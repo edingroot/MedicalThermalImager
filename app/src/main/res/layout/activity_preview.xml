@@ -64,14 +64,13 @@
                 android:layout_height="match_parent"
                 android:visibility="invisible"/>
 
-            <ToggleButton
-                android:id="@+id/streamButton"
+            <Button
+                android:id="@+id/btnDump"
                 style="?metaButtonBarButtonStyle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:onClick="onNetStreamClicked"
-                android:textOff="@string/startNetStream"
-                android:textOn="@string/stopNetStream"/>
+                android:text="@string/dumpThermalRaw"
+                android:onClick="onDumpThermalRawClicked"/>
 
             <Button
                 android:layout_width="51dp" style="?metaButtonBarButtonStyle"
@@ -99,52 +98,18 @@
             android:background="@color/black_overlay"
             tools:ignore="UselessParent"
             android:columnCount="3"
-            android:rowCount="2">
-            <LinearLayout
-                android:orientation="horizontal"
-                android:layout_width="fill_parent"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center_horizontal|bottom"
-                android:baselineAligned="false"
-                android:id="@+id/imageTypeListContainer"
-                android:focusableInTouchMode="false"
-                android:visibility="gone">
-
-                <ListView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:id="@+id/imageTypeListView"
-                    android:layout_gravity="bottom|left"
-                    android:layout_marginBottom="60dp"
-                    android:textAppearance="?android:attr/textAppearanceLarge"
-                    android:alpha="0.9"
-                    android:layout_weight="0.25"
-                    android:choiceMode="singleChoice"
-                    android:clickable="true"
-                    android:dividerHeight="0dp" />
-
-                <ListView
-                    android:id="@+id/paletteListView"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="bottom|right"
-                    android:layout_marginBottom="60dp"
-                    android:layout_weight="0.75"
-                    android:alpha="0.9"
-                    android:choiceMode="singleChoice"
-                    android:clickable="true"
-                    android:dividerHeight="0dp"
-                    android:textAppearance="?android:attr/textAppearanceLarge"/>
-            </LinearLayout>
+            android:rowCount="1">
 
             <ToggleButton
-                android:id="@+id/change_view_button" style="?metaButtonBarButtonStyle"
+                android:id="@+id/btnToggleMoreInfo"
+                style="?metaButtonBarButtonStyle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textOff="@string/change_view"
-                android:textOn="@string/change_view_retract"
-                android:onClick="onChangeViewClicked"
-                android:layout_gravity="bottom|start" />
+                android:layout_gravity="bottom|start"
+                android:checked="true"
+                android:onClick="onToggleMoreInfoClicked"
+                android:textOff="@string/toggle_more_info_retract"
+                android:textOn="@string/toggle_more_info"/>
 
             <LinearLayout
                 android:layout_width="wrap_content"

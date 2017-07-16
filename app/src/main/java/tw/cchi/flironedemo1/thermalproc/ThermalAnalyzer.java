@@ -4,6 +4,7 @@ package tw.cchi.flironedemo1.thermalproc;
 import android.content.Context;
 import android.os.Environment;
 import android.util.Log;
+import android.widget.Toast;
 
 import com.flir.flironesdk.RenderedImage;
 
@@ -11,31 +12,23 @@ import org.apache.commons.io.FileUtils;
 
 import java.io.File;
 
-public class ThermalAnalyzer {
-    private Context context;
-    private RenderedImage renderedImage;
+import tw.cchi.flironedemo1.AppUtils;
 
-    public ThermalAnalyzer(Context context, RenderedImage renderedImage) {
-        this.context = context;
+public class ThermalAnalyzer {
+    private RenderedImage renderedImage;
+    private int[] thermalPixelValues;
+
+    public ThermalAnalyzer(RenderedImage renderedImage) {
         this.renderedImage = renderedImage;
     }
 
-    public boolean exportToFiles(int[] thermalPixelValues) {
+    public boolean dumpRawThermalFile(String filename) {
         if (thermalPixelValues == null)
             thermalPixelValues = renderedImage.thermalPixelValues();
-
-        File sdCard = Environment.getExternalStorageDirectory();
-        File dir = new File (sdCard.getAbsolutePath() + "/flirEx1/rawtemp/");
-        dir.mkdirs();
-
         try {
-            String filename = "rawtemp_" + System.currentTimeMillis() + ".dat";
-//            PrintWriter writer = new PrintWriter(dir.getAbsolutePath() + "/" + filename, "UTF-8");
-//            writer.write(this.serializePixels());
-//            writer.close();
-            FileUtils.writeByteArrayToFile(new File(dir.getAbsolutePath() + "/" + filename), serializePixels(thermalPixelValues));
+            FileUtils.writeByteArrayToFile(new File(AppUtils.getExternalStorageDir() + "/" + filename), serializePixels(thermalPixelValues));
         } catch (Exception e) {
-            Log.e("exportToFiles", "Exception: " + e.toString());
+            Log.e("dumpRawThermalFile", "Exception: " + e.toString());
             e.printStackTrace();
             return false;
         }

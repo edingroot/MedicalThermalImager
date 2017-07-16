@@ -1,30 +1,21 @@
 package tw.cchi.flironedemo1;
 
-import android.annotation.TargetApi;
 import android.app.Activity;
-import android.app.AlertDialog;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.ColorFilter;
 import android.graphics.PorterDuff;
 import android.media.MediaScannerConnection;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
-import android.os.Handler;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.OrientationEventListener;
 import android.view.ScaleGestureDetector;
 import android.view.View;
-import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
-import android.widget.EditText;
 import android.widget.ImageView;
-import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ToggleButton;
@@ -33,7 +24,6 @@ import com.flir.flironesdk.Device;
 import com.flir.flironesdk.FlirUsbDevice;
 import com.flir.flironesdk.Frame;
 import com.flir.flironesdk.FrameProcessor;
-import com.flir.flironesdk.LoadedFrame;
 import com.flir.flironesdk.RenderedImage;
 import com.flir.flironesdk.SimulatedDevice;
 
@@ -41,74 +31,27 @@ import org.opencv.android.OpenCVLoader;
 import org.opencv.android.Utils;
 import org.opencv.core.Mat;
 
-import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.lang.reflect.Field;
-import java.net.Socket;
 import java.nio.ByteBuffer;
 import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.EnumSet;
-import java.util.HashMap;
 import java.util.Locale;
-import java.util.Map;
 
+import butterknife.BindView;
+import butterknife.ButterKnife;
 import tw.cchi.flironedemo1.thermalproc.ROIDetector;
 import tw.cchi.flironedemo1.thermalproc.RawThermalDump;
-import tw.cchi.flironedemo1.thermalproc.ThermalDumpProcessor;
-import tw.cchi.flironedemo1.util.SystemUiHider;
 import tw.cchi.flironedemo1.thermalproc.ThermalAnalyzer;
+import tw.cchi.flironedemo1.thermalproc.ThermalDumpProcessor;
 
-/**
- * An example activity and delegate for FLIR One image streaming and device interaction.
- * Based on an example full-screen activity that shows and hides the system UI (i.e.
- * status bar and navigation/system bar) with user interaction.
- *
- * @see SystemUiHider
- * @see com.flir.flironesdk.Device.Delegate
- * @see com.flir.flironesdk.FrameProcessor.Delegate
- * @see com.flir.flironesdk.Device.StreamDelegate
- * @see com.flir.flironesdk.Device.PowerUpdateDelegate
- */
 public class PreviewActivity extends Activity implements Device.Delegate, FrameProcessor.Delegate, Device.StreamDelegate, Device.PowerUpdateDelegate {
-    /**
-     * Whether or not the system UI should be auto-hidden after
-     * {@link #AUTO_HIDE_DELAY_MILLIS} milliseconds.
-     */
-    private static final boolean AUTO_HIDE = true;
-    /**
-     * If {@link #AUTO_HIDE} is set, the number of milliseconds to wait after
-     * user interaction before hiding the system UI.
-     */
-    private static final int AUTO_HIDE_DELAY_MILLIS = 8000;
-    /**
-     * If set, will toggle the system UI visibility upon interaction. Otherwise,
-     * will show the system UI visibility upon interaction.
-     */
-    private static final boolean TOGGLE_ON_CLICK = true;
-    /**
-     * The flags to pass to {@link SystemUiHider#getInstance}.
-     */
-    private static final int HIDER_FLAGS = SystemUiHider.FLAG_HIDE_NAVIGATION;
-    ImageView thermalImageView;
-    ScaleGestureDetector mScaleDetector;
-    Handler mHideHandler = new Handler();
-    private volatile boolean frameStreaming = false;
+    private volatile boolean streamingFrame = false;
     private volatile boolean imageCaptureRequested = false;
     private volatile boolean thermalAnalyzeRequested = false;
     private volatile boolean thermalDumpRequested = false;
-    private volatile Socket streamSocket = null;
-    // Device Delegate methods
 
-    // Called during device discovery, when a device is connected
-    // During this callback, you should save a reference to device
-    // You should also set the power update delegate for the device if you have one
-    // Go ahead and start frame stream as soon as connected, in this use case
-    // Finally we create a frame processor for rendering frames
-    private int deviceRotation = 0;
     private OrientationEventListener orientationEventListener;
     private volatile Device flirOneDevice;
     private FrameProcessor frameProcessor;
@@ -116,178 +59,39 @@ public class PreviewActivity extends Activity implements Device.Delegate, FrameP
     private Device.TuningState currentTuningState = Device.TuningState.Unknown;
     private ColorFilter originalChargingIndicatorColor = null;
     private Bitmap thermalBitmap = null;
-    int fCount = 0;
 
-    /**
-     * The instance of the {@link SystemUiHider} for this activity.
-     */
-    private SystemUiHider mSystemUiHider;
-    Runnable mHideRunnable = new Runnable() {
-        @Override
-        public void run() {
-            mSystemUiHider.hide();
-        }
-    };
-    /**
-     * Touch listener to use for in-layout UI controls to delay hiding the
-     * system UI. This is to prevent the jarring behavior of controls going away
-     * while interacting with activity UI.
-     */
-    View.OnTouchListener mDelayHideTouchListener = new View.OnTouchListener() {
-        @Override
-        public boolean onTouch(View view, MotionEvent motionEvent) {
-            if (AUTO_HIDE) {
-                delayedHide(AUTO_HIDE_DELAY_MILLIS);
-            }
-            return false;
-        }
-    };
+    private int deviceRotation = 0;
+    private boolean showingTopControls = true;
 
-    /**
-     * Schedules a call to hide() in [delay] milliseconds, canceling any
-     * previously scheduled calls.
-     */
-    private void delayedHide(int delayMillis) {
-        mHideHandler.removeCallbacks(mHideRunnable);
-        mHideHandler.postDelayed(mHideRunnable, delayMillis);
-    }
+    @BindView(R.id.fullscreen_content_controls_top) View topControlsView;
+    @BindView(R.id.fullscreen_content_controls) View bottomControlsView;
+    @BindView(R.id.fullscreen_content) View contentView;
+    @BindView(R.id.imageView) ImageView thermalImageView;
+
+    ScaleGestureDetector mScaleDetector;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_preview);
         OpenCVLoader.initDebug();
+        setContentView(R.layout.activity_preview);
+        ButterKnife.bind(this);
 
-        final View controlsView = findViewById(R.id.fullscreen_content_controls);
-        final View controlsViewTop = findViewById(R.id.fullscreen_content_controls_top);
-        final View contentView = findViewById(R.id.fullscreen_content);
-
-
-        HashMap<Integer, String> imageTypeNames = new HashMap<>();
-        // Massage the type names for display purposes and skip any deprecated
-        for (Field field : RenderedImage.ImageType.class.getDeclaredFields()) {
-            if (field.isEnumConstant() && !field.isAnnotationPresent(Deprecated.class)) {
-                RenderedImage.ImageType t = RenderedImage.ImageType.valueOf(field.getName());
-                String name = t.name().replaceAll("(RGBA)|(YCbCr)|(8)", "").replaceAll("([a-z])([A-Z])", "$1 $2");
-                imageTypeNames.put(t.ordinal(), name);
-            }
-        }
-        String[] imageTypeNameValues = new String[imageTypeNames.size()];
-        for (Map.Entry<Integer, String> mapEntry : imageTypeNames.entrySet()) {
-            int index = mapEntry.getKey();
-            imageTypeNameValues[index] = mapEntry.getValue();
-        }
-
-        RenderedImage.ImageType defaultImageType = RenderedImage.ImageType.BlendedMSXRGBA8888Image;
+        RenderedImage.ImageType defaultImageType = RenderedImage.ImageType.ThermalRGBA8888Image;
         frameProcessor = new FrameProcessor(this, this, EnumSet.of(defaultImageType, RenderedImage.ImageType.ThermalRadiometricKelvinImage));
-
-        ListView imageTypeListView = ((ListView) findViewById(R.id.imageTypeListView));
-        imageTypeListView.setAdapter(new ArrayAdapter<>(this, R.layout.emptytextview, imageTypeNameValues));
-        imageTypeListView.setSelection(defaultImageType.ordinal());
-        imageTypeListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                if (frameProcessor != null) {
-                    RenderedImage.ImageType imageType = RenderedImage.ImageType.values()[position];
-                    frameProcessor.setImageTypes(EnumSet.of(imageType, RenderedImage.ImageType.ThermalRadiometricKelvinImage));
-                    if (imageType.isColorized()){
-                        findViewById(R.id.paletteListView).setVisibility(View.VISIBLE);
-                    }else{
-                        findViewById(R.id.paletteListView).setVisibility(View.INVISIBLE);
-                    }
-                }
-            }
-        });
-        imageTypeListView.setDivider(null);
-
-        // Palette List View Setup
-        ListView paletteListView = ((ListView) findViewById(R.id.paletteListView));
-        paletteListView.setDivider(null);
-        paletteListView.setAdapter(new ArrayAdapter<>(this, R.layout.emptytextview, RenderedImage.Palette.values()));
-        paletteListView.setSelection(frameProcessor.getImagePalette().ordinal());
-        paletteListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                if (frameProcessor != null){
-                    frameProcessor.setImagePalette(RenderedImage.Palette.values()[position]);
-                }
-            }
-        });
-        // Set up an instance of SystemUiHider to control the system UI for
-        // this activity.
-
-        mSystemUiHider = SystemUiHider.getInstance(this, contentView, HIDER_FLAGS);
-        mSystemUiHider.setup();
-        mSystemUiHider
-                .setOnVisibilityChangeListener(new SystemUiHider.OnVisibilityChangeListener() {
-                    // Cached values.
-                    int mControlsHeight;
-                    int mShortAnimTime;
-
-                    @Override
-                    @TargetApi(Build.VERSION_CODES.HONEYCOMB_MR2)
-                    public void onVisibilityChange(boolean visible) {
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB_MR2) {
-                            // If the ViewPropertyAnimator API is available
-                            // (Honeycomb MR2 and later), use it to animate the
-                            // in-layout UI controls at the bottom of the
-                            // screen.
-                            if (mControlsHeight == 0) {
-                                mControlsHeight = controlsView.getHeight();
-                            }
-                            if (mShortAnimTime == 0) {
-                                mShortAnimTime = getResources().getInteger(
-                                        android.R.integer.config_shortAnimTime);
-                            }
-                            controlsView.animate()
-                                    .translationY(visible ? 0 : mControlsHeight)
-                                    .setDuration(mShortAnimTime);
-                            controlsViewTop.animate().translationY(visible ? 0 : -1 * mControlsHeight).setDuration(mShortAnimTime);
-                        } else {
-                            // If the ViewPropertyAnimator APIs aren't
-                            // available, simply show or hide the in-layout UI
-                            // controls.
-                            controlsView.setVisibility(visible ? View.VISIBLE : View.GONE);
-                            controlsViewTop.setVisibility(visible ? View.VISIBLE : View.GONE);
-                        }
-
-                        if (visible && !((ToggleButton) findViewById(R.id.change_view_button)).isChecked() && AUTO_HIDE) {
-                            // Schedule a hide().
-                            delayedHide(AUTO_HIDE_DELAY_MILLIS);
-                        }
-                    }
-                });
+        frameProcessor.setImagePalette(RenderedImage.Palette.Gray);
 
         // Set up the user interaction to manually show or hide the system UI.
         contentView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if (TOGGLE_ON_CLICK) {
-                    mSystemUiHider.toggle();
-                } else {
-                    mSystemUiHider.show();
-                }
-
-                System.out.println("frameStreaming=" + frameStreaming);
-                if (flirOneDevice != null && !frameStreaming) {
+                if (flirOneDevice != null && !streamingFrame) {
                     flirOneDevice.startFrameStream(PreviewActivity.this);
-                    frameStreaming = true;
+                    streamingFrame = true;
                 }
             }
         });
 
-        // Upon interacting with UI controls, delay any scheduled hide()
-        // operations to prevent the jarring behavior of controls going away
-        // while interacting with the UI.
-        findViewById(R.id.change_view_button).setOnTouchListener(mDelayHideTouchListener);
-
-
-        orientationEventListener = new OrientationEventListener(this) {
-            @Override
-            public void onOrientationChanged(int orientation) {
-                deviceRotation = orientation;
-            }
-        };
         mScaleDetector = new ScaleGestureDetector(this, new ScaleGestureDetector.OnScaleGestureListener() {
             @Override
             public void onScaleEnd(ScaleGestureDetector detector) {
@@ -314,6 +118,12 @@ public class PreviewActivity extends Activity implements Device.Delegate, FrameP
             }
         });
 
+        orientationEventListener = new OrientationEventListener(this) {
+            @Override
+            public void onOrientationChanged(int orientation) {
+                deviceRotation = orientation;
+            }
+        };
     }
 
     @Override
@@ -364,11 +174,15 @@ public class PreviewActivity extends Activity implements Device.Delegate, FrameP
     @Override
     protected void onPostCreate(Bundle savedInstanceState) {
         super.onPostCreate(savedInstanceState);
+    }
 
-        // Trigger the initial hide() shortly after the activity has been
-        // created, to briefly hint to the user that UI controls
-        // are available.
-        delayedHide(100);
+    private void showMessage(final String message) {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                Toast.makeText(PreviewActivity.this, message, Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 
     private void updateThermalImageView(final Bitmap frame) {
@@ -392,7 +206,7 @@ public class PreviewActivity extends Activity implements Device.Delegate, FrameP
         flirOneDevice = device;
         flirOneDevice.setPowerUpdateDelegate(this);
         flirOneDevice.startFrameStream(this);
-        this.frameStreaming = true;
+        this.streamingFrame = true;
 
         orientationEventListener.enable();
     }
@@ -402,7 +216,7 @@ public class PreviewActivity extends Activity implements Device.Delegate, FrameP
      */
     public void onDeviceDisconnected(Device device) {
         Log.i("ExampleApp", "Device disconnected!");
-        this.frameStreaming = false;
+        this.streamingFrame = false;
 
         final TextView levelTextView = (TextView) findViewById(R.id.batteryLevelTextView);
         final ImageView chargingIndicator = (ImageView) findViewById(R.id.batteryChargeIndicator);
@@ -522,11 +336,6 @@ public class PreviewActivity extends Activity implements Device.Delegate, FrameP
             final int[] thermalPixels = renderedImage.thermalPixelValues();
             // Note: this code is not optimized
 
-//            if (0 != (fCount = (++fCount) % 10)) {
-//                Log.i("onFrameProcessed", "SKIP");
-//                return;
-//            }
-
             // average the center 9 pixels for the spot meter
             int width = renderedImage.width();
             int height = renderedImage.height();
@@ -584,7 +393,7 @@ public class PreviewActivity extends Activity implements Device.Delegate, FrameP
             if (thermalAnalyzeRequested) {
                 thermalAnalyzeRequested = false;
                 flirOneDevice.stopFrameStream();
-                this.frameStreaming = false;
+                this.streamingFrame = false;
 
                 new Thread(new Runnable() {
                     @Override
@@ -614,9 +423,13 @@ public class PreviewActivity extends Activity implements Device.Delegate, FrameP
                 new Thread(new Runnable() {
                     @Override
                     public void run() {
-                        ThermalAnalyzer thermalAnalyzer = new ThermalAnalyzer(getApplicationContext(), renderedImage);
-                        boolean r = thermalAnalyzer.exportToFiles(thermalPixels);
-                        Log.i("exportToFiles", "result=" + r);
+                        ThermalAnalyzer thermalAnalyzer = new ThermalAnalyzer(renderedImage);
+                        String filename = "thermal-raw_" + System.currentTimeMillis() + ".dat";
+                        if (thermalAnalyzer.dumpRawThermalFile(filename)) {
+                            showMessage("Dumped: " + filename);
+                        } else {
+                            showMessage("Dumped filed.");
+                        }
                     }
                 }).start();
             }
@@ -674,7 +487,6 @@ public class PreviewActivity extends Activity implements Device.Delegate, FrameP
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
-
                             thermalImageView.animate().setDuration(50).scaleY(0).withEndAction((new Runnable() {
                                 public void run() {
                                     thermalImageView.animate().setDuration(50).scaleY(1);
@@ -684,45 +496,6 @@ public class PreviewActivity extends Activity implements Device.Delegate, FrameP
                     });
                 }
             }).start();
-        }
-
-        if (streamSocket != null && streamSocket.isConnected()) {
-            try {
-                // send PNG file over socket in another thread
-                final OutputStream outputStream = streamSocket.getOutputStream();
-                // make a output stream so we can get the size of the PNG
-                final ByteArrayOutputStream bufferStream = new ByteArrayOutputStream();
-
-                thermalBitmap.compress(Bitmap.CompressFormat.WEBP, 100, bufferStream);
-                bufferStream.flush();
-                (new Thread() {
-                    @Override
-                    public void run() {
-                        super.run();
-                        try {
-                            /*
-                             * Header is 6 bytes indicating the length of the image data and rotation
-                             * of the device
-                             * This could be expanded upon by adding bytes to have more metadata
-                             * such as image format
-                             */
-                            byte[] headerBytes = ByteBuffer.allocate((Integer.SIZE + Short.SIZE) / 8).putInt(bufferStream.size()).putShort((short) deviceRotation).array();
-                            synchronized (streamSocket) {
-                                outputStream.write(headerBytes);
-                                bufferStream.writeTo(outputStream);
-                                outputStream.flush();
-                            }
-                            bufferStream.close();
-
-
-                        } catch (IOException ex) {
-                            Log.e("STREAM", "Error sending frame: " + ex.toString());
-                        }
-                    }
-                }).start();
-            } catch (Exception ex) {
-                Log.e("STREAM", "Error creating PNG: " + ex.getMessage());
-            }
         }
     }
 
@@ -769,91 +542,28 @@ public class PreviewActivity extends Activity implements Device.Delegate, FrameP
         }
     }
 
-    public void onChangeViewClicked(View v) {
-        if (frameProcessor == null) {
-            ((ToggleButton) v).setChecked(false);
-            return;
-        }
-        ListView paletteListView = (ListView) findViewById(R.id.paletteListView);
-        ListView imageTypeListView = (ListView) findViewById(R.id.imageTypeListView);
-        if (((ToggleButton) v).isChecked()) {
-            // only show palette list if selected image type is colorized
-            paletteListView.setVisibility(View.INVISIBLE);
-            for (RenderedImage.ImageType imageType : frameProcessor.getImageTypes()) {
-                if (imageType.isColorized()) {
-                    paletteListView.setVisibility(View.VISIBLE);
-                    break;
-                }
-            }
-            imageTypeListView.setVisibility(View.VISIBLE);
-            findViewById(R.id.imageTypeListContainer).setVisibility(View.VISIBLE);
+    public void onToggleMoreInfoClicked(View v) {
+        if (showingTopControls) {
+            topControlsView.setVisibility(View.INVISIBLE);
+            showingTopControls = false;
         } else {
-            findViewById(R.id.imageTypeListContainer).setVisibility(View.GONE);
-        }
-
-
-    }
-    /**
-     * Example method of starting/stopping a frame stream to a host
-     *
-     * @param v The toggle button pushed
-     */
-    public void onNetStreamClicked(View v) {
-        final ToggleButton button = (ToggleButton) v;
-        button.setChecked(false);
-
-        if (streamSocket == null || streamSocket.isClosed()) {
-            AlertDialog.Builder alert = new AlertDialog.Builder(this);
-
-            alert.setTitle("Start Network Stream");
-            alert.setMessage("Provide hostname:port to connect");
-
-            // Set an EditText view to get user input
-            final EditText input = new EditText(this);
-
-            alert.setView(input);
-
-            alert.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
-                public void onClick(DialogInterface dialog, int whichButton) {
-                    String value = input.getText().toString();
-                    final String[] parts = value.split(":");
-                    (new Thread() {
-                        @Override
-                        public void run() {
-                            super.run();
-                            try {
-                                streamSocket = new Socket(parts[0], Integer.parseInt(parts[1], 10));
-                                runOnUiThread(new Thread() {
-                                    @Override
-                                    public void run() {
-                                        super.run();
-                                        button.setChecked(streamSocket.isConnected());
-                                    }
-                                });
-
-                            } catch (Exception ex) {
-                                Log.e("CONNECT", ex.getMessage());
-                            }
-                        }
-                    }).start();
-
-                }
-            });
-
-            alert.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-                public void onClick(DialogInterface dialog, int whichButton) {
-                    // Canceled.
-                }
-            });
-
-            alert.show();
-        } else {
-            try {
-                streamSocket.close();
-            } catch (Exception ex) {
-
-            }
-            button.setChecked(streamSocket != null && streamSocket.isConnected());
+            topControlsView.setVisibility(View.VISIBLE);
+            showingTopControls = true;
         }
     }
+
+    public void onDumpThermalRawClicked(View v) {
+        if (flirOneDevice != null && streamingFrame) {
+            this.thermalDumpRequested = true;
+        }
+    }
+
 }
+
+// Notes:
+// Device Delegate methods
+// Called during device discovery, when a device is connected
+// During this callback, you should save a reference to device
+// You should also set the power update delegate for the device if you have one
+// Go ahead and start frame stream as soon as connected, in this use case
+// Finally we create a frame processor for rendering frames
