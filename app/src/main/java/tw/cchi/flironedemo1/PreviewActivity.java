@@ -56,6 +56,7 @@ import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 
+import tw.cchi.flironedemo1.thermalproc.ROIDetector;
 import tw.cchi.flironedemo1.thermalproc.RawThermalDump;
 import tw.cchi.flironedemo1.thermalproc.ThermalDumpProcessor;
 import tw.cchi.flironedemo1.util.SystemUiHider;
@@ -588,16 +589,21 @@ public class PreviewActivity extends Activity implements Device.Delegate, FrameP
                 new Thread(new Runnable() {
                     @Override
                     public void run() {
-                        Log.i("thermalAnalyze", "thermalAnalyze started");
+                        Log.i("thermalAnalyze", "preprocess started");
                         RawThermalDump thermalDump = new RawThermalDump(renderedImage.width(), renderedImage.height(), thermalPixels);
                         ThermalDumpProcessor thermalDumpProcessor = new ThermalDumpProcessor(thermalDump);
                         thermalDumpProcessor.autoFilter();
-                        thermalDumpProcessor.filterBelow(2731 + 180); // 350
+                        thermalDumpProcessor.filterBelow(2731 + 300); // 350
                         Mat processedImage = thermalDumpProcessor.generateThermalImage();
-                        Bitmap resultBmp = Bitmap.createBitmap(processedImage.width(), processedImage.height(), Bitmap.Config.RGB_565);
-                        Utils.matToBitmap(processedImage, resultBmp);
+                        Log.i("thermalAnalyze", "preprocess completed");
 
-                        Log.i("thermalAnalyze", "thermalAnalyze completed");
+                        Log.i("thermalAnalyze", "identifyContours started");
+                        ROIDetector roiDetector = new ROIDetector(processedImage);
+                        Mat contourImg = roiDetector.identifyContours(70); // 40
+                        Log.i("thermalAnalyze", "identifyContours completed");
+
+                        Bitmap resultBmp = Bitmap.createBitmap(renderedImage.width(), renderedImage.height(), Bitmap.Config.RGB_565);
+                        Utils.matToBitmap(contourImg, resultBmp);
                         updateThermalImageView(resultBmp);
                     }
                 }).start();
