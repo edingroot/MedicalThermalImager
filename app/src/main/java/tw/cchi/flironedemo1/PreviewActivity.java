@@ -37,6 +37,10 @@ import com.flir.flironesdk.LoadedFrame;
 import com.flir.flironesdk.RenderedImage;
 import com.flir.flironesdk.SimulatedDevice;
 
+import org.opencv.android.OpenCVLoader;
+import org.opencv.android.Utils;
+import org.opencv.core.Mat;
+
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
@@ -52,8 +56,10 @@ import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 
+import tw.cchi.flironedemo1.thermalproc.RawThermalDump;
+import tw.cchi.flironedemo1.thermalproc.ThermalDumpProcessor;
 import tw.cchi.flironedemo1.util.SystemUiHider;
-import tw.cchi.flironedemo1.util.ThermalAnalyzer;
+import tw.cchi.flironedemo1.thermalproc.ThermalAnalyzer;
 
 /**
  * An example activity and delegate for FLIR One image streaming and device interaction.
@@ -89,7 +95,9 @@ public class PreviewActivity extends Activity implements Device.Delegate, FrameP
     ImageView thermalImageView;
     ScaleGestureDetector mScaleDetector;
     Handler mHideHandler = new Handler();
+    private volatile boolean frameStreaming = false;
     private volatile boolean imageCaptureRequested = false;
+    private volatile boolean thermalAnalyzeRequested = false;
     private volatile boolean thermalDumpRequested = false;
     private volatile Socket streamSocket = null;
     // Device Delegate methods
@@ -147,6 +155,7 @@ public class PreviewActivity extends Activity implements Device.Delegate, FrameP
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_preview);
+        OpenCVLoader.initDebug();
 
         final View controlsView = findViewById(R.id.fullscreen_content_controls);
         final View controlsViewTop = findViewById(R.id.fullscreen_content_controls_top);
@@ -208,7 +217,6 @@ public class PreviewActivity extends Activity implements Device.Delegate, FrameP
 
         mSystemUiHider = SystemUiHider.getInstance(this, contentView, HIDER_FLAGS);
         mSystemUiHider.setup();
-
         mSystemUiHider
                 .setOnVisibilityChangeListener(new SystemUiHider.OnVisibilityChangeListener() {
                     // Cached values.
@@ -257,6 +265,12 @@ public class PreviewActivity extends Activity implements Device.Delegate, FrameP
                     mSystemUiHider.toggle();
                 } else {
                     mSystemUiHider.show();
+                }
+
+                System.out.println("frameStreaming=" + frameStreaming);
+                if (flirOneDevice != null && !frameStreaming) {
+                    flirOneDevice.startFrameStream(PreviewActivity.this);
+                    frameStreaming = true;
                 }
             }
         });
@@ -377,6 +391,7 @@ public class PreviewActivity extends Activity implements Device.Delegate, FrameP
         flirOneDevice = device;
         flirOneDevice.setPowerUpdateDelegate(this);
         flirOneDevice.startFrameStream(this);
+        this.frameStreaming = true;
 
         orientationEventListener.enable();
     }
@@ -386,6 +401,7 @@ public class PreviewActivity extends Activity implements Device.Delegate, FrameP
      */
     public void onDeviceDisconnected(Device device) {
         Log.i("ExampleApp", "Device disconnected!");
+        this.frameStreaming = false;
 
         final TextView levelTextView = (TextView) findViewById(R.id.batteryLevelTextView);
         final ImageView chargingIndicator = (ImageView) findViewById(R.id.batteryChargeIndicator);
@@ -564,6 +580,29 @@ public class PreviewActivity extends Activity implements Device.Delegate, FrameP
                 updateThermalImageView(demoBitmap);
             }
 
+            if (thermalAnalyzeRequested) {
+                thermalAnalyzeRequested = false;
+                flirOneDevice.stopFrameStream();
+                this.frameStreaming = false;
+
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        Log.i("thermalAnalyze", "thermalAnalyze started");
+                        RawThermalDump thermalDump = new RawThermalDump(renderedImage.width(), renderedImage.height(), thermalPixels);
+                        ThermalDumpProcessor thermalDumpProcessor = new ThermalDumpProcessor(thermalDump);
+                        thermalDumpProcessor.autoFilter();
+                        thermalDumpProcessor.filterBelow(2731 + 180); // 350
+                        Mat processedImage = thermalDumpProcessor.generateThermalImage();
+                        Bitmap resultBmp = Bitmap.createBitmap(processedImage.width(), processedImage.height(), Bitmap.Config.RGB_565);
+                        Utils.matToBitmap(processedImage, resultBmp);
+
+                        Log.i("thermalAnalyze", "thermalAnalyze completed");
+                        updateThermalImageView(resultBmp);
+                    }
+                }).start();
+            }
+
             if (thermalDumpRequested) {
                 thermalDumpRequested = false;
                 new Thread(new Runnable() {
@@ -677,37 +716,25 @@ public class PreviewActivity extends Activity implements Device.Delegate, FrameP
                 }).start();
             } catch (Exception ex) {
                 Log.e("STREAM", "Error creating PNG: " + ex.getMessage());
-
             }
-
         }
-
-
     }
 
     public void onTuneClicked(View v) {
         if (flirOneDevice != null) {
             flirOneDevice.performTuning();
         }
-
     }
 
     public void onCaptureImageClicked(View v) {
-
-
-        // if nothing's connected, let's load an image instead?
-
-        if (flirOneDevice == null && lastSavedPath != null) {
-            // load!
-            File file = new File(lastSavedPath);
-
-
-            LoadedFrame frame = new LoadedFrame(file);
-
-            // load the frame
-            onFrameReceived(frame);
-        } else {
+        if (flirOneDevice != null) {
             this.imageCaptureRequested = true;
+        }
+    }
+
+    public void onAnalyzeClicked(View v) {
+        if (flirOneDevice != null) {
+            this.thermalAnalyzeRequested = true;
         }
     }
 
