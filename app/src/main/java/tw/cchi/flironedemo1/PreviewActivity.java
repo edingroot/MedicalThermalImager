@@ -291,11 +291,11 @@ public class PreviewActivity extends Activity implements Device.Delegate, FrameP
             }
         });
 
-        findViewById(R.id.fullscreen_content).setOnTouchListener(new View.OnTouchListener() {
+        contentView.setOnTouchListener(new View.OnTouchListener() {
             @Override
             public boolean onTouch(View v, MotionEvent event) {
                 mScaleDetector.onTouchEvent(event);
-                return true;
+                return false;
             }
         });
 
