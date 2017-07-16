@@ -53,6 +53,7 @@ import java.util.Locale;
 import java.util.Map;
 
 import tw.cchi.flironedemo1.util.SystemUiHider;
+import tw.cchi.flironedemo1.util.ThermalAnalyzer;
 
 /**
  * An example activity and delegate for FLIR One image streaming and device interaction.
@@ -75,7 +76,7 @@ public class PreviewActivity extends Activity implements Device.Delegate, FrameP
      * If {@link #AUTO_HIDE} is set, the number of milliseconds to wait after
      * user interaction before hiding the system UI.
      */
-    private static final int AUTO_HIDE_DELAY_MILLIS = 3000;
+    private static final int AUTO_HIDE_DELAY_MILLIS = 8000;
     /**
      * If set, will toggle the system UI visibility upon interaction. Otherwise,
      * will show the system UI visibility upon interaction.
@@ -89,8 +90,8 @@ public class PreviewActivity extends Activity implements Device.Delegate, FrameP
     ScaleGestureDetector mScaleDetector;
     Handler mHideHandler = new Handler();
     private volatile boolean imageCaptureRequested = false;
+    private volatile boolean thermalDumpRequested = false;
     private volatile Socket streamSocket = null;
-    private boolean chargeCableIsConnected = true;
     // Device Delegate methods
 
     // Called during device discovery, when a device is connected
@@ -106,6 +107,8 @@ public class PreviewActivity extends Activity implements Device.Delegate, FrameP
     private Device.TuningState currentTuningState = Device.TuningState.Unknown;
     private ColorFilter originalChargingIndicatorColor = null;
     private Bitmap thermalBitmap = null;
+    int fCount = 0;
+
     /**
      * The instance of the {@link SystemUiHider} for this activity.
      */
@@ -131,6 +134,237 @@ public class PreviewActivity extends Activity implements Device.Delegate, FrameP
         }
     };
 
+    /**
+     * Schedules a call to hide() in [delay] milliseconds, canceling any
+     * previously scheduled calls.
+     */
+    private void delayedHide(int delayMillis) {
+        mHideHandler.removeCallbacks(mHideRunnable);
+        mHideHandler.postDelayed(mHideRunnable, delayMillis);
+    }
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_preview);
+
+        final View controlsView = findViewById(R.id.fullscreen_content_controls);
+        final View controlsViewTop = findViewById(R.id.fullscreen_content_controls_top);
+        final View contentView = findViewById(R.id.fullscreen_content);
+
+
+        HashMap<Integer, String> imageTypeNames = new HashMap<>();
+        // Massage the type names for display purposes and skip any deprecated
+        for (Field field : RenderedImage.ImageType.class.getDeclaredFields()) {
+            if (field.isEnumConstant() && !field.isAnnotationPresent(Deprecated.class)) {
+                RenderedImage.ImageType t = RenderedImage.ImageType.valueOf(field.getName());
+                String name = t.name().replaceAll("(RGBA)|(YCbCr)|(8)", "").replaceAll("([a-z])([A-Z])", "$1 $2");
+                imageTypeNames.put(t.ordinal(), name);
+            }
+        }
+        String[] imageTypeNameValues = new String[imageTypeNames.size()];
+        for (Map.Entry<Integer, String> mapEntry : imageTypeNames.entrySet()) {
+            int index = mapEntry.getKey();
+            imageTypeNameValues[index] = mapEntry.getValue();
+        }
+
+        RenderedImage.ImageType defaultImageType = RenderedImage.ImageType.BlendedMSXRGBA8888Image;
+        frameProcessor = new FrameProcessor(this, this, EnumSet.of(defaultImageType, RenderedImage.ImageType.ThermalRadiometricKelvinImage));
+
+        ListView imageTypeListView = ((ListView) findViewById(R.id.imageTypeListView));
+        imageTypeListView.setAdapter(new ArrayAdapter<>(this, R.layout.emptytextview, imageTypeNameValues));
+        imageTypeListView.setSelection(defaultImageType.ordinal());
+        imageTypeListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                if (frameProcessor != null) {
+                    RenderedImage.ImageType imageType = RenderedImage.ImageType.values()[position];
+                    frameProcessor.setImageTypes(EnumSet.of(imageType, RenderedImage.ImageType.ThermalRadiometricKelvinImage));
+                    if (imageType.isColorized()){
+                        findViewById(R.id.paletteListView).setVisibility(View.VISIBLE);
+                    }else{
+                        findViewById(R.id.paletteListView).setVisibility(View.INVISIBLE);
+                    }
+                }
+            }
+        });
+        imageTypeListView.setDivider(null);
+
+        // Palette List View Setup
+        ListView paletteListView = ((ListView) findViewById(R.id.paletteListView));
+        paletteListView.setDivider(null);
+        paletteListView.setAdapter(new ArrayAdapter<>(this, R.layout.emptytextview, RenderedImage.Palette.values()));
+        paletteListView.setSelection(frameProcessor.getImagePalette().ordinal());
+        paletteListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                if (frameProcessor != null){
+                    frameProcessor.setImagePalette(RenderedImage.Palette.values()[position]);
+                }
+            }
+        });
+        // Set up an instance of SystemUiHider to control the system UI for
+        // this activity.
+
+        mSystemUiHider = SystemUiHider.getInstance(this, contentView, HIDER_FLAGS);
+        mSystemUiHider.setup();
+
+        mSystemUiHider
+                .setOnVisibilityChangeListener(new SystemUiHider.OnVisibilityChangeListener() {
+                    // Cached values.
+                    int mControlsHeight;
+                    int mShortAnimTime;
+
+                    @Override
+                    @TargetApi(Build.VERSION_CODES.HONEYCOMB_MR2)
+                    public void onVisibilityChange(boolean visible) {
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB_MR2) {
+                            // If the ViewPropertyAnimator API is available
+                            // (Honeycomb MR2 and later), use it to animate the
+                            // in-layout UI controls at the bottom of the
+                            // screen.
+                            if (mControlsHeight == 0) {
+                                mControlsHeight = controlsView.getHeight();
+                            }
+                            if (mShortAnimTime == 0) {
+                                mShortAnimTime = getResources().getInteger(
+                                        android.R.integer.config_shortAnimTime);
+                            }
+                            controlsView.animate()
+                                    .translationY(visible ? 0 : mControlsHeight)
+                                    .setDuration(mShortAnimTime);
+                            controlsViewTop.animate().translationY(visible ? 0 : -1 * mControlsHeight).setDuration(mShortAnimTime);
+                        } else {
+                            // If the ViewPropertyAnimator APIs aren't
+                            // available, simply show or hide the in-layout UI
+                            // controls.
+                            controlsView.setVisibility(visible ? View.VISIBLE : View.GONE);
+                            controlsViewTop.setVisibility(visible ? View.VISIBLE : View.GONE);
+                        }
+
+                        if (visible && !((ToggleButton) findViewById(R.id.change_view_button)).isChecked() && AUTO_HIDE) {
+                            // Schedule a hide().
+                            delayedHide(AUTO_HIDE_DELAY_MILLIS);
+                        }
+                    }
+                });
+
+        // Set up the user interaction to manually show or hide the system UI.
+        contentView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if (TOGGLE_ON_CLICK) {
+                    mSystemUiHider.toggle();
+                } else {
+                    mSystemUiHider.show();
+                }
+            }
+        });
+
+        // Upon interacting with UI controls, delay any scheduled hide()
+        // operations to prevent the jarring behavior of controls going away
+        // while interacting with the UI.
+        findViewById(R.id.change_view_button).setOnTouchListener(mDelayHideTouchListener);
+
+
+        orientationEventListener = new OrientationEventListener(this) {
+            @Override
+            public void onOrientationChanged(int orientation) {
+                deviceRotation = orientation;
+            }
+        };
+        mScaleDetector = new ScaleGestureDetector(this, new ScaleGestureDetector.OnScaleGestureListener() {
+            @Override
+            public void onScaleEnd(ScaleGestureDetector detector) {
+            }
+
+            @Override
+            public boolean onScaleBegin(ScaleGestureDetector detector) {
+                return true;
+            }
+
+            @Override
+            public boolean onScale(ScaleGestureDetector detector) {
+                Log.d("ZOOM", "zoom ongoing, scale: " + detector.getScaleFactor());
+                frameProcessor.setMSXDistance(detector.getScaleFactor());
+                return false;
+            }
+        });
+
+        findViewById(R.id.fullscreen_content).setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                mScaleDetector.onTouchEvent(event);
+                return true;
+            }
+        });
+
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        thermalImageView = (ImageView) findViewById(R.id.imageView);
+        if (Device.getSupportedDeviceClasses(this).contains(FlirUsbDevice.class)) {
+            findViewById(R.id.pleaseConnect).setVisibility(View.VISIBLE);
+        }
+        try {
+            Device.startDiscovery(this, this);
+        } catch (IllegalStateException e) {
+            // it's okay if we've already started discovery
+        } catch (SecurityException e) {
+            // On some platforms, we need the user to select the app to give us permisison to the USB device.
+            Toast.makeText(this, "Please insert FLIR One and select " + getString(R.string.app_name), Toast.LENGTH_LONG).show();
+            // There is likely a cleaner way to recover, but for now, exit the activity and
+            // wait for user to follow the instructions;
+            finish();
+        }
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        if (flirOneDevice != null) {
+            flirOneDevice.stopFrameStream();
+        }
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        if (flirOneDevice != null) {
+            flirOneDevice.startFrameStream(this);
+        }
+    }
+
+    @Override
+    public void onStop() {
+        // We must unregister our usb receiver, otherwise we will steal events from other apps
+        Log.e("PreviewActivity", "onStop, stopping discovery!");
+        Device.stopDiscovery();
+        flirOneDevice = null;
+        super.onStop();
+    }
+
+    @Override
+    protected void onPostCreate(Bundle savedInstanceState) {
+        super.onPostCreate(savedInstanceState);
+
+        // Trigger the initial hide() shortly after the activity has been
+        // created, to briefly hint to the user that UI controls
+        // are available.
+        delayedHide(100);
+    }
+
+    private void updateThermalImageView(final Bitmap frame) {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                thermalImageView.setImageBitmap(frame);
+            }
+        });
+    }
+
     public void onDeviceConnected(Device device) {
         Log.i("ExampleApp", "Device connected!");
         runOnUiThread(new Runnable() {
@@ -144,27 +378,6 @@ public class PreviewActivity extends Activity implements Device.Delegate, FrameP
         flirOneDevice.setPowerUpdateDelegate(this);
         flirOneDevice.startFrameStream(this);
 
-        final ToggleButton chargeCableButton = (ToggleButton) findViewById(R.id.chargeCableToggle);
-        if (flirOneDevice instanceof SimulatedDevice) {
-            runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    chargeCableButton.setChecked(chargeCableIsConnected);
-                    chargeCableButton.setVisibility(View.VISIBLE);
-                }
-            });
-        } else {
-            runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    chargeCableButton.setChecked(chargeCableIsConnected);
-                    chargeCableButton.setVisibility(View.INVISIBLE);
-                    findViewById(R.id.connect_sim_button).setEnabled(false);
-
-                }
-            });
-        }
-
         orientationEventListener.enable();
     }
 
@@ -174,7 +387,6 @@ public class PreviewActivity extends Activity implements Device.Delegate, FrameP
     public void onDeviceDisconnected(Device device) {
         Log.i("ExampleApp", "Device disconnected!");
 
-        final ToggleButton chargeCableButton = (ToggleButton) findViewById(R.id.chargeCableToggle);
         final TextView levelTextView = (TextView) findViewById(R.id.batteryLevelTextView);
         final ImageView chargingIndicator = (ImageView) findViewById(R.id.batteryChargeIndicator);
         runOnUiThread(new Runnable() {
@@ -183,8 +395,6 @@ public class PreviewActivity extends Activity implements Device.Delegate, FrameP
                 findViewById(R.id.pleaseConnect).setVisibility(View.GONE);
                 thermalImageView.setImageBitmap(Bitmap.createBitmap(1, 1, Bitmap.Config.ALPHA_8));
                 levelTextView.setText("--");
-                chargeCableButton.setChecked(chargeCableIsConnected);
-                chargeCableButton.setVisibility(View.INVISIBLE);
                 chargingIndicator.setVisibility(View.GONE);
                 thermalImageView.clearColorFilter();
                 findViewById(R.id.tuningProgressBar).setVisibility(View.GONE);
@@ -278,17 +488,6 @@ public class PreviewActivity extends Activity implements Device.Delegate, FrameP
                 levelTextView.setText(String.valueOf((int) percentage) + "%");
             }
         });
-
-
-    }
-
-    private void updateThermalImageView(final Bitmap frame) {
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                thermalImageView.setImageBitmap(frame);
-            }
-        });
     }
 
     // StreamDelegate method
@@ -303,11 +502,15 @@ public class PreviewActivity extends Activity implements Device.Delegate, FrameP
     // Frame Processor Delegate method, will be called each time a rendered frame is produced
     public void onFrameProcessed(final RenderedImage renderedImage) {
         if (renderedImage.imageType() == RenderedImage.ImageType.ThermalRadiometricKelvinImage) {
+            final int[] thermalPixels = renderedImage.thermalPixelValues();
             // Note: this code is not optimized
 
-            int[] thermalPixels = renderedImage.thermalPixelValues();
-            // average the center 9 pixels for the spot meter
+//            if (0 != (fCount = (++fCount) % 10)) {
+//                Log.i("onFrameProcessed", "SKIP");
+//                return;
+//            }
 
+            // average the center 9 pixels for the spot meter
             int width = renderedImage.width();
             int height = renderedImage.height();
             int centerPixelIndex = width * (height / 2) + (width / 2);
@@ -326,7 +529,7 @@ public class PreviewActivity extends Activity implements Device.Delegate, FrameP
             for (int i = 0; i < centerPixelIndexes.length; i++) {
                 // Remember: all primitives are signed, we want the unsigned value,
                 // we've used renderedImage.thermalPixelValues() to get unsigned values
-                int pixelValue = (thermalPixels[centerPixelIndexes[i]]);
+                int pixelValue = thermalPixels[centerPixelIndexes[i]];
                 averageTemp += (((double) pixelValue) - averageTemp) / ((double) i + 1);
             }
             double averageC = (averageTemp / 100) - 273.15;
@@ -360,6 +563,25 @@ public class PreviewActivity extends Activity implements Device.Delegate, FrameP
 
                 updateThermalImageView(demoBitmap);
             }
+
+            if (thermalDumpRequested) {
+                thermalDumpRequested = false;
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        ThermalAnalyzer thermalAnalyzer = new ThermalAnalyzer(getApplicationContext(), renderedImage);
+                        boolean r = thermalAnalyzer.exportToFiles(thermalPixels);
+                        Log.i("exportToFiles", "result=" + r);
+                    }
+                }).start();
+            }
+
+            // (DEBUG) Show image types
+            Log.i("ImageTypes", "0");
+            for (RenderedImage.ImageType type : frameProcessor.getImageTypes()) {
+                Log.i("ImageTypes", type.toString());
+            }
+
         } else {
             if (thermalBitmap == null) {
                 thermalBitmap = renderedImage.getBitmap();
@@ -378,6 +600,7 @@ public class PreviewActivity extends Activity implements Device.Delegate, FrameP
         */
         if (this.imageCaptureRequested) {
             imageCaptureRequested = false;
+            thermalDumpRequested = true;
             final Context context = this;
             new Thread(new Runnable() {
                 public void run() {
@@ -493,7 +716,6 @@ public class PreviewActivity extends Activity implements Device.Delegate, FrameP
             try {
                 flirOneDevice = new SimulatedDevice(this, this, getResources().openRawResource(R.raw.sampleframes), 10);
                 flirOneDevice.setPowerUpdateDelegate(this);
-                chargeCableIsConnected = true;
             } catch (Exception ex) {
                 flirOneDevice = null;
                 Log.w("FLIROneExampleApp", "IO EXCEPTION");
@@ -502,13 +724,6 @@ public class PreviewActivity extends Activity implements Device.Delegate, FrameP
         } else if (flirOneDevice instanceof SimulatedDevice) {
             flirOneDevice.close();
             flirOneDevice = null;
-        }
-    }
-
-    public void onSimulatedChargeCableToggleClicked(View v) {
-        if (flirOneDevice instanceof SimulatedDevice) {
-            chargeCableIsConnected = !chargeCableIsConnected;
-            ((SimulatedDevice) flirOneDevice).setChargeCableState(chargeCableIsConnected);
         }
     }
 
@@ -545,20 +760,6 @@ public class PreviewActivity extends Activity implements Device.Delegate, FrameP
 
 
     }
-
-    public void onImageTypeListViewClicked(View v) {
-        int index = ((ListView) v).getSelectedItemPosition();
-        RenderedImage.ImageType imageType = RenderedImage.ImageType.values()[index];
-        frameProcessor.setImageTypes(EnumSet.of(imageType, RenderedImage.ImageType.ThermalRadiometricKelvinImage));
-        int paletteVisibility = (imageType.isColorized()) ? View.VISIBLE : View.GONE;
-        findViewById(R.id.paletteListView).setVisibility(paletteVisibility);
-    }
-
-    public void onPaletteListViewClicked(View v) {
-        RenderedImage.Palette pal = (RenderedImage.Palette) (((ListView) v).getSelectedItem());
-        frameProcessor.setImagePalette(pal);
-    }
-
     /**
      * Example method of starting/stopping a frame stream to a host
      *
@@ -621,229 +822,5 @@ public class PreviewActivity extends Activity implements Device.Delegate, FrameP
             }
             button.setChecked(streamSocket != null && streamSocket.isConnected());
         }
-    }
-
-    @Override
-    protected void onStart() {
-        super.onStart();
-        thermalImageView = (ImageView) findViewById(R.id.imageView);
-        if (Device.getSupportedDeviceClasses(this).contains(FlirUsbDevice.class)) {
-            findViewById(R.id.pleaseConnect).setVisibility(View.VISIBLE);
-        }
-        try {
-            Device.startDiscovery(this, this);
-        } catch (IllegalStateException e) {
-            // it's okay if we've already started discovery
-        } catch (SecurityException e) {
-            // On some platforms, we need the user to select the app to give us permisison to the USB device.
-            Toast.makeText(this, "Please insert FLIR One and select " + getString(R.string.app_name), Toast.LENGTH_LONG).show();
-            // There is likely a cleaner way to recover, but for now, exit the activity and
-            // wait for user to follow the instructions;
-            finish();
-        }
-    }
-
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-
-
-        setContentView(R.layout.activity_preview);
-
-        final View controlsView = findViewById(R.id.fullscreen_content_controls);
-        final View controlsViewTop = findViewById(R.id.fullscreen_content_controls_top);
-        final View contentView = findViewById(R.id.fullscreen_content);
-
-
-        HashMap<Integer, String> imageTypeNames = new HashMap<>();
-        // Massage the type names for display purposes and skip any deprecated
-        for (Field field : RenderedImage.ImageType.class.getDeclaredFields()) {
-            if (field.isEnumConstant() && !field.isAnnotationPresent(Deprecated.class)) {
-                RenderedImage.ImageType t = RenderedImage.ImageType.valueOf(field.getName());
-                String name = t.name().replaceAll("(RGBA)|(YCbCr)|(8)", "").replaceAll("([a-z])([A-Z])", "$1 $2");
-                imageTypeNames.put(t.ordinal(), name);
-            }
-        }
-        String[] imageTypeNameValues = new String[imageTypeNames.size()];
-        for (Map.Entry<Integer, String> mapEntry : imageTypeNames.entrySet()) {
-            int index = mapEntry.getKey();
-            imageTypeNameValues[index] = mapEntry.getValue();
-        }
-
-        RenderedImage.ImageType defaultImageType = RenderedImage.ImageType.BlendedMSXRGBA8888Image;
-        frameProcessor = new FrameProcessor(this, this, EnumSet.of(defaultImageType, RenderedImage.ImageType.ThermalRadiometricKelvinImage));
-
-        ListView imageTypeListView = ((ListView) findViewById(R.id.imageTypeListView));
-        imageTypeListView.setAdapter(new ArrayAdapter<>(this, R.layout.emptytextview, imageTypeNameValues));
-        imageTypeListView.setSelection(defaultImageType.ordinal());
-        imageTypeListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                if (frameProcessor != null) {
-                    RenderedImage.ImageType imageType = RenderedImage.ImageType.values()[position];
-                    frameProcessor.setImageTypes(EnumSet.of(imageType, RenderedImage.ImageType.ThermalRadiometricKelvinImage));
-                    if (imageType.isColorized()) {
-                        findViewById(R.id.paletteListView).setVisibility(View.VISIBLE);
-                    } else {
-                        findViewById(R.id.paletteListView).setVisibility(View.INVISIBLE);
-                    }
-                }
-            }
-        });
-        imageTypeListView.setDivider(null);
-
-        // Palette List View Setup
-        ListView paletteListView = ((ListView) findViewById(R.id.paletteListView));
-        paletteListView.setDivider(null);
-        paletteListView.setAdapter(new ArrayAdapter<>(this, R.layout.emptytextview, RenderedImage.Palette.values()));
-        paletteListView.setSelection(frameProcessor.getImagePalette().ordinal());
-        paletteListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                if (frameProcessor != null) {
-                    frameProcessor.setImagePalette(RenderedImage.Palette.values()[position]);
-                }
-            }
-        });
-        // Set up an instance of SystemUiHider to control the system UI for
-        // this activity.
-
-        mSystemUiHider = SystemUiHider.getInstance(this, contentView, HIDER_FLAGS);
-        mSystemUiHider.setup();
-
-        mSystemUiHider
-                .setOnVisibilityChangeListener(new SystemUiHider.OnVisibilityChangeListener() {
-                    // Cached values.
-                    int mControlsHeight;
-                    int mShortAnimTime;
-
-                    @Override
-                    @TargetApi(Build.VERSION_CODES.HONEYCOMB_MR2)
-                    public void onVisibilityChange(boolean visible) {
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB_MR2) {
-                            // If the ViewPropertyAnimator API is available
-                            // (Honeycomb MR2 and later), use it to animate the
-                            // in-layout UI controls at the bottom of the
-                            // screen.
-                            if (mControlsHeight == 0) {
-                                mControlsHeight = controlsView.getHeight();
-                            }
-                            if (mShortAnimTime == 0) {
-                                mShortAnimTime = getResources().getInteger(
-                                        android.R.integer.config_shortAnimTime);
-                            }
-                            controlsView.animate()
-                                    .translationY(visible ? 0 : mControlsHeight)
-                                    .setDuration(mShortAnimTime);
-                            controlsViewTop.animate().translationY(visible ? 0 : -1 * mControlsHeight).setDuration(mShortAnimTime);
-                        } else {
-                            // If the ViewPropertyAnimator APIs aren't
-                            // available, simply show or hide the in-layout UI
-                            // controls.
-                            controlsView.setVisibility(visible ? View.VISIBLE : View.GONE);
-                            controlsViewTop.setVisibility(visible ? View.VISIBLE : View.GONE);
-                        }
-
-                        if (visible && !((ToggleButton) findViewById(R.id.change_view_button)).isChecked() && AUTO_HIDE) {
-                            // Schedule a hide().
-                            delayedHide(AUTO_HIDE_DELAY_MILLIS);
-                        }
-                    }
-                });
-
-        // Set up the user interaction to manually show or hide the system UI.
-        contentView.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                if (TOGGLE_ON_CLICK) {
-                    mSystemUiHider.toggle();
-                } else {
-                    mSystemUiHider.show();
-                }
-            }
-        });
-
-        // Upon interacting with UI controls, delay any scheduled hide()
-        // operations to prevent the jarring behavior of controls going away
-        // while interacting with the UI.
-        findViewById(R.id.change_view_button).setOnTouchListener(mDelayHideTouchListener);
-
-
-        orientationEventListener = new OrientationEventListener(this) {
-            @Override
-            public void onOrientationChanged(int orientation) {
-                deviceRotation = orientation;
-            }
-        };
-        mScaleDetector = new ScaleGestureDetector(this, new ScaleGestureDetector.OnScaleGestureListener() {
-            @Override
-            public void onScaleEnd(ScaleGestureDetector detector) {
-            }
-
-            @Override
-            public boolean onScaleBegin(ScaleGestureDetector detector) {
-                return true;
-            }
-
-            @Override
-            public boolean onScale(ScaleGestureDetector detector) {
-                Log.d("ZOOM", "zoom ongoing, scale: " + detector.getScaleFactor());
-                frameProcessor.setMSXDistance(detector.getScaleFactor());
-                return false;
-            }
-        });
-
-        findViewById(R.id.fullscreen_content).setOnTouchListener(new View.OnTouchListener() {
-            @Override
-            public boolean onTouch(View v, MotionEvent event) {
-                mScaleDetector.onTouchEvent(event);
-                return true;
-            }
-        });
-
-    }
-
-    @Override
-    public void onPause() {
-        super.onPause();
-        if (flirOneDevice != null) {
-            flirOneDevice.stopFrameStream();
-        }
-    }
-
-    @Override
-    public void onResume() {
-        super.onResume();
-        if (flirOneDevice != null) {
-            flirOneDevice.startFrameStream(this);
-        }
-    }
-
-    @Override
-    public void onStop() {
-        // We must unregister our usb receiver, otherwise we will steal events from other apps
-        Log.e("PreviewActivity", "onStop, stopping discovery!");
-        Device.stopDiscovery();
-        flirOneDevice = null;
-        super.onStop();
-    }
-
-    @Override
-    protected void onPostCreate(Bundle savedInstanceState) {
-        super.onPostCreate(savedInstanceState);
-
-        // Trigger the initial hide() shortly after the activity has been
-        // created, to briefly hint to the user that UI controls
-        // are available.
-        delayedHide(100);
-    }
-
-    /**
-     * Schedules a call to hide() in [delay] milliseconds, canceling any
-     * previously scheduled calls.
-     */
-    private void delayedHide(int delayMillis) {
-        mHideHandler.removeCallbacks(mHideRunnable);
-        mHideHandler.postDelayed(mHideRunnable, delayMillis);
     }
 }

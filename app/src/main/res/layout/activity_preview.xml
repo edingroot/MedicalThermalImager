@@ -51,32 +51,27 @@
                 android:visibility="gone" />
 
             <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textAppearance="?android:attr/textAppearanceMedium"
                 android:id="@+id/batteryLevelTextView"
-                android:layout_weight="0.48"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
                 android:layout_gravity="left|center_vertical"
-                android:text="--" />
+                android:layout_weight="0.5"
+                android:text="--"
+                android:textAppearance="?android:attr/textAppearanceMedium"/>
+
+            <View
+                android:layout_width="55dp"
+                android:layout_height="match_parent"
+                android:visibility="invisible"/>
 
             <ToggleButton
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Cable"
-                android:id="@+id/chargeCableToggle"
-                android:layout_weight="0.10"
-                android:checked="false"
-                android:visibility="invisible"
-                android:onClick="onSimulatedChargeCableToggleClicked" />
-
-            <ToggleButton
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
                 android:id="@+id/streamButton"
                 style="?metaButtonBarButtonStyle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:onClick="onNetStreamClicked"
                 android:textOff="@string/startNetStream"
-                android:textOn="@string/stopNetStream"
-                android:onClick="onNetStreamClicked"/>
+                android:textOn="@string/stopNetStream"/>
 
             <Button
                 android:layout_width="51dp" style="?metaButtonBarButtonStyle"
@@ -129,17 +124,17 @@
                     android:dividerHeight="0dp" />
 
                 <ListView
+                    android:id="@+id/paletteListView"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:id="@+id/paletteListView"
-                    android:layout_marginBottom="60dp"
-                    android:alpha="0.9"
                     android:layout_gravity="bottom|right"
+                    android:layout_marginBottom="60dp"
                     android:layout_weight="0.75"
+                    android:alpha="0.9"
                     android:choiceMode="singleChoice"
-                    android:textAppearance="?android:attr/textAppearanceLarge"
                     android:clickable="true"
-                    android:dividerHeight="0dp" />
+                    android:dividerHeight="0dp"
+                    android:textAppearance="?android:attr/textAppearanceLarge"/>
             </LinearLayout>
 
             <ImageButton style="?metaButtonBarButtonStyle"
