@@ -1,10 +1,7 @@
 package tw.cchi.flironedemo1.thermalproc;
 
 
-import android.content.Context;
-import android.os.Environment;
 import android.util.Log;
-import android.widget.Toast;
 
 import com.flir.flironesdk.RenderedImage;
 

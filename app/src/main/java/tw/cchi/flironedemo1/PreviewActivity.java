@@ -105,7 +105,7 @@ public class PreviewActivity extends Activity implements Device.Delegate, FrameP
             @Override
             public boolean onScale(ScaleGestureDetector detector) {
                 Log.d("ZOOM", "zoom ongoing, scale: " + detector.getScaleFactor());
-                frameProcessor.setMSXDistance(detector.getScaleFactor());
+//                frameProcessor.setMSXDistance(detector.getScaleFactor());
                 return false;
             }
         });
