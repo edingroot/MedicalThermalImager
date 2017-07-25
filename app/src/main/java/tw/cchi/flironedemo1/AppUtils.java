@@ -12,4 +12,20 @@ public class AppUtils {
         return dir.getAbsolutePath();
     }
 
+    /**
+     * Effective range: min <= val < max
+     * @param val
+     * @param min
+     * @param max
+     * @return
+     */
+    public static int trimByRange(int val, int min, int max) {
+        if (val < min)
+            return min;
+        else if (val > max)
+            return max;
+        else
+            return val;
+    }
+
 }

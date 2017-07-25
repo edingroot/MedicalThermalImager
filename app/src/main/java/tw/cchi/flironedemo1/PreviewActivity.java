@@ -16,6 +16,7 @@ import android.view.OrientationEventListener;
 import android.view.ScaleGestureDetector;
 import android.view.View;
 import android.widget.ImageView;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ToggleButton;
@@ -61,12 +62,18 @@ public class PreviewActivity extends Activity implements Device.Delegate, FrameP
     private Bitmap thermalBitmap = null;
 
     private int deviceRotation = 0;
+    private int imageWidth = 0;
+    private int imageHeight = 0;
+    private int thermalSpotX = -1;
+    private int thermalSpotY = -1;
     private boolean showingTopControls = true;
 
     @BindView(R.id.fullscreen_content_controls_top) View topControlsView;
     @BindView(R.id.fullscreen_content_controls) View bottomControlsView;
     @BindView(R.id.fullscreen_content) View contentView;
     @BindView(R.id.imageView) ImageView thermalImageView;
+    @BindView(R.id.layoutTempSpot) RelativeLayout layoutTempSpot;
+    @BindView(R.id.spotMeterValue) TextView spotMeterValue;
 
     ScaleGestureDetector mScaleDetector;
 
@@ -113,6 +120,15 @@ public class PreviewActivity extends Activity implements Device.Delegate, FrameP
         contentView.setOnTouchListener(new View.OnTouchListener() {
             @Override
             public boolean onTouch(View v, MotionEvent event) {
+                if (thermalImageView.getMeasuredHeight() > 0) {
+                    // Calculate actual touched position on the thermal image
+                    int x = (int) event.getX();
+                    int y = (int) event.getY() - thermalImageView.getTop();
+                    if (y >= 0 && y <= thermalImageView.getMeasuredHeight()) {
+                        handleThermalImageTouch(x, y);
+                    }
+                }
+
                 mScaleDetector.onTouchEvent(event);
                 return false;
             }
@@ -333,21 +349,27 @@ public class PreviewActivity extends Activity implements Device.Delegate, FrameP
     // Frame Processor Delegate method, will be called each time a rendered frame is produced
     public void onFrameProcessed(final RenderedImage renderedImage) {
         if (renderedImage.imageType() == RenderedImage.ImageType.ThermalRadiometricKelvinImage) {
+            imageWidth = renderedImage.width();
+            imageHeight = renderedImage.height();
+
             final int[] thermalPixels = renderedImage.thermalPixelValues();
             // Note: this code is not optimized
 
             // average the center 9 pixels for the spot meter
-            int width = renderedImage.width();
-            int height = renderedImage.height();
-            int centerPixelIndex = width * (height / 2) + (width / 2);
+            int centerPixelIndex;
+            if (thermalSpotX == -1) {
+                centerPixelIndex = imageWidth * (imageHeight / 2) + (imageWidth / 2);
+            } else {
+                centerPixelIndex = imageWidth * thermalSpotY + thermalSpotX;
+            }
             int[] centerPixelIndexes = new int[]{
                     centerPixelIndex, centerPixelIndex - 1, centerPixelIndex + 1,
-                    centerPixelIndex - width,
-                    centerPixelIndex - width - 1,
-                    centerPixelIndex - width + 1,
-                    centerPixelIndex + width,
-                    centerPixelIndex + width - 1,
-                    centerPixelIndex + width + 1
+                    centerPixelIndex - imageWidth,
+                    centerPixelIndex - imageWidth - 1,
+                    centerPixelIndex - imageWidth + 1,
+                    centerPixelIndex + imageWidth,
+                    centerPixelIndex + imageWidth - 1,
+                    centerPixelIndex + imageWidth + 1
             };
 
             double averageTemp = 0;
@@ -366,14 +388,14 @@ public class PreviewActivity extends Activity implements Device.Delegate, FrameP
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
-                    ((TextView) findViewById(R.id.spotMeterValue)).setText(spotMeterValue);
+                    PreviewActivity.this.spotMeterValue.setText(spotMeterValue);
                 }
             });
 
             // if radiometric is the only type, also show the image
             if (frameProcessor.getImageTypes().size() == 1) {
                 // example of a custom colorization, maps temperatures 0-100C to 8-bit gray-scale
-                byte[] argbPixels = new byte[width * height * 4];
+                byte[] argbPixels = new byte[imageWidth * imageHeight * 4];
                 final byte aPixValue = (byte) 255;
                 for (int p = 0; p < thermalPixels.length; p++) {
                     int destP = p * 4;
@@ -383,7 +405,7 @@ public class PreviewActivity extends Activity implements Device.Delegate, FrameP
                     // red pixel
                     argbPixels[destP] = argbPixels[destP + 1] = argbPixels[destP + 2] = pixValue;
                 }
-                final Bitmap demoBitmap = Bitmap.createBitmap(width, renderedImage.height(), Bitmap.Config.ARGB_8888);
+                final Bitmap demoBitmap = Bitmap.createBitmap(imageWidth, renderedImage.height(), Bitmap.Config.ARGB_8888);
 
                 demoBitmap.copyPixelsFromBuffer(ByteBuffer.wrap(argbPixels));
 
@@ -402,13 +424,13 @@ public class PreviewActivity extends Activity implements Device.Delegate, FrameP
                         RawThermalDump thermalDump = new RawThermalDump(renderedImage.width(), renderedImage.height(), thermalPixels);
                         ThermalDumpProcessor thermalDumpProcessor = new ThermalDumpProcessor(thermalDump);
                         thermalDumpProcessor.autoFilter();
-                        thermalDumpProcessor.filterBelow(2731 + 300); // 350
+                        thermalDumpProcessor.filterBelow(2731 + 320); // 350
                         Mat processedImage = thermalDumpProcessor.generateThermalImage();
                         Log.i("thermalAnalyze", "preprocess completed");
 
                         Log.i("thermalAnalyze", "identifyContours started");
                         ROIDetector roiDetector = new ROIDetector(processedImage);
-                        Mat contourImg = roiDetector.identifyContours(70); // 40
+                        Mat contourImg = roiDetector.identifyContours(140); // 40
                         Log.i("thermalAnalyze", "identifyContours completed");
 
                         Bitmap resultBmp = Bitmap.createBitmap(renderedImage.width(), renderedImage.height(), Bitmap.Config.RGB_565);
@@ -553,9 +575,28 @@ public class PreviewActivity extends Activity implements Device.Delegate, FrameP
     }
 
     public void onDumpThermalRawClicked(View v) {
-        if (flirOneDevice != null && streamingFrame) {
+        if (flirOneDevice != null && streamingFrame && !thermalDumpRequested) {
             this.thermalDumpRequested = true;
         }
+    }
+
+    private void handleThermalImageTouch(int x, int y) {
+        // Set indication spot location
+        RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams) layoutTempSpot.getLayoutParams();
+        params.leftMargin = x - layoutTempSpot.getMeasuredWidth() / 2;
+        params.topMargin = y + layoutTempSpot.getMeasuredHeight() / 2;
+        params.addRule(RelativeLayout.CENTER_HORIZONTAL, 0);
+        params.addRule(RelativeLayout.CENTER_VERTICAL, 0);
+        layoutTempSpot.setLayoutParams(params);
+        spotMeterValue.setText("");
+
+        // Calculate the correspondent point on the thermal image
+        double ratio = (double) imageWidth / thermalImageView.getMeasuredWidth();
+        x *= ratio;
+        y *= ratio;
+        System.out.printf("Actual touched point: x=%d, y=%d\n", x, y);
+        thermalSpotX = AppUtils.trimByRange(x, 1, imageWidth - 1);
+        thermalSpotY = AppUtils.trimByRange(y, 1, imageHeight - 1);
     }
 
 }

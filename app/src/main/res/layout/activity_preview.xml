@@ -1,4 +1,4 @@
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools" android:layout_width="match_parent"
     android:layout_height="match_parent" android:background="@android:color/background_dark"
     android:orientation="vertical"
@@ -11,12 +11,12 @@
         android:id="@+id/imageView"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
-        android:layout_gravity="center_vertical|center_horizontal"
+        android:layout_centerHorizontal="true"
+        android:layout_centerVertical="true"
         android:adjustViewBounds="true"
         android:focusable="false"
         android:focusableInTouchMode="false"
-        android:scaleType="fitCenter"
-        />
+        android:scaleType="fitCenter"/>
 
     <FrameLayout android:layout_width="match_parent" android:layout_height="match_parent"
         android:fitsSystemWindows="true"
@@ -177,24 +177,36 @@
 
     </FrameLayout>
 
-    <ImageView
+    <RelativeLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:id="@+id/spotMeterIcon"
-        android:layout_gravity="center"
-        android:src="@android:drawable/ic_menu_mylocation"
-        android:alpha="0.9" />
+        android:layout_centerHorizontal="true"
+        android:layout_centerVertical="true"
+        android:id="@+id/layoutTempSpot">
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:textAppearance="?android:attr/textAppearanceSmall"
-        android:id="@+id/spotMeterValue"
-        android:layout_gravity="center"
-        android:alpha="0.9"
-        android:paddingTop="39dp"
-        android:shadowColor="#000000"
-        android:shadowDx="0"
-        android:shadowDy="0"
-        android:shadowRadius="3"/>
-</FrameLayout>
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textAppearance="?android:attr/textAppearanceSmall"
+            android:id="@+id/spotMeterValue"
+            android:layout_centerHorizontal="true"
+            android:layout_centerVertical="true"
+            android:alpha="0.9"
+            android:paddingTop="39dp"
+            android:shadowColor="#000000"
+            android:shadowDx="0"
+            android:shadowDy="0"
+            android:shadowRadius="3"/>
+
+        <ImageView
+            android:id="@+id/spotMeterIcon"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerHorizontal="true"
+            android:layout_centerVertical="true"
+            android:alpha="0.9"
+            android:src="@android:drawable/ic_menu_mylocation"/>
+
+    </RelativeLayout>
+
+</RelativeLayout>

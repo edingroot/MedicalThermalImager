@@ -2,7 +2,6 @@ package tw.cchi.flironedemo1.thermalproc;
 
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfPoint;
-import org.opencv.core.Point;
 import org.opencv.core.Scalar;
 
 import java.util.ArrayList;
@@ -35,7 +34,8 @@ public class ROIDetector {
         List<MatOfPoint> contours = new ArrayList<>();
         findContours(dst, contours, new Mat(), RETR_EXTERNAL, CHAIN_APPROX_NONE);
         // Draw
-        Mat result = new Mat(dst.size(), CV_8U, new Scalar(0));
+        // Mat result = new Mat(dst.size(), CV_8U, new Scalar(0));
+        Mat result = src.clone();
         drawContours(result, contours, -1, new Scalar(255), 1);
 
         return result;
