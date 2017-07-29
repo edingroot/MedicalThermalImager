@@ -569,6 +569,9 @@ public class PreviewActivity extends Activity implements Device.Delegate, FrameP
     }
 
     private void updateThermalSpotValue() {
+        if (thermalPixels == null)
+            return;
+
         // Note: this code is not optimized
         // average the center 9 pixels for the spot meter
         int centerPixelIndex;
@@ -625,72 +628,73 @@ public class PreviewActivity extends Activity implements Device.Delegate, FrameP
     }
 
     private void handleThermalImageTouch(int x, int y) {
-        // Set indication spot location
-        RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams) layoutTempSpot.getLayoutParams();
-        params.leftMargin = x - layoutTempSpot.getMeasuredWidth() / 2;
-        params.topMargin = y + layoutTempSpot.getMeasuredHeight() / 2;
-        params.addRule(RelativeLayout.CENTER_HORIZONTAL, 0);
-        params.addRule(RelativeLayout.CENTER_VERTICAL, 0);
-        layoutTempSpot.setLayoutParams(params);
-        spotMeterValue.setText("");
+        boolean ignoreMovingSpot = false;
 
         // Calculate the correspondent point on the thermal image
         double ratio = (double) imageWidth / thermalImageView.getMeasuredWidth();
-        x *= ratio;
-        y *= ratio;
-        Log.i(Config.TAG, String.format("Actual touched point: x=%d, y=%d\n", x, y));
-        thermalSpotX = AppUtils.trimByRange(x, 1, imageWidth - 1);
-        thermalSpotY = AppUtils.trimByRange(y, 1, imageHeight - 1);
+        int imgX = (int) (x * ratio);
+        int imgY = (int) (y * ratio);
+        Log.i(Config.TAG, String.format("Actual touched point: x=%d, y=%d\n", imgX, imgY));
+        thermalSpotX = AppUtils.trimByRange(imgX, 1, imageWidth - 1);
+        thermalSpotY = AppUtils.trimByRange(imgY, 1, imageHeight - 1);
 
-        // If is in thermal analysis result preview mode, handle selection
-        if (flirOneDevice != null && !streamingFrame) {
-            updateThermalSpotValue();
-
-            if (!runningContourProcessing) {
-                int contourIndex = roiDetector.getSelectedContourIndex(x, y);
-                if (contourIndex != -1) {
+        // If is in thermal analysis result preview mode and the previous analysis is finished, handle selection.
+        if (flirOneDevice != null && !streamingFrame && !runningContourProcessing) {
+            int contourIndex = roiDetector.getSelectedContourIndex(imgX, imgY);
+            if (contourIndex != -1) {
+                if (contourIndex != this.selectedContourIndex) {
                     this.runningContourProcessing = true;
+                    this.selectedContourIndex = contourIndex;
+                    ignoreMovingSpot = true;
+                    Toast.makeText(this, "Processing selected area", Toast.LENGTH_SHORT).show();
 
-                    if (contourIndex != this.selectedContourIndex) {
-                        this.selectedContourIndex = contourIndex;
-                        Toast.makeText(this, "Processing selected area", Toast.LENGTH_SHORT).show();
+                    final MatOfPoint contour = roiDetector.getContours().get(contourIndex);
+                    new Thread(new Runnable() {
+                        @Override
+                        public void run() {
+                            Log.i(Config.TAG, "thermalAnalysis filterByContour & generate image started");
+                            thermalDumpProcessor.filterByContour(contour);
+                            // thermalDumpProcessor.autoFilter();
+                            Mat processedImage = thermalDumpProcessor.getGeneratedImage();
+                            Log.i(Config.TAG, "thermalAnalysis filterByContour & generate image finished");
 
-                        final MatOfPoint contour = roiDetector.getContours().get(contourIndex);
-                        new Thread(new Runnable() {
-                            @Override
-                            public void run() {
-                                Log.i(Config.TAG, "thermalAnalysis filterByContour & generate image started");
-                                thermalDumpProcessor.filterByContour(contour);
-                                // thermalDumpProcessor.autoFilter();
-                                Mat processedImage = thermalDumpProcessor.getGeneratedImage();
-                                Log.i(Config.TAG, "thermalAnalysis filterByContour & generate image finished");
+                            ArrayList<MatOfPoint> contours = new ArrayList<>();
+                            contours.add(contour);
+                            drawContours(processedImage, contours, -1, new Scalar(255), 1);
 
-                                ArrayList<MatOfPoint> contours = new ArrayList<>();
-                                contours.add(contour);
-                                drawContours(processedImage, contours, -1, new Scalar(255), 1);
+                            Bitmap resultBmp = Bitmap.createBitmap(imageWidth, imageHeight, Bitmap.Config.RGB_565);
+                            Utils.matToBitmap(processedImage, resultBmp);
+                            updateThermalImageView(resultBmp);
 
-                                Bitmap resultBmp = Bitmap.createBitmap(imageWidth, imageHeight, Bitmap.Config.RGB_565);
-                                Utils.matToBitmap(processedImage, resultBmp);
-                                updateThermalImageView(resultBmp);
-
-                                PreviewActivity.this.runningContourProcessing = false;
-                            }
-                        }).start();
-                    }
-                } else {
-                    if (x < imageHeight / 2) {
-                        // Decrease the contrast on the contour area
-                        contrastRatio += 0.05;
-                    } else {
-                        // Enhance the contrast on the contour area
-                        contrastRatio -= 0.05;
-                    }
-                    adjustContourContrast(contrastRatio);
+                            runningContourProcessing = false;
+                            Log.i(Config.TAG, "thermalAnalysis runningContourProcessing=" + PreviewActivity.this.runningContourProcessing);
+                            Log.i(Config.TAG, "thermalAnalysis runningContourProcessing=" + runningContourProcessing);
+                        }
+                    }).start();
                 }
+            } else {
+                if (imgX < imageHeight / 2) {
+                    // Decrease the contrast on the contour area
+                    contrastRatio -= 0.01;
+                } else {
+                    // Enhance the contrast on the contour area
+                    contrastRatio += 0.01;
+                }
+                adjustContourContrast(contrastRatio);
             }
         }
-    }
 
+        // Set indication spot location
+        if (!ignoreMovingSpot) {
+            RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams) layoutTempSpot.getLayoutParams();
+            params.leftMargin = x - layoutTempSpot.getMeasuredWidth() / 2;
+            params.topMargin = y + layoutTempSpot.getMeasuredHeight() / 2;
+            params.addRule(RelativeLayout.CENTER_HORIZONTAL, 0);
+            params.addRule(RelativeLayout.CENTER_VERTICAL, 0);
+            layoutTempSpot.setLayoutParams(params);
+            updateThermalSpotValue();
+        }
+    }
 }
 
 // Notes:
