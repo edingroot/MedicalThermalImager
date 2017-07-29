@@ -1,11 +1,15 @@
 package tw.cchi.flironedemo1.thermalproc;
 
+import android.util.Log;
+
 import org.opencv.android.OpenCVLoader;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfPoint;
 import org.opencv.core.MatOfPoint2f;
 import org.opencv.core.Point;
+
+import tw.cchi.flironedemo1.Config;
 
 import static org.opencv.imgproc.Imgproc.pointPolygonTest;
 
@@ -21,8 +25,7 @@ public class ThermalDumpProcessor {
     private int pixelCount = 0;
     private int[] thermalValues10; // 0.1K = 1 (different from RawThermalDump)
     private int[] thermalHist;
-    private short[] thermalLUT; // thermalLUT[tempK] = grayLevel (0~255)
-
+    private volatile Mat generatedImage = null;
 
     public ThermalDumpProcessor(RawThermalDump thermalDump) {
         OpenCVLoader.initDebug();
@@ -59,9 +62,7 @@ public class ThermalDumpProcessor {
     public void autoFilter() {
         int minPixelThreshold;
 
-        System.out.printf("autoFiltering()\n");
-        System.out.printf("Original: min=%d, max=%d\n", thermalHistMin, thermalHistMax);
-        thermalLUT = null;
+        Log.i(Config.TAG, String.format("autoFilter - before: min=%d, max=%d", thermalHistMin, thermalHistMax));
 
         minPixelThreshold = (int) (pixelCount * FILTER_RATIO_LOW);
         for (int i = thermalHistMin; i <= thermalHistMax; i++) {
@@ -83,7 +84,7 @@ public class ThermalDumpProcessor {
             }
         }
 
-        System.out.printf("New: min=%d, max=%d\n", thermalHistMin, thermalHistMax);
+        Log.i(Config.TAG, String.format("autoFilter - after: min=%d, max=%d", thermalHistMin, thermalHistMax));
 
         // Filter thermalValues10
         for (int i = 0; i < pixelCount; i++) {
@@ -95,15 +96,15 @@ public class ThermalDumpProcessor {
                 thermalHist[thermalHistMax]++;
             }
         }
+
+        generatedImage = null;
     }
 
     public void filterBelow(int thermalThreshold10K) {
-        if (thermalThreshold10K <= thermalHistMin){
-            System.out.printf("filterBelow: thermalHistMin=%d, newThreshold=%d, ignore.", thermalHistMin, thermalThreshold10K);
+        if (thermalThreshold10K <= thermalHistMin) {
+            Log.e(Config.TAG, String.format("filterBelow: thermalHistMin=%d, newThreshold=%d, ignore.", thermalHistMin, thermalThreshold10K));
             return;
         }
-
-        thermalLUT = null;
 
         // Filter thermalValues10
         thermalHistMin = thermalThreshold10K;
@@ -114,15 +115,15 @@ public class ThermalDumpProcessor {
                 thermalValues10[i] = thermalHistMin;
             }
         }
+
+        generatedImage = null;
     }
 
     public void filterAbove(int thermalThreshold10K) {
-        if (thermalThreshold10K >= thermalHistMax){
-            System.out.printf("filterAbove: thermalHistMax=%d, newThreshold=%d, ignore.", thermalHistMax, thermalThreshold10K);
+        if (thermalThreshold10K >= thermalHistMax) {
+            Log.e(Config.TAG, String.format("filterAbove: thermalHistMax=%d, newThreshold=%d, ignore.", thermalHistMax, thermalThreshold10K));
             return;
         }
-
-        thermalLUT = null;
 
         // Filter thermalValues10
         thermalHistMax = thermalThreshold10K;
@@ -133,6 +134,8 @@ public class ThermalDumpProcessor {
                 thermalValues10[i] = thermalHistMax;
             }
         }
+
+        generatedImage = null;
     }
 
     public void filterByContour(MatOfPoint contour) {
@@ -145,15 +148,36 @@ public class ThermalDumpProcessor {
             }
         }
         updateThermalHist();
+        generatedImage = null;
     }
 
-    public synchronized Mat generateThermalImage() {
-        Mat img = new Mat(height, width, CvType.CV_8U);
+    public Mat getGeneratedImage() {
+        if (generatedImage == null) {
+            generateThermalImage();
+        }
+        return generatedImage;
+    }
 
-        System.out.printf("generateThermalImage, min=%d, max=%d\n", thermalHistMin, thermalHistMax);
+    /**
+     * Get generated image with contrast adjusted with contrastRatio
+     * @param contrastRatio Enhance contrast if > 1 and vise versa.
+     */
+    public Mat getGeneratedImage(double contrastRatio) {
+        if (generatedImage == null) {
+            generateThermalImage();
+        }
+        Mat result = generatedImage.clone();
+        generatedImage.convertTo(result, -1, contrastRatio, 0);
+        return result;
+    }
+
+    private synchronized void generateThermalImage() {
+        generatedImage = new Mat(height, width, CvType.CV_8U);
+
+        Log.i(Config.TAG, String.format("generateThermalImage - min=%d, max=%d", thermalHistMin, thermalHistMax));
 
         // Generate thermal LUT
-        thermalLUT = new short[thermalHistMax + 1];
+        short[] thermalLUT = new short[thermalHistMax + 1]; // thermalLUT[tempK] = grayLevel (0~255)
         double increasePerK = 255.0 / (thermalHistMax - thermalHistMin);
         double sum = 0;
         for (int i = thermalHistMin; i <= thermalHistMax; i++) {
@@ -164,13 +188,11 @@ public class ThermalDumpProcessor {
         for (int row = 0; row < height; row++) {
             for (int col = 0; col < width; col++) {
                 if (thermalValues10[col + row * width] == 0)
-                    img.put(row, col, 0);
+                    generatedImage.put(row, col, 0);
                 else
-                    img.put(row, col, thermalLUT[thermalValues10[col + row * width]]);
+                    generatedImage.put(row, col, thermalLUT[thermalValues10[col + row * width]]);
             }
         }
-
-        return img;
     }
 
     private void updateThermalHist() {

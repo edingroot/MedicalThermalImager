@@ -53,7 +53,7 @@ import static org.opencv.imgproc.Imgproc.drawContours;
 
 public class PreviewActivity extends Activity implements Device.Delegate, FrameProcessor.Delegate, Device.StreamDelegate, Device.PowerUpdateDelegate {
     private volatile boolean streamingFrame = false;
-    private volatile boolean runningContourFiltering = false;
+    private volatile boolean runningContourProcessing = false;
     private volatile boolean imageCaptureRequested = false;
     private volatile boolean thermalAnalyzeRequested = false;
     private volatile boolean thermalDumpRequested = false;
@@ -71,6 +71,7 @@ public class PreviewActivity extends Activity implements Device.Delegate, FrameP
     private RawThermalDump thermalDump;
     private Bitmap thermalBitmap = null;
     private volatile int selectedContourIndex = -1;
+    private volatile double contrastRatio = 1;
 
     private int deviceRotation = 0;
     private int imageWidth = 0;
@@ -316,8 +317,7 @@ public class PreviewActivity extends Activity implements Device.Delegate, FrameP
 
     @Override
     public void onBatteryPercentageReceived(final byte percentage) {
-        Log.i(Config.TAG, "Battery percentage received!");
-
+        // Log.i(Config.TAG, "Battery percentage received!");
         final TextView levelTextView = (TextView) findViewById(R.id.batteryLevelTextView);
         runOnUiThread(new Runnable() {
             @Override
@@ -380,9 +380,9 @@ public class PreviewActivity extends Activity implements Device.Delegate, FrameP
             }
 
             // (DEBUG) Show image types
-            for (RenderedImage.ImageType type : frameProcessor.getImageTypes()) {
-                Log.i(Config.TAG, "ImageTypes=" + type);
-            }
+            // for (RenderedImage.ImageType type : frameProcessor.getImageTypes()) {
+            //     Log.i(Config.TAG, "ImageType=" + type);
+            // }
         } else {
             if (thermalBitmap == null) {
                 thermalBitmap = renderedImage.getBitmap();
@@ -522,13 +522,13 @@ public class PreviewActivity extends Activity implements Device.Delegate, FrameP
                 thermalDumpProcessor = new ThermalDumpProcessor(thermalDump);
                 thermalDumpProcessor.autoFilter();
                 thermalDumpProcessor.filterBelow(2731 + 320); // 350
-                Mat processedImage = thermalDumpProcessor.generateThermalImage();
-                Log.i(Config.TAG, "thermalAnalyze preprocess completed");
+                Mat processedImage = thermalDumpProcessor.getGeneratedImage();
+                Log.i(Config.TAG, "thermalAnalyze preprocess finished");
 
                 Log.i(Config.TAG, "thermalAnalyze recognizeContours started");
                 roiDetector = new ROIDetector(processedImage);
                 Mat contourImg = roiDetector.recognizeContours(140); // 40
-                Log.i(Config.TAG, "thermalAnalyze recognizeContours completed");
+                Log.i(Config.TAG, "thermalAnalyze recognizeContours finished");
 
                 Bitmap resultBmp = Bitmap.createBitmap(imageWidth, imageHeight, Bitmap.Config.RGB_565);
                 Utils.matToBitmap(contourImg, resultBmp);
@@ -607,6 +607,23 @@ public class PreviewActivity extends Activity implements Device.Delegate, FrameP
         });
     }
 
+    private void adjustContourContrast(final double ratio) {
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                Log.i(Config.TAG, String.format("Contrast adjustment (ratio=%.2f) started", ratio));
+                Mat processedImage = thermalDumpProcessor.getGeneratedImage(ratio);
+                Log.i(Config.TAG, String.format("Contrast adjustment (ratio=%.2f) finished", ratio));
+
+                Bitmap resultBmp = Bitmap.createBitmap(imageWidth, imageHeight, Bitmap.Config.RGB_565);
+                Utils.matToBitmap(processedImage, resultBmp);
+                updateThermalImageView(resultBmp);
+
+                PreviewActivity.this.runningContourProcessing = false;
+            }
+        }).start();
+    }
+
     private void handleThermalImageTouch(int x, int y) {
         // Set indication spot location
         RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams) layoutTempSpot.getLayoutParams();
@@ -621,7 +638,7 @@ public class PreviewActivity extends Activity implements Device.Delegate, FrameP
         double ratio = (double) imageWidth / thermalImageView.getMeasuredWidth();
         x *= ratio;
         y *= ratio;
-        System.out.printf("Actual touched point: x=%d, y=%d\n", x, y);
+        Log.i(Config.TAG, String.format("Actual touched point: x=%d, y=%d\n", x, y));
         thermalSpotX = AppUtils.trimByRange(x, 1, imageWidth - 1);
         thermalSpotY = AppUtils.trimByRange(y, 1, imageHeight - 1);
 
@@ -629,10 +646,10 @@ public class PreviewActivity extends Activity implements Device.Delegate, FrameP
         if (flirOneDevice != null && !streamingFrame) {
             updateThermalSpotValue();
 
-            if (!runningContourFiltering) {
+            if (!runningContourProcessing) {
                 int contourIndex = roiDetector.getSelectedContourIndex(x, y);
                 if (contourIndex != -1) {
-                    this.runningContourFiltering = true;
+                    this.runningContourProcessing = true;
 
                     if (contourIndex != this.selectedContourIndex) {
                         this.selectedContourIndex = contourIndex;
@@ -642,11 +659,11 @@ public class PreviewActivity extends Activity implements Device.Delegate, FrameP
                         new Thread(new Runnable() {
                             @Override
                             public void run() {
-                                Log.i(Config.TAG, "thermalAnalyze filterByContour & generate image started");
+                                Log.i(Config.TAG, "thermalAnalysis filterByContour & generate image started");
                                 thermalDumpProcessor.filterByContour(contour);
                                 // thermalDumpProcessor.autoFilter();
-                                Mat processedImage = thermalDumpProcessor.generateThermalImage();
-                                Log.i(Config.TAG, "thermalAnalyze filterByContour & generate image completed");
+                                Mat processedImage = thermalDumpProcessor.getGeneratedImage();
+                                Log.i(Config.TAG, "thermalAnalysis filterByContour & generate image finished");
 
                                 ArrayList<MatOfPoint> contours = new ArrayList<>();
                                 contours.add(contour);
@@ -656,12 +673,19 @@ public class PreviewActivity extends Activity implements Device.Delegate, FrameP
                                 Utils.matToBitmap(processedImage, resultBmp);
                                 updateThermalImageView(resultBmp);
 
-                                PreviewActivity.this.runningContourFiltering = false;
+                                PreviewActivity.this.runningContourProcessing = false;
                             }
                         }).start();
-                    } else {
-                        // TODO: contrast enhancement on the contour area
                     }
+                } else {
+                    if (x < imageHeight / 2) {
+                        // Decrease the contrast on the contour area
+                        contrastRatio += 0.05;
+                    } else {
+                        // Enhance the contrast on the contour area
+                        contrastRatio -= 0.05;
+                    }
+                    adjustContourContrast(contrastRatio);
                 }
             }
         }
