@@ -1,7 +1,6 @@
 package tw.cchi.flironedemo1;
 
 import android.app.Activity;
-import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.ColorFilter;
@@ -41,7 +40,6 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.EnumSet;
-import java.util.List;
 import java.util.Locale;
 
 import butterknife.BindView;
@@ -202,24 +200,6 @@ public class PreviewActivity extends Activity implements Device.Delegate, FrameP
         super.onPostCreate(savedInstanceState);
     }
 
-    private void showMessage(final String message) {
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                Toast.makeText(PreviewActivity.this, message, Toast.LENGTH_SHORT).show();
-            }
-        });
-    }
-
-    private void updateThermalImageView(final Bitmap frame) {
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                thermalImageView.setImageBitmap(frame);
-            }
-        });
-    }
-
     public void onDeviceConnected(Device device) {
         Log.i(Config.TAG, "Device connected!");
         runOnUiThread(new Runnable() {
@@ -356,6 +336,14 @@ public class PreviewActivity extends Activity implements Device.Delegate, FrameP
 
     // Frame Processor Delegate method, will be called each time a rendered frame is produced
     public void onFrameProcessed(final RenderedImage renderedImage) {
+        if (imageCaptureRequested) {
+            imageCaptureRequested = false;
+            captureImage(renderedImage);
+
+            // Dump thermal data as well when capturing image
+            thermalDumpRequested = true;
+        }
+
         if (renderedImage.imageType() == RenderedImage.ImageType.ThermalRadiometricKelvinImage) {
             this.imageWidth = renderedImage.width();
             this.imageHeight = renderedImage.height();
@@ -376,62 +364,25 @@ public class PreviewActivity extends Activity implements Device.Delegate, FrameP
                     // red pixel
                     argbPixels[destP] = argbPixels[destP + 1] = argbPixels[destP + 2] = pixValue;
                 }
+
                 final Bitmap demoBitmap = Bitmap.createBitmap(imageWidth, renderedImage.height(), Bitmap.Config.ARGB_8888);
-
                 demoBitmap.copyPixelsFromBuffer(ByteBuffer.wrap(argbPixels));
-
                 updateThermalImageView(demoBitmap);
             }
 
             if (thermalAnalyzeRequested) {
                 thermalAnalyzeRequested = false;
-                flirOneDevice.stopFrameStream();
-                this.streamingFrame = false;
-
-                new Thread(new Runnable() {
-                    @Override
-                    public void run() {
-                        Log.i(Config.TAG, "thermalAnalyze preprocess started");
-                        thermalDump = new RawThermalDump(renderedImage.width(), renderedImage.height(), thermalPixels);
-                        thermalDumpProcessor = new ThermalDumpProcessor(thermalDump);
-                        thermalDumpProcessor.autoFilter();
-                        thermalDumpProcessor.filterBelow(2731 + 320); // 350
-                        Mat processedImage = thermalDumpProcessor.generateThermalImage();
-                        Log.i(Config.TAG, "thermalAnalyze preprocess completed");
-
-                        Log.i(Config.TAG, "thermalAnalyze recognizeContours started");
-                        roiDetector = new ROIDetector(processedImage);
-                        Mat contourImg = roiDetector.recognizeContours(140); // 40
-                        Log.i(Config.TAG, "thermalAnalyze recognizeContours completed");
-
-                        Bitmap resultBmp = Bitmap.createBitmap(imageWidth, imageHeight, Bitmap.Config.RGB_565);
-                        Utils.matToBitmap(contourImg, resultBmp);
-                        updateThermalImageView(resultBmp);
-                    }
-                }).start();
+                performThermalAnalysis(renderedImage);
             }
-
             if (thermalDumpRequested) {
                 thermalDumpRequested = false;
-                new Thread(new Runnable() {
-                    @Override
-                    public void run() {
-                        ThermalAnalyzer thermalAnalyzer = new ThermalAnalyzer(renderedImage);
-                        String filename = "thermal-raw_" + System.currentTimeMillis() + ".dat";
-                        if (thermalAnalyzer.dumpRawThermalFile(filename)) {
-                            showMessage("Dumped: " + filename);
-                        } else {
-                            showMessage("Dumped filed.");
-                        }
-                    }
-                }).start();
+                dumpThermalData(renderedImage);
             }
 
             // (DEBUG) Show image types
             for (RenderedImage.ImageType type : frameProcessor.getImageTypes()) {
                 Log.i(Config.TAG, "ImageTypes=" + type);
             }
-
         } else {
             if (thermalBitmap == null) {
                 thermalBitmap = renderedImage.getBitmap();
@@ -444,52 +395,8 @@ public class PreviewActivity extends Activity implements Device.Delegate, FrameP
             }
             updateThermalImageView(thermalBitmap);
         }
-
-        /*
-        Capture this image if requested.
-        */
-        if (this.imageCaptureRequested) {
-            imageCaptureRequested = false;
-            thermalDumpRequested = true;
-            final Context context = this;
-            new Thread(new Runnable() {
-                public void run() {
-                    String path = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES).toString();
-                    SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd-HH-mm-ssZ", Locale.getDefault());
-                    String formatedDate = sdf.format(new Date());
-                    String fileName = "FLIROne-" + formatedDate + ".jpg";
-                    try {
-                        lastSavedPath = path + "/" + fileName;
-                        renderedImage.getFrame().save(new File(lastSavedPath), RenderedImage.Palette.Iron, RenderedImage.ImageType.BlendedMSXRGBA8888Image);
-
-                        MediaScannerConnection.scanFile(context,
-                                new String[]{path + "/" + fileName}, null,
-                                new MediaScannerConnection.OnScanCompletedListener() {
-                                    @Override
-                                    public void onScanCompleted(String path, Uri uri) {
-                                        Log.i(Config.TAG, "ExternalStorage Scanned " + path + ":");
-                                        Log.i(Config.TAG, "ExternalStorage -> uri=" + uri);
-                                    }
-
-                                });
-
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
-                    runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            thermalImageView.animate().setDuration(50).scaleY(0).withEndAction((new Runnable() {
-                                public void run() {
-                                    thermalImageView.animate().setDuration(50).scaleY(1);
-                                }
-                            }));
-                        }
-                    });
-                }
-            }).start();
-        }
     }
+
 
     public void onTuneClicked(View v) {
         if (flirOneDevice != null) {
@@ -554,11 +461,111 @@ public class PreviewActivity extends Activity implements Device.Delegate, FrameP
         }
     }
 
+
+    private void showToastMessage(final String message) {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                Toast.makeText(PreviewActivity.this, message, Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    private void captureImage(final RenderedImage renderedImage) {
+        new Thread(new Runnable() {
+            public void run() {
+                String path = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES).toString();
+                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd-HH-mm-ssZ", Locale.getDefault());
+                String formatedDate = sdf.format(new Date());
+                String fileName = "FLIROne-" + formatedDate + ".jpg";
+                try {
+                    lastSavedPath = path + "/" + fileName;
+                    renderedImage.getFrame().save(new File(lastSavedPath), RenderedImage.Palette.Iron, RenderedImage.ImageType.BlendedMSXRGBA8888Image);
+
+                    MediaScannerConnection.scanFile(PreviewActivity.this,
+                            new String[]{path + "/" + fileName}, null,
+                            new MediaScannerConnection.OnScanCompletedListener() {
+                                @Override
+                                public void onScanCompleted(String path, Uri uri) {
+                                    Log.i(Config.TAG, "ExternalStorage Scanned " + path + ":");
+                                    Log.i(Config.TAG, "ExternalStorage -> uri=" + uri);
+                                }
+
+                            });
+
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        thermalImageView.animate().setDuration(50).scaleY(0).withEndAction((new Runnable() {
+                            public void run() {
+                                thermalImageView.animate().setDuration(50).scaleY(1);
+                            }
+                        }));
+                    }
+                });
+            }
+        }).start();
+    }
+
+    private void performThermalAnalysis(final RenderedImage renderedImage) {
+        flirOneDevice.stopFrameStream();
+        this.streamingFrame = false;
+
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                Log.i(Config.TAG, "thermalAnalyze preprocess started");
+                thermalDump = new RawThermalDump(renderedImage.width(), renderedImage.height(), thermalPixels);
+                thermalDumpProcessor = new ThermalDumpProcessor(thermalDump);
+                thermalDumpProcessor.autoFilter();
+                thermalDumpProcessor.filterBelow(2731 + 320); // 350
+                Mat processedImage = thermalDumpProcessor.generateThermalImage();
+                Log.i(Config.TAG, "thermalAnalyze preprocess completed");
+
+                Log.i(Config.TAG, "thermalAnalyze recognizeContours started");
+                roiDetector = new ROIDetector(processedImage);
+                Mat contourImg = roiDetector.recognizeContours(140); // 40
+                Log.i(Config.TAG, "thermalAnalyze recognizeContours completed");
+
+                Bitmap resultBmp = Bitmap.createBitmap(imageWidth, imageHeight, Bitmap.Config.RGB_565);
+                Utils.matToBitmap(contourImg, resultBmp);
+                updateThermalImageView(resultBmp);
+            }
+        }).start();
+    }
+
+    private void dumpThermalData(final RenderedImage renderedImage) {
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                ThermalAnalyzer thermalAnalyzer = new ThermalAnalyzer(renderedImage);
+                String filename = "thermal-raw_" + System.currentTimeMillis() + ".dat";
+                if (thermalAnalyzer.dumpRawThermalFile(filename)) {
+                    showToastMessage("Dumped: " + filename);
+                } else {
+                    showToastMessage("Dumped filed.");
+                }
+            }
+        }).start();
+    }
+
     private void resetAnalytics() {
         if (flirOneDevice != null && !streamingFrame) {
             flirOneDevice.startFrameStream(PreviewActivity.this);
             streamingFrame = true;
         }
+    }
+
+    private void updateThermalImageView(final Bitmap frame) {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                thermalImageView.setImageBitmap(frame);
+            }
+        });
     }
 
     private void updateThermalSpotValue() {

@@ -30,13 +30,11 @@ public class ROIDetector {
     public Mat recognizeContours(int threshold) {
         Mat dst = new Mat(src.size(), CV_8U, new Scalar(0));
         threshold(src, dst, threshold, 255, THRESH_BINARY);
-
-        // Dilate
         dilate(dst, dst, new Mat());
 
-        // Find contours
         contours = new ArrayList<>();
         findContours(dst, contours, new Mat(), RETR_EXTERNAL, CHAIN_APPROX_NONE);
+
         // Draw
         // Mat result = new Mat(dst.size(), CV_8U, new Scalar(0));
         Mat result = src.clone();
