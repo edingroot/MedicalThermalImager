@@ -3,9 +3,14 @@ package tw.cchi.flironedemo1.thermalproc;
 import org.opencv.android.OpenCVLoader;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
+import org.opencv.core.MatOfPoint;
+import org.opencv.core.MatOfPoint2f;
+import org.opencv.core.Point;
+
+import static org.opencv.imgproc.Imgproc.pointPolygonTest;
 
 public class ThermalDumpProcessor {
-    public int thermalHistMin = 0;
+    public int thermalHistMin = 0; // thermalValue10 = 0 ignored
     public int thermalHistMax = 0;
 
     private final static int MAX_ALLOWED = 2731 + 1200; // 120 deg Celsius
@@ -15,7 +20,7 @@ public class ThermalDumpProcessor {
     private int height = 0;
     private int pixelCount = 0;
     private int[] thermalValues10; // 0.1K = 1 (different from RawThermalDump)
-    private int[] thermalHist = new int[MAX_ALLOWED];
+    private int[] thermalHist;
     private short[] thermalLUT; // thermalLUT[tempK] = grayLevel (0~255)
 
 
@@ -25,22 +30,24 @@ public class ThermalDumpProcessor {
         this.width = thermalDump.width;
         this.height = thermalDump.height;
         this.pixelCount = thermalDump.thermalValues.length;
-        thermalValues10 = new int[pixelCount];
+        this.thermalValues10 = new int[pixelCount];
 
-        // Load thermalValues10 & Calculate thermalHist
+        // Load thermalValues10 & Calculate thermalHist (same as this.updateThermalHist())
+        thermalHist = new int[MAX_ALLOWED];
         thermalHistMin = pixelCount;
         thermalHistMax = 0;
         for (int i = 0; i < pixelCount; i++) {
             thermalValues10[i] = thermalDump.thermalValues[i] / 10;
+
             thermalHist[thermalValues10[i]]++;
-            if (thermalValues10[i] < thermalHistMin)
+            if (thermalValues10[i] != 0 && thermalValues10[i] < thermalHistMin)
                 thermalHistMin = thermalValues10[i];
             if (thermalValues10[i] > thermalHistMax)
                 thermalHistMax = thermalValues10[i];
         }
     }
 
-    // Would be lossy compared to the original thermalDump input (due to the thermalValues10 conversion)
+    // Would be lossy compared to the original thermalDump input (due to thermalValues10 conversion)
     public RawThermalDump getThermalDump() {
         int[] thermalValues = new int[pixelCount];
         for (int i = 0; i < pixelCount; i++) {
@@ -128,7 +135,19 @@ public class ThermalDumpProcessor {
         }
     }
 
-    public Mat generateThermalImage() {
+    public void filterByContour(MatOfPoint contour) {
+        MatOfPoint2f contour2f = new MatOfPoint2f(contour.toArray());
+        for (int row = 0; row < height; row++) {
+            for (int col = 0; col < width; col++) {
+                if (-1 == pointPolygonTest(contour2f, new Point(col, row), false)) {
+                    thermalValues10[col + row * width] = 0;
+                }
+            }
+        }
+        updateThermalHist();
+    }
+
+    public synchronized Mat generateThermalImage() {
         Mat img = new Mat(height, width, CvType.CV_8U);
 
         System.out.printf("generateThermalImage, min=%d, max=%d\n", thermalHistMin, thermalHistMax);
@@ -144,11 +163,27 @@ public class ThermalDumpProcessor {
 
         for (int row = 0; row < height; row++) {
             for (int col = 0; col < width; col++) {
-                img.put(row, col, thermalLUT[thermalValues10[col + row * width]]);
+                if (thermalValues10[col + row * width] == 0)
+                    img.put(row, col, 0);
+                else
+                    img.put(row, col, thermalLUT[thermalValues10[col + row * width]]);
             }
         }
 
         return img;
+    }
+
+    private void updateThermalHist() {
+        thermalHist = new int[MAX_ALLOWED];
+        thermalHistMin = pixelCount;
+        thermalHistMax = 0;
+        for (int i = 0; i < pixelCount; i++) {
+            thermalHist[thermalValues10[i]]++;
+            if (thermalValues10[i] != 0 && thermalValues10[i] < thermalHistMin)
+                thermalHistMin = thermalValues10[i];
+            if (thermalValues10[i] > thermalHistMax)
+                thermalHistMax = thermalValues10[i];
+        }
     }
 
 }
