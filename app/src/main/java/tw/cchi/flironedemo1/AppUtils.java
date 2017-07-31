@@ -6,8 +6,8 @@ import java.io.File;
 
 public class AppUtils {
 
-    public static String getExternalStorageDir() {
-        File dir = new File(Environment.getExternalStorageDirectory().getAbsolutePath() + "/flirEx1/rawtemp");
+    public static String getExportsDir() {
+        File dir = new File(Environment.getExternalStorageDirectory().getAbsolutePath() + "/flirEx1");
         dir.mkdirs();
         return dir.getAbsolutePath();
     }

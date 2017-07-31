@@ -34,6 +34,8 @@ import org.opencv.core.MatOfPoint;
 import org.opencv.core.Scalar;
 
 import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
@@ -61,7 +63,6 @@ public class PreviewActivity extends Activity implements Device.Delegate, FrameP
     private OrientationEventListener orientationEventListener;
     private volatile Device flirOneDevice;
     private FrameProcessor frameProcessor;
-    private String lastSavedPath;
     private Device.TuningState currentTuningState = Device.TuningState.Unknown;
     private ColorFilter originalChargingIndicatorColor = null;
 
@@ -69,7 +70,7 @@ public class PreviewActivity extends Activity implements Device.Delegate, FrameP
     private volatile ROIDetector roiDetector;
     private ThermalDumpProcessor thermalDumpProcessor;
     private RawThermalDump thermalDump;
-    private Bitmap thermalBitmap = null;
+    private volatile Bitmap thermalBitmap = null;
     private volatile int selectedContourIndex = -1;
     private volatile double contrastRatio = 1;
 
@@ -474,24 +475,50 @@ public class PreviewActivity extends Activity implements Device.Delegate, FrameP
     private void captureImage(final RenderedImage renderedImage) {
         new Thread(new Runnable() {
             public void run() {
-                String path = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES).toString();
+                // String path = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES).toString();
+                String path = AppUtils.getExportsDir();
                 SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd-HH-mm-ssZ", Locale.getDefault());
-                String formatedDate = sdf.format(new Date());
-                String fileName = "FLIROne-" + formatedDate + ".jpg";
+                String[] filenames = {sdf.format(new Date()) + "_thermalImage.jpg", sdf.format(new Date()) + "_processedImage.jpg"};
                 try {
-                    lastSavedPath = path + "/" + fileName;
-                    renderedImage.getFrame().save(new File(lastSavedPath), RenderedImage.Palette.Iron, RenderedImage.ImageType.BlendedMSXRGBA8888Image);
+                    // Save the original thermal image
+                    renderedImage.getFrame().save(new File(path + "/" + filenames[0]), RenderedImage.Palette.Iron, RenderedImage.ImageType.BlendedMSXRGBA8888Image);
 
-                    MediaScannerConnection.scanFile(PreviewActivity.this,
-                            new String[]{path + "/" + fileName}, null,
-                            new MediaScannerConnection.OnScanCompletedListener() {
-                                @Override
-                                public void onScanCompleted(String path, Uri uri) {
-                                    Log.i(Config.TAG, "ExternalStorage Scanned " + path + ":");
-                                    Log.i(Config.TAG, "ExternalStorage -> uri=" + uri);
+                    // Save the processed thermal image
+                    if (thermalBitmap != null) {
+                        FileOutputStream out = null;
+                        try {
+                            out = new FileOutputStream(path + "/" + filenames[1]);
+                            // PNG is a lossless format, the compression factor (100) is ignored
+                            Mat img = thermalDumpProcessor.getGeneratedImage();
+                            Bitmap bmp = Bitmap.createBitmap(imageWidth, imageHeight, Bitmap.Config.RGB_565);
+                            Utils.matToBitmap(img, bmp);
+                            bmp.compress(Bitmap.CompressFormat.PNG, 100, out);
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        } finally {
+                            try {
+                                if (out != null) {
+                                    out.close();
                                 }
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
+                        }
+                    }
 
-                            });
+                    // Call the system media scanner
+                    for (int i = 0; i < filenames.length; i++) {
+                        MediaScannerConnection.scanFile(PreviewActivity.this,
+                                new String[]{path + "/" + filenames[i]}, null,
+                                new MediaScannerConnection.OnScanCompletedListener() {
+                                    @Override
+                                    public void onScanCompleted(String path, Uri uri) {
+                                        Log.i(Config.TAG, "ExternalStorage Scanned " + path + ":");
+                                        Log.i(Config.TAG, "ExternalStorage -> uri=" + uri);
+                                    }
+
+                                });
+                    }
 
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -506,6 +533,21 @@ public class PreviewActivity extends Activity implements Device.Delegate, FrameP
                         }));
                     }
                 });
+            }
+        }).start();
+    }
+
+    private void dumpThermalData(final RenderedImage renderedImage) {
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                ThermalAnalyzer thermalAnalyzer = new ThermalAnalyzer(renderedImage);
+                String filename = "thermal-raw_" + System.currentTimeMillis() + ".dat";
+                if (thermalAnalyzer.dumpRawThermalFile(filename)) {
+                    showToastMessage("Dumped: " + filename);
+                } else {
+                    showToastMessage("Dumped filed.");
+                }
             }
         }).start();
     }
@@ -537,21 +579,6 @@ public class PreviewActivity extends Activity implements Device.Delegate, FrameP
         }).start();
     }
 
-    private void dumpThermalData(final RenderedImage renderedImage) {
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                ThermalAnalyzer thermalAnalyzer = new ThermalAnalyzer(renderedImage);
-                String filename = "thermal-raw_" + System.currentTimeMillis() + ".dat";
-                if (thermalAnalyzer.dumpRawThermalFile(filename)) {
-                    showToastMessage("Dumped: " + filename);
-                } else {
-                    showToastMessage("Dumped filed.");
-                }
-            }
-        }).start();
-    }
-
     private void resetAnalytics() {
         if (flirOneDevice != null && !streamingFrame) {
             flirOneDevice.startFrameStream(PreviewActivity.this);
@@ -560,6 +587,7 @@ public class PreviewActivity extends Activity implements Device.Delegate, FrameP
     }
 
     private void updateThermalImageView(final Bitmap frame) {
+        thermalBitmap = frame;
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
@@ -667,8 +695,6 @@ public class PreviewActivity extends Activity implements Device.Delegate, FrameP
                             updateThermalImageView(resultBmp);
 
                             runningContourProcessing = false;
-                            Log.i(Config.TAG, "thermalAnalysis runningContourProcessing=" + PreviewActivity.this.runningContourProcessing);
-                            Log.i(Config.TAG, "thermalAnalysis runningContourProcessing=" + runningContourProcessing);
                         }
                     }).start();
                 }

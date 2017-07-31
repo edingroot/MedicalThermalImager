@@ -167,6 +167,7 @@ public class ThermalDumpProcessor {
             generateThermalImage();
         }
         Mat result = generatedImage.clone();
+        // convertTo: last 2 params are the alpha and beta values
         generatedImage.convertTo(result, -1, contrastRatio, 0);
         return result;
     }
