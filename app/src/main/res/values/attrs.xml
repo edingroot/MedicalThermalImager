@@ -23,6 +23,7 @@
     <declare-styleable name="StartPointSeekBar">
         <attr name="minValue" format="float"/>
         <attr name="maxValue" format="float"/>
+        <attr name="progress" format="float"/>
         <attr name="thumbDrawable" format="reference"></attr>
         <attr name="thumbPressedDrawable" format="reference"></attr>
         <attr name="defaultBackgroundColor" format="color"></attr>

@@ -54,8 +54,7 @@ public class StartPointSeekBar extends View {
      *
      */
     public interface OnSeekBarChangeListener {
-        void onOnSeekBarValueChange(StartPointSeekBar bar,
-                                    double value);
+        void onOnSeekBarValueChange(StartPointSeekBar bar, double value);
     }
 
     /**
@@ -64,8 +63,7 @@ public class StartPointSeekBar extends View {
      *
      * @param listener The listener to notify about changed selected values.
      */
-    public void setOnSeekBarChangeListener(
-            OnSeekBarChangeListener listener) {
+    public void setOnSeekBarChangeListener(OnSeekBarChangeListener listener) {
         this.listener = listener;
     }
 
@@ -112,6 +110,7 @@ public class StartPointSeekBar extends View {
 
         this.absoluteMinValue = a.getFloat(R.styleable.StartPointSeekBar_minValue, DEFAULT_MIN_VALUE);
         this.absoluteMaxValue = a.getFloat(R.styleable.StartPointSeekBar_maxValue, DEFAULT_MAX_VALUE);
+        this.setProgress(a.getFloat(R.styleable.StartPointSeekBar_progress, 0));
 
         this.defaultBackgroundColor = a.getColor(R.styleable.StartPointSeekBar_defaultBackgroundColor,
                 DEFAULT_BACKGROUND_COLOR);
