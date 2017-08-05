@@ -90,6 +90,8 @@ public class PreviewActivity extends Activity implements Device.Delegate, FrameP
     @BindView(R.id.layoutTempSpot) RelativeLayout layoutTempSpot;
     @BindView(R.id.spotMeterValue) TextView spotMeterValue;
 
+    @BindView(R.id.secondaryControlsContainer) View secondaryControlsContainer;
+
     ScaleGestureDetector mScaleDetector;
 
     @Override

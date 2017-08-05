@@ -12,4 +12,7 @@
     <string name="txtTuning">Tuning...</string>
     <string name="dumpThermalRaw">Dump</string>
 
+    <!-- Secondary Controls Panel -->
+    <string name="contrast">Contrast</string>
+
 </resources>

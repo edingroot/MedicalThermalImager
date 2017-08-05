@@ -1,9 +1,14 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools" android:layout_width="match_parent"
-    android:layout_height="match_parent" android:background="@android:color/background_dark"
-    android:orientation="vertical"
-    tools:context=".PreviewActivity" android:keepScreenOn="true" android:id="@+id/topView"
-    android:touchscreenBlocksFocus="false">
+                xmlns:tools="http://schemas.android.com/tools"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                xmlns:custom="http://schemas.android.com/apk/res-auto"
+                android:background="@android:color/background_dark"
+                android:orientation="vertical"
+                tools:context=".PreviewActivity"
+                android:keepScreenOn="true"
+                android:id="@+id/topView"
+                android:touchscreenBlocksFocus="false">
 
     <!-- This FrameLayout insets its children based on system windows using
          android:fitsSystemWindows. -->
@@ -21,6 +26,7 @@
     <FrameLayout android:layout_width="match_parent" android:layout_height="match_parent"
         android:fitsSystemWindows="true"
         android:id="@+id/fullscreen_content">
+
         <LinearLayout
             android:id="@+id/fullscreen_content_controls_top" style="@android:style/ButtonBar"
             android:layout_width="match_parent"
@@ -28,6 +34,7 @@
             android:layout_gravity="top|center_horizontal" android:orientation="horizontal"
             tools:ignore="UselessParent"
             android:background="@color/black_overlay">
+
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -91,6 +98,7 @@
 
 
         </LinearLayout>
+
         <FrameLayout android:id="@+id/fullscreen_content_controls" style="?metaButtonBarStyle"
             android:layout_width="match_parent" android:layout_height="wrap_content"
             android:layout_gravity="bottom|center_horizontal"
@@ -144,6 +152,52 @@
                 android:layout_gravity="bottom|end" />
 
         </FrameLayout>
+
+        <LinearLayout
+            android:id="@+id/secondaryControlsContainer"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal|bottom"
+            android:layout_marginBottom="50dp"
+            android:baselineAligned="false"
+            android:focusableInTouchMode="false"
+            android:orientation="vertical"
+            android:visibility="visible">
+
+            <!-- TODO -->
+            <TableLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="5dp">
+
+                <TableRow
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content">
+
+                    <TextView
+                        android:id="@+id/textView"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center_vertical"
+                        android:layout_marginEnd="12dp"
+                        android:text="@string/contrast"
+                        android:textSize="18sp"/>
+
+                    <com.vashisthg.startpointseekbar.StartPointSeekBar
+                        android:id="@+id/seek_bar"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        custom:minValue="-1.0"
+                        custom:maxValue="+1.0"/>
+
+
+                </TableRow>
+
+            </TableLayout>
+
+
+        </LinearLayout>
 
         <ProgressBar
             style="?android:attr/progressBarStyle"
