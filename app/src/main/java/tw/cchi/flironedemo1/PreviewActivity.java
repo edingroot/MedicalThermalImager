@@ -55,6 +55,7 @@ import static org.opencv.imgproc.Imgproc.drawContours;
 
 public class PreviewActivity extends Activity implements Device.Delegate, FrameProcessor.Delegate, Device.StreamDelegate, Device.PowerUpdateDelegate {
     private volatile boolean streamingFrame = false;
+    private volatile boolean runningThermalAnalysis = false;
     private volatile boolean runningContourProcessing = false;
     private volatile boolean imageCaptureRequested = false;
     private volatile boolean thermalAnalyzeRequested = false;
@@ -73,6 +74,7 @@ public class PreviewActivity extends Activity implements Device.Delegate, FrameP
     private volatile Bitmap thermalBitmap = null;
     private volatile int selectedContourIndex = -1;
     private volatile double contrastRatio = 1;
+    private volatile Thread contourProcessingThread = null;
 
     private int deviceRotation = 0;
     private int imageWidth = 0;
@@ -373,7 +375,15 @@ public class PreviewActivity extends Activity implements Device.Delegate, FrameP
 
             if (thermalAnalyzeRequested) {
                 thermalAnalyzeRequested = false;
-                performThermalAnalysis(renderedImage);
+                if (runningThermalAnalysis) {
+                    // Terminate the previous unfinished thermal analysis thread
+                    if (runningContourProcessing) {
+                        runningContourProcessing = false;
+                        contourProcessingThread.stop();
+                    }
+                } else {
+                    performThermalAnalysis(renderedImage);
+                }
             }
             if (thermalDumpRequested) {
                 thermalDumpRequested = false;
@@ -556,7 +566,7 @@ public class PreviewActivity extends Activity implements Device.Delegate, FrameP
         flirOneDevice.stopFrameStream();
         this.streamingFrame = false;
 
-        new Thread(new Runnable() {
+        contourProcessingThread = new Thread(new Runnable() {
             @Override
             public void run() {
                 Log.i(Config.TAG, "thermalAnalyze preprocess started");
@@ -570,13 +580,15 @@ public class PreviewActivity extends Activity implements Device.Delegate, FrameP
                 Log.i(Config.TAG, "thermalAnalyze recognizeContours started");
                 roiDetector = new ROIDetector(processedImage);
                 Mat contourImg = roiDetector.recognizeContours(140); // 40
+                selectedContourIndex = -1;
                 Log.i(Config.TAG, "thermalAnalyze recognizeContours finished");
 
                 Bitmap resultBmp = Bitmap.createBitmap(imageWidth, imageHeight, Bitmap.Config.RGB_565);
                 Utils.matToBitmap(contourImg, resultBmp);
                 updateThermalImageView(resultBmp);
             }
-        }).start();
+        });
+        contourProcessingThread.start();
     }
 
     private void resetAnalytics() {
@@ -692,9 +704,11 @@ public class PreviewActivity extends Activity implements Device.Delegate, FrameP
 
                             Bitmap resultBmp = Bitmap.createBitmap(imageWidth, imageHeight, Bitmap.Config.RGB_565);
                             Utils.matToBitmap(processedImage, resultBmp);
-                            updateThermalImageView(resultBmp);
-
-                            runningContourProcessing = false;
+                            // Check if task is stopped by main program
+                            if (runningContourProcessing) {
+                                updateThermalImageView(resultBmp);
+                                runningContourProcessing = false;
+                            }
                         }
                     }).start();
                 }
