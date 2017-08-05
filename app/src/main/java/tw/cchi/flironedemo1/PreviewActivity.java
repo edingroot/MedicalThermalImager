@@ -8,7 +8,6 @@ import android.graphics.PorterDuff;
 import android.media.MediaScannerConnection;
 import android.net.Uri;
 import android.os.Bundle;
-import android.os.Environment;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.OrientationEventListener;
@@ -26,6 +25,7 @@ import com.flir.flironesdk.Frame;
 import com.flir.flironesdk.FrameProcessor;
 import com.flir.flironesdk.RenderedImage;
 import com.flir.flironesdk.SimulatedDevice;
+import com.vashisthg.startpointseekbar.StartPointSeekBar;
 
 import org.opencv.android.OpenCVLoader;
 import org.opencv.android.Utils;
@@ -67,6 +67,7 @@ public class PreviewActivity extends Activity implements Device.Delegate, FrameP
     private Device.TuningState currentTuningState = Device.TuningState.Unknown;
     private ColorFilter originalChargingIndicatorColor = null;
 
+    // Related to thermal analysis
     private volatile int[] thermalPixels = null;
     private volatile ROIDetector roiDetector;
     private ThermalDumpProcessor thermalDumpProcessor;
@@ -93,6 +94,7 @@ public class PreviewActivity extends Activity implements Device.Delegate, FrameP
     @BindView(R.id.batteryChargeIndicator) ImageView batteryChargeIndicator;
 
     @BindView(R.id.secondaryControlsContainer) View secondaryControlsContainer;
+    @BindView(R.id.contrastSeekBar) StartPointSeekBar contrastSeekBar;
 
     ScaleGestureDetector mScaleDetector;
 
@@ -110,7 +112,7 @@ public class PreviewActivity extends Activity implements Device.Delegate, FrameP
         /* contentView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                resetAnalytics();
+                resetAnalysis();
             }
         }); */
 
@@ -147,6 +149,13 @@ public class PreviewActivity extends Activity implements Device.Delegate, FrameP
 
                 // Consume the event, which onClick event will not triggered
                 return true;
+            }
+        });
+
+        contrastSeekBar.setOnSeekBarChangeListener(new StartPointSeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onOnSeekBarValueChange(StartPointSeekBar bar, double value) {
+                PreviewActivity.this.onContrastSeekBarChanged(bar, value);
             }
         });
 
@@ -220,7 +229,7 @@ public class PreviewActivity extends Activity implements Device.Delegate, FrameP
         flirOneDevice = device;
         flirOneDevice.setPowerUpdateDelegate(this);
         flirOneDevice.startFrameStream(this);
-        this.streamingFrame = true;
+        streamingFrame = true;
 
         orientationEventListener.enable();
     }
@@ -230,7 +239,9 @@ public class PreviewActivity extends Activity implements Device.Delegate, FrameP
      */
     public void onDeviceDisconnected(Device device) {
         Log.i(Config.TAG, "Device disconnected!");
-        this.streamingFrame = false;
+        streamingFrame = false;
+        flirOneDevice = null;
+        orientationEventListener.disable();
 
         runOnUiThread(new Runnable() {
             @Override
@@ -248,8 +259,6 @@ public class PreviewActivity extends Activity implements Device.Delegate, FrameP
                 findViewById(R.id.connect_sim_button).setEnabled(true);
             }
         });
-        flirOneDevice = null;
-        orientationEventListener.disable();
     }
 
     /**
@@ -434,7 +443,7 @@ public class PreviewActivity extends Activity implements Device.Delegate, FrameP
             if (streamingFrame) {
                 this.thermalAnalyzeRequested = true;
             } else {
-                resetAnalytics();
+                resetAnalysis();
             }
         }
     }
@@ -471,7 +480,8 @@ public class PreviewActivity extends Activity implements Device.Delegate, FrameP
             showingTopControls = false;
         } else {
             topControlsView.setVisibility(View.VISIBLE);
-            if (streamingFrame)
+            // Check if device is connected & on thermal analysis result preview mode
+            if (flirOneDevice != null && thermalDumpProcessor != null)
                 secondaryControlsContainer.setVisibility(View.VISIBLE);
             showingTopControls = true;
         }
@@ -481,6 +491,11 @@ public class PreviewActivity extends Activity implements Device.Delegate, FrameP
         if (flirOneDevice != null && streamingFrame && !thermalDumpRequested) {
             this.thermalDumpRequested = true;
         }
+    }
+
+    public void onContrastSeekBarChanged(StartPointSeekBar bar, double value) {
+        this.contrastRatio = value;
+        adjustContourContrast(contrastRatio);
     }
 
 
@@ -602,10 +617,12 @@ public class PreviewActivity extends Activity implements Device.Delegate, FrameP
         contourProcessingThread.start();
     }
 
-    private void resetAnalytics() {
+    private void resetAnalysis() {
         if (flirOneDevice != null && !streamingFrame) {
             flirOneDevice.startFrameStream(PreviewActivity.this);
             streamingFrame = true;
+            thermalDump = null;
+            thermalDumpProcessor = null;
         }
     }
 
@@ -692,6 +709,7 @@ public class PreviewActivity extends Activity implements Device.Delegate, FrameP
         // If is in thermal analysis result preview mode and the previous analysis is finished, handle selection.
         if (flirOneDevice != null && !streamingFrame && !runningContourProcessing) {
             int contourIndex = roiDetector.getSelectedContourIndex(imgX, imgY);
+            // If there is a contour selected
             if (contourIndex != -1) {
                 if (contourIndex != this.selectedContourIndex) {
                     this.runningContourProcessing = true;
@@ -723,15 +741,6 @@ public class PreviewActivity extends Activity implements Device.Delegate, FrameP
                         }
                     }).start();
                 }
-            } else {
-                if (imgX < imageHeight / 2) {
-                    // Decrease the contrast on the contour area
-                    contrastRatio -= 0.01;
-                } else {
-                    // Enhance the contrast on the contour area
-                    contrastRatio += 0.01;
-                }
-                adjustContourContrast(contrastRatio);
             }
         }
 

@@ -184,14 +184,13 @@
                         android:textSize="18sp"/>
 
                     <com.vashisthg.startpointseekbar.StartPointSeekBar
-                        android:id="@+id/seek_bar"
+                        android:id="@+id/contrastSeekBar"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        custom:maxValue="+1.0"
-                        custom:minValue="-1.0"
-                        custom:progress="0"/>
-
+                        custom:minValue="0.0"
+                        custom:maxValue="2.0"
+                        custom:progress="1.0"/>
 
                 </TableRow>
 
