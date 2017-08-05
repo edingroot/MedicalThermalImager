@@ -89,6 +89,8 @@ public class PreviewActivity extends Activity implements Device.Delegate, FrameP
     @BindView(R.id.imageView) ImageView thermalImageView;
     @BindView(R.id.layoutTempSpot) RelativeLayout layoutTempSpot;
     @BindView(R.id.spotMeterValue) TextView spotMeterValue;
+    @BindView(R.id.batteryLevelTextView) TextView batteryLevelTextView;
+    @BindView(R.id.batteryChargeIndicator) ImageView batteryChargeIndicator;
 
     @BindView(R.id.secondaryControlsContainer) View secondaryControlsContainer;
 
@@ -230,16 +232,17 @@ public class PreviewActivity extends Activity implements Device.Delegate, FrameP
         Log.i(Config.TAG, "Device disconnected!");
         this.streamingFrame = false;
 
-        final TextView levelTextView = (TextView) findViewById(R.id.batteryLevelTextView);
-        final ImageView chargingIndicator = (ImageView) findViewById(R.id.batteryChargeIndicator);
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                findViewById(R.id.pleaseConnect).setVisibility(View.GONE);
+                findViewById(R.id.pleaseConnect).setVisibility(View.VISIBLE);
                 thermalImageView.setImageBitmap(Bitmap.createBitmap(1, 1, Bitmap.Config.ALPHA_8));
-                levelTextView.setText("--");
-                chargingIndicator.setVisibility(View.GONE);
+                batteryLevelTextView.setText("--");
+                batteryChargeIndicator.setVisibility(View.GONE);
+                spotMeterValue.setText("");
                 thermalImageView.clearColorFilter();
+                thermalImageView.setImageResource(0);
+//                thermalImageView.setImageResource(android.R.color.transparent);
                 findViewById(R.id.tuningProgressBar).setVisibility(View.GONE);
                 findViewById(R.id.tuningTextView).setVisibility(View.GONE);
                 findViewById(R.id.connect_sim_button).setEnabled(true);
@@ -334,13 +337,16 @@ public class PreviewActivity extends Activity implements Device.Delegate, FrameP
 
     // StreamDelegate method
     public void onFrameReceived(Frame frame) {
-        if (currentTuningState != Device.TuningState.InProgress) {
+        if (currentTuningState != Device.TuningState.InProgress && streamingFrame) {
             frameProcessor.processFrame(frame);
         }
     }
 
     // Frame Processor Delegate method, will be called each time a rendered frame is produced
     public void onFrameProcessed(final RenderedImage renderedImage) {
+        if (!streamingFrame)
+            return;
+
         if (imageCaptureRequested) {
             imageCaptureRequested = false;
             captureImage(renderedImage);
@@ -461,9 +467,12 @@ public class PreviewActivity extends Activity implements Device.Delegate, FrameP
     public void onToggleMoreInfoClicked(View v) {
         if (showingTopControls) {
             topControlsView.setVisibility(View.INVISIBLE);
+            secondaryControlsContainer.setVisibility(View.GONE);
             showingTopControls = false;
         } else {
             topControlsView.setVisibility(View.VISIBLE);
+            if (streamingFrame)
+                secondaryControlsContainer.setVisibility(View.VISIBLE);
             showingTopControls = true;
         }
     }

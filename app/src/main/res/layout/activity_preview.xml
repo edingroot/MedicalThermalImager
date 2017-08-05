@@ -162,7 +162,7 @@
             android:baselineAligned="false"
             android:focusableInTouchMode="false"
             android:orientation="vertical"
-            android:visibility="visible">
+            android:visibility="gone">
 
             <!-- TODO -->
             <TableLayout
@@ -188,9 +188,9 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        custom:minValue="-1.0"
                         custom:maxValue="+1.0"
-                        custom:progress="0" />
+                        custom:minValue="-1.0"
+                        custom:progress="0"/>
 
 
                 </TableRow>
