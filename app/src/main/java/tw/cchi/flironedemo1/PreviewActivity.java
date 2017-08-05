@@ -82,12 +82,13 @@ public class PreviewActivity extends Activity implements Device.Delegate, FrameP
     private int imageHeight = 0;
     private int thermalSpotX = -1;
     private int thermalSpotY = -1;
-    private boolean showingTopControls = true;
+    private boolean showingMoreInfo = true;
 
     @BindView(R.id.fullscreen_content_controls_top) View topControlsView;
     @BindView(R.id.fullscreen_content_controls) View bottomControlsView;
     @BindView(R.id.fullscreen_content) View contentView;
     @BindView(R.id.imageView) ImageView thermalImageView;
+    @BindView(R.id.pleaseConnect) TextView pleaseConnect;
     @BindView(R.id.layoutTempSpot) RelativeLayout layoutTempSpot;
     @BindView(R.id.spotMeterValue) TextView spotMeterValue;
     @BindView(R.id.batteryLevelTextView) TextView batteryLevelTextView;
@@ -222,7 +223,7 @@ public class PreviewActivity extends Activity implements Device.Delegate, FrameP
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                findViewById(R.id.pleaseConnect).setVisibility(View.GONE);
+                pleaseConnect.setVisibility(View.GONE);
             }
         });
 
@@ -252,8 +253,7 @@ public class PreviewActivity extends Activity implements Device.Delegate, FrameP
                 batteryChargeIndicator.setVisibility(View.GONE);
                 spotMeterValue.setText("");
                 thermalImageView.clearColorFilter();
-                thermalImageView.setImageResource(0);
-//                thermalImageView.setImageResource(android.R.color.transparent);
+                thermalImageView.setImageResource(android.R.color.transparent);
                 findViewById(R.id.tuningProgressBar).setVisibility(View.GONE);
                 findViewById(R.id.tuningTextView).setVisibility(View.GONE);
                 findViewById(R.id.connect_sim_button).setEnabled(true);
@@ -474,16 +474,16 @@ public class PreviewActivity extends Activity implements Device.Delegate, FrameP
     }
 
     public void onToggleMoreInfoClicked(View v) {
-        if (showingTopControls) {
+        if (showingMoreInfo) {
             topControlsView.setVisibility(View.INVISIBLE);
             secondaryControlsContainer.setVisibility(View.GONE);
-            showingTopControls = false;
+            showingMoreInfo = false;
         } else {
             topControlsView.setVisibility(View.VISIBLE);
             // Check if device is connected & on thermal analysis result preview mode
             if (flirOneDevice != null && thermalDumpProcessor != null)
                 secondaryControlsContainer.setVisibility(View.VISIBLE);
-            showingTopControls = true;
+            showingMoreInfo = true;
         }
     }
 
@@ -612,6 +612,15 @@ public class PreviewActivity extends Activity implements Device.Delegate, FrameP
                 Bitmap resultBmp = Bitmap.createBitmap(imageWidth, imageHeight, Bitmap.Config.RGB_565);
                 Utils.matToBitmap(contourImg, resultBmp);
                 updateThermalImageView(resultBmp);
+
+                if (showingMoreInfo) {
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            secondaryControlsContainer.setVisibility(View.VISIBLE);
+                        }
+                    });
+                }
             }
         });
         contourProcessingThread.start();
@@ -685,6 +694,11 @@ public class PreviewActivity extends Activity implements Device.Delegate, FrameP
                 Log.i(Config.TAG, String.format("Contrast adjustment (ratio=%.2f) started", ratio));
                 Mat processedImage = thermalDumpProcessor.getGeneratedImage(ratio);
                 Log.i(Config.TAG, String.format("Contrast adjustment (ratio=%.2f) finished", ratio));
+
+                // TODO: draw contours
+                if (roiDetector != null && roiDetector.getContours() != null) {
+                    drawContours(processedImage, roiDetector.getContours(), -1, new Scalar(255), 1);
+                }
 
                 Bitmap resultBmp = Bitmap.createBitmap(imageWidth, imageHeight, Bitmap.Config.RGB_565);
                 Utils.matToBitmap(processedImage, resultBmp);
