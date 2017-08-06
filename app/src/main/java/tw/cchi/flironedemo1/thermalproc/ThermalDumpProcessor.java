@@ -151,18 +151,18 @@ public class ThermalDumpProcessor {
         generatedImage = null;
     }
 
-    public Mat getGeneratedImage() {
+    public Mat getImage() {
         if (generatedImage == null) {
             generateThermalImage();
         }
-        return generatedImage;
+        return generatedImage.clone();
     }
 
     /**
      * Get generated image with contrast adjusted with contrastRatio
      * @param contrastRatio Enhance contrast if > 1 and vise versa.
      */
-    public Mat getGeneratedImage(double contrastRatio) {
+    public Mat getImage(double contrastRatio) {
         if (generatedImage == null) {
             generateThermalImage();
         }

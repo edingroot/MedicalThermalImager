@@ -162,9 +162,8 @@
             android:baselineAligned="false"
             android:focusableInTouchMode="false"
             android:orientation="vertical"
-            android:visibility="gone">
+            android:visibility="visible">
 
-            <!-- TODO -->
             <TableLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -175,9 +174,6 @@
                     android:layout_height="wrap_content">
 
                     <TextView
-                        android:id="@+id/textView"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
                         android:layout_gravity="center_vertical"
                         android:layout_marginEnd="12dp"
                         android:text="@string/contrast"
@@ -185,12 +181,35 @@
 
                     <com.vashisthg.startpointseekbar.StartPointSeekBar
                         android:id="@+id/contrastSeekBar"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        custom:minValue="0.0"
                         custom:maxValue="2.0"
+                        custom:minValue="0.0"
                         custom:progress="1.0"/>
+
+                </TableRow>
+
+                <TableRow
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content">
+
+                    <TextView
+                        android:layout_gravity="center_vertical"
+                        android:layout_marginEnd="12dp"
+                        android:text="@string/actions"
+                        android:textSize="18sp"/>
+
+                    <FrameLayout>
+
+                        <Button
+                            android:id="@+id/btnFilter"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:onClick="onFilterClicked"
+                            android:paddingEnd="@dimen/buttonPadding"
+                            android:paddingStart="@dimen/buttonPadding"
+                            android:text="@string/filter"/>
+
+                    </FrameLayout>
 
                 </TableRow>
 

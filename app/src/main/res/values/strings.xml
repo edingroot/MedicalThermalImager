@@ -14,5 +14,11 @@
 
     <!-- Secondary Controls Panel -->
     <string name="contrast">Contrast</string>
+    <string name="actions">Actions</string>
+    <string name="filter">Filter</string>
+
+    <!-- Messages -->
+    <string name="noContourSelected">No contour selected</string>
+    <string name="processingContour">Processing on selected contour</string>
 
 </resources>

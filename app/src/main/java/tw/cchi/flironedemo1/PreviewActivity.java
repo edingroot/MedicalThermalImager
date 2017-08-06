@@ -13,6 +13,7 @@ import android.view.MotionEvent;
 import android.view.OrientationEventListener;
 import android.view.ScaleGestureDetector;
 import android.view.View;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
@@ -39,7 +40,6 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.EnumSet;
 import java.util.Locale;
@@ -96,6 +96,7 @@ public class PreviewActivity extends Activity implements Device.Delegate, FrameP
 
     @BindView(R.id.secondaryControlsContainer) View secondaryControlsContainer;
     @BindView(R.id.contrastSeekBar) StartPointSeekBar contrastSeekBar;
+    @BindView(R.id.btnFilter) Button btnFilter;
 
     ScaleGestureDetector mScaleDetector;
 
@@ -171,10 +172,11 @@ public class PreviewActivity extends Activity implements Device.Delegate, FrameP
     @Override
     protected void onStart() {
         super.onStart();
-        thermalImageView = (ImageView) findViewById(R.id.imageView);
+        
         if (Device.getSupportedDeviceClasses(this).contains(FlirUsbDevice.class)) {
-            findViewById(R.id.pleaseConnect).setVisibility(View.VISIBLE);
+            pleaseConnect.setVisibility(View.VISIBLE);
         }
+
         try {
             Device.startDiscovery(this, this);
         } catch (IllegalStateException e) {
@@ -186,6 +188,8 @@ public class PreviewActivity extends Activity implements Device.Delegate, FrameP
             // wait for user to follow the instructions;
             finish();
         }
+
+        secondaryControlsContainer.setVisibility(View.INVISIBLE);
     }
 
     @Override
@@ -247,8 +251,8 @@ public class PreviewActivity extends Activity implements Device.Delegate, FrameP
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                findViewById(R.id.pleaseConnect).setVisibility(View.VISIBLE);
-                thermalImageView.setImageBitmap(Bitmap.createBitmap(1, 1, Bitmap.Config.ALPHA_8));
+                pleaseConnect.setVisibility(View.VISIBLE);
+                thermalImageView.setImageBitmap(Bitmap.createBitmap(1, 1, Bitmap.Config.RGB_565));
                 batteryLevelTextView.setText("--");
                 batteryChargeIndicator.setVisibility(View.GONE);
                 spotMeterValue.setText("");
@@ -306,26 +310,25 @@ public class PreviewActivity extends Activity implements Device.Delegate, FrameP
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                ImageView chargingIndicator = (ImageView) findViewById(R.id.batteryChargeIndicator);
                 if (originalChargingIndicatorColor == null) {
-                    originalChargingIndicatorColor = chargingIndicator.getColorFilter();
+                    originalChargingIndicatorColor = batteryChargeIndicator.getColorFilter();
                 }
                 switch (batteryChargingState) {
                     case FAULT:
                     case FAULT_HEAT:
-                        chargingIndicator.setColorFilter(Color.RED);
-                        chargingIndicator.setVisibility(View.VISIBLE);
+                        batteryChargeIndicator.setColorFilter(Color.RED);
+                        batteryChargeIndicator.setVisibility(View.VISIBLE);
                         break;
                     case FAULT_BAD_CHARGER:
-                        chargingIndicator.setColorFilter(Color.DKGRAY);
-                        chargingIndicator.setVisibility(View.VISIBLE);
+                        batteryChargeIndicator.setColorFilter(Color.DKGRAY);
+                        batteryChargeIndicator.setVisibility(View.VISIBLE);
                     case MANAGED_CHARGING:
-                        chargingIndicator.setColorFilter(originalChargingIndicatorColor);
-                        chargingIndicator.setVisibility(View.VISIBLE);
+                        batteryChargeIndicator.setColorFilter(originalChargingIndicatorColor);
+                        batteryChargeIndicator.setVisibility(View.VISIBLE);
                         break;
                     case NO_CHARGING:
                     default:
-                        chargingIndicator.setVisibility(View.GONE);
+                        batteryChargeIndicator.setVisibility(View.GONE);
                         break;
                 }
             }
@@ -335,11 +338,10 @@ public class PreviewActivity extends Activity implements Device.Delegate, FrameP
     @Override
     public void onBatteryPercentageReceived(final byte percentage) {
         // Log.i(Config.TAG, "Battery percentage received!");
-        final TextView levelTextView = (TextView) findViewById(R.id.batteryLevelTextView);
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                levelTextView.setText(String.valueOf((int) percentage) + "%");
+                batteryLevelTextView.setText(String.valueOf((int) percentage) + "%");
             }
         });
     }
@@ -385,7 +387,7 @@ public class PreviewActivity extends Activity implements Device.Delegate, FrameP
                     argbPixels[destP] = argbPixels[destP + 1] = argbPixels[destP + 2] = pixValue;
                 }
 
-                final Bitmap demoBitmap = Bitmap.createBitmap(imageWidth, renderedImage.height(), Bitmap.Config.ARGB_8888);
+                final Bitmap demoBitmap = Bitmap.createBitmap(imageWidth, renderedImage.height(), Bitmap.Config.RGB_565);
                 demoBitmap.copyPixelsFromBuffer(ByteBuffer.wrap(argbPixels));
                 updateThermalImageView(demoBitmap);
             }
@@ -493,10 +495,46 @@ public class PreviewActivity extends Activity implements Device.Delegate, FrameP
         }
     }
 
+
+    /* ---------- Secondary control panel ---------- */
+
     public void onContrastSeekBarChanged(StartPointSeekBar bar, double value) {
         this.contrastRatio = value;
-        adjustContourContrast(contrastRatio);
+        adjustContrast(contrastRatio);
     }
+
+    public void onFilterClicked(View v) {
+        if (selectedContourIndex == -1) {
+            Toast.makeText(this, getString(R.string.noContourSelected), Toast.LENGTH_SHORT).show();
+        } else {
+            Toast.makeText(this, getString(R.string.processingContour), Toast.LENGTH_SHORT).show();
+            runningContourProcessing = true;
+            final MatOfPoint contour = roiDetector.getContours().get(selectedContourIndex);
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    // Run filtering
+                    Log.i(Config.TAG, "thermalAnalysis filterByContour & generate image started");
+                    thermalDumpProcessor.filterByContour(contour);
+                    // thermalDumpProcessor.autoFilter();
+                    Mat processedImage = thermalDumpProcessor.getImage();
+                    Log.i(Config.TAG, "thermalAnalysis filterByContour & generate image finished");
+
+                    // Show filtered result
+                    ROIDetector.drawSelectedContour(processedImage, true, contour);
+                    Bitmap resultBmp = Bitmap.createBitmap(imageWidth, imageHeight, Bitmap.Config.RGB_565);
+                    Utils.matToBitmap(processedImage, resultBmp);
+                    // Check if task is stopped by main program
+                    if (runningContourProcessing) {
+                        updateThermalImageView(resultBmp);
+                        runningContourProcessing = false;
+                    }
+                }
+            }).start();
+        }
+    }
+
+    /* ---------- /Secondary control panel ---------- */
 
 
     private void showToastMessage(final String message) {
@@ -525,7 +563,7 @@ public class PreviewActivity extends Activity implements Device.Delegate, FrameP
                         try {
                             out = new FileOutputStream(path + "/" + filenames[1]);
                             // PNG is a lossless format, the compression factor (100) is ignored
-                            Mat img = thermalDumpProcessor.getGeneratedImage();
+                            Mat img = thermalDumpProcessor.getImage();
                             Bitmap bmp = Bitmap.createBitmap(imageWidth, imageHeight, Bitmap.Config.RGB_565);
                             Utils.matToBitmap(img, bmp);
                             bmp.compress(Bitmap.CompressFormat.PNG, 100, out);
@@ -600,13 +638,13 @@ public class PreviewActivity extends Activity implements Device.Delegate, FrameP
                 thermalDumpProcessor = new ThermalDumpProcessor(thermalDump);
                 thermalDumpProcessor.autoFilter();
                 thermalDumpProcessor.filterBelow(2731 + 320); // 350
-                Mat processedImage = thermalDumpProcessor.getGeneratedImage();
+                Mat processedImage = thermalDumpProcessor.getImage();
                 Log.i(Config.TAG, "thermalAnalyze preprocess finished");
 
                 Log.i(Config.TAG, "thermalAnalyze recognizeContours started");
                 roiDetector = new ROIDetector(processedImage);
-                Mat contourImg = roiDetector.recognizeContours(140); // 40
                 selectedContourIndex = -1;
+                Mat contourImg = roiDetector.recognizeContours(140); // 40
                 Log.i(Config.TAG, "thermalAnalyze recognizeContours finished");
 
                 Bitmap resultBmp = Bitmap.createBitmap(imageWidth, imageHeight, Bitmap.Config.RGB_565);
@@ -687,28 +725,6 @@ public class PreviewActivity extends Activity implements Device.Delegate, FrameP
         });
     }
 
-    private void adjustContourContrast(final double ratio) {
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                Log.i(Config.TAG, String.format("Contrast adjustment (ratio=%.2f) started", ratio));
-                Mat processedImage = thermalDumpProcessor.getGeneratedImage(ratio);
-                Log.i(Config.TAG, String.format("Contrast adjustment (ratio=%.2f) finished", ratio));
-
-                // TODO: draw contours
-                if (roiDetector != null && roiDetector.getContours() != null) {
-                    drawContours(processedImage, roiDetector.getContours(), -1, new Scalar(255), 1);
-                }
-
-                Bitmap resultBmp = Bitmap.createBitmap(imageWidth, imageHeight, Bitmap.Config.RGB_565);
-                Utils.matToBitmap(processedImage, resultBmp);
-                updateThermalImageView(resultBmp);
-
-                PreviewActivity.this.runningContourProcessing = false;
-            }
-        }).start();
-    }
-
     private void handleThermalImageTouch(int x, int y) {
         boolean ignoreMovingSpot = false;
 
@@ -725,36 +741,9 @@ public class PreviewActivity extends Activity implements Device.Delegate, FrameP
             int contourIndex = roiDetector.getSelectedContourIndex(imgX, imgY);
             // If there is a contour selected
             if (contourIndex != -1) {
-                if (contourIndex != this.selectedContourIndex) {
-                    this.runningContourProcessing = true;
-                    this.selectedContourIndex = contourIndex;
-                    ignoreMovingSpot = true;
-                    Toast.makeText(this, "Processing selected area", Toast.LENGTH_SHORT).show();
-
-                    final MatOfPoint contour = roiDetector.getContours().get(contourIndex);
-                    new Thread(new Runnable() {
-                        @Override
-                        public void run() {
-                            Log.i(Config.TAG, "thermalAnalysis filterByContour & generate image started");
-                            thermalDumpProcessor.filterByContour(contour);
-                            // thermalDumpProcessor.autoFilter();
-                            Mat processedImage = thermalDumpProcessor.getGeneratedImage();
-                            Log.i(Config.TAG, "thermalAnalysis filterByContour & generate image finished");
-
-                            ArrayList<MatOfPoint> contours = new ArrayList<>();
-                            contours.add(contour);
-                            drawContours(processedImage, contours, -1, new Scalar(255), 1);
-
-                            Bitmap resultBmp = Bitmap.createBitmap(imageWidth, imageHeight, Bitmap.Config.RGB_565);
-                            Utils.matToBitmap(processedImage, resultBmp);
-                            // Check if task is stopped by main program
-                            if (runningContourProcessing) {
-                                updateThermalImageView(resultBmp);
-                                runningContourProcessing = false;
-                            }
-                        }
-                    }).start();
-                }
+                this.selectedContourIndex = contourIndex;
+                ignoreMovingSpot = true;
+                handleContourSelected(roiDetector.getContours().get(contourIndex));
             }
         }
 
@@ -768,6 +757,44 @@ public class PreviewActivity extends Activity implements Device.Delegate, FrameP
             layoutTempSpot.setLayoutParams(params);
             updateThermalSpotValue();
         }
+    }
+
+    private void handleContourSelected(final MatOfPoint contour) {
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                // Change selected contour color
+                Mat imgSelected = thermalDumpProcessor.getImage();
+                ROIDetector.drawSelectedContour(imgSelected, true, contour);
+                Bitmap resultBmp = Bitmap.createBitmap(imageWidth, imageHeight, Bitmap.Config.RGB_565);
+                Utils.matToBitmap(imgSelected, resultBmp);
+                updateThermalImageView(resultBmp);
+            }
+        }).start();
+    }
+
+    private void adjustContrast(final double ratio) {
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                Log.i(Config.TAG, String.format("Contrast adjustment (ratio=%.2f) started", ratio));
+                Mat processedImage = thermalDumpProcessor.getImage(ratio);
+                Log.i(Config.TAG, String.format("Contrast adjustment (ratio=%.2f) finished", ratio));
+
+                if (roiDetector != null && roiDetector.getContours() != null) {
+                    if (selectedContourIndex != -1)
+                        ROIDetector.drawSelectedContour(processedImage, true, roiDetector.getContours().get(selectedContourIndex));
+                    else
+                        ROIDetector.drawAllContours(processedImage, true, roiDetector.getContours());
+                }
+
+                Bitmap resultBmp = Bitmap.createBitmap(imageWidth, imageHeight, Bitmap.Config.RGB_565);
+                Utils.matToBitmap(processedImage, resultBmp);
+                updateThermalImageView(resultBmp);
+
+                PreviewActivity.this.runningContourProcessing = false;
+            }
+        }).start();
     }
 }
 
