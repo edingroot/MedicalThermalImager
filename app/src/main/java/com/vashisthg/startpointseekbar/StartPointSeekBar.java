@@ -338,12 +338,15 @@ public class StartPointSeekBar extends View {
      * @param value The new value to set
      */
     public void setProgress(double value) {
-        double newThumbValue = valueToNormalized(value);
-        if (newThumbValue > absoluteMaxValue || newThumbValue < absoluteMinValue) {
+        if (value > absoluteMaxValue || value < absoluteMinValue) {
             throw new IllegalArgumentException("Value should be in the middle of max and min value");
         }
-        normalizedThumbValue = newThumbValue;
+        normalizedThumbValue = valueToNormalized(value);
         invalidate();
+    }
+
+    public double getProgress() {
+        return normalizedToValue(normalizedThumbValue);
     }
 
     /**
