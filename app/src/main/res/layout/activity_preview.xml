@@ -187,7 +187,7 @@
                         android:layout_marginEnd="2dp"
                         android:layout_marginTop="2dp"
                         android:text="@string/contrast"
-                        android:textSize="18sp"/>
+                        android:textSize="16sp"/>
 
                     <com.vashisthg.startpointseekbar.StartPointSeekBar
                         android:id="@+id/contrastSeekBar"
@@ -210,16 +210,15 @@
                 <TableRow
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content">
-
                     <TextView
                         android:layout_gravity="center_vertical"
                         android:layout_marginEnd="2dp"
                         android:layout_marginTop="2dp"
-                        android:text="@string/threshold"
-                        android:textSize="18sp"/>
+                        android:text="@string/filter_threshold"
+                        android:textSize="16sp"/>
 
                     <com.vashisthg.startpointseekbar.StartPointSeekBar
-                        android:id="@+id/thresholdSeekBar"
+                        android:id="@+id/filterThresSeekBar"
                         android:layout_gravity="center_vertical"
                         android:layout_weight="1"
                         custom:maxValue="230.0"
@@ -227,7 +226,7 @@
                         custom:progress="140.0"/>
 
                     <TextView
-                        android:id="@+id/txtThresholdValue"
+                        android:id="@+id/txtFilterThresValue"
                         android:layout_width="20sp"
                         android:layout_height="wrap_content"
                         android:layout_gravity="center_vertical|end"
@@ -236,30 +235,68 @@
                         android:textSize="10sp"/>
                 </TableRow>
 
-
                 <TableRow
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content">
 
                     <TextView
                         android:layout_gravity="center_vertical"
+                        android:layout_marginEnd="2dp"
+                        android:layout_marginTop="2dp"
+                        android:text="@string/rcgn_threshold"
+                        android:textSize="16sp"/>
+
+                    <com.vashisthg.startpointseekbar.StartPointSeekBar
+                        android:id="@+id/rcgnThresSeekBar"
+                        android:layout_gravity="center_vertical"
+                        android:layout_weight="1"
+                        custom:maxValue="230.0"
+                        custom:minValue="0.0"
+                        custom:progress="140.0"/>
+
+                    <TextView
+                        android:id="@+id/txtRcgnThresValue"
+                        android:layout_width="20sp"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center_vertical|end"
+                        android:layout_marginEnd="3dp"
+                        android:text="140"
+                        android:textSize="10sp"/>
+                </TableRow>
+
+                <TableRow
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content">
+                    <TextView
+                        android:layout_gravity="center_vertical"
                         android:layout_marginEnd="12dp"
                         android:text="@string/actions"
-                        android:textSize="18sp"/>
+                        android:textSize="16sp"/>
 
-                    <FrameLayout>
+                    <LinearLayout
+                        android:orientation="horizontal">
 
                         <Button
                             android:id="@+id/btnFilter"
                             android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
+                            android:layout_height="@dimen/buttonMediumHeight"
                             android:onClick="onFilterClicked"
                             android:paddingEnd="@dimen/buttonPadding"
                             android:paddingStart="@dimen/buttonPadding"
-                            android:text="@string/filter"/>
+                            android:text="@string/filter"
+                            android:textSize="@dimen/buttonMediumTextSize"/>
 
-                    </FrameLayout>
+                        <Button
+                            android:id="@+id/btnRcgHigh"
+                            android:layout_width="wrap_content"
+                            android:layout_height="@dimen/buttonMediumHeight"
+                            android:onClick="onRcgHighClicked"
+                            android:paddingEnd="@dimen/buttonPadding"
+                            android:paddingStart="@dimen/buttonPadding"
+                            android:text="@string/rcgHigh"
+                            android:textSize="@dimen/buttonMediumTextSize"/>
 
+                    </LinearLayout>
                 </TableRow>
 
             </TableLayout>

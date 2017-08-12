@@ -67,10 +67,10 @@ public class ROIDetector {
         return contours;
     }
 
-    public static void drawSelectedContour(Mat img, boolean grayScaleSrc, MatOfPoint contour) {
+    public static void drawSelectedContour(Mat img, MatOfPoint contour) {
         ArrayList<MatOfPoint> contours = new ArrayList<>();
         contours.add(contour);
-        if (grayScaleSrc) {
+        if (img.channels() == 1) {
             cvtColor(img, img, COLOR_GRAY2BGR);
         }
         drawContours(img, contours, -1, COLOR_SELECTED_CONTOUR, 1);

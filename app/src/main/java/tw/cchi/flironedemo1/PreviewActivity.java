@@ -76,6 +76,7 @@ public class PreviewActivity extends Activity implements Device.Delegate, FrameP
     private volatile int selectedContourIndex = -1;
     private volatile double contrastRatio = 1;
     private volatile double roiDetectionThreshold = 1;
+    private volatile double recognitionThreshold = 1;
 
     private int deviceRotation = 0;
     private int imageWidth = 0;
@@ -97,9 +98,12 @@ public class PreviewActivity extends Activity implements Device.Delegate, FrameP
     @BindView(R.id.secondaryControlsContainer) View secondaryControlsContainer;
     @BindView(R.id.contrastSeekBar) StartPointSeekBar contrastSeekBar;
     @BindView(R.id.txtContrastValue) TextView txtContrastValue;
-    @BindView(R.id.thresholdSeekBar) StartPointSeekBar thresholdSeekBar;
-    @BindView(R.id.txtThresholdValue) TextView txtThresholdValue;
+    @BindView(R.id.filterThresSeekBar) StartPointSeekBar filterThresSeekBar;
+    @BindView(R.id.txtFilterThresValue) TextView txtFilterThresValue;
+    @BindView(R.id.rcgnThresSeekBar) StartPointSeekBar rcgnThresSeekBar;
+    @BindView(R.id.txtRcgnThresValue) TextView txtRcgnThresValue;
     @BindView(R.id.btnFilter) Button btnFilter;
+    @BindView(R.id.btnRcgHigh) Button btnRcgHigh;
 
     ScaleGestureDetector mScaleDetector;
 
@@ -164,10 +168,17 @@ public class PreviewActivity extends Activity implements Device.Delegate, FrameP
             }
         });
 
-        thresholdSeekBar.setOnSeekBarChangeListener(new StartPointSeekBar.OnSeekBarChangeListener() {
+        filterThresSeekBar.setOnSeekBarChangeListener(new StartPointSeekBar.OnSeekBarChangeListener() {
             @Override
             public void onOnSeekBarValueChange(StartPointSeekBar bar, double value) {
-                PreviewActivity.this.onThresholdSeekBarChanged(bar, value);
+                PreviewActivity.this.onFilterThresSeekBarChanged(bar, value);
+            }
+        });
+
+        rcgnThresSeekBar.setOnSeekBarChangeListener(new StartPointSeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onOnSeekBarValueChange(StartPointSeekBar bar, double value) {
+                PreviewActivity.this.onRcgnThresSeekBarChanged(bar, value);
             }
         });
 
@@ -202,8 +213,8 @@ public class PreviewActivity extends Activity implements Device.Delegate, FrameP
         secondaryControlsContainer.setVisibility(View.GONE);
         this.contrastRatio = contrastSeekBar.getProgress();
         txtContrastValue.setText(String.format("%.2f", contrastRatio));
-        this.roiDetectionThreshold = thresholdSeekBar.getProgress();
-        txtThresholdValue.setText(String.format("%d", (int) roiDetectionThreshold));
+        this.roiDetectionThreshold = filterThresSeekBar.getProgress();
+        txtFilterThresValue.setText(String.format("%d", (int) roiDetectionThreshold));
     }
 
     @Override
@@ -383,7 +394,7 @@ public class PreviewActivity extends Activity implements Device.Delegate, FrameP
 
         if (imageCaptureRequested) {
             imageCaptureRequested = false;
-            captureImage(renderedImage);
+            captureThermalImage(renderedImage);
 
             // Dump thermal data as well when capturing image
             thermalDumpRequested = true;
@@ -459,7 +470,11 @@ public class PreviewActivity extends Activity implements Device.Delegate, FrameP
 
     public void onCaptureImageClicked(View v) {
         if (flirOneDevice != null) {
-            this.imageCaptureRequested = true;
+            if (streamingFrame) {
+                this.imageCaptureRequested = true;
+            } else {
+                capturePorccessedImage();
+            }
         }
     }
 
@@ -528,9 +543,14 @@ public class PreviewActivity extends Activity implements Device.Delegate, FrameP
         adjustContrast(contrastRatio);
     }
 
-    public void onThresholdSeekBarChanged(StartPointSeekBar bar, double value) {
+    public void onFilterThresSeekBarChanged(StartPointSeekBar bar, double value) {
         this.roiDetectionThreshold = value;
-        txtThresholdValue.setText(String.format("%d", (int) roiDetectionThreshold));
+        txtFilterThresValue.setText(String.format("%d", (int) roiDetectionThreshold));
+    }
+
+    public void onRcgnThresSeekBarChanged(StartPointSeekBar bar, double value) {
+        this.recognitionThreshold = value;
+        txtRcgnThresValue.setText(String.format("%d", (int) recognitionThreshold));
     }
 
     public void onFilterClicked(View v) {
@@ -544,16 +564,17 @@ public class PreviewActivity extends Activity implements Device.Delegate, FrameP
                 @Override
                 public void run() {
                     // Run filtering
-                    Log.i(Config.TAG, "thermalAnalysis filterByContour & generate image started");
-                    thermalDumpProcessor.filterByContour(contour);
+                    Log.i(Config.TAG, "thermalAnalysis filterFromContour & generate image started");
+                    thermalDumpProcessor.filterFromContour(contour);
                     // thermalDumpProcessor.autoFilter();
-                    Mat processedImage = thermalDumpProcessor.getImage();
-                    Log.i(Config.TAG, "thermalAnalysis filterByContour & generate image finished");
+                    Mat processedImage = thermalDumpProcessor.getImage(contrastRatio);
+                    Log.i(Config.TAG, "thermalAnalysis filterFromContour & generate image finished");
 
                     // Show filtered result
-                    ROIDetector.drawSelectedContour(processedImage, true, contour);
+                    ROIDetector.drawSelectedContour(processedImage, contour);
                     Bitmap resultBmp = Bitmap.createBitmap(imageWidth, imageHeight, Bitmap.Config.RGB_565);
                     Utils.matToBitmap(processedImage, resultBmp);
+
                     // Check if task is stopped by main program
                     if (runningContourProcessing) {
                         updateThermalImageView(resultBmp);
@@ -562,6 +583,10 @@ public class PreviewActivity extends Activity implements Device.Delegate, FrameP
                 }
             }).start();
         }
+    }
+
+    public void onRcgHighClicked(View v) {
+        // TODO
     }
 
     /* ---------- /Secondary control panel ---------- */
@@ -576,26 +601,44 @@ public class PreviewActivity extends Activity implements Device.Delegate, FrameP
         });
     }
 
-    private void captureImage(final RenderedImage renderedImage) {
+    private void captureThermalImage(final RenderedImage renderedImage) {
         new Thread(new Runnable() {
             public void run() {
                 // String path = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES).toString();
                 String path = AppUtils.getExportsDir();
                 SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd-HH-mm-ssZ", Locale.getDefault());
-                String[] filenames = {sdf.format(new Date()) + "_thermalImage.jpg", sdf.format(new Date()) + "_processedImage.jpg"};
+                String filename = sdf.format(new Date()) + "_thermalImage.png";
+
                 try {
                     // Save the original thermal image
-                    renderedImage.getFrame().save(new File(path + "/" + filenames[0]), RenderedImage.Palette.Iron, RenderedImage.ImageType.BlendedMSXRGBA8888Image);
+                    renderedImage.getFrame().save(new File(path + "/" + filename), RenderedImage.Palette.Iron, RenderedImage.ImageType.BlendedMSXRGBA8888Image);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
 
+                scanMediaStorageAndAnimate(filename);
+            }
+        }).start();
+    }
+
+    public void capturePorccessedImage() {
+        new Thread(new Runnable() {
+            public void run() {
+                // String path = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES).toString();
+                String path = AppUtils.getExportsDir();
+                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd-HH-mm-ssZ", Locale.getDefault());
+                String filename = sdf.format(new Date()) + "_processedImage.png";
+
+                try {
                     // Save the processed thermal image
                     if (thermalBitmap != null) {
                         FileOutputStream out = null;
                         try {
-                            out = new FileOutputStream(path + "/" + filenames[1]);
-                            // PNG is a lossless format, the compression factor (100) is ignored
-                            Mat img = thermalDumpProcessor.getImage();
+                            out = new FileOutputStream(path + "/" + filename);
+                            Mat img = thermalDumpProcessor.getImage(contrastRatio);
                             Bitmap bmp = Bitmap.createBitmap(imageWidth, imageHeight, Bitmap.Config.RGB_565);
                             Utils.matToBitmap(img, bmp);
+                            // PNG is a lossless format, the compression factor (100) is ignored
                             bmp.compress(Bitmap.CompressFormat.PNG, 100, out);
                         } catch (Exception e) {
                             e.printStackTrace();
@@ -609,36 +652,39 @@ public class PreviewActivity extends Activity implements Device.Delegate, FrameP
                             }
                         }
                     }
-
-                    // Call the system media scanner
-                    for (int i = 0; i < filenames.length; i++) {
-                        MediaScannerConnection.scanFile(PreviewActivity.this,
-                                new String[]{path + "/" + filenames[i]}, null,
-                                new MediaScannerConnection.OnScanCompletedListener() {
-                                    @Override
-                                    public void onScanCompleted(String path, Uri uri) {
-                                        Log.i(Config.TAG, "ExternalStorage Scanned " + path + ":");
-                                        Log.i(Config.TAG, "ExternalStorage -> uri=" + uri);
-                                    }
-
-                                });
-                    }
-
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        thermalImageView.animate().setDuration(50).scaleY(0).withEndAction((new Runnable() {
-                            public void run() {
-                                thermalImageView.animate().setDuration(50).scaleY(1);
-                            }
-                        }));
-                    }
-                });
+
+                scanMediaStorageAndAnimate(filename);
+
             }
         }).start();
+    }
+
+    private void scanMediaStorageAndAnimate(String filename) {
+        // Call the system media scanner
+        MediaScannerConnection.scanFile(PreviewActivity.this,
+                new String[] {filename}, null,
+                new MediaScannerConnection.OnScanCompletedListener() {
+                    @Override
+                    public void onScanCompleted(String path, Uri uri) {
+                        Log.i(Config.TAG, "ExternalStorage Scanned " + path + ":");
+                        Log.i(Config.TAG, "ExternalStorage -> uri=" + uri);
+                    }
+
+                });
+
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                thermalImageView.animate().setDuration(50).scaleY(0).withEndAction((new Runnable() {
+                    public void run() {
+                        thermalImageView.animate().setDuration(50).scaleY(1);
+                    }
+                }));
+            }
+        });
     }
 
     private void dumpThermalData(final RenderedImage renderedImage) {
@@ -668,7 +714,7 @@ public class PreviewActivity extends Activity implements Device.Delegate, FrameP
                 thermalDumpProcessor = new ThermalDumpProcessor(thermalDump);
                 thermalDumpProcessor.autoFilter();
                 thermalDumpProcessor.filterBelow(2731 + 320); // 350
-                Mat processedImage = thermalDumpProcessor.getImage();
+                Mat processedImage = thermalDumpProcessor.getImage(contrastRatio);
                 Log.i(Config.TAG, "thermalAnalyze preprocess finished");
 
                 Log.i(Config.TAG, "thermalAnalyze recognizeContours started");
@@ -789,8 +835,8 @@ public class PreviewActivity extends Activity implements Device.Delegate, FrameP
             @Override
             public void run() {
                 // Change selected contour color
-                Mat imgSelected = thermalDumpProcessor.getImage();
-                ROIDetector.drawSelectedContour(imgSelected, true, contour);
+                Mat imgSelected = thermalDumpProcessor.getImage(contrastRatio);
+                ROIDetector.drawSelectedContour(imgSelected, contour);
                 Bitmap resultBmp = Bitmap.createBitmap(imageWidth, imageHeight, Bitmap.Config.RGB_565);
                 Utils.matToBitmap(imgSelected, resultBmp);
                 updateThermalImageView(resultBmp);
@@ -808,7 +854,7 @@ public class PreviewActivity extends Activity implements Device.Delegate, FrameP
                 Mat processedImage = thermalDumpProcessor.getImage(ratio);
                 if (roiDetector != null && roiDetector.getContours() != null) {
                     if (selectedContourIndex != -1)
-                        ROIDetector.drawSelectedContour(processedImage, true, roiDetector.getContours().get(selectedContourIndex));
+                        ROIDetector.drawSelectedContour(processedImage, roiDetector.getContours().get(selectedContourIndex));
                     else
                         ROIDetector.drawAllContours(processedImage, true, roiDetector.getContours());
                 }

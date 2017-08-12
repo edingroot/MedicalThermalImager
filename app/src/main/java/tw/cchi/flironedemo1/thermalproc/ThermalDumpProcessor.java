@@ -138,7 +138,7 @@ public class ThermalDumpProcessor {
         generatedImage = null;
     }
 
-    public void filterByContour(MatOfPoint contour) {
+    public void filterFromContour(MatOfPoint contour) {
         MatOfPoint2f contour2f = new MatOfPoint2f(contour.toArray());
         for (int row = 0; row < height; row++) {
             for (int col = 0; col < width; col++) {
@@ -151,13 +151,6 @@ public class ThermalDumpProcessor {
         generatedImage = null;
     }
 
-    public Mat getImage() {
-        if (generatedImage == null) {
-            generateThermalImage();
-        }
-        return generatedImage.clone();
-    }
-
     /**
      * Get generated image with contrast adjusted with contrastRatio
      * @param contrastRatio Enhance contrast if > 1 and vise versa.
@@ -166,10 +159,15 @@ public class ThermalDumpProcessor {
         if (generatedImage == null) {
             generateThermalImage();
         }
-        Mat result = generatedImage.clone();
-        // convertTo: last 2 params are the alpha and beta values
-        generatedImage.convertTo(result, -1, contrastRatio, 0);
-        return result;
+
+        if (contrastRatio == 1) {
+            return generatedImage;
+        } else {
+            Mat result = generatedImage.clone();
+            // convertTo: last 2 params are the alpha and beta values
+            generatedImage.convertTo(result, -1, contrastRatio, 0);
+            return result;
+        }
     }
 
     private synchronized void generateThermalImage() {
