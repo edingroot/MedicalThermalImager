@@ -23,38 +23,42 @@
         android:focusableInTouchMode="false"
         android:scaleType="fitCenter"/>
 
-    <FrameLayout android:layout_width="match_parent" android:layout_height="match_parent"
-        android:fitsSystemWindows="true"
-        android:id="@+id/fullscreen_content">
+    <FrameLayout
+        android:id="@+id/fullscreen_content"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:fitsSystemWindows="true">
 
         <LinearLayout
-            android:id="@+id/fullscreen_content_controls_top" style="@android:style/ButtonBar"
+            android:id="@+id/fullscreen_content_controls_top"
+            style="@android:style/ButtonBar"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_gravity="top|center_horizontal" android:orientation="horizontal"
-            tools:ignore="UselessParent"
-            android:background="@color/black_overlay">
+            android:layout_gravity="top|center_horizontal"
+            android:background="@color/black_overlay"
+            android:orientation="horizontal"
+            tools:ignore="UselessParent">
 
             <TextView
+                android:id="@+id/batteryLabelTextView"
+                style="?actionMenuTextAppearance"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textAppearance="?android:attr/textAppearanceMedium"
-                android:text="@string/battery_label"
-                android:id="@+id/batteryLabelTextView"
+                android:layout_gravity="left|center_vertical"
                 android:layout_margin="8dp"
                 android:layout_weight="0"
-                android:layout_gravity="left|center_vertical"
-                style="?actionMenuTextAppearance"/>
+                android:text="@string/battery_label"
+                android:textAppearance="?android:attr/textAppearanceMedium"/>
 
             <ImageView
+                android:id="@+id/batteryChargeIndicator"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:id="@+id/batteryChargeIndicator"
                 android:layout_gravity="left|center_vertical"
                 android:layout_weight="0"
                 android:src="@android:drawable/ic_lock_idle_charging"
                 android:tint="@color/accent_material_light"
-                android:visibility="gone" />
+                android:visibility="gone"/>
 
             <TextView
                 android:id="@+id/batteryLevelTextView"
@@ -75,37 +79,41 @@
                 style="?metaButtonBarButtonStyle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@string/dumpThermalRaw"
-                android:onClick="onDumpThermalRawClicked"/>
+                android:onClick="onDumpThermalRawClicked"
+                android:text="@string/dumpThermalRaw"/>
 
             <Button
-                android:layout_width="51dp" style="?metaButtonBarButtonStyle"
-                android:layout_height="wrap_content"
-                android:text="@string/performTuning"
                 android:id="@+id/tuneButton"
-                android:onClick="onTuneClicked" />
+                style="?metaButtonBarButtonStyle"
+                android:layout_width="51dp"
+                android:layout_height="wrap_content"
+                android:onClick="onTuneClicked"
+                android:text="@string/performTuning"/>
 
             <ToggleButton
+                android:id="@+id/switch_rotate"
+                style="?metaButtonBarButtonStyle"
                 android:layout_width="47dp"
                 android:layout_height="wrap_content"
-                android:text="@string/rotate_on"
-                android:id="@+id/switch_rotate"
-                android:onClick="onRotateClicked"
                 android:layout_gravity="right"
+                android:onClick="onRotateClicked"
+                android:text="@string/rotate_on"
                 android:textOff="@string/rotate_off"
-                android:textOn="@string/rotate_on"
-                style="?metaButtonBarButtonStyle" />
+                android:textOn="@string/rotate_on"/>
 
 
         </LinearLayout>
 
-        <FrameLayout android:id="@+id/fullscreen_content_controls" style="?metaButtonBarStyle"
-            android:layout_width="match_parent" android:layout_height="wrap_content"
+        <FrameLayout
+            android:id="@+id/fullscreen_content_controls"
+            style="?metaButtonBarStyle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
             android:layout_gravity="bottom|center_horizontal"
             android:background="@color/black_overlay"
-            tools:ignore="UselessParent"
             android:columnCount="3"
-            android:rowCount="1">
+            android:rowCount="1"
+            tools:ignore="UselessParent">
 
             <ToggleButton
                 android:id="@+id/btnToggleMoreInfo"
@@ -144,12 +152,13 @@
             </LinearLayout>
 
             <Button
-                android:layout_width="wrap_content" style="?metaButtonBarButtonStyle"
-                android:layout_height="wrap_content"
-                android:text="@string/connectSim"
                 android:id="@+id/connect_sim_button"
+                style="?metaButtonBarButtonStyle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="bottom|end"
                 android:onClick="onConnectSimClicked"
-                android:layout_gravity="bottom|end" />
+                android:text="@string/connectSim"/>
 
         </FrameLayout>
 
@@ -175,18 +184,58 @@
 
                     <TextView
                         android:layout_gravity="center_vertical"
-                        android:layout_marginEnd="12dp"
+                        android:layout_marginEnd="2dp"
+                        android:layout_marginTop="2dp"
                         android:text="@string/contrast"
                         android:textSize="18sp"/>
 
                     <com.vashisthg.startpointseekbar.StartPointSeekBar
                         android:id="@+id/contrastSeekBar"
+                        android:layout_gravity="center_vertical"
                         android:layout_weight="1"
-                        custom:maxValue="2.0"
+                        custom:maxValue="1.5"
                         custom:minValue="0.0"
                         custom:progress="1.0"/>
 
+                    <TextView
+                        android:id="@+id/txtContrastValue"
+                        android:layout_width="20sp"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center_vertical|end"
+                        android:layout_marginEnd="3dp"
+                        android:text="1.00"
+                        android:textSize="10sp"/>
                 </TableRow>
+
+                <TableRow
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content">
+
+                    <TextView
+                        android:layout_gravity="center_vertical"
+                        android:layout_marginEnd="2dp"
+                        android:layout_marginTop="2dp"
+                        android:text="@string/threshold"
+                        android:textSize="18sp"/>
+
+                    <com.vashisthg.startpointseekbar.StartPointSeekBar
+                        android:id="@+id/thresholdSeekBar"
+                        android:layout_gravity="center_vertical"
+                        android:layout_weight="1"
+                        custom:maxValue="230.0"
+                        custom:minValue="0.0"
+                        custom:progress="140.0"/>
+
+                    <TextView
+                        android:id="@+id/txtThresholdValue"
+                        android:layout_width="20sp"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center_vertical|end"
+                        android:layout_marginEnd="3dp"
+                        android:text="140"
+                        android:textSize="10sp"/>
+                </TableRow>
+
 
                 <TableRow
                     android:layout_width="match_parent"
@@ -219,33 +268,33 @@
         </LinearLayout>
 
         <ProgressBar
+            android:id="@+id/tuningProgressBar"
             style="?android:attr/progressBarStyle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:id="@+id/tuningProgressBar"
             android:layout_gravity="center"
-            android:visibility="gone" />
+            android:visibility="gone"/>
 
         <TextView
+            android:id="@+id/tuningTextView"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textAppearance="?android:attr/textAppearanceMedium"
-            android:text="@string/txtTuning"
-            android:id="@+id/tuningTextView"
-            android:labelFor="@id/tuningProgressBar"
             android:layout_gravity="center"
             android:layout_marginTop="36dp"
-            android:visibility="gone" />
+            android:labelFor="@id/tuningProgressBar"
+            android:text="@string/txtTuning"
+            android:textAppearance="?android:attr/textAppearanceMedium"
+            android:visibility="gone"/>
 
         <TextView
+            android:id="@+id/pleaseConnect"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textAppearance="?android:attr/textAppearanceLarge"
-            android:text="Please Connect FLIR One"
-            android:id="@+id/pleaseConnect"
             android:layout_gravity="center"
             android:layout_marginTop="90dp"
-            android:visibility="gone" />
+            android:text="Please Connect FLIR One"
+            android:textAppearance="?android:attr/textAppearanceLarge"
+            android:visibility="gone"/>
 
 
     </FrameLayout>

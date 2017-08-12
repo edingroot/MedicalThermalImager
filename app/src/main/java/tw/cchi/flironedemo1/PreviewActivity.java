@@ -32,7 +32,6 @@ import org.opencv.android.OpenCVLoader;
 import org.opencv.android.Utils;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfPoint;
-import org.opencv.core.Scalar;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -73,9 +72,10 @@ public class PreviewActivity extends Activity implements Device.Delegate, FrameP
     private ThermalDumpProcessor thermalDumpProcessor;
     private RawThermalDump thermalDump;
     private volatile Bitmap thermalBitmap = null;
+    private volatile Thread contourProcessingThread = null;
     private volatile int selectedContourIndex = -1;
     private volatile double contrastRatio = 1;
-    private volatile Thread contourProcessingThread = null;
+    private volatile double roiDetectionThreshold = 1;
 
     private int deviceRotation = 0;
     private int imageWidth = 0;
@@ -96,6 +96,9 @@ public class PreviewActivity extends Activity implements Device.Delegate, FrameP
 
     @BindView(R.id.secondaryControlsContainer) View secondaryControlsContainer;
     @BindView(R.id.contrastSeekBar) StartPointSeekBar contrastSeekBar;
+    @BindView(R.id.txtContrastValue) TextView txtContrastValue;
+    @BindView(R.id.thresholdSeekBar) StartPointSeekBar thresholdSeekBar;
+    @BindView(R.id.txtThresholdValue) TextView txtThresholdValue;
     @BindView(R.id.btnFilter) Button btnFilter;
 
     ScaleGestureDetector mScaleDetector;
@@ -161,6 +164,13 @@ public class PreviewActivity extends Activity implements Device.Delegate, FrameP
             }
         });
 
+        thresholdSeekBar.setOnSeekBarChangeListener(new StartPointSeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onOnSeekBarValueChange(StartPointSeekBar bar, double value) {
+                PreviewActivity.this.onThresholdSeekBarChanged(bar, value);
+            }
+        });
+
         orientationEventListener = new OrientationEventListener(this) {
             @Override
             public void onOrientationChanged(int orientation) {
@@ -189,7 +199,11 @@ public class PreviewActivity extends Activity implements Device.Delegate, FrameP
             finish();
         }
 
-        secondaryControlsContainer.setVisibility(View.INVISIBLE);
+        secondaryControlsContainer.setVisibility(View.GONE);
+        this.contrastRatio = contrastSeekBar.getProgress();
+        txtContrastValue.setText(String.format("%.2f", contrastRatio));
+        this.roiDetectionThreshold = thresholdSeekBar.getProgress();
+        txtThresholdValue.setText(String.format("%d", (int) roiDetectionThreshold));
     }
 
     @Override
@@ -235,8 +249,17 @@ public class PreviewActivity extends Activity implements Device.Delegate, FrameP
         flirOneDevice.setPowerUpdateDelegate(this);
         flirOneDevice.startFrameStream(this);
         streamingFrame = true;
-
         orientationEventListener.enable();
+
+        if (showingMoreInfo) {
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    topControlsView.setVisibility(View.VISIBLE);
+                    secondaryControlsContainer.setVisibility(View.VISIBLE);
+                }
+            });
+        }
     }
 
     /**
@@ -475,20 +498,6 @@ public class PreviewActivity extends Activity implements Device.Delegate, FrameP
         }
     }
 
-    public void onToggleMoreInfoClicked(View v) {
-        if (showingMoreInfo) {
-            topControlsView.setVisibility(View.INVISIBLE);
-            secondaryControlsContainer.setVisibility(View.GONE);
-            showingMoreInfo = false;
-        } else {
-            topControlsView.setVisibility(View.VISIBLE);
-            // Check if device is connected & on thermal analysis result preview mode
-            if (flirOneDevice != null && thermalDumpProcessor != null)
-                secondaryControlsContainer.setVisibility(View.VISIBLE);
-            showingMoreInfo = true;
-        }
-    }
-
     public void onDumpThermalRawClicked(View v) {
         if (flirOneDevice != null && streamingFrame && !thermalDumpRequested) {
             this.thermalDumpRequested = true;
@@ -498,9 +507,30 @@ public class PreviewActivity extends Activity implements Device.Delegate, FrameP
 
     /* ---------- Secondary control panel ---------- */
 
+    public void onToggleMoreInfoClicked(View v) {
+        if (showingMoreInfo) {
+            topControlsView.setVisibility(View.INVISIBLE);
+            secondaryControlsContainer.setVisibility(View.GONE);
+            showingMoreInfo = false;
+        } else {
+            topControlsView.setVisibility(View.VISIBLE);
+            // Check if device is connected & on thermal analysis result preview mode
+            // if (flirOneDevice != null && thermalDumpProcessor != null)
+            if (flirOneDevice != null)
+                secondaryControlsContainer.setVisibility(View.VISIBLE);
+            showingMoreInfo = true;
+        }
+    }
+
     public void onContrastSeekBarChanged(StartPointSeekBar bar, double value) {
         this.contrastRatio = value;
+        txtContrastValue.setText(String.format("%.2f", contrastRatio));
         adjustContrast(contrastRatio);
+    }
+
+    public void onThresholdSeekBarChanged(StartPointSeekBar bar, double value) {
+        this.roiDetectionThreshold = value;
+        txtThresholdValue.setText(String.format("%d", (int) roiDetectionThreshold));
     }
 
     public void onFilterClicked(View v) {
@@ -644,7 +674,7 @@ public class PreviewActivity extends Activity implements Device.Delegate, FrameP
                 Log.i(Config.TAG, "thermalAnalyze recognizeContours started");
                 roiDetector = new ROIDetector(processedImage);
                 selectedContourIndex = -1;
-                Mat contourImg = roiDetector.recognizeContours(140); // 40
+                Mat contourImg = roiDetector.recognizeContours((int) roiDetectionThreshold); // 140, 40
                 Log.i(Config.TAG, "thermalAnalyze recognizeContours finished");
 
                 Bitmap resultBmp = Bitmap.createBitmap(imageWidth, imageHeight, Bitmap.Config.RGB_565);
@@ -726,8 +756,6 @@ public class PreviewActivity extends Activity implements Device.Delegate, FrameP
     }
 
     private void handleThermalImageTouch(int x, int y) {
-        boolean ignoreMovingSpot = false;
-
         // Calculate the correspondent point on the thermal image
         double ratio = (double) imageWidth / thermalImageView.getMeasuredWidth();
         int imgX = (int) (x * ratio);
@@ -740,23 +768,20 @@ public class PreviewActivity extends Activity implements Device.Delegate, FrameP
         if (flirOneDevice != null && !streamingFrame && !runningContourProcessing) {
             int contourIndex = roiDetector.getSelectedContourIndex(imgX, imgY);
             // If there is a contour selected
-            if (contourIndex != -1) {
-                this.selectedContourIndex = contourIndex;
-                ignoreMovingSpot = true;
+            if (contourIndex != -1 && contourIndex != selectedContourIndex) {
+                selectedContourIndex = contourIndex;
                 handleContourSelected(roiDetector.getContours().get(contourIndex));
             }
         }
 
         // Set indication spot location
-        if (!ignoreMovingSpot) {
-            RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams) layoutTempSpot.getLayoutParams();
-            params.leftMargin = x - layoutTempSpot.getMeasuredWidth() / 2;
-            params.topMargin = y + layoutTempSpot.getMeasuredHeight() / 2;
-            params.addRule(RelativeLayout.CENTER_HORIZONTAL, 0);
-            params.addRule(RelativeLayout.CENTER_VERTICAL, 0);
-            layoutTempSpot.setLayoutParams(params);
-            updateThermalSpotValue();
-        }
+        RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams) layoutTempSpot.getLayoutParams();
+        params.leftMargin = x - layoutTempSpot.getMeasuredWidth() / 2;
+        params.topMargin = y + layoutTempSpot.getMeasuredHeight() / 2;
+        params.addRule(RelativeLayout.CENTER_HORIZONTAL, 0);
+        params.addRule(RelativeLayout.CENTER_VERTICAL, 0);
+        layoutTempSpot.setLayoutParams(params);
+        updateThermalSpotValue();
     }
 
     private void handleContourSelected(final MatOfPoint contour) {
@@ -774,13 +799,13 @@ public class PreviewActivity extends Activity implements Device.Delegate, FrameP
     }
 
     private void adjustContrast(final double ratio) {
+        if (thermalDumpProcessor == null)
+            return;
+
         new Thread(new Runnable() {
             @Override
             public void run() {
-                Log.i(Config.TAG, String.format("Contrast adjustment (ratio=%.2f) started", ratio));
                 Mat processedImage = thermalDumpProcessor.getImage(ratio);
-                Log.i(Config.TAG, String.format("Contrast adjustment (ratio=%.2f) finished", ratio));
-
                 if (roiDetector != null && roiDetector.getContours() != null) {
                     if (selectedContourIndex != -1)
                         ROIDetector.drawSelectedContour(processedImage, true, roiDetector.getContours().get(selectedContourIndex));
