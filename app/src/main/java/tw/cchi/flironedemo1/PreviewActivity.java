@@ -50,8 +50,6 @@ import tw.cchi.flironedemo1.thermalproc.RawThermalDump;
 import tw.cchi.flironedemo1.thermalproc.ThermalAnalyzer;
 import tw.cchi.flironedemo1.thermalproc.ThermalDumpProcessor;
 
-import static org.opencv.imgproc.Imgproc.drawContours;
-
 public class PreviewActivity extends Activity implements Device.Delegate, FrameProcessor.Delegate, Device.StreamDelegate, Device.PowerUpdateDelegate {
     private volatile boolean streamingFrame = false;
     private volatile boolean runningThermalAnalysis = false;
@@ -70,7 +68,6 @@ public class PreviewActivity extends Activity implements Device.Delegate, FrameP
     private volatile int[] thermalPixels = null;
     private volatile ROIDetector roiDetector;
     private ThermalDumpProcessor thermalDumpProcessor;
-    private RawThermalDump thermalDump;
     private volatile Bitmap thermalBitmap = null;
     private volatile Thread contourProcessingThread = null;
     private volatile int selectedContourIndex = -1;
@@ -280,6 +277,9 @@ public class PreviewActivity extends Activity implements Device.Delegate, FrameP
         Log.i(Config.TAG, "Device disconnected!");
         streamingFrame = false;
         flirOneDevice = null;
+        thermalDumpProcessor = null;
+        roiDetector = null;
+        thermalBitmap = null;
         orientationEventListener.disable();
 
         runOnUiThread(new Runnable() {
@@ -473,7 +473,7 @@ public class PreviewActivity extends Activity implements Device.Delegate, FrameP
             if (streamingFrame) {
                 this.imageCaptureRequested = true;
             } else {
-                capturePorccessedImage();
+                captureProcessedImage();
             }
         }
     }
@@ -621,7 +621,7 @@ public class PreviewActivity extends Activity implements Device.Delegate, FrameP
         }).start();
     }
 
-    public void capturePorccessedImage() {
+    private void captureProcessedImage() {
         new Thread(new Runnable() {
             public void run() {
                 // String path = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES).toString();
@@ -710,7 +710,7 @@ public class PreviewActivity extends Activity implements Device.Delegate, FrameP
             @Override
             public void run() {
                 Log.i(Config.TAG, "thermalAnalyze preprocess started");
-                thermalDump = new RawThermalDump(renderedImage.width(), renderedImage.height(), thermalPixels);
+                RawThermalDump thermalDump = new RawThermalDump(renderedImage.width(), renderedImage.height(), thermalPixels);
                 thermalDumpProcessor = new ThermalDumpProcessor(thermalDump);
                 thermalDumpProcessor.autoFilter();
                 thermalDumpProcessor.filterBelow(2731 + 320); // 350
@@ -744,7 +744,6 @@ public class PreviewActivity extends Activity implements Device.Delegate, FrameP
         if (flirOneDevice != null && !streamingFrame) {
             flirOneDevice.startFrameStream(PreviewActivity.this);
             streamingFrame = true;
-            thermalDump = null;
             thermalDumpProcessor = null;
         }
     }
@@ -867,6 +866,7 @@ public class PreviewActivity extends Activity implements Device.Delegate, FrameP
             }
         }).start();
     }
+
 }
 
 // Notes:

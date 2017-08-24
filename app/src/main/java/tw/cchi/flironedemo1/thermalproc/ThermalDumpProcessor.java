@@ -3,12 +3,14 @@ package tw.cchi.flironedemo1.thermalproc;
 import android.util.Log;
 
 import org.opencv.android.OpenCVLoader;
+import org.opencv.core.Core;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfPoint;
 import org.opencv.core.MatOfPoint2f;
 import org.opencv.core.Point;
 
+import tw.cchi.flironedemo1.AppUtils;
 import tw.cchi.flironedemo1.Config;
 
 import static org.opencv.imgproc.Imgproc.pointPolygonTest;
@@ -139,13 +141,8 @@ public class ThermalDumpProcessor {
     }
 
     public void filterFromContour(MatOfPoint contour) {
-        MatOfPoint2f contour2f = new MatOfPoint2f(contour.toArray());
-        for (int row = 0; row < height; row++) {
-            for (int col = 0; col < width; col++) {
-                if (-1 == pointPolygonTest(contour2f, new Point(col, row), false)) {
-                    thermalValues10[col + row * width] = 0;
-                }
-            }
+        for (Point point : AppUtils.getPointsOutsideContour(contour, generatedImage.size())) {
+            thermalValues10[(int) (point.x + point.y * width)] = 0;
         }
         updateThermalHist();
         generatedImage = null;
