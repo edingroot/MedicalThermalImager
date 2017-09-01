@@ -214,11 +214,11 @@
                         android:layout_gravity="center_vertical"
                         android:layout_marginEnd="2dp"
                         android:layout_marginTop="2dp"
-                        android:text="@string/filter_threshold"
+                        android:text="@string/roi_threshold"
                         android:textSize="16sp"/>
 
                     <com.vashisthg.startpointseekbar.StartPointSeekBar
-                        android:id="@+id/filterThresSeekBar"
+                        android:id="@+id/roiThresSeekBar"
                         android:layout_gravity="center_vertical"
                         android:layout_weight="1"
                         custom:maxValue="230.0"
@@ -226,7 +226,7 @@
                         custom:progress="140.0"/>
 
                     <TextView
-                        android:id="@+id/txtFilterThresValue"
+                        android:id="@+id/txtROIThresValue"
                         android:layout_width="20sp"
                         android:layout_height="wrap_content"
                         android:layout_gravity="center_vertical|end"

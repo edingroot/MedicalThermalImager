@@ -95,8 +95,8 @@ public class PreviewActivity extends Activity implements Device.Delegate, FrameP
     @BindView(R.id.secondaryControlsContainer) View secondaryControlsContainer;
     @BindView(R.id.contrastSeekBar) StartPointSeekBar contrastSeekBar;
     @BindView(R.id.txtContrastValue) TextView txtContrastValue;
-    @BindView(R.id.filterThresSeekBar) StartPointSeekBar filterThresSeekBar;
-    @BindView(R.id.txtFilterThresValue) TextView txtFilterThresValue;
+    @BindView(R.id.roiThresSeekBar) StartPointSeekBar roiThresSeekBar;
+    @BindView(R.id.txtROIThresValue) TextView txtROIThresValue;
     @BindView(R.id.rcgnThresSeekBar) StartPointSeekBar rcgnThresSeekBar;
     @BindView(R.id.txtRcgnThresValue) TextView txtRcgnThresValue;
     @BindView(R.id.btnFilter) Button btnFilter;
@@ -165,10 +165,10 @@ public class PreviewActivity extends Activity implements Device.Delegate, FrameP
             }
         });
 
-        filterThresSeekBar.setOnSeekBarChangeListener(new StartPointSeekBar.OnSeekBarChangeListener() {
+        roiThresSeekBar.setOnSeekBarChangeListener(new StartPointSeekBar.OnSeekBarChangeListener() {
             @Override
             public void onOnSeekBarValueChange(StartPointSeekBar bar, double value) {
-                PreviewActivity.this.onFilterThresSeekBarChanged(bar, value);
+                PreviewActivity.this.onROIThresSeekBarChanged(bar, value);
             }
         });
 
@@ -210,8 +210,8 @@ public class PreviewActivity extends Activity implements Device.Delegate, FrameP
         secondaryControlsContainer.setVisibility(View.GONE);
         this.contrastRatio = contrastSeekBar.getProgress();
         txtContrastValue.setText(String.format("%.2f", contrastRatio));
-        this.roiDetectionThreshold = filterThresSeekBar.getProgress();
-        txtFilterThresValue.setText(String.format("%d", (int) roiDetectionThreshold));
+        this.roiDetectionThreshold = roiThresSeekBar.getProgress();
+        txtROIThresValue.setText(String.format("%d", (int) roiDetectionThreshold));
     }
 
     @Override
@@ -529,7 +529,7 @@ public class PreviewActivity extends Activity implements Device.Delegate, FrameP
             showingMoreInfo = false;
         } else {
             topControlsView.setVisibility(View.VISIBLE);
-            // Check if device is connected & on thermal analysis result preview mode
+            // Check if device is connected & is under thermal analysis result preview mode
             // if (flirOneDevice != null && thermalDumpProcessor != null)
             if (flirOneDevice != null)
                 secondaryControlsContainer.setVisibility(View.VISIBLE);
@@ -543,9 +543,9 @@ public class PreviewActivity extends Activity implements Device.Delegate, FrameP
         adjustContrast(contrastRatio);
     }
 
-    public void onFilterThresSeekBarChanged(StartPointSeekBar bar, double value) {
+    public void onROIThresSeekBarChanged(StartPointSeekBar bar, double value) {
         this.roiDetectionThreshold = value;
-        txtFilterThresValue.setText(String.format("%d", (int) roiDetectionThreshold));
+        txtROIThresValue.setText(String.format("%d", (int) roiDetectionThreshold));
     }
 
     public void onRcgnThresSeekBarChanged(StartPointSeekBar bar, double value) {

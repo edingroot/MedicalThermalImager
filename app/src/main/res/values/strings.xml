@@ -14,7 +14,7 @@
 
     <!-- Secondary Controls Panel -->
     <string name="contrast">Contrast</string>
-    <string name="filter_threshold">Filter Thres.</string>
+    <string name="roi_threshold">ROI Thres.</string>
     <string name="rcgn_threshold">Rcgn. Thres.</string>
     <string name="actions">Actions</string>
     <string name="filter">Filter</string>

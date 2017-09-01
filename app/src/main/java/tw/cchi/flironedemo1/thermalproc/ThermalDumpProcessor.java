@@ -37,7 +37,7 @@ public class ThermalDumpProcessor {
         this.pixelCount = thermalDump.thermalValues.length;
         this.thermalValues10 = new int[pixelCount];
 
-        // Load thermalValues10 & Calculate thermalHist (same as this.updateThermalHist())
+        // Load thermalValues10 & calculate thermalHist (same as this.updateThermalHist())
         thermalHist = new int[MAX_ALLOWED];
         thermalHistMin = pixelCount;
         thermalHistMax = 0;
@@ -52,7 +52,7 @@ public class ThermalDumpProcessor {
         }
     }
 
-    // Would be lossy compared to the original thermalDump input (due to thermalValues10 conversion)
+    // Would be lossy compared to the original thermalDump input (due to the thermalValues10 conversion)
     public RawThermalDump getThermalDump() {
         int[] thermalValues = new int[pixelCount];
         for (int i = 0; i < pixelCount; i++) {
@@ -103,6 +103,7 @@ public class ThermalDumpProcessor {
     }
 
     public void filterBelow(int thermalThreshold10K) {
+        Log.i(Config.TAG, "filterBelow");
         if (thermalThreshold10K <= thermalHistMin) {
             Log.e(Config.TAG, String.format("filterBelow: thermalHistMin=%d, newThreshold=%d, ignore.", thermalHistMin, thermalThreshold10K));
             return;
@@ -110,6 +111,8 @@ public class ThermalDumpProcessor {
 
         // Filter thermalValues10
         thermalHistMin = thermalThreshold10K;
+        if (thermalHistMin > thermalHistMax)
+            thermalHistMax = thermalHistMin;
         for (int i = 0; i < pixelCount; i++) {
             if (thermalValues10[i] < thermalHistMin) {
                 thermalHist[thermalValues10[i]]--;
@@ -141,6 +144,7 @@ public class ThermalDumpProcessor {
     }
 
     public void filterFromContour(MatOfPoint contour) {
+        Log.i(Config.TAG, "filterFromContour");
         for (Point point : AppUtils.getPointsOutsideContour(contour, generatedImage.size())) {
             thermalValues10[(int) (point.x + point.y * width)] = 0;
         }
@@ -149,7 +153,8 @@ public class ThermalDumpProcessor {
     }
 
     /**
-     * Get generated image with contrast adjusted with contrastRatio
+     * Get generated image with contrast adjusted with contrastRatio.
+     *
      * @param contrastRatio Enhance contrast if > 1 and vise versa.
      */
     public Mat getImage(double contrastRatio) {
@@ -173,7 +178,7 @@ public class ThermalDumpProcessor {
         Log.i(Config.TAG, String.format("generateThermalImage - min=%d, max=%d", thermalHistMin, thermalHistMax));
 
         // Generate thermal LUT
-        short[] thermalLUT = new short[thermalHistMax + 1]; // thermalLUT[tempK] = grayLevel (0~255)
+        short[] thermalLUT = new short[thermalHistMax + 1]; // thermalLUT[temp10K] = grayLevel (0~255)
         double increasePerK = 255.0 / (thermalHistMax - thermalHistMin);
         double sum = 0;
         for (int i = thermalHistMin; i <= thermalHistMax; i++) {
@@ -192,6 +197,8 @@ public class ThermalDumpProcessor {
     }
 
     private void updateThermalHist() {
+        Log.i(Config.TAG, "updateThermalHist");
+
         thermalHist = new int[MAX_ALLOWED];
         thermalHistMin = pixelCount;
         thermalHistMax = 0;
