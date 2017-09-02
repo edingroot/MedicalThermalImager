@@ -19,6 +19,7 @@ import static org.opencv.imgproc.Imgproc.drawContours;
 public class AppUtils {
 
     public static String getExportsDir() {
+        // String path = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES).toString();
         File dir = new File(Environment.getExternalStorageDirectory().getAbsolutePath() + "/flirEx1");
         dir.mkdirs();
         return dir.getAbsolutePath();

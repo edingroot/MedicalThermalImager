@@ -23,7 +23,7 @@ public class ThermalDumpParser {
         if (thermalPixelValues == null)
             thermalPixelValues = renderedImage.thermalPixelValues();
         try {
-            FileUtils.writeByteArrayToFile(new File(AppUtils.getExportsDir() + "/" + filename), serializePixels(thermalPixelValues));
+            FileUtils.writeByteArrayToFile(new File(filename), serializePixels(thermalPixelValues));
         } catch (Exception e) {
             Log.e("dumpRawThermalFile", "Exception: " + e.toString());
             e.printStackTrace();

@@ -68,8 +68,9 @@ public class PreviewActivity extends Activity implements Device.Delegate, FrameP
     private volatile int[] thermalPixels = null;
     private volatile ROIDetector roiDetector;
     private ThermalDumpProcessor thermalDumpProcessor;
-    private volatile Bitmap thermalBitmap = null;
     private volatile Thread contourProcessingThread = null;
+    private volatile Bitmap thermalBitmap = null;
+    private volatile RenderedImage lastRenderedImage = null;
     private volatile int selectedContourIndex = -1;
     private volatile double contrastRatio = 1;
     private volatile double roiDetectionThreshold = 1;
@@ -391,6 +392,7 @@ public class PreviewActivity extends Activity implements Device.Delegate, FrameP
     public void onFrameProcessed(final RenderedImage renderedImage) {
         if (!streamingFrame)
             return;
+        lastRenderedImage = renderedImage;
 
         if (imageCaptureRequested) {
             imageCaptureRequested = false;
@@ -474,6 +476,7 @@ public class PreviewActivity extends Activity implements Device.Delegate, FrameP
                 this.imageCaptureRequested = true;
             } else {
                 captureProcessedImage();
+                dumpThermalData(lastRenderedImage);
             }
         }
     }
@@ -601,40 +604,60 @@ public class PreviewActivity extends Activity implements Device.Delegate, FrameP
         });
     }
 
+    private void scanMediaStorageAndAnimate(String filename) {
+        // Call the system media scanner
+        MediaScannerConnection.scanFile(PreviewActivity.this,
+                new String[] {filename}, null,
+                new MediaScannerConnection.OnScanCompletedListener() {
+                    @Override
+                    public void onScanCompleted(String path, Uri uri) {
+                        Log.i(Config.TAG, "ExternalStorage Scanned " + path + ":");
+                        Log.i(Config.TAG, "ExternalStorage -> uri=" + uri);
+                    }
+
+                });
+
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                thermalImageView.animate().setDuration(50).scaleY(0).withEndAction((new Runnable() {
+                    public void run() {
+                        thermalImageView.animate().setDuration(50).scaleY(1);
+                    }
+                }));
+            }
+        });
+    }
+
+    // -----------------------------------------------------------------
+
     private void captureThermalImage(final RenderedImage renderedImage) {
+        final String filename = AppUtils.getExportsDir() + "/" + System.currentTimeMillis() + "_thermalImage.png";
+
         new Thread(new Runnable() {
             public void run() {
-                // String path = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES).toString();
-                String path = AppUtils.getExportsDir();
-                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd-HH-mm-ssZ", Locale.getDefault());
-                String filename = sdf.format(new Date()) + "_thermalImage.png";
-
                 try {
                     // Save the original thermal image
-                    renderedImage.getFrame().save(new File(path + "/" + filename), RenderedImage.Palette.Iron, RenderedImage.ImageType.BlendedMSXRGBA8888Image);
+                    renderedImage.getFrame().save(new File(filename), RenderedImage.Palette.Iron, RenderedImage.ImageType.BlendedMSXRGBA8888Image);
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
-
                 scanMediaStorageAndAnimate(filename);
             }
         }).start();
     }
 
     private void captureProcessedImage() {
+        final String filename = AppUtils.getExportsDir() + "/" + System.currentTimeMillis() + "_processedImage.png";
+
         new Thread(new Runnable() {
             public void run() {
-                // String path = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES).toString();
-                String path = AppUtils.getExportsDir();
-                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd-HH-mm-ssZ", Locale.getDefault());
-                String filename = sdf.format(new Date()) + "_processedImage.png";
-
                 try {
                     // Save the processed thermal image
                     if (thermalBitmap != null) {
                         FileOutputStream out = null;
                         try {
-                            out = new FileOutputStream(path + "/" + filename);
+                            out = new FileOutputStream(filename);
                             Mat img = thermalDumpProcessor.getImage(contrastRatio);
                             Bitmap bmp = Bitmap.createBitmap(imageWidth, imageHeight, Bitmap.Config.RGB_565);
                             Utils.matToBitmap(img, bmp);
@@ -662,37 +685,13 @@ public class PreviewActivity extends Activity implements Device.Delegate, FrameP
         }).start();
     }
 
-    private void scanMediaStorageAndAnimate(String filename) {
-        // Call the system media scanner
-        MediaScannerConnection.scanFile(PreviewActivity.this,
-                new String[] {filename}, null,
-                new MediaScannerConnection.OnScanCompletedListener() {
-                    @Override
-                    public void onScanCompleted(String path, Uri uri) {
-                        Log.i(Config.TAG, "ExternalStorage Scanned " + path + ":");
-                        Log.i(Config.TAG, "ExternalStorage -> uri=" + uri);
-                    }
-
-                });
-
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                thermalImageView.animate().setDuration(50).scaleY(0).withEndAction((new Runnable() {
-                    public void run() {
-                        thermalImageView.animate().setDuration(50).scaleY(1);
-                    }
-                }));
-            }
-        });
-    }
-
     private void dumpThermalData(final RenderedImage renderedImage) {
+        final String filename = AppUtils.getExportsDir() + "/" + System.currentTimeMillis() + "_rawThermal.dat";
+
         new Thread(new Runnable() {
             @Override
             public void run() {
                 ThermalDumpParser thermalDumpParser = new ThermalDumpParser(renderedImage);
-                String filename = "thermal-raw_" + System.currentTimeMillis() + ".dat";
                 if (thermalDumpParser.dumpRawThermalFile(filename)) {
                     showToastMessage("Dumped: " + filename);
                 } else {
