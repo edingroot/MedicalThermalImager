@@ -11,11 +11,11 @@ import java.io.File;
 
 import tw.cchi.flironedemo1.AppUtils;
 
-public class ThermalAnalyzer {
+public class ThermalDumpParser {
     private RenderedImage renderedImage;
     private int[] thermalPixelValues;
 
-    public ThermalAnalyzer(RenderedImage renderedImage) {
+    public ThermalDumpParser(RenderedImage renderedImage) {
         this.renderedImage = renderedImage;
     }
 

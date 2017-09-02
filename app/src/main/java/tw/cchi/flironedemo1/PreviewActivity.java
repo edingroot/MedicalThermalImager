@@ -47,7 +47,7 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import tw.cchi.flironedemo1.thermalproc.ROIDetector;
 import tw.cchi.flironedemo1.thermalproc.RawThermalDump;
-import tw.cchi.flironedemo1.thermalproc.ThermalAnalyzer;
+import tw.cchi.flironedemo1.thermalproc.ThermalDumpParser;
 import tw.cchi.flironedemo1.thermalproc.ThermalDumpProcessor;
 
 public class PreviewActivity extends Activity implements Device.Delegate, FrameProcessor.Delegate, Device.StreamDelegate, Device.PowerUpdateDelegate {
@@ -691,9 +691,9 @@ public class PreviewActivity extends Activity implements Device.Delegate, FrameP
         new Thread(new Runnable() {
             @Override
             public void run() {
-                ThermalAnalyzer thermalAnalyzer = new ThermalAnalyzer(renderedImage);
+                ThermalDumpParser thermalDumpParser = new ThermalDumpParser(renderedImage);
                 String filename = "thermal-raw_" + System.currentTimeMillis() + ".dat";
-                if (thermalAnalyzer.dumpRawThermalFile(filename)) {
+                if (thermalDumpParser.dumpRawThermalFile(filename)) {
                     showToastMessage("Dumped: " + filename);
                 } else {
                     showToastMessage("Dumped filed.");
