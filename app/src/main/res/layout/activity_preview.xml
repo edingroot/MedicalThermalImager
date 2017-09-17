@@ -39,40 +39,27 @@
             android:orientation="horizontal"
             tools:ignore="UselessParent">
 
-            <TextView
-                android:id="@+id/batteryLabelTextView"
-                style="?actionMenuTextAppearance"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="left|center_vertical"
-                android:layout_margin="8dp"
-                android:layout_weight="0"
-                android:text="@string/battery_label"
-                android:textAppearance="?android:attr/textAppearanceMedium"/>
-
-            <ImageView
-                android:id="@+id/batteryChargeIndicator"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="left|center_vertical"
-                android:layout_weight="0"
-                android:src="@android:drawable/ic_lock_idle_charging"
-                android:tint="@color/accent_material_light"
-                android:visibility="gone"/>
-
-            <TextView
-                android:id="@+id/batteryLevelTextView"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="left|center_vertical"
-                android:layout_weight="0.5"
-                android:text="--"
-                android:textAppearance="?android:attr/textAppearanceMedium"/>
-
             <View
-                android:layout_width="55dp"
+                android:layout_width="75dp"
                 android:layout_height="match_parent"
                 android:visibility="invisible"/>
+
+            <ImageButton
+                android:id="@+id/imgBtnAnalyze"
+                style="?metaButtonBarButtonStyle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:onClick="onAnalyzeClicked"
+                android:src="@android:drawable/ic_menu_mapmode"/>
+
+            <ImageButton
+                android:id="@+id/imageButton"
+                style="?metaButtonBarButtonStyle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal|bottom"
+                android:onClick="onCaptureImageClicked"
+                android:src="@android:drawable/ic_menu_camera"/>
 
             <Button
                 android:id="@+id/btnDump"
@@ -132,22 +119,35 @@
                 android:layout_gravity="center_horizontal|bottom"
                 android:orientation="horizontal">
 
-                <ImageButton
-                    android:id="@+id/imageButton"
-                    style="?metaButtonBarButtonStyle"
+                <TextView
+                    android:id="@+id/batteryLabelTextView"
+                    style="?actionMenuTextAppearance"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_gravity="center_horizontal|bottom"
-                    android:onClick="onCaptureImageClicked"
-                    android:src="@android:drawable/ic_menu_camera"/>
+                    android:layout_gravity="left|center_vertical"
+                    android:layout_margin="8dp"
+                    android:layout_weight="0"
+                    android:text="@string/battery_label"
+                    android:textAppearance="?android:attr/textAppearanceMedium"/>
 
-                <ImageButton
-                    android:id="@+id/imgBtnAnalyze"
-                    style="?metaButtonBarButtonStyle"
+                <TextView
+                    android:id="@+id/batteryLevelTextView"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:onClick="onAnalyzeClicked"
-                    android:src="@android:drawable/ic_menu_mapmode"/>
+                    android:layout_gravity="left|center_vertical"
+                    android:layout_weight="0.5"
+                    android:text="--"
+                    android:textAppearance="?android:attr/textAppearanceMedium"/>
+
+                <ImageView
+                    android:id="@+id/batteryChargeIndicator"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="left|center_vertical"
+                    android:layout_weight="0"
+                    android:src="@android:drawable/ic_lock_idle_charging"
+                    android:tint="@color/accent_material_light"
+                    android:visibility="gone"/>
 
             </LinearLayout>
 
