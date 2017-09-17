@@ -632,7 +632,8 @@ public class PreviewActivity extends Activity implements Device.Delegate, FrameP
     // -----------------------------------------------------------------
 
     private void captureThermalImage(final RenderedImage renderedImage) {
-        final String filename = AppUtils.getExportsDir() + "/" + System.currentTimeMillis() + "_thermalImage.png";
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd-HH-mm-ss", Locale.getDefault());
+        final String filename = AppUtils.getExportsDir() + "/" + sdf.format(new Date()) + "_thermalImage.png";
 
         new Thread(new Runnable() {
             public void run() {
@@ -648,7 +649,8 @@ public class PreviewActivity extends Activity implements Device.Delegate, FrameP
     }
 
     private void captureProcessedImage() {
-        final String filename = AppUtils.getExportsDir() + "/" + System.currentTimeMillis() + "_processedImage.png";
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd-HH-mm-ss", Locale.getDefault());
+        final String filename = AppUtils.getExportsDir() + "/" + sdf.format(new Date()) + "_processedImage.png";
 
         new Thread(new Runnable() {
             public void run() {
@@ -686,7 +688,8 @@ public class PreviewActivity extends Activity implements Device.Delegate, FrameP
     }
 
     private void dumpThermalData(final RenderedImage renderedImage) {
-        final String filename = AppUtils.getExportsDir() + "/" + System.currentTimeMillis() + "_rawThermal.dat";
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd-HH-mm-ss", Locale.getDefault());
+        final String filename = AppUtils.getExportsDir() + "/" + sdf.format(new Date()) + "_rawThermal.dat";
 
         new Thread(new Runnable() {
             @Override
@@ -712,7 +715,8 @@ public class PreviewActivity extends Activity implements Device.Delegate, FrameP
                 RawThermalDump thermalDump = new RawThermalDump(renderedImage.width(), renderedImage.height(), thermalPixels);
                 thermalDumpProcessor = new ThermalDumpProcessor(thermalDump);
                 thermalDumpProcessor.autoFilter();
-                thermalDumpProcessor.filterBelow(2731 + 320); // 350
+                thermalDumpProcessor.filterBelow(2731 + 200); // 320, 350
+                thermalDumpProcessor.filterAbove(2731 + 600);
                 Mat processedImage = thermalDumpProcessor.getImage(contrastRatio);
                 Log.i(Config.TAG, "thermalAnalyze preprocess finished");
 

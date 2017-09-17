@@ -132,6 +132,8 @@ public class ThermalDumpProcessor {
 
         // Filter thermalValues10
         thermalHistMax = thermalThreshold10K;
+        if (thermalHistMax < thermalHistMin)
+            thermalHistMin = thermalHistMax;
         for (int i = 0; i < pixelCount; i++) {
             if (thermalValues10[i] > thermalHistMax) {
                 thermalHist[thermalValues10[i]]--;
