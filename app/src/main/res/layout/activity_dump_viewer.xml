@@ -1,10 +1,47 @@
-<?xml version="1.0" encoding="utf-8"?>
-<android.support.constraint.ConstraintLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    tools:context="tw.cchi.flironedemo1.DumpViewerActivity">
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                xmlns:tools="http://schemas.android.com/tools"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                xmlns:custom="http://schemas.android.com/apk/res-auto"
+                android:background="@android:color/background_dark"
+                android:orientation="vertical"
+                tools:context=".PreviewActivity"
+                android:keepScreenOn="true"
+                android:id="@+id/topView"
+                android:touchscreenBlocksFocus="false">
 
-</android.support.constraint.ConstraintLayout>
+
+    <ImageView
+        android:id="@+id/imageView"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:layout_centerVertical="true"
+        android:adjustViewBounds="true"
+        android:focusable="false"
+        android:focusableInTouchMode="false"
+        android:scaleType="fitCenter"/>
+
+
+    <LinearLayout
+        android:id="@+id/fullscreen_content_controls_top"
+        style="@android:style/ButtonBar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="top|center_horizontal"
+        android:background="@color/black_overlay"
+        android:orientation="horizontal"
+        tools:ignore="UselessParent">
+
+        <ImageButton
+            android:id="@+id/imgBtnPick"
+            style="?metaButtonBarButtonStyle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:onClick="onImagePickClicked"
+            android:src="@android:drawable/ic_menu_search"/>
+
+    </LinearLayout>
+
+
+</RelativeLayout>

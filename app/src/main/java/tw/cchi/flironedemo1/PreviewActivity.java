@@ -73,16 +73,16 @@ public class PreviewActivity extends Activity implements Device.Delegate, FrameP
     private volatile Device flirOneDevice;
     private FrameProcessor frameProcessor;
     private Device.TuningState currentTuningState = Device.TuningState.Unknown;
-    private ColorFilter originalChargingIndicatorColor = null;
-    private volatile int[] thermalPixels = null;
-    private volatile Bitmap thermalBitmap = null; // last frame updated to imageview
-    private volatile Bitmap opacityMask = null;
+    private ColorFilter originalChargingIndicatorColor;
+    private volatile int[] thermalPixels;
+    private volatile Bitmap thermalBitmap; // last frame updated to imageview
+    private volatile Bitmap opacityMask;
 
     // Related to thermal analysis
     private volatile ROIDetector roiDetector;
     private ThermalDumpProcessor thermalDumpProcessor;
-    private volatile Thread contourProcessingThread = null;
-    private volatile RenderedImage lastRenderedImage = null;
+    private volatile Thread contourProcessingThread;
+    private volatile RenderedImage lastRenderedImage;
     private volatile int selectedContourIndex = -1;
     private volatile double contrastRatio = 1;
     private volatile double roiDetectionThreshold = 1;
@@ -270,9 +270,9 @@ public class PreviewActivity extends Activity implements Device.Delegate, FrameP
                     cursor.moveToFirst();
 
                     int columnIndex = cursor.getColumnIndex(filePathColumn[0]);
-                    String imgDecodableString = cursor.getString(columnIndex);
+                    String filepath = cursor.getString(columnIndex);
                     cursor.close();
-                    opacityMask = BitmapFactory.decodeFile(imgDecodableString);
+                    opacityMask = BitmapFactory.decodeFile(filepath);
                     imgBtnPick.setBackgroundColor(getResources().getColor(android.R.color.holo_blue_dark));
 
                     // Reconnect sim device if it was connected previously
@@ -625,7 +625,7 @@ public class PreviewActivity extends Activity implements Device.Delegate, FrameP
                     Log.i(Config.TAG, "thermalAnalysis filterFromContour & generate image started");
                     thermalDumpProcessor.filterFromContour(contour);
                     // thermalDumpProcessor.autoFilter();
-                    Mat processedImage = thermalDumpProcessor.getImage(contrastRatio);
+                    Mat processedImage = thermalDumpProcessor.getImageMat(contrastRatio);
                     Log.i(Config.TAG, "thermalAnalysis filterFromContour & generate image finished");
 
                     // Show filtered result
@@ -818,7 +818,7 @@ public class PreviewActivity extends Activity implements Device.Delegate, FrameP
                         FileOutputStream out = null;
                         try {
                             out = new FileOutputStream(filename);
-                            Mat img = thermalDumpProcessor.getImage(contrastRatio);
+                            Mat img = thermalDumpProcessor.getImageMat(contrastRatio);
                             Bitmap bmp = Bitmap.createBitmap(imageWidth, imageHeight, Bitmap.Config.RGB_565);
                             Utils.matToBitmap(img, bmp);
                             // PNG is a lossless format, the compression factor (100) is ignored
@@ -852,8 +852,7 @@ public class PreviewActivity extends Activity implements Device.Delegate, FrameP
         new Thread(new Runnable() {
             @Override
             public void run() {
-                ThermalDumpParser thermalDumpParser = new ThermalDumpParser(renderedImage);
-                if (thermalDumpParser.dumpRawThermalFile(filename)) {
+                if (ThermalDumpParser.saveRawThermalDump(renderedImage, filename)) {
                     showToastMessage("Dumped: " + filename);
                 } else {
                     showToastMessage("Dumped filed.");
@@ -875,7 +874,7 @@ public class PreviewActivity extends Activity implements Device.Delegate, FrameP
                 thermalDumpProcessor.autoFilter();
                 thermalDumpProcessor.filterBelow(2731 + 200); // 320, 350
                 thermalDumpProcessor.filterAbove(2731 + 600);
-                Mat processedImage = thermalDumpProcessor.getImage(contrastRatio);
+                Mat processedImage = thermalDumpProcessor.getImageMat(contrastRatio);
                 Log.i(Config.TAG, "thermalAnalyze preprocess finished");
 
                 Log.i(Config.TAG, "thermalAnalyze recognizeContours started");
@@ -914,7 +913,7 @@ public class PreviewActivity extends Activity implements Device.Delegate, FrameP
             @Override
             public void run() {
                 // Change selected contour color
-                Mat imgSelected = thermalDumpProcessor.getImage(contrastRatio);
+                Mat imgSelected = thermalDumpProcessor.getImageMat(contrastRatio);
                 ROIDetector.drawSelectedContour(imgSelected, contour);
                 Bitmap resultBmp = Bitmap.createBitmap(imageWidth, imageHeight, Bitmap.Config.RGB_565);
                 Utils.matToBitmap(imgSelected, resultBmp);
@@ -930,7 +929,7 @@ public class PreviewActivity extends Activity implements Device.Delegate, FrameP
         new Thread(new Runnable() {
             @Override
             public void run() {
-                Mat processedImage = thermalDumpProcessor.getImage(ratio);
+                Mat processedImage = thermalDumpProcessor.getImageMat(ratio);
                 if (roiDetector != null && roiDetector.getContours() != null) {
                     if (selectedContourIndex != -1)
                         ROIDetector.drawSelectedContour(processedImage, roiDetector.getContours().get(selectedContourIndex));

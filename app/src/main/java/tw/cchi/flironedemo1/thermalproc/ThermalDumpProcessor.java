@@ -1,8 +1,10 @@
 package tw.cchi.flironedemo1.thermalproc;
 
+import android.graphics.Bitmap;
 import android.util.Log;
 
 import org.opencv.android.OpenCVLoader;
+import org.opencv.android.Utils;
 import org.opencv.core.Core;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
@@ -155,11 +157,11 @@ public class ThermalDumpProcessor {
     }
 
     /**
-     * Get generated image with contrast adjusted with contrastRatio.
+     * Get generated image Mat with contrast adjusted with contrastRatio.
      *
      * @param contrastRatio Enhance contrast if > 1 and vise versa.
      */
-    public Mat getImage(double contrastRatio) {
+    public Mat getImageMat(double contrastRatio) {
         if (generatedImage == null) {
             generateThermalImage();
         }
@@ -172,6 +174,17 @@ public class ThermalDumpProcessor {
             generatedImage.convertTo(result, -1, contrastRatio, 0);
             return result;
         }
+    }
+
+    /**
+     * Get generated image with contrast adjusted with contrastRatio.
+     *
+     * @param contrastRatio Enhance contrast if > 1 and vise versa.
+     */
+    public Bitmap getBitmap(double contrastRatio) {
+        Bitmap resultBmp = Bitmap.createBitmap(width, height, Bitmap.Config.RGB_565);
+        Utils.matToBitmap(getImageMat(contrastRatio), resultBmp);
+        return resultBmp;
     }
 
     private synchronized void generateThermalImage() {
