@@ -64,13 +64,17 @@
                 android:onClick="onCaptureImageClicked"
                 android:src="@android:drawable/ic_menu_camera"/>
 
-            <Button
-                android:id="@+id/btnDump"
+            <ToggleButton
+                android:id="@+id/switch_rotate"
                 style="?metaButtonBarButtonStyle"
-                android:layout_width="wrap_content"
+                android:layout_width="40dp"
                 android:layout_height="wrap_content"
-                android:onClick="onDumpThermalRawClicked"
-                android:text="@string/dumpThermalRaw"/>
+                android:layout_gravity="right"
+                android:checked="false"
+                android:onClick="onRotateClicked"
+                android:text="@string/rotate_on"
+                android:textOff="@string/rotate_off"
+                android:textOn="@string/rotate_on"/>
 
             <Button
                 android:id="@+id/tuneButton"
@@ -80,16 +84,13 @@
                 android:onClick="onTuneClicked"
                 android:text="@string/performTuning"/>
 
-            <ToggleButton
-                android:id="@+id/switch_rotate"
+            <Button
+                android:id="@+id/btnTools"
                 style="?metaButtonBarButtonStyle"
-                android:layout_width="47dp"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_gravity="right"
-                android:onClick="onRotateClicked"
-                android:text="@string/rotate_on"
-                android:textOff="@string/rotate_off"
-                android:textOn="@string/rotate_on"/>
+                android:onClick="onToolsClicked"
+                android:text="@string/tools"/>
 
 
         </LinearLayout>

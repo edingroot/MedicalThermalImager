@@ -15,6 +15,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.util.Log;
+import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.OrientationEventListener;
 import android.view.ScaleGestureDetector;
@@ -22,6 +23,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.PopupMenu;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -112,6 +114,7 @@ public class PreviewActivity extends Activity implements Device.Delegate, FrameP
     @BindView(R.id.btnFilter) Button btnFilter;
     @BindView(R.id.btnRcgHigh) Button btnRcgHigh;
     @BindView(R.id.imgBtnPick) ImageButton imgBtnPick;
+    @BindView(R.id.btnTools) Button btnTools;
 
     ScaleGestureDetector mScaleDetector;
 
@@ -241,6 +244,16 @@ public class PreviewActivity extends Activity implements Device.Delegate, FrameP
         }
     }
 
+    @Override
+    public void onStop() {
+        // We must unregister our usb receiver, otherwise we will steal events from other apps
+        Log.e(Config.TAG, "PreviewActivity onStop, stopping discovery!");
+        Device.stopDiscovery();
+        flirOneDevice = null;
+        super.onStop();
+    }
+
+    @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
@@ -269,20 +282,6 @@ public class PreviewActivity extends Activity implements Device.Delegate, FrameP
                 }
                 break;
         }
-    }
-
-    @Override
-    public void onStop() {
-        // We must unregister our usb receiver, otherwise we will steal events from other apps
-        Log.e(Config.TAG, "PreviewActivity onStop, stopping discovery!");
-        Device.stopDiscovery();
-        flirOneDevice = null;
-        super.onStop();
-    }
-
-    @Override
-    protected void onPostCreate(Bundle savedInstanceState) {
-        super.onPostCreate(savedInstanceState);
     }
 
     public void onDeviceConnected(Device device) {
@@ -561,12 +560,24 @@ public class PreviewActivity extends Activity implements Device.Delegate, FrameP
         }
     }
 
-    public void onDumpThermalRawClicked(View v) {
-        if (flirOneDevice != null && streamingFrame && !thermalDumpRequested) {
-            this.thermalDumpRequested = true;
-        }
-    }
+    public void onToolsClicked(View v) {
+        PopupMenu popup = new PopupMenu(this, v);
+        popup.inflate(R.menu.tools_menu);
+        popup.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
+            @Override
+            public boolean onMenuItemClick(MenuItem item) {
+                switch (item.getItemId()) {
+                    case R.id.action_dump_viewer:
+                        startActivity(new Intent(PreviewActivity.this, DumpViewerActivity.class));
+                        return true;
 
+                    default:
+                        return false;
+                }
+            }
+        });
+        popup.show();
+    }
 
     /* ---------- Secondary control panel ---------- */
 
