@@ -1,19 +1,26 @@
 package tw.cchi.flironedemo1;
 
 import android.app.Activity;
+import android.content.Intent;
+import android.database.Cursor;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.ColorFilter;
+import android.graphics.Paint;
 import android.graphics.PorterDuff;
 import android.media.MediaScannerConnection;
 import android.net.Uri;
 import android.os.Bundle;
+import android.provider.MediaStore;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.OrientationEventListener;
 import android.view.ScaleGestureDetector;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
@@ -51,31 +58,33 @@ import tw.cchi.flironedemo1.thermalproc.ThermalDumpParser;
 import tw.cchi.flironedemo1.thermalproc.ThermalDumpProcessor;
 
 public class PreviewActivity extends Activity implements Device.Delegate, FrameProcessor.Delegate, Device.StreamDelegate, Device.PowerUpdateDelegate {
+    public static final int ACTION_PICK_FROM_GALLERY = 100;
+
+    private volatile boolean simConnected = false;
     private volatile boolean streamingFrame = false;
     private volatile boolean runningThermalAnalysis = false;
     private volatile boolean runningContourProcessing = false;
     private volatile boolean imageCaptureRequested = false;
     private volatile boolean thermalAnalyzeRequested = false;
     private volatile boolean thermalDumpRequested = false;
-
     private OrientationEventListener orientationEventListener;
     private volatile Device flirOneDevice;
     private FrameProcessor frameProcessor;
     private Device.TuningState currentTuningState = Device.TuningState.Unknown;
     private ColorFilter originalChargingIndicatorColor = null;
+    private volatile int[] thermalPixels = null;
+    private volatile Bitmap thermalBitmap = null; // last frame updated to imageview
+    private volatile Bitmap opacityMask = null;
 
     // Related to thermal analysis
-    private volatile int[] thermalPixels = null;
     private volatile ROIDetector roiDetector;
     private ThermalDumpProcessor thermalDumpProcessor;
     private volatile Thread contourProcessingThread = null;
-    private volatile Bitmap thermalBitmap = null;
     private volatile RenderedImage lastRenderedImage = null;
     private volatile int selectedContourIndex = -1;
     private volatile double contrastRatio = 1;
     private volatile double roiDetectionThreshold = 1;
     private volatile double recognitionThreshold = 1;
-
     private int deviceRotation = 0;
     private int imageWidth = 0;
     private int imageHeight = 0;
@@ -102,6 +111,7 @@ public class PreviewActivity extends Activity implements Device.Delegate, FrameP
     @BindView(R.id.txtRcgnThresValue) TextView txtRcgnThresValue;
     @BindView(R.id.btnFilter) Button btnFilter;
     @BindView(R.id.btnRcgHigh) Button btnRcgHigh;
+    @BindView(R.id.imgBtnPick) ImageButton imgBtnPick;
 
     ScaleGestureDetector mScaleDetector;
 
@@ -191,7 +201,7 @@ public class PreviewActivity extends Activity implements Device.Delegate, FrameP
     @Override
     protected void onStart() {
         super.onStart();
-        
+
         if (Device.getSupportedDeviceClasses(this).contains(FlirUsbDevice.class)) {
             pleaseConnect.setVisibility(View.VISIBLE);
         }
@@ -228,6 +238,36 @@ public class PreviewActivity extends Activity implements Device.Delegate, FrameP
         super.onResume();
         if (flirOneDevice != null) {
             flirOneDevice.startFrameStream(this);
+        }
+    }
+
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        switch (requestCode) {
+            case ACTION_PICK_FROM_GALLERY:
+                if (resultCode == Activity.RESULT_OK) {
+                    // Pick image from gallery
+                    Uri selectedImage = data.getData();
+                    String[] filePathColumn = {MediaStore.Images.Media.DATA};
+
+                    // Get the cursor
+                    Cursor cursor = this.getContentResolver().query(selectedImage, filePathColumn, null, null, null);
+                    // Move to first row
+                    cursor.moveToFirst();
+
+                    int columnIndex = cursor.getColumnIndex(filePathColumn[0]);
+                    String imgDecodableString = cursor.getString(columnIndex);
+                    cursor.close();
+                    opacityMask = BitmapFactory.decodeFile(imgDecodableString);
+                    imgBtnPick.setBackgroundColor(getResources().getColor(android.R.color.holo_blue_dark));
+
+                    // Reconnect sim device if it was connected previously
+                    if (simConnected && flirOneDevice == null) {
+                        connectSimulatedDevice();
+                    }
+                }
+                break;
         }
     }
 
@@ -450,7 +490,7 @@ public class PreviewActivity extends Activity implements Device.Delegate, FrameP
             //     Log.i(Config.TAG, "ImageType=" + type);
             // }
         } else {
-            if (thermalBitmap == null) {
+            /*if (thermalBitmap == null) {
                 thermalBitmap = renderedImage.getBitmap();
             } else {
                 try {
@@ -458,8 +498,8 @@ public class PreviewActivity extends Activity implements Device.Delegate, FrameP
                 } catch (IllegalArgumentException e) {
                     thermalBitmap = renderedImage.getBitmap();
                 }
-            }
-            updateThermalImageView(thermalBitmap);
+            }*/
+            updateThermalImageView(renderedImage.getBitmap());
         }
     }
 
@@ -493,17 +533,12 @@ public class PreviewActivity extends Activity implements Device.Delegate, FrameP
 
     public void onConnectSimClicked(View v) {
         if (flirOneDevice == null) {
-            try {
-                flirOneDevice = new SimulatedDevice(this, this, getResources().openRawResource(R.raw.sampleframes), 10);
-                flirOneDevice.setPowerUpdateDelegate(this);
-            } catch (Exception ex) {
-                flirOneDevice = null;
-                Log.w(Config.TAG, "IO EXCEPTION");
-                ex.printStackTrace();
-            }
+            connectSimulatedDevice();
+
         } else if (flirOneDevice instanceof SimulatedDevice) {
             flirOneDevice.close();
             flirOneDevice = null;
+            simConnected = false;
         }
     }
 
@@ -513,6 +548,17 @@ public class PreviewActivity extends Activity implements Device.Delegate, FrameP
             thermalImageView.setRotation(180);
         } else {
             thermalImageView.setRotation(0);
+        }
+    }
+
+    public void onImagePickClicked(View v) {
+        if (opacityMask == null) {
+            Intent galleryIntent = new Intent(
+                    Intent.ACTION_PICK, android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+            startActivityForResult(galleryIntent, ACTION_PICK_FROM_GALLERY);
+        } else {
+            opacityMask = null;
+            imgBtnPick.setBackgroundColor(0);
         }
     }
 
@@ -607,7 +653,7 @@ public class PreviewActivity extends Activity implements Device.Delegate, FrameP
     private void scanMediaStorageAndAnimate(String filename) {
         // Call the system media scanner
         MediaScannerConnection.scanFile(PreviewActivity.this,
-                new String[] {filename}, null,
+                new String[]{filename}, null,
                 new MediaScannerConnection.OnScanCompletedListener() {
                     @Override
                     public void onScanCompleted(String path, Uri uri) {
@@ -630,6 +676,109 @@ public class PreviewActivity extends Activity implements Device.Delegate, FrameP
     }
 
     // -----------------------------------------------------------------
+
+    private void connectSimulatedDevice() {
+        try {
+            flirOneDevice = new SimulatedDevice(this, this, getResources().openRawResource(R.raw.sampleframes), 10);
+            flirOneDevice.setPowerUpdateDelegate(this);
+        } catch (Exception ex) {
+            flirOneDevice = null;
+            Log.w(Config.TAG, "IO EXCEPTION");
+            ex.printStackTrace();
+        }
+        simConnected = true;
+    }
+
+    private void updateThermalImageView(final Bitmap frame) {
+        // Draw opacity mask if assigned
+        if (opacityMask != null) {
+            Canvas canvas = new Canvas(frame);
+            Paint alphaPaint = new Paint();
+            alphaPaint.setAlpha(Config.OPACITY_MASK_ALPHA);
+            canvas.drawBitmap(opacityMask, 0, 0, alphaPaint);
+        }
+
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                thermalImageView.setImageBitmap(frame);
+            }
+        });
+
+        // Perform a native deep copy to avoid object referencing
+        thermalBitmap = frame.copy(frame.getConfig(), frame.isMutable());
+    }
+
+    private void updateThermalSpotValue() {
+        if (thermalPixels == null)
+            return;
+
+        // Note: this code is not optimized
+        // average the center 9 pixels for the spot meter
+        int centerPixelIndex;
+        if (thermalSpotX == -1) {
+            centerPixelIndex = imageWidth * (imageHeight / 2) + (imageWidth / 2);
+        } else {
+            centerPixelIndex = imageWidth * thermalSpotY + thermalSpotX;
+        }
+        int[] centerPixelIndexes = new int[]{
+                centerPixelIndex, centerPixelIndex - 1, centerPixelIndex + 1,
+                centerPixelIndex - imageWidth,
+                centerPixelIndex - imageWidth - 1,
+                centerPixelIndex - imageWidth + 1,
+                centerPixelIndex + imageWidth,
+                centerPixelIndex + imageWidth - 1,
+                centerPixelIndex + imageWidth + 1
+        };
+
+        double averageTemp = 0;
+        for (int i = 0; i < centerPixelIndexes.length; i++) {
+            // Remember: all primitives are signed, we want the unsigned value,
+            // we've used renderedImage.thermalPixelValues() to get unsigned values
+            int pixelValue = thermalPixels[centerPixelIndexes[i]];
+            averageTemp += (((double) pixelValue) - averageTemp) / ((double) i + 1);
+        }
+        double averageC = (averageTemp / 100) - 273.15;
+        NumberFormat numberFormat = NumberFormat.getInstance();
+        numberFormat.setMaximumFractionDigits(2);
+        numberFormat.setMinimumFractionDigits(2);
+        final String spotMeterValue = numberFormat.format(averageC) + "ºC";
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                PreviewActivity.this.spotMeterValue.setText(spotMeterValue);
+            }
+        });
+    }
+
+    private void handleThermalImageTouch(int x, int y) {
+        // Calculate the correspondent point on the thermal image
+        double ratio = (double) imageWidth / thermalImageView.getMeasuredWidth();
+        int imgX = (int) (x * ratio);
+        int imgY = (int) (y * ratio);
+        Log.i(Config.TAG, String.format("Actual touched point: x=%d, y=%d\n", imgX, imgY));
+        thermalSpotX = AppUtils.trimByRange(imgX, 1, imageWidth - 1);
+        thermalSpotY = AppUtils.trimByRange(imgY, 1, imageHeight - 1);
+
+        // If is in thermal analysis result preview mode and the previous analysis is finished, handle selection.
+        if (flirOneDevice != null && !streamingFrame && !runningContourProcessing) {
+            int contourIndex = roiDetector.getSelectedContourIndex(imgX, imgY);
+            // If there is a contour selected
+            if (contourIndex != -1 && contourIndex != selectedContourIndex) {
+                selectedContourIndex = contourIndex;
+                handleContourSelected(roiDetector.getContours().get(contourIndex));
+            }
+        }
+
+        // Set indication spot location
+        RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams) layoutTempSpot.getLayoutParams();
+        params.leftMargin = x - layoutTempSpot.getMeasuredWidth() / 2;
+        params.topMargin = y + layoutTempSpot.getMeasuredHeight() / 2;
+        params.addRule(RelativeLayout.CENTER_HORIZONTAL, 0);
+        params.addRule(RelativeLayout.CENTER_VERTICAL, 0);
+        layoutTempSpot.setLayoutParams(params);
+        updateThermalSpotValue();
+    }
 
     private void captureThermalImage(final RenderedImage renderedImage) {
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd-HH-mm-ss", Locale.getDefault());
@@ -749,87 +898,6 @@ public class PreviewActivity extends Activity implements Device.Delegate, FrameP
             streamingFrame = true;
             thermalDumpProcessor = null;
         }
-    }
-
-    private void updateThermalImageView(final Bitmap frame) {
-        thermalBitmap = frame;
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                thermalImageView.setImageBitmap(frame);
-            }
-        });
-    }
-
-    private void updateThermalSpotValue() {
-        if (thermalPixels == null)
-            return;
-
-        // Note: this code is not optimized
-        // average the center 9 pixels for the spot meter
-        int centerPixelIndex;
-        if (thermalSpotX == -1) {
-            centerPixelIndex = imageWidth * (imageHeight / 2) + (imageWidth / 2);
-        } else {
-            centerPixelIndex = imageWidth * thermalSpotY + thermalSpotX;
-        }
-        int[] centerPixelIndexes = new int[]{
-                centerPixelIndex, centerPixelIndex - 1, centerPixelIndex + 1,
-                centerPixelIndex - imageWidth,
-                centerPixelIndex - imageWidth - 1,
-                centerPixelIndex - imageWidth + 1,
-                centerPixelIndex + imageWidth,
-                centerPixelIndex + imageWidth - 1,
-                centerPixelIndex + imageWidth + 1
-        };
-
-        double averageTemp = 0;
-        for (int i = 0; i < centerPixelIndexes.length; i++) {
-            // Remember: all primitives are signed, we want the unsigned value,
-            // we've used renderedImage.thermalPixelValues() to get unsigned values
-            int pixelValue = thermalPixels[centerPixelIndexes[i]];
-            averageTemp += (((double) pixelValue) - averageTemp) / ((double) i + 1);
-        }
-        double averageC = (averageTemp / 100) - 273.15;
-        NumberFormat numberFormat = NumberFormat.getInstance();
-        numberFormat.setMaximumFractionDigits(2);
-        numberFormat.setMinimumFractionDigits(2);
-        final String spotMeterValue = numberFormat.format(averageC) + "ºC";
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                PreviewActivity.this.spotMeterValue.setText(spotMeterValue);
-            }
-        });
-    }
-
-    private void handleThermalImageTouch(int x, int y) {
-        // Calculate the correspondent point on the thermal image
-        double ratio = (double) imageWidth / thermalImageView.getMeasuredWidth();
-        int imgX = (int) (x * ratio);
-        int imgY = (int) (y * ratio);
-        Log.i(Config.TAG, String.format("Actual touched point: x=%d, y=%d\n", imgX, imgY));
-        thermalSpotX = AppUtils.trimByRange(imgX, 1, imageWidth - 1);
-        thermalSpotY = AppUtils.trimByRange(imgY, 1, imageHeight - 1);
-
-        // If is in thermal analysis result preview mode and the previous analysis is finished, handle selection.
-        if (flirOneDevice != null && !streamingFrame && !runningContourProcessing) {
-            int contourIndex = roiDetector.getSelectedContourIndex(imgX, imgY);
-            // If there is a contour selected
-            if (contourIndex != -1 && contourIndex != selectedContourIndex) {
-                selectedContourIndex = contourIndex;
-                handleContourSelected(roiDetector.getContours().get(contourIndex));
-            }
-        }
-
-        // Set indication spot location
-        RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams) layoutTempSpot.getLayoutParams();
-        params.leftMargin = x - layoutTempSpot.getMeasuredWidth() / 2;
-        params.topMargin = y + layoutTempSpot.getMeasuredHeight() / 2;
-        params.addRule(RelativeLayout.CENTER_HORIZONTAL, 0);
-        params.addRule(RelativeLayout.CENTER_VERTICAL, 0);
-        layoutTempSpot.setLayoutParams(params);
-        updateThermalSpotValue();
     }
 
     private void handleContourSelected(final MatOfPoint contour) {
