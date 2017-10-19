@@ -780,7 +780,7 @@ public class PreviewActivity extends Activity implements Device.Delegate, FrameP
 
     private void captureThermalImage(final RenderedImage renderedImage) {
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd-HH-mm-ss", Locale.getDefault());
-        final String filename = AppUtils.getExportsDir() + "/" + sdf.format(new Date()) + "_thermalImage.png";
+        final String filename = AppUtils.getExportsDir() + "/" + sdf.format(new Date()) + "_thermalImage.jpg";
 
         new Thread(new Runnable() {
             public void run() {
@@ -797,7 +797,7 @@ public class PreviewActivity extends Activity implements Device.Delegate, FrameP
 
     private void captureProcessedImage() {
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd-HH-mm-ss", Locale.getDefault());
-        final String filename = AppUtils.getExportsDir() + "/" + sdf.format(new Date()) + "_processedImage.png";
+        final String filename = AppUtils.getExportsDir() + "/" + sdf.format(new Date()) + "_processedImage.jpg";
 
         new Thread(new Runnable() {
             public void run() {
