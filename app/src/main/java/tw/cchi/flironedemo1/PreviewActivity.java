@@ -161,7 +161,7 @@ public class PreviewActivity extends Activity implements Device.Delegate, FrameP
                     // Calculate actual touched position on the thermal image
                     int x = (int) event.getX();
                     int y = (int) event.getY() - thermalImageView.getTop();
-                    if (y >= 0 && y <= thermalImageView.getMeasuredHeight()) {
+                    if (y >= 0 && y < thermalImageView.getMeasuredHeight()) {
                         handleThermalImageTouch(x, y);
                     }
                 }
@@ -760,12 +760,16 @@ public class PreviewActivity extends Activity implements Device.Delegate, FrameP
         });
     }
 
+    /**
+     *
+     * @param x the pX value on the imageView
+     * @param y the pY value on the imageView
+     */
     private void handleThermalImageTouch(int x, int y) {
         // Calculate the correspondent point on the thermal image
         double ratio = (double) imageWidth / thermalImageView.getMeasuredWidth();
         int imgX = (int) (x * ratio);
         int imgY = (int) (y * ratio);
-        Log.i(Config.TAG, String.format("Actual touched point: x=%d, y=%d\n", imgX, imgY));
         thermalSpotX = AppUtils.trimByRange(imgX, 1, imageWidth - 1);
         thermalSpotY = AppUtils.trimByRange(imgY, 1, imageHeight - 1);
 
@@ -782,10 +786,11 @@ public class PreviewActivity extends Activity implements Device.Delegate, FrameP
         // Set indication spot location
         RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams) layoutTempSpot.getLayoutParams();
         params.leftMargin = x - layoutTempSpot.getMeasuredWidth() / 2;
-        params.topMargin = y + layoutTempSpot.getMeasuredHeight() / 2;
+        params.topMargin = y - layoutTempSpot.getMeasuredHeight() / 2 + thermalImageView.getTop();
         params.addRule(RelativeLayout.CENTER_HORIZONTAL, 0);
         params.addRule(RelativeLayout.CENTER_VERTICAL, 0);
         layoutTempSpot.setLayoutParams(params);
+
         updateThermalSpotValue();
     }
 

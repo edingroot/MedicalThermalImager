@@ -26,5 +26,6 @@
     <!-- Messages -->
     <string name="noContourSelected">No contour selected</string>
     <string name="processingContour">Processing on selected contour</string>
+    <string name="pick_thermal_image">Pick a thermal dump file (*.dat)</string>
 
 </resources>
