@@ -90,7 +90,7 @@ public class PreviewActivity extends Activity implements Device.Delegate, FrameP
     private int imageHeight = 0;
     private int thermalSpotX = -1;
     private int thermalSpotY = -1;
-    private boolean showingMoreInfo = true;
+    private boolean showingMoreInfo = false;
 
     @BindView(R.id.fullscreen_content_controls_top) View topControlsView;
     @BindView(R.id.fullscreen_content_controls) View bottomControlsView;
@@ -304,7 +304,6 @@ public class PreviewActivity extends Activity implements Device.Delegate, FrameP
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
-                    topControlsView.setVisibility(View.VISIBLE);
                     secondaryControlsContainer.setVisibility(View.VISIBLE);
                 }
             });
@@ -572,17 +571,16 @@ public class PreviewActivity extends Activity implements Device.Delegate, FrameP
     /* ---------- Secondary control panel ---------- */
 
     public void onToggleMoreInfoClicked(View v) {
-        if (showingMoreInfo) {
-            topControlsView.setVisibility(View.INVISIBLE);
-            secondaryControlsContainer.setVisibility(View.GONE);
-            showingMoreInfo = false;
-        } else {
-            topControlsView.setVisibility(View.VISIBLE);
-            // Check if device is connected & is under thermal analysis result preview mode
-            // if (flirOneDevice != null && thermalDumpProcessor != null)
-            if (flirOneDevice != null)
+        // Check if device is connected & is under thermal analysis result preview mode
+        // if (flirOneDevice != null && thermalDumpProcessor != null)
+        if (flirOneDevice != null) {
+            if (showingMoreInfo) {
+                secondaryControlsContainer.setVisibility(View.GONE);
+                showingMoreInfo = false;
+            } else {
                 secondaryControlsContainer.setVisibility(View.VISIBLE);
-            showingMoreInfo = true;
+                showingMoreInfo = true;
+            }
         }
     }
 
