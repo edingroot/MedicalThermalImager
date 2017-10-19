@@ -35,8 +35,8 @@ public class AppUtils {
     public static int trimByRange(int val, int min, int max) {
         if (val < min)
             return min;
-        else if (val > max)
-            return max;
+        else if (val >= max)
+            return max - 1;
         else
             return val;
     }
