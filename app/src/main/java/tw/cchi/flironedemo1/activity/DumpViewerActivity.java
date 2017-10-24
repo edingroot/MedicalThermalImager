@@ -1,4 +1,4 @@
-package tw.cchi.flironedemo1;
+package tw.cchi.flironedemo1.activity;
 
 import android.app.Activity;
 import android.content.Intent;
@@ -7,18 +7,24 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.view.MotionEvent;
 import android.view.View;
+import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import java.text.NumberFormat;
+import java.util.Arrays;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import tw.cchi.flironedemo1.AppUtils;
+import tw.cchi.flironedemo1.R;
+import tw.cchi.flironedemo1.model.ChartParameter;
 import tw.cchi.flironedemo1.thermalproc.RawThermalDump;
 import tw.cchi.flironedemo1.thermalproc.ThermalDumpParser;
 import tw.cchi.flironedemo1.thermalproc.ThermalDumpProcessor;
+import tw.cchi.flironedemo1.view.MultiChartView;
 
 
 public class DumpViewerActivity extends Activity {
@@ -26,13 +32,16 @@ public class DumpViewerActivity extends Activity {
 
     private String thermalDumpPath;
     private RawThermalDump rawThermalDump;
-    ThermalDumpProcessor thermalDumpProcessor;
+    private ThermalDumpProcessor thermalDumpProcessor;
     private Bitmap thermalBitmap;
+    private boolean displayingChart = false;
 
     private int thermalSpotX = -1;
     private int thermalSpotY = -1;
 
-    @BindView(R.id.imageView) ImageView thermalImageView;
+    @BindView(R.id.layoutThermalViews) FrameLayout layoutThermalViews;
+    @BindView(R.id.thermalImageView) ImageView thermalImageView;
+    @BindView(R.id.thermalChartView) MultiChartView thermalChartView;
 
     @BindView(R.id.layoutTempSpot) RelativeLayout layoutTempSpot;
     @BindView(R.id.spotMeterValue) TextView spotMeterValue;
@@ -64,6 +73,13 @@ public class DumpViewerActivity extends Activity {
                 return true;
             }
         });
+
+        thermalChartView.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                return false;
+            }
+        });
     }
 
     @Override
@@ -90,6 +106,20 @@ public class DumpViewerActivity extends Activity {
         intent.setType("*/*");
         Intent destIntent = Intent.createChooser(intent, getString(R.string.pick_thermal_image));
         startActivityForResult(destIntent, ACTION_PICK_DUMP_FILE);
+    }
+
+    public void onVisualizeHorizonClicked(View v) {
+        if (rawThermalDump == null || thermalSpotY == -1)
+            return;
+
+        if (displayingChart) {
+            thermalChartView.setVisibility(View.GONE);
+            displayingChart = false;
+        } else {
+            updateLineChart();
+            thermalChartView.setVisibility(View.VISIBLE);
+            displayingChart = true;
+        }
     }
 
 
@@ -121,7 +151,6 @@ public class DumpViewerActivity extends Activity {
                 }
             }
         }).run();
-
     }
 
     private void updateThermalImageView(final Bitmap frame) {
@@ -129,46 +158,24 @@ public class DumpViewerActivity extends Activity {
             @Override
             public void run() {
                 thermalImageView.setImageBitmap(frame);
+                thermalSpotX = layoutThermalViews.getMeasuredWidth() / 2;
+                thermalSpotY = layoutThermalViews.getMeasuredHeight() / 2;
+                handleThermalImageTouch(thermalSpotX, thermalSpotY);
             }
         });
-
-        // Perform a native deep copy to avoid object referencing
-        // thermalBitmap = frame.copy(frame.getConfig(), frame.isMutable());
     }
 
     private void updateThermalSpotValue() {
         if (rawThermalDump == null)
             return;
 
-        int imageWidth = rawThermalDump.width;
-        int imageHeight = rawThermalDump.height;
-
-        // Note: this code is not optimized
-        // average the center 9 pixels for the spot meter
-        int centerPixelIndex;
+        double averageC;
         if (thermalSpotX == -1) {
-            centerPixelIndex = imageWidth * (imageHeight / 2) + (imageWidth / 2);
+            averageC = rawThermalDump.getTemperature9Average(rawThermalDump.width / 2, rawThermalDump.height / 2);
         } else {
-            centerPixelIndex = imageWidth * thermalSpotY + thermalSpotX;
+            averageC = rawThermalDump.getTemperature9Average(thermalSpotX, thermalSpotY);
         }
-        int[] centerPixelIndexes = new int[]{
-                centerPixelIndex, centerPixelIndex - 1, centerPixelIndex + 1,
-                centerPixelIndex - imageWidth,
-                centerPixelIndex - imageWidth - 1,
-                centerPixelIndex - imageWidth + 1,
-                centerPixelIndex + imageWidth,
-                centerPixelIndex + imageWidth - 1,
-                centerPixelIndex + imageWidth + 1
-        };
 
-        double averageTemp = 0;
-        for (int i = 0; i < centerPixelIndexes.length; i++) {
-            // Remember: all primitives are signed, we want the unsigned value,
-            // we've used renderedImage.thermalPixelValues() to get unsigned values
-            int pixelValue = rawThermalDump.thermalValues[centerPixelIndexes[i]];
-            averageTemp += (((double) pixelValue) - averageTemp) / ((double) i + 1);
-        }
-        double averageC = (averageTemp / 100) - 273.15;
         NumberFormat numberFormat = NumberFormat.getInstance();
         numberFormat.setMaximumFractionDigits(2);
         numberFormat.setMinimumFractionDigits(2);
@@ -179,6 +186,8 @@ public class DumpViewerActivity extends Activity {
                 DumpViewerActivity.this.spotMeterValue.setText(spotMeterValue);
             }
         });
+
+        updateLineChart();
     }
 
     /**
@@ -197,19 +206,32 @@ public class DumpViewerActivity extends Activity {
         // Set indication spot location
         RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams) layoutTempSpot.getLayoutParams();
         params.leftMargin = x - layoutTempSpot.getMeasuredWidth() / 2;
-        params.topMargin = y - layoutTempSpot.getMeasuredHeight() / 2 + thermalImageView.getTop();
+        params.topMargin = y - layoutTempSpot.getMeasuredHeight() / 2 + layoutThermalViews.getTop();
         params.addRule(RelativeLayout.CENTER_HORIZONTAL, 0);
         params.addRule(RelativeLayout.CENTER_VERTICAL, 0);
         layoutTempSpot.setLayoutParams(params);
 
         // Set horizontal line location
         params = (RelativeLayout.LayoutParams) horizontalLine.getLayoutParams();
-        params.topMargin = y + thermalImageView.getTop();
+        params.topMargin = y + layoutThermalViews.getTop();
         params.addRule(RelativeLayout.CENTER_HORIZONTAL, 0);
         params.addRule(RelativeLayout.CENTER_VERTICAL, 0);
         horizontalLine.setLayoutParams(params);
 
         updateThermalSpotValue();
+    }
+
+    private void updateLineChart() {
+        ChartParameter chartParameter = new ChartParameter(ChartParameter.ChartType.MULTI_LINE_CURVE);
+        chartParameter.setAlpha(0.6f);
+
+        int width = rawThermalDump.width;
+        float[] temperaturePoints = new float[width];
+        for (int i = 0; i < width; i++) {
+            temperaturePoints[i] = rawThermalDump.getTemperatureAt(i, thermalSpotY);
+        }
+        chartParameter.addFloatArray(temperaturePoints);
+        thermalChartView.setChartParameter(chartParameter);
     }
 
 }

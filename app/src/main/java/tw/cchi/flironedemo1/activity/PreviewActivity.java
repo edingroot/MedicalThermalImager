@@ -1,4 +1,4 @@
-package tw.cchi.flironedemo1;
+package tw.cchi.flironedemo1.activity;
 
 import android.app.Activity;
 import android.content.Intent;
@@ -54,6 +54,9 @@ import java.util.Locale;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import tw.cchi.flironedemo1.AppUtils;
+import tw.cchi.flironedemo1.Config;
+import tw.cchi.flironedemo1.R;
 import tw.cchi.flironedemo1.thermalproc.ROIDetector;
 import tw.cchi.flironedemo1.thermalproc.RawThermalDump;
 import tw.cchi.flironedemo1.thermalproc.ThermalDumpParser;
@@ -114,6 +117,7 @@ public class PreviewActivity extends Activity implements Device.Delegate, FrameP
     @BindView(R.id.btnFilter) Button btnFilter;
     @BindView(R.id.btnRcgHigh) Button btnRcgHigh;
     @BindView(R.id.imgBtnPick) ImageButton imgBtnPick;
+    @BindView(R.id.btnTune) Button btnTune;
     @BindView(R.id.btnTools) Button btnTools;
 
     ScaleGestureDetector mScaleDetector;
@@ -125,6 +129,10 @@ public class PreviewActivity extends Activity implements Device.Delegate, FrameP
         setContentView(R.layout.activity_preview);
         ButterKnife.bind(this);
 
+//        frameProcessor = new FrameProcessor(this, this, EnumSet.of(
+//                RenderedImage.ImageType.VisibleAlignedRGBA8888Image,
+//                RenderedImage.ImageType.ThermalRadiometricKelvinImage
+//        ));
         RenderedImage.ImageType defaultImageType = RenderedImage.ImageType.ThermalRGBA8888Image;
         frameProcessor = new FrameProcessor(this, this, EnumSet.of(defaultImageType, RenderedImage.ImageType.ThermalRadiometricKelvinImage));
         frameProcessor.setImagePalette(RenderedImage.Palette.Gray);
@@ -345,14 +353,16 @@ public class PreviewActivity extends Activity implements Device.Delegate, FrameP
      * @param tuningState
      */
     public void onTuningStateChanged(Device.TuningState tuningState) {
-        Log.i(Config.TAG, "Tuning state changed changed!");
+        this.currentTuningState = tuningState;
+        final String tuningStateName = tuningState.name();
+        Log.i(Config.TAG, "Tuning state changed changed: " + tuningStateName);
 
-        currentTuningState = tuningState;
         if (tuningState == Device.TuningState.InProgress) {
             runOnUiThread(new Thread() {
                 @Override
                 public void run() {
                     super.run();
+                    btnTune.setText(tuningStateName);
                     thermalImageView.setColorFilter(Color.DKGRAY, PorterDuff.Mode.DARKEN);
                     findViewById(R.id.tuningProgressBar).setVisibility(View.VISIBLE);
                     findViewById(R.id.tuningTextView).setVisibility(View.VISIBLE);
@@ -363,6 +373,7 @@ public class PreviewActivity extends Activity implements Device.Delegate, FrameP
                 @Override
                 public void run() {
                     super.run();
+                    btnTune.setText(tuningStateName);
                     thermalImageView.clearColorFilter();
                     findViewById(R.id.tuningProgressBar).setVisibility(View.GONE);
                     findViewById(R.id.tuningTextView).setVisibility(View.GONE);
@@ -722,32 +733,14 @@ public class PreviewActivity extends Activity implements Device.Delegate, FrameP
         if (thermalPixels == null)
             return;
 
-        // Note: this code is not optimized
-        // average the center 9 pixels for the spot meter
-        int centerPixelIndex;
+        RawThermalDump rawThermalDump = new RawThermalDump(imageWidth, imageHeight, thermalPixels);
+        double averageC;
         if (thermalSpotX == -1) {
-            centerPixelIndex = imageWidth * (imageHeight / 2) + (imageWidth / 2);
+            averageC = rawThermalDump.getTemperature9Average(rawThermalDump.width / 2, rawThermalDump.height / 2);
         } else {
-            centerPixelIndex = imageWidth * thermalSpotY + thermalSpotX;
+            averageC = rawThermalDump.getTemperature9Average(thermalSpotX, thermalSpotY);
         }
-        int[] centerPixelIndexes = new int[]{
-                centerPixelIndex, centerPixelIndex - 1, centerPixelIndex + 1,
-                centerPixelIndex - imageWidth,
-                centerPixelIndex - imageWidth - 1,
-                centerPixelIndex - imageWidth + 1,
-                centerPixelIndex + imageWidth,
-                centerPixelIndex + imageWidth - 1,
-                centerPixelIndex + imageWidth + 1
-        };
 
-        double averageTemp = 0;
-        for (int i = 0; i < centerPixelIndexes.length; i++) {
-            // Remember: all primitives are signed, we want the unsigned value,
-            // we've used renderedImage.thermalPixelValues() to get unsigned values
-            int pixelValue = thermalPixels[centerPixelIndexes[i]];
-            averageTemp += (((double) pixelValue) - averageTemp) / ((double) i + 1);
-        }
-        double averageC = (averageTemp / 100) - 273.15;
         NumberFormat numberFormat = NumberFormat.getInstance();
         numberFormat.setMaximumFractionDigits(2);
         numberFormat.setMinimumFractionDigits(2);
@@ -802,7 +795,7 @@ public class PreviewActivity extends Activity implements Device.Delegate, FrameP
             public void run() {
                 try {
                     // Save the original thermal image
-                    renderedImage.getFrame().save(new File(filename), RenderedImage.Palette.Iron, RenderedImage.ImageType.BlendedMSXRGBA8888Image);
+                    renderedImage.getFrame().save(new File(filename), RenderedImage.Palette.Gray, RenderedImage.ImageType.ThermalRadiometricKelvinImage);
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
