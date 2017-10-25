@@ -1,7 +1,6 @@
 package tw.cchi.flironedemo1.activity;
 
 import android.Manifest;
-import android.app.Activity;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.os.Bundle;
@@ -36,7 +35,7 @@ import tw.cchi.flironedemo1.thermalproc.ThermalDumpProcessor;
 import tw.cchi.flironedemo1.view.MultiChartView;
 
 @RuntimePermissions
-public class DumpViewerActivity extends Activity {
+public class DumpViewerActivity extends BaseActivity {
     private ArrayList<String> thermalDumpPaths = new ArrayList<>();
     private ArrayList<RawThermalDump> rawThermalDumps = new ArrayList<>();
     private ArrayList<ThermalDumpProcessor> thermalDumpProcessors = new ArrayList<>();
@@ -128,6 +127,7 @@ public class DumpViewerActivity extends Activity {
                         }
                     }
 
+
                     for (String path : addPaths) {
                         addRawThermalDump(path);
                     }
@@ -196,7 +196,7 @@ public class DumpViewerActivity extends Activity {
     }
 
     private void addRawThermalDump(final String filepath) {
-        (new Runnable() {
+        new Thread(new Runnable() {
             @Override
             public void run() {
                 RawThermalDump thermalDump = ThermalDumpParser.readRawThermalDump(filepath);
@@ -209,8 +209,11 @@ public class DumpViewerActivity extends Activity {
                     thermalDumpProcessors.add(thermalDumpProcessor);
                     thermalBitmaps.add(thermalBitmap);
 
-                    selectedThermalDumpIndex = thermalDumpsRecyclerAdapter.addDump(thermalDump.getTitle());
-                    updateThermalImageView(thermalBitmap);
+                    int index = thermalDumpsRecyclerAdapter.addDump(thermalDump.getTitle());
+                    if (selectedThermalDumpIndex != index) {
+                        selectedThermalDumpIndex = index;
+                        updateThermalImageView(thermalBitmap);
+                    }
 
                 } else {
                     showToastMessage("Failed reading thermal dump");
@@ -219,7 +222,7 @@ public class DumpViewerActivity extends Activity {
                     updateThermalImageView(null);
                 }
             }
-        }).run();
+        }).start();
     }
 
     private void updateThermalImageView(final Bitmap frame) {

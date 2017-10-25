@@ -1,5 +1,6 @@
 package tw.cchi.flironedemo1.adapter;
 
+import android.app.Activity;
 import android.content.Context;
 import android.support.v4.content.res.ResourcesCompat;
 import android.support.v7.widget.RecyclerView;
@@ -14,6 +15,8 @@ import java.util.Locale;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import tw.cchi.flironedemo1.R;
+import tw.cchi.flironedemo1.activity.BaseActivity;
+import tw.cchi.flironedemo1.activity.DumpViewerActivity;
 
 public class ThermalDumpsRecyclerAdapter extends RecyclerView.Adapter<ThermalDumpsRecyclerAdapter.ViewHolder> {
     private final Context context;
@@ -36,7 +39,12 @@ public class ThermalDumpsRecyclerAdapter extends RecyclerView.Adapter<ThermalDum
         if (titles.size() == 1) {
             selectedPosition = 0;
         }
-        notifyDataSetChanged();
+        BaseActivity.getInstance().runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                notifyDataSetChanged();
+            }
+        });
 
         return selectedPosition;
     }

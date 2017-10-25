@@ -62,7 +62,7 @@ import tw.cchi.flironedemo1.thermalproc.RawThermalDump;
 import tw.cchi.flironedemo1.thermalproc.ThermalDumpParser;
 import tw.cchi.flironedemo1.thermalproc.ThermalDumpProcessor;
 
-public class PreviewActivity extends Activity implements Device.Delegate, FrameProcessor.Delegate, Device.StreamDelegate, Device.PowerUpdateDelegate {
+public class PreviewActivity extends BaseActivity implements Device.Delegate, FrameProcessor.Delegate, Device.StreamDelegate, Device.PowerUpdateDelegate {
     public static final int ACTION_PICK_FROM_GALLERY = 100;
 
     private volatile boolean simConnected = false;
