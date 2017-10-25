@@ -45,6 +45,8 @@ public class MultiChartView extends RelativeLayout {
     }
 
     private void updateChart() {
+        // TODO: auto calaulate and set axis max/min values
+
         ArrayList<ILineDataSet> dataSets = new ArrayList<>();
         int[] colors = ColorTemplate.VORDIPLOM_COLORS;
         ArrayList<float[]> valueArrays = chartParameter.getFloatArrays();
@@ -86,6 +88,7 @@ public class MultiChartView extends RelativeLayout {
         lineChart.setDrawGridBackground(false);
 
         YAxis leftAxis = lineChart.getAxisLeft();
+        // TODO: remove fixed axis max/min values
         leftAxis.setAxisMaximum(45f);
         leftAxis.setAxisMinimum(30f);
         //leftAxis.setYOffset(20f);

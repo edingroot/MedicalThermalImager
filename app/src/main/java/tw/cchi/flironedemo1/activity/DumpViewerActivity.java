@@ -66,12 +66,14 @@ public class DumpViewerActivity extends Activity {
             @Override
             public boolean onTouch(View v, MotionEvent event) {
                 if (thermalImageView.getMeasuredHeight() > 0) {
-                    // Calculate actual touched position on the thermal image
                     int x = (int) event.getX();
                     int y = (int) event.getY();
-                    if (y >= 0 && y < thermalImageView.getMeasuredHeight()) {
-                        handleThermalImageTouch(x, y);
+                    if (y < 0) {
+                        y = 0;
+                    } else if (y >= thermalImageView.getMeasuredHeight()) {
+                        y = thermalImageView.getMeasuredHeight() - 1;
                     }
+                    handleThermalImageTouch(x, y);
                 }
 
                 // Consume the event, which onClick event will not triggered
@@ -193,9 +195,16 @@ public class DumpViewerActivity extends Activity {
             @Override
             public void run() {
                 thermalImageView.setImageBitmap(frame);
-                thermalSpotX = layoutThermalViews.getMeasuredWidth() / 2;
-                thermalSpotY = layoutThermalViews.getMeasuredHeight() / 2;
-                handleThermalImageTouch(thermalSpotX, thermalSpotY);
+                // Execute after view measuring and layouting
+                thermalImageView.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        handleThermalImageTouch(
+                                layoutThermalViews.getMeasuredWidth() / 2,
+                                layoutThermalViews.getMeasuredHeight() / 2
+                        );
+                    }
+                });
             }
         });
     }
@@ -231,14 +240,14 @@ public class DumpViewerActivity extends Activity {
         // Set indication spot location
         RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams) layoutTempSpot.getLayoutParams();
         params.leftMargin = x - layoutTempSpot.getMeasuredWidth() / 2;
-        params.topMargin = y - layoutTempSpot.getMeasuredHeight() / 2 + layoutThermalViews.getTop();
+        params.topMargin = y - layoutTempSpot.getMeasuredHeight() / 2 + layoutThermalViews.getTop() + thermalImageView.getTop();
         params.addRule(RelativeLayout.CENTER_HORIZONTAL, 0);
         params.addRule(RelativeLayout.CENTER_VERTICAL, 0);
         layoutTempSpot.setLayoutParams(params);
 
         // Set horizontal line location
         params = (RelativeLayout.LayoutParams) horizontalLine.getLayoutParams();
-        params.topMargin = y + layoutThermalViews.getTop();
+        params.topMargin = y + layoutThermalViews.getTop() + thermalImageView.getTop();
         params.addRule(RelativeLayout.CENTER_HORIZONTAL, 0);
         params.addRule(RelativeLayout.CENTER_VERTICAL, 0);
         horizontalLine.setLayoutParams(params);
