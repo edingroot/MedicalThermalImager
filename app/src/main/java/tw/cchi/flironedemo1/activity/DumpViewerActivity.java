@@ -79,7 +79,7 @@ public class DumpViewerActivity extends Activity {
                     } else if (y >= thermalImageView.getMeasuredHeight()) {
                         y = thermalImageView.getMeasuredHeight() - 1;
                     }
-                    handleThermalImageTouch(x, y);
+                    handleThermalImageTouch(x, y, true);
                 }
 
                 // Consume the event, which onClick event will not triggered
@@ -231,10 +231,15 @@ public class DumpViewerActivity extends Activity {
                 thermalImageView.post(new Runnable() {
                     @Override
                     public void run() {
-                        handleThermalImageTouch(
-                                layoutThermalViews.getMeasuredWidth() / 2,
-                                layoutThermalViews.getMeasuredHeight() / 2
-                        );
+                        if (thermalSpotX == -1 || thermalSpotY == -1) {
+                            handleThermalImageTouch(
+                                    thermalImageView.getMeasuredWidth() / 2,
+                                    thermalImageView.getMeasuredHeight() / 2,
+                                    true
+                            );
+                        } else {
+                            handleThermalImageTouch(thermalSpotX, thermalSpotY, false);
+                        }
                     }
                 });
             }
@@ -243,10 +248,11 @@ public class DumpViewerActivity extends Activity {
 
     /**
      *
-     * @param x the pX value on the imageView
-     * @param y the pY value on the imageView
+     * @param x
+     * @param y
+     * @param isImageViewCoordinates true: (x, y) on the imageView; false: (x, y) on the thermalImage (not scaled)
      */
-    private void handleThermalImageTouch(int x, int y) {
+    private void handleThermalImageTouch(int x, int y, boolean isImageViewCoordinates) {
         if (rawThermalDumps.size() == 0 || selectedThermalDumpIndex == -1)
             return;
 
@@ -254,10 +260,17 @@ public class DumpViewerActivity extends Activity {
 
         // Calculate the correspondent point on the thermal image
         double ratio = (double) rawThermalDump.width / thermalImageView.getMeasuredWidth();
-        int imgX = (int) (x * ratio);
-        int imgY = (int) (y * ratio);
-        thermalSpotX = AppUtils.trimByRange(imgX, 1, rawThermalDump.width - 1);
-        thermalSpotY = AppUtils.trimByRange(imgY, 1, rawThermalDump.height - 1);
+        if (isImageViewCoordinates) {
+            int imgX = (int) (x * ratio);
+            int imgY = (int) (y * ratio);
+            thermalSpotX = AppUtils.trimByRange(imgX, 1, rawThermalDump.width - 1);
+            thermalSpotY = AppUtils.trimByRange(imgY, 1, rawThermalDump.height - 1);
+        } else {
+            thermalSpotX = x;
+            thermalSpotY = y;
+            x = (int) (x / ratio);
+            y = (int) (y / ratio);
+        }
 
         // Set indication spot location
         RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams) layoutTempSpot.getLayoutParams();
