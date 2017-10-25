@@ -113,8 +113,8 @@
             android:layout_height="0dp"
             android:layout_alignBottom="@+id/btnPick"
             android:layout_alignTop="@+id/btnPick"
-            android:layout_marginStart="3dp"
-            android:layout_toEndOf="@+id/btnPick">
+            android:layout_toEndOf="@+id/btnPick"
+            android:padding="5dp">
 
             <android.support.v7.widget.RecyclerView
                 android:id="@+id/recyclerDumpSwitcher"

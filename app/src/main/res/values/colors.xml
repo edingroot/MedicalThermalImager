@@ -2,6 +2,5 @@
 
     <color name="black_overlay">#66000000</color>
     <color name="indicatorYellow">#ffed62</color>
-    <color name="selectedButton">#00074b</color>
 
 </resources>

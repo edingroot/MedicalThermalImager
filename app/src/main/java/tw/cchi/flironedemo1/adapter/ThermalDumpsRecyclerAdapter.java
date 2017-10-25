@@ -78,12 +78,14 @@ public class ThermalDumpsRecyclerAdapter extends RecyclerView.Adapter<ThermalDum
 
         holder.button.setText(holderTitle);
         if (selectedPosition == position) {
-            holder.button.setBackgroundColor(
-                    ResourcesCompat.getColor(context.getResources(), R.color.selectedButton, null)
+            holder.button.setBackground(
+                    ResourcesCompat.getDrawable(context.getResources(), R.drawable.dumpbtn_selected, null)
             );
         } else {
-            // Set to default color
-            holder.button.setBackgroundResource(android.R.drawable.btn_default);
+            // holder.button.setBackgroundResource(android.R.drawable.btn_default); // android default button style
+            holder.button.setBackground(
+                    ResourcesCompat.getDrawable(context.getResources(), R.drawable.dumpbtn_normal, null)
+            );
         }
         holder.button.setOnClickListener(new View.OnClickListener() {
             @Override
