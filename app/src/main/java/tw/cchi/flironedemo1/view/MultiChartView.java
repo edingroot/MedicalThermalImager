@@ -85,8 +85,6 @@ public class MultiChartView extends RelativeLayout {
 
         lineChart.setDrawGridBackground(false);
 
-//        XAxis xAxis = lineChart.getXAxis();
-//        xAxis.enableGridDashedLine(10f, 10f, 0f);
         YAxis leftAxis = lineChart.getAxisLeft();
         leftAxis.setAxisMaximum(45f);
         leftAxis.setAxisMinimum(30f);

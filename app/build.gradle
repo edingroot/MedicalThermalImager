@@ -60,13 +60,17 @@ dependencies {
     // https://mvnrepository.com/artifact/commons-io/commons-io
     compile group: 'commons-io', name: 'commons-io', version: '2.5'
 
-    // ButterKnife
     compile 'com.android.support:appcompat-v7:25.3.1'
     compile 'com.android.support:support-v4:25.3.1'
-    compile 'com.jakewharton:butterknife:8.7.0'
     compile 'com.android.support.constraint:constraint-layout:1.0.2'
     compile 'com.github.PhilJay:MPAndroidChart:v3.0.2'
+    compile 'com.droidninja:filepicker:2.0.8'
+
+    compile 'com.jakewharton:butterknife:8.7.0'
     annotationProcessor 'com.jakewharton:butterknife-compiler:8.7.0'
+
+    compile("com.github.hotchemi:permissionsdispatcher:3.0.1")
+    annotationProcessor "com.github.hotchemi:permissionsdispatcher-processor:3.0.1"
 }
 
 repositories {

@@ -12,6 +12,7 @@ import org.opencv.core.Size;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.List;
 
 import static org.opencv.core.Core.FILLED;
 import static org.opencv.imgproc.Imgproc.drawContours;
@@ -39,6 +40,14 @@ public class AppUtils {
             return max - 1;
         else
             return val;
+    }
+
+    public static void removeListDuplication(List<String> list, List<String> compareTarget) {
+        for (String str : list) {
+            if (compareTarget.contains(str)) {
+                list.remove(str);
+            }
+        }
     }
 
     public static Point[] getPointsInsideContour(MatOfPoint contour, Size imageSize) {

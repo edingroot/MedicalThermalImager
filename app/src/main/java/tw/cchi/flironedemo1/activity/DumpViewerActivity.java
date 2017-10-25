@@ -1,10 +1,11 @@
 package tw.cchi.flironedemo1.activity;
 
+import android.Manifest;
 import android.app.Activity;
 import android.content.Intent;
 import android.graphics.Bitmap;
-import android.net.Uri;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.FrameLayout;
@@ -14,10 +15,15 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import java.text.NumberFormat;
-import java.util.Arrays;
+import java.util.ArrayList;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import droidninja.filepicker.FilePickerBuilder;
+import droidninja.filepicker.FilePickerConst;
+import droidninja.filepicker.utils.Orientation;
+import permissions.dispatcher.NeedsPermission;
+import permissions.dispatcher.RuntimePermissions;
 import tw.cchi.flironedemo1.AppUtils;
 import tw.cchi.flironedemo1.R;
 import tw.cchi.flironedemo1.model.ChartParameter;
@@ -26,14 +32,13 @@ import tw.cchi.flironedemo1.thermalproc.ThermalDumpParser;
 import tw.cchi.flironedemo1.thermalproc.ThermalDumpProcessor;
 import tw.cchi.flironedemo1.view.MultiChartView;
 
-
+@RuntimePermissions
 public class DumpViewerActivity extends Activity {
-    public static final int ACTION_PICK_DUMP_FILE = 100;
-
-    private String thermalDumpPath;
-    private RawThermalDump rawThermalDump;
-    private ThermalDumpProcessor thermalDumpProcessor;
-    private Bitmap thermalBitmap;
+    private ArrayList<String> thermalDumpPaths = new ArrayList<>();
+    private ArrayList<RawThermalDump> rawThermalDumps = new ArrayList<>();
+    private ArrayList<ThermalDumpProcessor> thermalDumpProcessors = new ArrayList<>();
+    private ArrayList<Bitmap> thermalBitmaps = new ArrayList<>();
+    private int selectedThermalDumpIndex = -1;
     private boolean displayingChart = false;
 
     private int thermalSpotX = -1;
@@ -87,13 +92,14 @@ public class DumpViewerActivity extends Activity {
         super.onActivityResult(requestCode, resultCode, data);
 
         switch (requestCode) {
-            case ACTION_PICK_DUMP_FILE:
-                if (resultCode == RESULT_OK) {
-                    Uri uri = data.getData();
-                    if (uri != null) {
-                        openRawThermalDump(uri.getPath());
-                    } else {
-                        Toast.makeText(DumpViewerActivity.this, "Invalid file path", Toast.LENGTH_SHORT).show();
+            case FilePickerConst.REQUEST_CODE_DOC:
+                if (resultCode == RESULT_OK && data != null) {
+                    ArrayList<String> docPaths = new ArrayList<>();
+
+                    docPaths.addAll(data.getStringArrayListExtra(FilePickerConst.KEY_SELECTED_DOCS));
+                    AppUtils.removeListDuplication(docPaths, thermalDumpPaths);
+                    for (String path : docPaths) {
+                        openRawThermalDump(path);
                     }
                 }
                 break;
@@ -101,22 +107,27 @@ public class DumpViewerActivity extends Activity {
 
     }
 
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        DumpViewerActivityPermissionsDispatcher.onRequestPermissionsResult(this,requestCode, grantResults);
+    }
+
     public void onImagePickClicked(View v) {
-        Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
-        intent.setType("*/*");
-        Intent destIntent = Intent.createChooser(intent, getString(R.string.pick_thermal_image));
-        startActivityForResult(destIntent, ACTION_PICK_DUMP_FILE);
+        DumpViewerActivityPermissionsDispatcher.onPickDocWithPermissionCheck(this);
     }
 
     public void onVisualizeHorizonClicked(View v) {
-        if (rawThermalDump == null || thermalSpotY == -1)
+        if (rawThermalDumps.size() == 0 || selectedThermalDumpIndex == -1 || thermalSpotY == -1)
             return;
+
+        RawThermalDump rawThermalDump = rawThermalDumps.get(selectedThermalDumpIndex);
 
         if (displayingChart) {
             thermalChartView.setVisibility(View.GONE);
             displayingChart = false;
         } else {
-            updateLineChart();
+            updateLineChart(rawThermalDump);
             thermalChartView.setVisibility(View.VISIBLE);
             displayingChart = true;
         }
@@ -132,21 +143,45 @@ public class DumpViewerActivity extends Activity {
         });
     }
 
+    @NeedsPermission({Manifest.permission.WRITE_EXTERNAL_STORAGE})
+    public void onPickDoc() {
+        String[] thermalDumpExts = {".dat"};
+        int MAX_FILES_COUNT = 3;
+
+        if(thermalDumpPaths.size() > MAX_FILES_COUNT )
+            showToastMessage("Cannot select more than " + MAX_FILES_COUNT + " items");
+        else
+            FilePickerBuilder.getInstance().setMaxCount(3)
+                    .setSelectedFiles(thermalDumpPaths)
+                    .setActivityTheme(R.style.FilePickerTheme)
+                    .addFileSupport("ThermalDump", thermalDumpExts)
+                    .enableDocSupport(false)
+                    .withOrientation(Orientation.PORTRAIT_ONLY)
+                    .pickFile(this);
+    }
+
     private void openRawThermalDump(final String filepath) {
         (new Runnable() {
             @Override
             public void run() {
-                rawThermalDump = ThermalDumpParser.readRawThermalDump(filepath);
-                if (rawThermalDump != null) {
-                    thermalDumpPath = filepath;
-                    thermalDumpProcessor = new ThermalDumpProcessor(rawThermalDump);
-                    thermalBitmap = thermalDumpProcessor.getBitmap(1);
+                RawThermalDump thermalDump = ThermalDumpParser.readRawThermalDump(filepath);
+
+                if (thermalDump != null) {
+                    ThermalDumpProcessor thermalDumpProcessor = new ThermalDumpProcessor(thermalDump);
+                    Bitmap thermalBitmap = thermalDumpProcessor.getBitmap(1);
+
+                    rawThermalDumps.add(thermalDump);
+                    thermalDumpProcessors.add(thermalDumpProcessor);
+                    thermalBitmaps.add(thermalBitmap);
+
+                    setSelectedThermalDump(rawThermalDumps.size() - 1);
+                    // TODO: handle multiple thermal images at a same time
                     updateThermalImageView(thermalBitmap);
+
                 } else {
                     showToastMessage("Failed reading thermal dump");
-                    thermalDumpPath = null;
-                    thermalDumpProcessor = null;
-                    thermalBitmap = null;
+                    thermalDumpProcessors = null;
+                    thermalBitmaps = null;
                     updateThermalImageView(null);
                 }
             }
@@ -165,29 +200,14 @@ public class DumpViewerActivity extends Activity {
         });
     }
 
-    private void updateThermalSpotValue() {
-        if (rawThermalDump == null)
-            return;
+    private boolean setSelectedThermalDump(int selectedIndex) {
+        if (selectedIndex >= rawThermalDumps.size())
+            return false;
 
-        double averageC;
-        if (thermalSpotX == -1) {
-            averageC = rawThermalDump.getTemperature9Average(rawThermalDump.width / 2, rawThermalDump.height / 2);
-        } else {
-            averageC = rawThermalDump.getTemperature9Average(thermalSpotX, thermalSpotY);
-        }
+        this.selectedThermalDumpIndex = selectedIndex;
+        // TODO: display selected status on UI
 
-        NumberFormat numberFormat = NumberFormat.getInstance();
-        numberFormat.setMaximumFractionDigits(2);
-        numberFormat.setMinimumFractionDigits(2);
-        final String spotMeterValue = numberFormat.format(averageC) + "ºC";
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                DumpViewerActivity.this.spotMeterValue.setText(spotMeterValue);
-            }
-        });
-
-        updateLineChart();
+        return true;
     }
 
     /**
@@ -196,6 +216,11 @@ public class DumpViewerActivity extends Activity {
      * @param y the pY value on the imageView
      */
     private void handleThermalImageTouch(int x, int y) {
+        if (rawThermalDumps.size() == 0 || selectedThermalDumpIndex == -1)
+            return;
+
+        RawThermalDump rawThermalDump = rawThermalDumps.get(selectedThermalDumpIndex);
+
         // Calculate the correspondent point on the thermal image
         double ratio = (double) rawThermalDump.width / thermalImageView.getMeasuredWidth();
         int imgX = (int) (x * ratio);
@@ -218,10 +243,34 @@ public class DumpViewerActivity extends Activity {
         params.addRule(RelativeLayout.CENTER_VERTICAL, 0);
         horizontalLine.setLayoutParams(params);
 
-        updateThermalSpotValue();
+        updateThermalSpotValue(rawThermalDump);
     }
 
-    private void updateLineChart() {
+    private void updateThermalSpotValue(RawThermalDump rawThermalDump) {
+        double averageC;
+        if (thermalSpotX == -1) {
+            averageC = rawThermalDump.getTemperature9Average(rawThermalDump.width / 2, rawThermalDump.height / 2);
+        } else {
+            averageC = rawThermalDump.getTemperature9Average(thermalSpotX, thermalSpotY);
+        }
+
+        NumberFormat numberFormat = NumberFormat.getInstance();
+        numberFormat.setMaximumFractionDigits(2);
+        numberFormat.setMinimumFractionDigits(2);
+        final String spotMeterValue = numberFormat.format(averageC) + "ºC";
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                DumpViewerActivity.this.spotMeterValue.setText(spotMeterValue);
+            }
+        });
+
+        if (displayingChart) {
+            updateLineChart(rawThermalDump);
+        }
+    }
+
+    private void updateLineChart(RawThermalDump rawThermalDump) {
         ChartParameter chartParameter = new ChartParameter(ChartParameter.ChartType.MULTI_LINE_CURVE);
         chartParameter.setAlpha(0.6f);
 
