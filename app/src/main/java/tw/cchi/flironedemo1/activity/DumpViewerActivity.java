@@ -6,6 +6,8 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.FrameLayout;
@@ -26,6 +28,7 @@ import permissions.dispatcher.NeedsPermission;
 import permissions.dispatcher.RuntimePermissions;
 import tw.cchi.flironedemo1.AppUtils;
 import tw.cchi.flironedemo1.R;
+import tw.cchi.flironedemo1.adapter.ThermalDumpsRecyclerAdapter;
 import tw.cchi.flironedemo1.model.ChartParameter;
 import tw.cchi.flironedemo1.thermalproc.RawThermalDump;
 import tw.cchi.flironedemo1.thermalproc.ThermalDumpParser;
@@ -38,6 +41,7 @@ public class DumpViewerActivity extends Activity {
     private ArrayList<RawThermalDump> rawThermalDumps = new ArrayList<>();
     private ArrayList<ThermalDumpProcessor> thermalDumpProcessors = new ArrayList<>();
     private ArrayList<Bitmap> thermalBitmaps = new ArrayList<>();
+    private ThermalDumpsRecyclerAdapter thermalDumpsRecyclerAdapter;
     private int selectedThermalDumpIndex = -1;
     private boolean displayingChart = false;
 
@@ -45,6 +49,8 @@ public class DumpViewerActivity extends Activity {
     private int thermalSpotY = -1;
 
     @BindView(R.id.layoutThermalViews) FrameLayout layoutThermalViews;
+    @BindView(R.id.recyclerDumpSwitcher) RecyclerView recyclerDumpSwitcher;
+
     @BindView(R.id.thermalImageView) ImageView thermalImageView;
     @BindView(R.id.thermalChartView) MultiChartView thermalChartView;
 
@@ -87,6 +93,19 @@ public class DumpViewerActivity extends Activity {
                 return false;
             }
         });
+
+        thermalDumpsRecyclerAdapter = new ThermalDumpsRecyclerAdapter(this, new ThermalDumpsRecyclerAdapter.OnInteractionListener() {
+            @Override
+            public void onClick(int position) {
+                selectedThermalDumpIndex = position;
+                updateThermalImageView(thermalBitmaps.get(position));
+            }
+        });
+        recyclerDumpSwitcher.setAdapter(thermalDumpsRecyclerAdapter);
+        recyclerDumpSwitcher.setLayoutManager(
+                new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
+        );
+
     }
 
     @Override
@@ -96,12 +115,25 @@ public class DumpViewerActivity extends Activity {
         switch (requestCode) {
             case FilePickerConst.REQUEST_CODE_DOC:
                 if (resultCode == RESULT_OK && data != null) {
-                    ArrayList<String> docPaths = new ArrayList<>();
+                    ArrayList<String> addPaths = new ArrayList<>();
+                    ArrayList<String> removePaths = new ArrayList<>(thermalDumpPaths);
 
-                    docPaths.addAll(data.getStringArrayListExtra(FilePickerConst.KEY_SELECTED_DOCS));
-                    AppUtils.removeListDuplication(docPaths, thermalDumpPaths);
-                    for (String path : docPaths) {
-                        openRawThermalDump(path);
+                    addPaths.addAll(data.getStringArrayListExtra(FilePickerConst.KEY_SELECTED_DOCS));
+
+                    for (String path : removePaths) {
+                        // Selected file has already been added
+                        if (addPaths.contains(path)) {
+                            addPaths.remove(path);
+                            removePaths.remove(path);
+                        }
+                    }
+
+                    for (String path : addPaths) {
+                        addRawThermalDump(path);
+                    }
+
+                    for (String path : removePaths) {
+                        // TODO
                     }
                 }
                 break;
@@ -150,9 +182,9 @@ public class DumpViewerActivity extends Activity {
         String[] thermalDumpExts = {".dat"};
         int MAX_FILES_COUNT = 3;
 
-        if(thermalDumpPaths.size() > MAX_FILES_COUNT )
+        if(rawThermalDumps.size() > MAX_FILES_COUNT) {
             showToastMessage("Cannot select more than " + MAX_FILES_COUNT + " items");
-        else
+        }  else {
             FilePickerBuilder.getInstance().setMaxCount(3)
                     .setSelectedFiles(thermalDumpPaths)
                     .setActivityTheme(R.style.FilePickerTheme)
@@ -160,9 +192,10 @@ public class DumpViewerActivity extends Activity {
                     .enableDocSupport(false)
                     .withOrientation(Orientation.PORTRAIT_ONLY)
                     .pickFile(this);
+        }
     }
 
-    private void openRawThermalDump(final String filepath) {
+    private void addRawThermalDump(final String filepath) {
         (new Runnable() {
             @Override
             public void run() {
@@ -176,8 +209,7 @@ public class DumpViewerActivity extends Activity {
                     thermalDumpProcessors.add(thermalDumpProcessor);
                     thermalBitmaps.add(thermalBitmap);
 
-                    setSelectedThermalDump(rawThermalDumps.size() - 1);
-                    // TODO: handle multiple thermal images at a same time
+                    selectedThermalDumpIndex = thermalDumpsRecyclerAdapter.addDump(thermalDump.getTitle());
                     updateThermalImageView(thermalBitmap);
 
                 } else {
@@ -207,16 +239,6 @@ public class DumpViewerActivity extends Activity {
                 });
             }
         });
-    }
-
-    private boolean setSelectedThermalDump(int selectedIndex) {
-        if (selectedIndex >= rawThermalDumps.size())
-            return false;
-
-        this.selectedThermalDumpIndex = selectedIndex;
-        // TODO: display selected status on UI
-
-        return true;
     }
 
     /**

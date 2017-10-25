@@ -1,14 +1,34 @@
 package tw.cchi.flironedemo1.thermalproc;
 
+import java.io.File;
+
 public class RawThermalDump {
     public int width;
     public int height;
     public int[] thermalValues;
+    private String filepath;
+    private String title;
 
     public RawThermalDump(int width, int height, int[] thermalValues) {
         this.width = width;
         this.height = height;
         this.thermalValues = thermalValues;
+    }
+
+    public String getFilepath() {
+        return filepath;
+    }
+
+    public void setFilepath(String filepath) {
+        this.filepath = filepath;
+
+        // Generate title; filenameEx: 2017-10-08-16-10-08_rawThermal.dat
+        String filename = new File(filepath).getName();
+        title = filename.substring("2017-".length(), "_rawThermal.dat".length());
+    }
+
+    public String getTitle() {
+        return title;
     }
 
     public float getTemperatureAt(int x, int y) {

@@ -43,7 +43,9 @@ public class ThermalDumpParser {
             thermalValues[i] = twoBytesValue(bytes[byteIndex], bytes[byteIndex + 1]);
         }
 
-        return new RawThermalDump(width, height, thermalValues);
+        RawThermalDump rawThermalDump = new RawThermalDump(width, height, thermalValues);
+        rawThermalDump.setFilepath(filepath);
+        return rawThermalDump;
     }
 
     /**

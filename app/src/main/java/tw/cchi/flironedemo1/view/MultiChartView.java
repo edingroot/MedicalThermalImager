@@ -45,7 +45,7 @@ public class MultiChartView extends RelativeLayout {
     }
 
     private void updateChart() {
-        // TODO: auto calaulate and set axis max/min values
+        // TODO: auto calculate and set axis max/min values
 
         ArrayList<ILineDataSet> dataSets = new ArrayList<>();
         int[] colors = ColorTemplate.VORDIPLOM_COLORS;
