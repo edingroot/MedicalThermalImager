@@ -1,5 +1,15 @@
 <resources>
 
+    <color name="colorPrimary">#3F51B5</color>
+    <color name="colorPrimaryHL">#4a5fcf</color>
+    <color name="colorPrimaryDeep">#141f59</color>
+    <color name="colorPrimaryDark">#303F9F</color>
+    <!--<color name="colorAccent">#FF4081</color>-->
+    <color name="colorBackground">#3a3b40</color>
+    <color name="colorControlGray">#b2b2b2</color>
+    <color name="contentText">#fff</color>
+    <color name="menuBackground">#616161</color>
+
     <color name="black_overlay">#66000000</color>
     <color name="indicatorYellow">#ffed62</color>
 

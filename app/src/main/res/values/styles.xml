@@ -2,32 +2,45 @@
 <resources>
 
     <!-- Base application theme. -->
-    <style name="AppTheme" parent="android:Theme.Holo.NoActionBar">
-        <!-- Customize your theme here. -->
+    <style name="AppTheme" parent="Theme.AppCompat.DayNight.NoActionBar">
+        <item name="colorPrimary">@color/colorPrimary</item>
+        <item name="colorPrimaryDark">@color/colorBackground</item>
+        <item name="colorAccent">@color/colorControlGray</item>
+        <item name="android:textColor">@color/contentText</item>
+        <item name="android:textColorPrimary">@color/contentText</item>
+        <item name="android:popupMenuStyle">@style/MyPopupMenu</item>
+        <item name="android:alertDialogStyle">@style/MyAlertDialog</item>
     </style>
 
     <style name="FullscreenTheme" parent="AppTheme">
         <item name="android:windowContentOverlay">@null</item>
         <item name="android:windowBackground">@null</item>
-        <item name="metaButtonBarStyle">@style/ButtonBar</item>
-        <item name="metaButtonBarButtonStyle">@style/ButtonBarButton</item>
+        <!--<item name="metaButtonBarStyle">@style/ButtonBar</item>-->
+        <!--<item name="metaButtonBarButtonStyle">@style/ButtonBarButton</item>-->
     </style>
 
-    <style name="ButtonBar">
-        <item name="android:paddingLeft">2dp</item>
-        <item name="android:paddingTop">5dp</item>
-        <item name="android:paddingRight">2dp</item>
-        <item name="android:paddingBottom">0dp</item>
-        <item name="android:background">@android:drawable/bottom_bar</item>
+    <!--<style name="ButtonBar">-->
+        <!--<item name="android:paddingLeft">2dp</item>-->
+        <!--<item name="android:paddingTop">5dp</item>-->
+        <!--<item name="android:paddingRight">2dp</item>-->
+        <!--<item name="android:paddingBottom">0dp</item>-->
+        <!--<item name="android:background">@android:drawable/bottom_bar</item>-->
+    <!--</style>-->
+
+    <!--<style name="ButtonBarButton" />-->
+
+    <style name="MyPopupMenu" parent="@android:style/Widget.Holo.ListPopupWindow">
+        <item name="android:popupBackground">@color/menuBackground</item>
     </style>
 
-    <style name="ButtonBarButton" />
+    <style name="MyAlertDialog" parent="Theme.AppCompat.Dialog.Alert">
+        <item name="android:popupBackground">@color/menuBackground</item>
+    </style>
 
     <style name="FilePickerTheme" parent="LibAppTheme">
-        <!-- Customize your theme here. -->
         <item name="colorPrimary">@color/colorPrimary</item>
-        <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
-        <item name="colorAccent">@color/colorAccent</item>
+        <item name="colorPrimaryDark">@color/colorBackground</item>
+        <item name="colorAccent">@color/colorControlGray</item>
     </style>
 
 </resources>

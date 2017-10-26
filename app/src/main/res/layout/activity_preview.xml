@@ -73,6 +73,7 @@
                 android:checked="false"
                 android:onClick="onRotateClicked"
                 android:text="@string/rotate_on"
+                android:textColor="@color/colorControlGray"
                 android:textOff="@string/rotate_off"
                 android:textOn="@string/rotate_on"/>
 
@@ -115,6 +116,7 @@
                 android:layout_gravity="bottom|start"
                 android:checked="true"
                 android:onClick="onToggleMoreInfoClicked"
+                android:textColor="@color/colorControlGray"
                 android:textOff="@string/toggle_more_info"
                 android:textOn="@string/toggle_less_info"/>
 
@@ -133,7 +135,8 @@
                     android:layout_margin="8dp"
                     android:layout_weight="0"
                     android:text="@string/battery_label"
-                    android:textAppearance="?android:attr/textAppearanceMedium"/>
+                    android:textAppearance="?android:attr/textAppearanceMedium"
+                    android:textColor="@color/colorControlGray"/>
 
                 <TextView
                     android:id="@+id/batteryLevelTextView"

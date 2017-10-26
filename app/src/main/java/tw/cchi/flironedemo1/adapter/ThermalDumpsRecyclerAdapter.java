@@ -1,6 +1,5 @@
 package tw.cchi.flironedemo1.adapter;
 
-import android.app.Activity;
 import android.content.Context;
 import android.support.v4.content.res.ResourcesCompat;
 import android.support.v7.widget.RecyclerView;
@@ -16,7 +15,6 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import tw.cchi.flironedemo1.R;
 import tw.cchi.flironedemo1.activity.BaseActivity;
-import tw.cchi.flironedemo1.activity.DumpViewerActivity;
 
 public class ThermalDumpsRecyclerAdapter extends RecyclerView.Adapter<ThermalDumpsRecyclerAdapter.ViewHolder> {
     private final Context context;
@@ -85,6 +83,7 @@ public class ThermalDumpsRecyclerAdapter extends RecyclerView.Adapter<ThermalDum
         final String holderTitle = titles.get(position);
 
         holder.button.setText(holderTitle);
+
         if (selectedPosition == position) {
             holder.button.setBackground(
                     ResourcesCompat.getDrawable(context.getResources(), R.drawable.dumpbtn_selected, null)
@@ -95,14 +94,22 @@ public class ThermalDumpsRecyclerAdapter extends RecyclerView.Adapter<ThermalDum
                     ResourcesCompat.getDrawable(context.getResources(), R.drawable.dumpbtn_normal, null)
             );
         }
+
         holder.button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (holderPosition == selectedPosition)
-                    return;
+                if (holderPosition != selectedPosition) {
+                    setSelectedPosition(holderPosition);
+                    onInteractionListener.onClick(holderPosition);
+                }
+            }
+        });
 
-                onInteractionListener.onClick(holderPosition);
-                setSelectedPosition(holderPosition);
+        holder.button.setOnLongClickListener(new View.OnLongClickListener() {
+            @Override
+            public boolean onLongClick(View v) {
+                onInteractionListener.onLongClick(holderPosition);
+                return true;
             }
         });
     }
@@ -133,6 +140,7 @@ public class ThermalDumpsRecyclerAdapter extends RecyclerView.Adapter<ThermalDum
 
     public interface OnInteractionListener {
         void onClick(int position);
+        void onLongClick(int position);
     }
 
 }

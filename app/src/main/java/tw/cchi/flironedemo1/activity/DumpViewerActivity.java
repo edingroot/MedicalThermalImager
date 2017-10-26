@@ -1,10 +1,12 @@
 package tw.cchi.flironedemo1.activity;
 
 import android.Manifest;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.MotionEvent;
@@ -36,10 +38,12 @@ import tw.cchi.flironedemo1.view.MultiChartView;
 
 @RuntimePermissions
 public class DumpViewerActivity extends BaseActivity {
+
     private ArrayList<String> thermalDumpPaths = new ArrayList<>();
     private ArrayList<RawThermalDump> rawThermalDumps = new ArrayList<>();
     private ArrayList<ThermalDumpProcessor> thermalDumpProcessors = new ArrayList<>();
     private ArrayList<Bitmap> thermalBitmaps = new ArrayList<>();
+
     private ThermalDumpsRecyclerAdapter thermalDumpsRecyclerAdapter;
     private int selectedThermalDumpIndex = -1;
     private boolean displayingChart = false;
@@ -99,6 +103,26 @@ public class DumpViewerActivity extends BaseActivity {
                 selectedThermalDumpIndex = position;
                 updateThermalImageView(thermalBitmaps.get(position));
             }
+
+            @Override
+            public void onLongClick(int position) {
+                final int dumpPosition = position;
+
+                new AlertDialog.Builder(DumpViewerActivity.this, R.style.MyAlertDialog)
+                        .setTitle("Confirm")
+                        .setMessage("Confirm to remove " + rawThermalDumps.get(position).getTitle() + " from display?")
+                        .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                removeThermalDump(dumpPosition);
+                            }
+                        })
+                        .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                            }
+                        }).show();
+            }
         });
         recyclerDumpSwitcher.setAdapter(thermalDumpsRecyclerAdapter);
         recyclerDumpSwitcher.setLayoutManager(
@@ -116,10 +140,11 @@ public class DumpViewerActivity extends BaseActivity {
                 if (resultCode == RESULT_OK && data != null) {
                     ArrayList<String> addPaths = new ArrayList<>();
                     ArrayList<String> removePaths = new ArrayList<>(thermalDumpPaths);
+                    ArrayList<String> currentPaths = new ArrayList<>(thermalDumpPaths);
 
                     addPaths.addAll(data.getStringArrayListExtra(FilePickerConst.KEY_SELECTED_DOCS));
 
-                    for (String path : removePaths) {
+                    for (String path : currentPaths) {
                         // Selected file has already been added
                         if (addPaths.contains(path)) {
                             addPaths.remove(path);
@@ -133,7 +158,7 @@ public class DumpViewerActivity extends BaseActivity {
                     }
 
                     for (String path : removePaths) {
-                        // TODO
+                        removeThermalDump(currentPaths.indexOf(path));
                     }
                 }
                 break;
@@ -205,6 +230,7 @@ public class DumpViewerActivity extends BaseActivity {
                     ThermalDumpProcessor thermalDumpProcessor = new ThermalDumpProcessor(thermalDump);
                     Bitmap thermalBitmap = thermalDumpProcessor.getBitmap(1);
 
+                    thermalDumpPaths.add(filepath);
                     rawThermalDumps.add(thermalDump);
                     thermalDumpProcessors.add(thermalDumpProcessor);
                     thermalBitmaps.add(thermalBitmap);
@@ -223,6 +249,20 @@ public class DumpViewerActivity extends BaseActivity {
                 }
             }
         }).start();
+    }
+
+    private void removeThermalDump(int index) {
+        int newIndex = thermalDumpsRecyclerAdapter.removeDump(index);
+        if (selectedThermalDumpIndex == index) {
+            updateThermalImageView(thermalBitmaps.get(index));
+        }
+        selectedThermalDumpIndex = newIndex;
+        thermalDumpPaths.remove(index);
+        rawThermalDumps.remove(index);
+        thermalDumpProcessors.remove(index);
+        thermalBitmaps.remove(index);
+
+        System.gc();
     }
 
     private void updateThermalImageView(final Bitmap frame) {
