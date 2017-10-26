@@ -152,7 +152,6 @@ public class DumpViewerActivity extends BaseActivity {
                         }
                     }
 
-
                     for (String path : addPaths) {
                         addRawThermalDump(path);
                     }

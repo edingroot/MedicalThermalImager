@@ -55,10 +55,10 @@ public class ThermalDumpsRecyclerAdapter extends RecyclerView.Adapter<ThermalDum
     public int removeDump(int position) {
         titles.remove(position);
 
-        if (position == 0) {
-            selectedPosition = -1;
+        if (titles.size() == 0) {
+            setSelectedPosition(-1);
         } else if (position == selectedPosition) {
-            selectedPosition = 0;
+            setSelectedPosition(0);
         }
         notifyDataSetChanged();
 
