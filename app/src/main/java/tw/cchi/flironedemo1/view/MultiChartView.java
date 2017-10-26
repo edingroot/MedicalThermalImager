@@ -4,19 +4,14 @@ import android.content.Context;
 import android.graphics.Color;
 import android.util.AttributeSet;
 import android.view.LayoutInflater;
-import android.view.MotionEvent;
 import android.widget.RelativeLayout;
 
 import com.github.mikephil.charting.charts.LineChart;
-import com.github.mikephil.charting.components.Description;
-import com.github.mikephil.charting.components.XAxis;
 import com.github.mikephil.charting.components.YAxis;
 import com.github.mikephil.charting.data.Entry;
 import com.github.mikephil.charting.data.LineData;
 import com.github.mikephil.charting.data.LineDataSet;
 import com.github.mikephil.charting.interfaces.datasets.ILineDataSet;
-import com.github.mikephil.charting.listener.ChartTouchListener;
-import com.github.mikephil.charting.listener.OnChartGestureListener;
 import com.github.mikephil.charting.utils.ColorTemplate;
 
 import java.util.ArrayList;
@@ -55,7 +50,7 @@ public class MultiChartView extends RelativeLayout {
                 values.add(new Entry(j, valueArray[j]));
             }
 
-            LineDataSet lineDataSet = new LineDataSet(values, chartParameter.getDatasetTitle(i));
+            LineDataSet lineDataSet = new LineDataSet(values, chartParameter.getTitle(i));
             lineDataSet.setLineWidth(2.5f);
             lineDataSet.setCircleRadius(4f);
 

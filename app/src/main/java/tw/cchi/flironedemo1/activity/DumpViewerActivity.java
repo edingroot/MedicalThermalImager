@@ -280,6 +280,7 @@ public class DumpViewerActivity extends BaseActivity {
         rawThermalDumps.remove(index);
         thermalDumpProcessors.remove(index);
         thermalBitmaps.remove(index);
+        removeFromChartParameter(thermalChartParameter, index);
 
         System.gc();
     }
@@ -378,6 +379,12 @@ public class DumpViewerActivity extends BaseActivity {
             temperaturePoints[i] = rawThermalDump.getTemperatureAt(i, y);
         }
         chartParameter.addFloatArray(rawThermalDump.getTitle(), temperaturePoints);
+        // Not updating chart axis here because it will be called when all thermalDumps are added.
+    }
+
+    private void removeFromChartParameter(ChartParameter chartParameter, int index) {
+        chartParameter.removeFloatArray(index);
+        updateChartAxis();
     }
 
     private void updateChartParameter(ChartParameter chartParameter, int y) {
@@ -393,6 +400,9 @@ public class DumpViewerActivity extends BaseActivity {
         }
     }
 
+    /**
+     * Calculate max and min temperature among all thermal dumps and update chart axis.
+     */
     private void updateChartAxis() {
         new Thread(new Runnable() {
             @Override
@@ -424,9 +434,9 @@ public class DumpViewerActivity extends BaseActivity {
                     chartAxisMax = max;
                     chartAxisMin = min;
 
-                    if (thermalChartParameter != null) {
-                        thermalChartParameter.setAxisMax(chartAxisMax);
-                        thermalChartParameter.setAxisMin(chartAxisMin);
+                    thermalChartParameter.setAxisMax(chartAxisMax);
+                    thermalChartParameter.setAxisMin(chartAxisMin);
+                    if (displayingChart) {
                         thermalChartView.updateChart(thermalChartParameter);
                     }
                 }
