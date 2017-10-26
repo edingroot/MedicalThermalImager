@@ -377,7 +377,7 @@ public class DumpViewerActivity extends BaseActivity {
         for (int i = 0; i < width; i++) {
             temperaturePoints[i] = rawThermalDump.getTemperatureAt(i, y);
         }
-        chartParameter.addFloatArray(temperaturePoints);
+        chartParameter.addFloatArray(rawThermalDump.getTitle(), temperaturePoints);
     }
 
     private void updateChartParameter(ChartParameter chartParameter, int y) {

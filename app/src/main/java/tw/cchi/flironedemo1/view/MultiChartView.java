@@ -55,7 +55,7 @@ public class MultiChartView extends RelativeLayout {
                 values.add(new Entry(j, valueArray[j]));
             }
 
-            LineDataSet lineDataSet = new LineDataSet(values, "ThermalGraph " + (i + 1));
+            LineDataSet lineDataSet = new LineDataSet(values, chartParameter.getDatasetTitle(i));
             lineDataSet.setLineWidth(2.5f);
             lineDataSet.setCircleRadius(4f);
 

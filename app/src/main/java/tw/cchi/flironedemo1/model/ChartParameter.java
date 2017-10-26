@@ -13,10 +13,12 @@ public class ChartParameter implements Parcelable {
     private float alpha = 1.0f;
     private float axisMin = -1;
     private float axisMax = -1;
+    private ArrayList<String> datasetTitles;
     private ArrayList<float[]> floatArrays;
 
     public ChartParameter(ChartType chartType) {
         this.chartType = chartType;
+        this.datasetTitles = new ArrayList<>();
         this.floatArrays = new ArrayList<>();
     }
 
@@ -48,7 +50,12 @@ public class ChartParameter implements Parcelable {
         this.alpha = alpha;
     }
 
-    public void addFloatArray(float[] floatArray) {
+    public String getDatasetTitle(int index) {
+        return datasetTitles.get(index);
+    }
+
+    public void addFloatArray(String title, float[] floatArray) {
+        datasetTitles.add(title);
         floatArrays.add(floatArray);
     }
 
