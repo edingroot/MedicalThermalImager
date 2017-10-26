@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import tw.cchi.flironedemo1.R;
+import tw.cchi.flironedemo1.activity.BaseActivity;
 import tw.cchi.flironedemo1.model.ChartParameter;
 
 public class MultiChartView extends RelativeLayout {
@@ -45,8 +46,6 @@ public class MultiChartView extends RelativeLayout {
     }
 
     private void updateChart() {
-        // TODO: auto calculate and set axis max/min values
-
         ArrayList<ILineDataSet> dataSets = new ArrayList<>();
         int[] colors = ColorTemplate.VORDIPLOM_COLORS;
         ArrayList<float[]> valueArrays = chartParameter.getFloatArrays();
@@ -66,14 +65,27 @@ public class MultiChartView extends RelativeLayout {
             int color = colors[i % colors.length];
             lineDataSet.setColor(color);
             lineDataSet.setDrawCircles(false);
-            lineDataSet.setDrawCircles(false);
             dataSets.add(lineDataSet);
         }
 
-        LineData data = new LineData(dataSets);
-        lineChart.setData(data);
+        lineChart.setData(new LineData(dataSets));
         lineChart.setAlpha(chartParameter.getAlpha());
-        lineChart.invalidate();
+
+        // Calculate and set max, min of the left axis
+        YAxis leftAxis = lineChart.getAxisLeft();
+        if (chartParameter.getAxisMax() != -1) {
+            leftAxis.setAxisMaximum(chartParameter.getAxisMax());
+        }
+        if (chartParameter.getAxisMin() != -1) {
+            leftAxis.setAxisMinimum(chartParameter.getAxisMin());
+        }
+
+        BaseActivity.getInstance().runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                lineChart.invalidate();
+            }
+        });
     }
 
     private void initLineChart() {
@@ -88,10 +100,6 @@ public class MultiChartView extends RelativeLayout {
         lineChart.setDrawGridBackground(false);
 
         YAxis leftAxis = lineChart.getAxisLeft();
-        // TODO: remove fixed axis max/min values
-        leftAxis.setAxisMaximum(45f);
-        leftAxis.setAxisMinimum(30f);
-        //leftAxis.setYOffset(20f);
         leftAxis.enableGridDashedLine(10f, 10f, 0f);
         leftAxis.setDrawZeroLine(false);
         leftAxis.setEnabled(true);

@@ -19,6 +19,9 @@ import android.widget.Toast;
 
 import java.text.NumberFormat;
 import java.util.ArrayList;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -45,11 +48,15 @@ public class DumpViewerActivity extends BaseActivity {
     private ArrayList<Bitmap> thermalBitmaps = new ArrayList<>();
 
     private ThermalDumpsRecyclerAdapter thermalDumpsRecyclerAdapter;
+    private volatile ExecutorService addThermalDumpExecutorService;
     private int selectedThermalDumpIndex = -1;
     private boolean displayingChart = false;
 
     private int thermalSpotX = -1;
     private int thermalSpotY = -1;
+    private volatile ChartParameter thermalChartParameter;
+    private volatile float chartAxisMax = -1;
+    private volatile float chartAxisMin = -1;
 
     @BindView(R.id.layoutThermalViews) FrameLayout layoutThermalViews;
     @BindView(R.id.recyclerDumpSwitcher) RecyclerView recyclerDumpSwitcher;
@@ -90,6 +97,7 @@ public class DumpViewerActivity extends BaseActivity {
             }
         });
 
+        // Pass touch event to the underlying layout
         thermalChartView.setOnTouchListener(new View.OnTouchListener() {
             @Override
             public boolean onTouch(View v, MotionEvent event) {
@@ -152,13 +160,18 @@ public class DumpViewerActivity extends BaseActivity {
                         }
                     }
 
-                    for (String path : addPaths) {
-                        addRawThermalDump(path);
+                    for (String path : removePaths) {
+                        removeThermalDump(thermalDumpPaths.indexOf(path));
                     }
 
-                    for (String path : removePaths) {
-                        removeThermalDump(currentPaths.indexOf(path));
+                    if (addThermalDumpExecutorService == null || addThermalDumpExecutorService.isShutdown()) {
+                        addThermalDumpExecutorService = Executors.newCachedThreadPool();
                     }
+                    for (String path : addPaths) {
+                        addThermalDump(path);
+                    }
+
+                    updateChartAxis();
                 }
                 break;
         }
@@ -185,7 +198,8 @@ public class DumpViewerActivity extends BaseActivity {
             thermalChartView.setVisibility(View.GONE);
             displayingChart = false;
         } else {
-            updateLineChart(rawThermalDump);
+            thermalChartParameter = createChartParameter(rawThermalDump, thermalSpotY);
+            thermalChartView.setChartParameter(thermalChartParameter);
             thermalChartView.setVisibility(View.VISIBLE);
             displayingChart = true;
         }
@@ -219,8 +233,8 @@ public class DumpViewerActivity extends BaseActivity {
         }
     }
 
-    private void addRawThermalDump(final String filepath) {
-        new Thread(new Runnable() {
+    private void addThermalDump(final String filepath) {
+        addThermalDumpExecutorService.execute(new Runnable() {
             @Override
             public void run() {
                 RawThermalDump thermalDump = ThermalDumpParser.readRawThermalDump(filepath);
@@ -247,7 +261,7 @@ public class DumpViewerActivity extends BaseActivity {
                     updateThermalImageView(null);
                 }
             }
-        }).start();
+        });
     }
 
     private void removeThermalDump(int index) {
@@ -352,21 +366,67 @@ public class DumpViewerActivity extends BaseActivity {
         });
 
         if (displayingChart) {
-            updateLineChart(rawThermalDump);
+            thermalChartParameter = createChartParameter(rawThermalDump, thermalSpotY);
+            thermalChartView.setChartParameter(thermalChartParameter);
         }
     }
 
-    private void updateLineChart(RawThermalDump rawThermalDump) {
+    private ChartParameter createChartParameter(RawThermalDump rawThermalDump, int y) {
         ChartParameter chartParameter = new ChartParameter(ChartParameter.ChartType.MULTI_LINE_CURVE);
         chartParameter.setAlpha(0.6f);
 
         int width = rawThermalDump.width;
         float[] temperaturePoints = new float[width];
         for (int i = 0; i < width; i++) {
-            temperaturePoints[i] = rawThermalDump.getTemperatureAt(i, thermalSpotY);
+            temperaturePoints[i] = rawThermalDump.getTemperatureAt(i, y);
         }
         chartParameter.addFloatArray(temperaturePoints);
-        thermalChartView.setChartParameter(chartParameter);
+        if (chartAxisMax != -1 && chartAxisMin != -1) {
+            chartParameter.setAxisMax(chartAxisMax);
+            chartParameter.setAxisMin(chartAxisMin);
+        }
+        return chartParameter;
+    }
+
+    private void updateChartAxis() {
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                // Wait for all addThermalDump threads to be finished
+                addThermalDumpExecutorService.shutdown();
+                try {
+                    // All tasks have finished or the time has been reached
+                    addThermalDumpExecutorService.awaitTermination(1, TimeUnit.MINUTES);
+                } catch (InterruptedException e) {}
+                if (DumpViewerActivity.this.isDestroyed())
+                    return;
+
+                float max = Float.MIN_VALUE;
+                float min = Float.MAX_VALUE;
+
+                for (RawThermalDump rawThermalDump : rawThermalDumps) {
+                    if (rawThermalDump.getMaxTemperature() > max)
+                        max = rawThermalDump.getMaxTemperature();
+                    if (rawThermalDump.getMinTemperature() < min)
+                        min = rawThermalDump.getMinTemperature();
+                }
+
+                if (max != chartAxisMax || min != chartAxisMin) {
+                    /* max = (float) Math.ceil(max) + 9;
+                    max -= max % 10;
+                    min = (float) Math.floor(min);
+                    min -= min % 10; */
+                    chartAxisMax = max;
+                    chartAxisMin = min;
+
+                    if (thermalChartParameter != null) {
+                        thermalChartParameter.setAxisMax(chartAxisMax);
+                        thermalChartParameter.setAxisMin(chartAxisMin);
+                        thermalChartView.setChartParameter(thermalChartParameter);
+                    }
+                }
+            }
+        }).start();
     }
 
 }

@@ -33,10 +33,11 @@ public class ThermalDumpProcessor {
 
     public ThermalDumpProcessor(RawThermalDump thermalDump) {
         OpenCVLoader.initDebug();
+        int[] thermalValues = thermalDump.getThermalValues();
 
         this.width = thermalDump.width;
         this.height = thermalDump.height;
-        this.pixelCount = thermalDump.thermalValues.length;
+        this.pixelCount = thermalValues.length;
         this.thermalValues10 = new int[pixelCount];
 
         // Load thermalValues10 & calculate thermalHist (same as this.updateThermalHist())
@@ -44,7 +45,7 @@ public class ThermalDumpProcessor {
         thermalHistMin = pixelCount;
         thermalHistMax = 0;
         for (int i = 0; i < pixelCount; i++) {
-            thermalValues10[i] = thermalDump.thermalValues[i] / 10;
+            thermalValues10[i] = thermalValues[i] / 10;
 
             thermalHist[thermalValues10[i]]++;
             if (thermalValues10[i] != 0 && thermalValues10[i] < thermalHistMin)

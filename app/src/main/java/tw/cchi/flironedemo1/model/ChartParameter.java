@@ -11,6 +11,8 @@ public class ChartParameter implements Parcelable {
     }
     private ChartType chartType;
     private float alpha = 1.0f;
+    private float axisMin = -1;
+    private float axisMax = -1;
     private ArrayList<float[]> floatArrays;
 
     public ChartParameter(ChartType chartType) {
@@ -22,12 +24,20 @@ public class ChartParameter implements Parcelable {
         return chartType;
     }
 
-    public void addFloatArray(float[] floatArray) {
-        floatArrays.add(floatArray);
+    public float getAxisMin() {
+        return axisMin;
     }
 
-    public ArrayList<float[]> getFloatArrays() {
-        return floatArrays;
+    public void setAxisMin(float axisMin) {
+        this.axisMin = axisMin;
+    }
+
+    public float getAxisMax() {
+        return axisMax;
+    }
+
+    public void setAxisMax(float axisMax) {
+        this.axisMax = axisMax;
     }
 
     public float getAlpha() {
@@ -36,6 +46,14 @@ public class ChartParameter implements Parcelable {
 
     public void setAlpha(float alpha) {
         this.alpha = alpha;
+    }
+
+    public void addFloatArray(float[] floatArray) {
+        floatArrays.add(floatArray);
+    }
+
+    public ArrayList<float[]> getFloatArrays() {
+        return floatArrays;
     }
 
     protected ChartParameter(Parcel in) {

@@ -5,7 +5,9 @@ import java.io.File;
 public class RawThermalDump {
     public int width;
     public int height;
-    public int[] thermalValues;
+    private int[] thermalValues;
+    private int maxValue = -1;
+    private int minValue = -1;
     private String filepath;
     private String title;
 
@@ -13,6 +15,15 @@ public class RawThermalDump {
         this.width = width;
         this.height = height;
         this.thermalValues = thermalValues;
+    }
+
+    public int[] getThermalValues() {
+        return thermalValues;
+    }
+
+    public void setThermalValues(int[] thermalValues) {
+        this.thermalValues = thermalValues;
+        maxValue = minValue = -1;
     }
 
     public String getFilepath() {
@@ -36,6 +47,27 @@ public class RawThermalDump {
 
     public String getTitle() {
         return title;
+    }
+
+    public float getMaxTemperature() {
+        if (maxValue == -1) {
+            for (int val : thermalValues) {
+                if (val > maxValue)
+                    maxValue = val;
+            }
+        }
+        return (float) (maxValue - 27315) / 100;
+    }
+
+    public float getMinTemperature() {
+        if (minValue == -1) {
+            minValue = Integer.MAX_VALUE;
+            for (int val : thermalValues) {
+                if (val < minValue)
+                    minValue = val;
+            }
+        }
+        return (float) (minValue - 27315) / 100;
     }
 
     public float getTemperatureAt(int x, int y) {
