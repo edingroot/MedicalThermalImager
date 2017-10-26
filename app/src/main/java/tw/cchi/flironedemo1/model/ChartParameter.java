@@ -52,6 +52,14 @@ public class ChartParameter implements Parcelable {
         floatArrays.add(floatArray);
     }
 
+    public boolean updateFloatArray(int index, float[] floatArray) {
+        if (index >= floatArrays.size())
+            return false;
+
+        floatArrays.set(index, floatArray);
+        return true;
+    }
+
     public ArrayList<float[]> getFloatArrays() {
         return floatArrays;
     }

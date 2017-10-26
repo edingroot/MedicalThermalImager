@@ -40,14 +40,11 @@ public class MultiChartView extends RelativeLayout {
         initLineChart();
     }
 
-    public void setChartParameter(ChartParameter chartParameter) {
+    public void updateChart(ChartParameter chartParameter) {
         this.chartParameter = chartParameter;
-        updateChart();
-    }
 
-    private void updateChart() {
         ArrayList<ILineDataSet> dataSets = new ArrayList<>();
-        int[] colors = ColorTemplate.VORDIPLOM_COLORS;
+        int[] colors = ColorTemplate.PASTEL_COLORS;
         ArrayList<float[]> valueArrays = chartParameter.getFloatArrays();
 
         for (int i = 0; i < valueArrays.size(); i++) {

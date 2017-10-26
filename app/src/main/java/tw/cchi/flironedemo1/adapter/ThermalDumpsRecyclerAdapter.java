@@ -32,7 +32,7 @@ public class ThermalDumpsRecyclerAdapter extends RecyclerView.Adapter<ThermalDum
      * @param title
      * @return selected position
      */
-    public int addDump(String title) {
+    public int addDumpSwitch(String title) {
         titles.add(title);
         if (titles.size() == 1) {
             selectedPosition = 0;
@@ -52,7 +52,7 @@ public class ThermalDumpsRecyclerAdapter extends RecyclerView.Adapter<ThermalDum
      * @param position
      * @return (new) selected position of -1 if the list is empty.
      */
-    public int removeDump(int position) {
+    public int removeDumpSwitch(int position) {
         titles.remove(position);
 
         if (titles.size() == 0) {
