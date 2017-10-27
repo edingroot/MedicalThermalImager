@@ -14,7 +14,7 @@ import java.io.IOException;
 public class RawThermalDump {
     public int width;
     public int height;
-    private int[] thermalValues;
+    private int[] thermalValues; // 0.01K = 1, (C = val/100 - 273.15)
     private int maxValue = -1;
     private int minValue = -1;
     private String filepath;

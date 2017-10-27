@@ -31,8 +31,11 @@ public class ThermalDumpProcessor {
     private int[] thermalHist;
     private volatile Mat generatedImage = null;
 
-    public ThermalDumpProcessor(RawThermalDump thermalDump) {
+    static {
         OpenCVLoader.initDebug();
+    }
+
+    public ThermalDumpProcessor(RawThermalDump thermalDump) {
         int[] thermalValues = thermalDump.getThermalValues();
 
         this.width = thermalDump.width;
@@ -158,6 +161,17 @@ public class ThermalDumpProcessor {
     }
 
     /**
+     * Get generated image with contrast adjusted with contrastRatio.
+     *
+     * @param contrastRatio Enhance contrast if > 1 and vise versa.
+     */
+    public Bitmap getBitmap(double contrastRatio) {
+        Bitmap resultBmp = Bitmap.createBitmap(width, height, Bitmap.Config.RGB_565);
+        Utils.matToBitmap(getImageMat(contrastRatio), resultBmp);
+        return resultBmp;
+    }
+
+    /**
      * Get generated image Mat with contrast adjusted with contrastRatio.
      *
      * @param contrastRatio Enhance contrast if > 1 and vise versa.
@@ -177,19 +191,8 @@ public class ThermalDumpProcessor {
         }
     }
 
-    /**
-     * Get generated image with contrast adjusted with contrastRatio.
-     *
-     * @param contrastRatio Enhance contrast if > 1 and vise versa.
-     */
-    public Bitmap getBitmap(double contrastRatio) {
-        Bitmap resultBmp = Bitmap.createBitmap(width, height, Bitmap.Config.RGB_565);
-        Utils.matToBitmap(getImageMat(contrastRatio), resultBmp);
-        return resultBmp;
-    }
-
     private synchronized void generateThermalImage() {
-        generatedImage = new Mat(height, width, CvType.CV_8U);
+        generatedImage = new Mat(height, width, CvType.CV_8UC1);
 
         Log.i(Config.TAG, String.format("generateThermalImage - min=%d, max=%d", thermalHistMin, thermalHistMax));
 

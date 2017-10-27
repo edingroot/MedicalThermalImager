@@ -794,7 +794,7 @@ public class PreviewActivity extends BaseActivity implements Device.Delegate, Fr
             public void run() {
                 try {
                     // Save the original thermal image
-                    renderedImage.getFrame().save(new File(filename), RenderedImage.Palette.Gray, RenderedImage.ImageType.ThermalRadiometricKelvinImage);
+                    renderedImage.getFrame().save(new File(filename), RenderedImage.Palette.Gray, RenderedImage.ImageType.ThermalRGBA8888Image);
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
