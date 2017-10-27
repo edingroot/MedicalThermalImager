@@ -1,6 +1,15 @@
 package tw.cchi.flironedemo1.thermalproc;
 
+import android.util.Log;
+
+import com.flir.flironesdk.RenderedImage;
+
+import org.apache.commons.io.FileUtils;
+
+import java.io.BufferedInputStream;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
 
 public class RawThermalDump {
     public int width;
@@ -17,6 +26,65 @@ public class RawThermalDump {
         this.thermalValues = thermalValues;
     }
 
+    public RawThermalDump(RenderedImage renderedImage) {
+        this.width = renderedImage.width();
+        this.height = renderedImage.height();
+        this.thermalValues = renderedImage.thermalPixelValues();
+    }
+
+    public static RawThermalDump readFromFile(String filepath) {
+        byte[] bytes = readAllBytesFromFile(filepath);
+        if (bytes == null || bytes.length < 4) {
+            return null;
+        }
+
+        int width = bytes2UnsignedInt(bytes[0], bytes[1]);
+        int height = bytes2UnsignedInt(bytes[2], bytes[3]);
+
+        if (bytes.length != 4 + width * height * 2)
+            return null;
+
+        int[] thermalValues = new int[width * height];
+        for (int i = 0; i < width * height; i++) {
+            int byteIndex = 4 + i * 2;
+            thermalValues[i] = bytes2UnsignedInt(bytes[byteIndex], bytes[byteIndex + 1]);
+        }
+
+        RawThermalDump rawThermalDump = new RawThermalDump(width, height, thermalValues);
+        rawThermalDump.setFilepath(filepath);
+        return rawThermalDump;
+    }
+
+    /**
+     * File format: first 0~1 and 2~3 bytes are width and height, and the following each 2 byte represents the temperature in 100*K ( /100 -273.15C)
+     * @param filepath
+     * @return
+     */
+    public boolean saveToFile(String filepath) {
+        int length = width * height;
+        byte[] bytes = new byte[length * 2 + 4];
+
+        bytes[0] = (byte) (width & 0xff);
+        bytes[1] = (byte) ((width >> 8) & 0xff);
+        bytes[2] = (byte) (height & 0xff);
+        bytes[3] = (byte) ((height >> 8) & 0xff);
+
+        for (int i = 0; i < length; i++) {
+            bytes[4 + i * 2] = (byte) (thermalValues[i] & 0xff);
+            bytes[4 + i * 2 + 1] = (byte) ((thermalValues[i] >> 8) & 0xff);
+        }
+
+        try {
+            FileUtils.writeByteArrayToFile(new File(filepath), bytes);
+        } catch (Exception e) {
+            Log.e("saveRawThermalDump", "Exception: " + e.toString());
+            e.printStackTrace();
+            return false;
+        }
+
+        return true;
+    }
+
     public int[] getThermalValues() {
         return thermalValues;
     }
@@ -30,7 +98,7 @@ public class RawThermalDump {
         return filepath;
     }
 
-    public void setFilepath(String filepath) {
+    private void setFilepath(String filepath) {
         this.filepath = filepath;
 
         // Generate title; filenameEx: 2017-10-08-16-10-08_rawThermal.dat
@@ -117,5 +185,28 @@ public class RawThermalDump {
         }
         return (averageTemp / 100) - 273.15;
 
+    }
+
+    private static int bytes2UnsignedInt(byte msb, byte lsb) {
+        // Make bytes unsigned
+        int iMsb = 0xff & (int) msb;
+        int iLsb = 0xff & (int) lsb;
+        return iLsb << 8 | iMsb;
+    }
+
+    private static byte[] readAllBytesFromFile(String filepath) {
+        File file = new File(filepath);
+        int size = (int) file.length();
+        byte[] bytes = new byte[size];
+
+        try {
+            BufferedInputStream buf = new BufferedInputStream(new FileInputStream(file));
+            buf.read(bytes, 0, bytes.length);
+            buf.close();
+            return bytes;
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 }

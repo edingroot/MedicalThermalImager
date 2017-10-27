@@ -35,7 +35,6 @@ import tw.cchi.flironedemo1.R;
 import tw.cchi.flironedemo1.adapter.ThermalDumpsRecyclerAdapter;
 import tw.cchi.flironedemo1.model.ChartParameter;
 import tw.cchi.flironedemo1.thermalproc.RawThermalDump;
-import tw.cchi.flironedemo1.thermalproc.ThermalDumpParser;
 import tw.cchi.flironedemo1.thermalproc.ThermalDumpProcessor;
 import tw.cchi.flironedemo1.view.MultiChartView;
 
@@ -237,7 +236,7 @@ public class DumpViewerActivity extends BaseActivity {
         addThermalDumpExecutorService.execute(new Runnable() {
             @Override
             public void run() {
-                RawThermalDump thermalDump = ThermalDumpParser.readRawThermalDump(filepath);
+                RawThermalDump thermalDump = RawThermalDump.readFromFile(filepath);
 
                 if (thermalDump != null) {
                     ThermalDumpProcessor thermalDumpProcessor = new ThermalDumpProcessor(thermalDump);

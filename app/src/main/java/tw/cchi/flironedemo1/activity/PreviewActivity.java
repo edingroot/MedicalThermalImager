@@ -59,7 +59,6 @@ import tw.cchi.flironedemo1.Config;
 import tw.cchi.flironedemo1.R;
 import tw.cchi.flironedemo1.thermalproc.ROIDetector;
 import tw.cchi.flironedemo1.thermalproc.RawThermalDump;
-import tw.cchi.flironedemo1.thermalproc.ThermalDumpParser;
 import tw.cchi.flironedemo1.thermalproc.ThermalDumpProcessor;
 
 public class PreviewActivity extends BaseActivity implements Device.Delegate, FrameProcessor.Delegate, Device.StreamDelegate, Device.PowerUpdateDelegate {
@@ -850,7 +849,8 @@ public class PreviewActivity extends BaseActivity implements Device.Delegate, Fr
         new Thread(new Runnable() {
             @Override
             public void run() {
-                if (ThermalDumpParser.saveRawThermalDump(renderedImage, filename)) {
+                RawThermalDump rawThermalDump = new RawThermalDump(renderedImage);
+                if (rawThermalDump.saveToFile(filename)) {
                     showToastMessage("Dumped: " + filename);
                 } else {
                     showToastMessage("Dumped filed.");
