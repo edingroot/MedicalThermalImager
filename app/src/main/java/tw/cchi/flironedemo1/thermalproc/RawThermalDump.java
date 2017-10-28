@@ -131,7 +131,7 @@ public class RawThermalDump {
         if (minValue == -1) {
             minValue = Integer.MAX_VALUE;
             for (int val : thermalValues) {
-                if (val < minValue)
+                if (val < minValue && val != 0)
                     minValue = val;
             }
         }
