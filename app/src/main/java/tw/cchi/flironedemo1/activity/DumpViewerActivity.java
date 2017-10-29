@@ -77,7 +77,7 @@ public class DumpViewerActivity extends BaseActivity {
 
         // Launch image picker on activity first started
         onImagePickClicked(findViewById(R.id.imgBtnPick));
-        showToastMessage(getString(R.string.pick_thermal_image));
+        showToastMessage(getString(R.string.pick_thermal_images));
 
         thermalImageView.setOnTouchListener(new View.OnTouchListener() {
             @Override
