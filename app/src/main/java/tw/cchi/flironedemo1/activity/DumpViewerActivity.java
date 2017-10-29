@@ -9,6 +9,7 @@ import android.support.annotation.NonNull;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.FrameLayout;
@@ -31,6 +32,7 @@ import droidninja.filepicker.utils.Orientation;
 import permissions.dispatcher.NeedsPermission;
 import permissions.dispatcher.RuntimePermissions;
 import tw.cchi.flironedemo1.AppUtils;
+import tw.cchi.flironedemo1.Config;
 import tw.cchi.flironedemo1.R;
 import tw.cchi.flironedemo1.adapter.ThermalDumpsRecyclerAdapter;
 import tw.cchi.flironedemo1.model.ChartParameter;
@@ -41,10 +43,12 @@ import tw.cchi.flironedemo1.view.MultiChartView;
 @RuntimePermissions
 public class DumpViewerActivity extends BaseActivity {
 
-    private ArrayList<String> thermalDumpPaths = new ArrayList<>();
-    private ArrayList<RawThermalDump> rawThermalDumps = new ArrayList<>();
-    private ArrayList<ThermalDumpProcessor> thermalDumpProcessors = new ArrayList<>();
-    private ArrayList<Bitmap> thermalBitmaps = new ArrayList<>();
+    private final Object dumpListLock = new Object();
+    private volatile ArrayList<String> thermalDumpPaths = new ArrayList<>();
+    private volatile ArrayList<RawThermalDump> rawThermalDumps = new ArrayList<>();
+    private volatile ArrayList<ThermalDumpProcessor> thermalDumpProcessors = new ArrayList<>();
+    private volatile ArrayList<Bitmap> thermalBitmaps = new ArrayList<>();
+    private volatile ChartParameter thermalChartParameter;
 
     private ThermalDumpsRecyclerAdapter thermalDumpsRecyclerAdapter;
     private volatile ExecutorService addThermalDumpExecutorService;
@@ -53,7 +57,6 @@ public class DumpViewerActivity extends BaseActivity {
 
     private int thermalSpotX = -1;
     private int thermalSpotY = -1;
-    private volatile ChartParameter thermalChartParameter;
     private volatile float chartAxisMax = -1;
     private volatile float chartAxisMin = -1;
 
@@ -165,13 +168,18 @@ public class DumpViewerActivity extends BaseActivity {
                         removeThermalDump(thermalDumpPaths.indexOf(path));
                     }
 
-                    if (addThermalDumpExecutorService == null || addThermalDumpExecutorService.isShutdown()) {
-                        addThermalDumpExecutorService = Executors.newCachedThreadPool();
-                    }
-                    for (String path : addPaths) {
-                        addThermalDump(path);
-                    }
+                    if (addPaths.size() > 0) {
+                        if (addThermalDumpExecutorService == null || addThermalDumpExecutorService.isShutdown() || addThermalDumpExecutorService.isTerminated())
+                            addThermalDumpExecutorService = Executors.newCachedThreadPool();
+                        for (String path : addPaths) {
+                            addThermalDump(path);
+                        }
 
+                    } else {
+                        if (currentPaths.size() == 0) {
+                            thermalImageView.setImageBitmap(null);
+                        }
+                    }
                     updateChartAxis();
                 }
                 break;
@@ -247,15 +255,18 @@ public class DumpViewerActivity extends BaseActivity {
                         thermalSpotY = thermalDump.height / 2;
                     }
 
-                    thermalDumpPaths.add(filepath);
-                    rawThermalDumps.add(thermalDump);
-                    thermalDumpProcessors.add(thermalDumpProcessor);
-                    thermalBitmaps.add(thermalBitmap);
-                    addToChartParameter(thermalChartParameter, thermalDump, thermalSpotY);
+                    int newIndex;
+                    synchronized (dumpListLock) {
+                        thermalDumpPaths.add(filepath);
+                        rawThermalDumps.add(thermalDump);
+                        thermalDumpProcessors.add(thermalDumpProcessor);
+                        thermalBitmaps.add(thermalBitmap);
+                        addToChartParameter(thermalChartParameter, thermalDump, thermalSpotY);
+                        newIndex = thermalDumpsRecyclerAdapter.addDumpSwitch(thermalDump.getTitle());
+                    }
 
-                    int index = thermalDumpsRecyclerAdapter.addDumpSwitch(thermalDump.getTitle());
-                    if (selectedThermalDumpIndex != index) {
-                        selectedThermalDumpIndex = index;
+                    if (selectedThermalDumpIndex != newIndex) {
+                        selectedThermalDumpIndex = newIndex;
                         updateThermalImageView(thermalBitmap);
                     }
 
@@ -270,16 +281,19 @@ public class DumpViewerActivity extends BaseActivity {
     }
 
     private void removeThermalDump(int index) {
-        int newIndex = thermalDumpsRecyclerAdapter.removeDumpSwitch(index);
-        if (selectedThermalDumpIndex == index) {
-            updateThermalImageView(thermalBitmaps.get(index));
+        synchronized (dumpListLock) {
+            int newIndex = thermalDumpsRecyclerAdapter.removeDumpSwitch(index);
+
+            if (selectedThermalDumpIndex == index) {
+                updateThermalImageView(thermalBitmaps.get(index));
+            }
+            selectedThermalDumpIndex = newIndex;
+            thermalDumpPaths.remove(index);
+            rawThermalDumps.remove(index);
+            thermalDumpProcessors.remove(index);
+            thermalBitmaps.remove(index);
+            removeFromChartParameter(thermalChartParameter, index);
         }
-        selectedThermalDumpIndex = newIndex;
-        thermalDumpPaths.remove(index);
-        rawThermalDumps.remove(index);
-        thermalDumpProcessors.remove(index);
-        thermalBitmaps.remove(index);
-        removeFromChartParameter(thermalChartParameter, index);
 
         System.gc();
     }
@@ -370,6 +384,13 @@ public class DumpViewerActivity extends BaseActivity {
         }
     }
 
+    /**
+     * Note: Not calling updateChartAxis() here because it will be called when all thermalDumps are added
+     *
+     * @param chartParameter
+     * @param rawThermalDump
+     * @param y
+     */
     private void addToChartParameter(ChartParameter chartParameter, RawThermalDump rawThermalDump, int y) {
         int width = rawThermalDump.width;
         float[] temperaturePoints = new float[width];
@@ -378,12 +399,16 @@ public class DumpViewerActivity extends BaseActivity {
             temperaturePoints[i] = rawThermalDump.getTemperatureAt(i, y);
         }
         chartParameter.addFloatArray(rawThermalDump.getTitle(), temperaturePoints);
-        // Not updating chart axis here because it will be called when all thermalDumps are added.
     }
 
+    /**
+     * Note: Not calling updateChartAxis() here
+     *
+     * @param chartParameter
+     * @param index
+     */
     private void removeFromChartParameter(ChartParameter chartParameter, int index) {
         chartParameter.removeFloatArray(index);
-        updateChartAxis();
     }
 
     private void updateChartParameter(ChartParameter chartParameter, int y) {
@@ -406,6 +431,8 @@ public class DumpViewerActivity extends BaseActivity {
         new Thread(new Runnable() {
             @Override
             public void run() {
+                Log.i(Config.TAG, "updateChartAxis: waiting for all addThermalDump threads finished");
+
                 // Wait until all addThermalDump threads finished
                 addThermalDumpExecutorService.shutdown();
                 try {
@@ -414,6 +441,8 @@ public class DumpViewerActivity extends BaseActivity {
                 } catch (InterruptedException e) {}
                 if (DumpViewerActivity.this.isDestroyed())
                     return;
+
+                Log.i(Config.TAG, "updateChartAxis: addThermalDumpExecutorService terminated");
 
                 float max = Float.MIN_VALUE;
                 float min = Float.MAX_VALUE;

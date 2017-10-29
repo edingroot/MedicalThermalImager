@@ -35,7 +35,7 @@ public class MultiChartView extends RelativeLayout {
         initLineChart();
     }
 
-    public void updateChart(ChartParameter chartParameter) {
+    public synchronized void updateChart(ChartParameter chartParameter) {
         this.chartParameter = chartParameter;
 
         ArrayList<ILineDataSet> dataSets = new ArrayList<>();
