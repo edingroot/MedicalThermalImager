@@ -7,4 +7,9 @@
         android:title="@string/dump_viewer"
         app:showAsAction="always"/>
 
+    <item
+        android:id="@+id/action_switch_rotate"
+        android:title="@string/rotate_view"
+        app:showAsAction="always"/>
+
 </menu>

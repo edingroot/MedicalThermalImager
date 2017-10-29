@@ -23,18 +23,18 @@
         android:focusableInTouchMode="false"
         android:scaleType="fitCenter"/>
 
-    <FrameLayout
+    <RelativeLayout
         android:id="@+id/fullscreen_content"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:fitsSystemWindows="true">
 
-        <LinearLayout
-            android:id="@+id/fullscreen_content_controls_top"
-            style="@android:style/ButtonBar"
+        <RelativeLayout
+            android:id="@+id/controls_top"
+            style="?metaButtonBarStyle"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_gravity="top|center_horizontal"
+            android:layout_alignParentTop="true"
             android:background="@color/black_overlay"
             android:orientation="horizontal"
             tools:ignore="UselessParent">
@@ -44,6 +44,7 @@
                 style="?metaButtonBarButtonStyle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_alignParentStart="true"
                 android:onClick="onImagePickClicked"
                 android:src="@android:drawable/ic_menu_my_calendar"/>
 
@@ -52,6 +53,7 @@
                 style="?metaButtonBarButtonStyle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_toEndOf="@id/imgBtnPick"
                 android:onClick="onAnalyzeClicked"
                 android:src="@android:drawable/ic_menu_mapmode"/>
 
@@ -60,28 +62,16 @@
                 style="?metaButtonBarButtonStyle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_gravity="center_horizontal|bottom"
+                android:layout_centerHorizontal="true"
                 android:onClick="onCaptureImageClicked"
                 android:src="@android:drawable/ic_menu_camera"/>
-
-            <ToggleButton
-                android:id="@+id/switch_rotate"
-                style="?metaButtonBarButtonStyle"
-                android:layout_width="40dp"
-                android:layout_height="wrap_content"
-                android:layout_gravity="right"
-                android:checked="false"
-                android:onClick="onRotateClicked"
-                android:text="@string/rotate_on"
-                android:textColor="@color/colorControlGray"
-                android:textOff="@string/rotate_off"
-                android:textOn="@string/rotate_on"/>
 
             <Button
                 android:id="@+id/btnTune"
                 style="?metaButtonBarButtonStyle"
-                android:layout_width="51dp"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_toStartOf="@id/btnTools"
                 android:onClick="onTuneClicked"
                 android:text="@string/performTuning"
                 android:textSize="14sp"/>
@@ -91,18 +81,19 @@
                 style="?metaButtonBarButtonStyle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_alignParentEnd="true"
                 android:onClick="onToolsClicked"
                 android:text="@string/tools"/>
 
 
-        </LinearLayout>
+        </RelativeLayout>
 
-        <FrameLayout
-            android:id="@+id/fullscreen_content_controls"
+        <RelativeLayout
+            android:id="@+id/content_controls_bottom"
             style="?metaButtonBarStyle"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_gravity="bottom|center_horizontal"
+            android:layout_alignParentBottom="true"
             android:background="@color/black_overlay"
             android:columnCount="3"
             android:rowCount="1"
@@ -113,7 +104,7 @@
                 style="?metaButtonBarButtonStyle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_gravity="bottom|start"
+                android:layout_alignParentStart="true"
                 android:checked="true"
                 android:onClick="onToggleMoreInfoClicked"
                 android:textColor="@color/colorControlGray"
@@ -122,8 +113,9 @@
 
             <LinearLayout
                 android:layout_width="wrap_content"
-                android:layout_height="match_parent"
-                android:layout_gravity="center_horizontal|bottom"
+                android:layout_height="wrap_content"
+                android:layout_centerHorizontal="true"
+                android:layout_centerVertical="true"
                 android:orientation="horizontal">
 
                 <TextView
@@ -131,7 +123,7 @@
                     style="?actionMenuTextAppearance"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_gravity="left|center_vertical"
+                    android:layout_gravity="start|center_vertical"
                     android:layout_margin="8dp"
                     android:layout_weight="0"
                     android:text="@string/battery_label"
@@ -142,7 +134,7 @@
                     android:id="@+id/batteryLevelTextView"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_gravity="left|center_vertical"
+                    android:layout_gravity="start|center_vertical"
                     android:layout_weight="0.5"
                     android:text="--"
                     android:textAppearance="?android:attr/textAppearanceMedium"/>
@@ -151,7 +143,7 @@
                     android:id="@+id/batteryChargeIndicator"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_gravity="left|center_vertical"
+                    android:layout_gravity="start|center_vertical"
                     android:layout_weight="0"
                     android:src="@android:drawable/ic_lock_idle_charging"
                     android:tint="@color/accent_material_light"
@@ -164,18 +156,18 @@
                 style="?metaButtonBarButtonStyle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_gravity="bottom|end"
+                android:layout_alignParentEnd="true"
                 android:onClick="onConnectSimClicked"
                 android:text="@string/connectSim"/>
 
-        </FrameLayout>
+        </RelativeLayout>
 
         <LinearLayout
             android:id="@+id/secondaryControlsContainer"
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
-            android:layout_gravity="center_horizontal|bottom"
-            android:layout_marginBottom="50dp"
+            android:layout_above="@+id/content_controls_bottom"
+            android:layout_alignParentStart="true"
             android:baselineAligned="false"
             android:focusableInTouchMode="false"
             android:orientation="vertical"
@@ -337,14 +329,29 @@
             android:id="@+id/pleaseConnect"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_centerHorizontal="true"
+            android:layout_centerVertical="true"
             android:layout_gravity="center"
-            android:layout_marginTop="90dp"
             android:text="Please Connect FLIR One"
             android:textAppearance="?android:attr/textAppearanceLarge"
             android:visibility="gone"/>
 
+        <TextView
+            android:id="@+id/editTuningState"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentEnd="true"
+            android:layout_below="@+id/controls_top"
+            android:layout_marginTop="-5dp"
+            android:ems="10"
+            android:inputType="textPersonName"
+            android:paddingEnd="12dp"
+            android:text="Tuning State"
+            android:textAlignment="textEnd"
+            android:textSize="10sp"/>
 
-    </FrameLayout>
+
+    </RelativeLayout>
 
     <RelativeLayout
         android:layout_width="wrap_content"

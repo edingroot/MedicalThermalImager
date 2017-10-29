@@ -21,6 +21,7 @@ import android.view.OrientationEventListener;
 import android.view.ScaleGestureDetector;
 import android.view.View;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.PopupMenu;
@@ -96,8 +97,8 @@ public class PreviewActivity extends BaseActivity implements Device.Delegate, Fr
     private int thermalSpotY = -1;
     private boolean showingMoreInfo = false;
 
-    @BindView(R.id.fullscreen_content_controls_top) View topControlsView;
-    @BindView(R.id.fullscreen_content_controls) View bottomControlsView;
+    @BindView(R.id.controls_top) View topControlsView;
+    @BindView(R.id.content_controls_bottom) View bottomControlsView;
     @BindView(R.id.fullscreen_content) View contentView;
     @BindView(R.id.imageView) ImageView thermalImageView;
     @BindView(R.id.pleaseConnect) TextView pleaseConnect;
@@ -116,8 +117,8 @@ public class PreviewActivity extends BaseActivity implements Device.Delegate, Fr
     @BindView(R.id.btnFilter) Button btnFilter;
     @BindView(R.id.btnRcgHigh) Button btnRcgHigh;
     @BindView(R.id.imgBtnPick) ImageButton imgBtnPick;
-    @BindView(R.id.btnTune) Button btnTune;
     @BindView(R.id.btnTools) Button btnTools;
+    @BindView(R.id.editTuningState) TextView editTuningState;
 
     ScaleGestureDetector mScaleDetector;
 
@@ -361,7 +362,7 @@ public class PreviewActivity extends BaseActivity implements Device.Delegate, Fr
                 @Override
                 public void run() {
                     super.run();
-                    btnTune.setText(tuningStateName);
+                    editTuningState.setText(tuningStateName);
                     thermalImageView.setColorFilter(Color.DKGRAY, PorterDuff.Mode.DARKEN);
                     findViewById(R.id.tuningProgressBar).setVisibility(View.VISIBLE);
                     findViewById(R.id.tuningTextView).setVisibility(View.VISIBLE);
@@ -372,7 +373,7 @@ public class PreviewActivity extends BaseActivity implements Device.Delegate, Fr
                 @Override
                 public void run() {
                     super.run();
-                    btnTune.setText(tuningStateName);
+                    editTuningState.setText(tuningStateName);
                     thermalImageView.clearColorFilter();
                     findViewById(R.id.tuningProgressBar).setVisibility(View.GONE);
                     findViewById(R.id.tuningTextView).setVisibility(View.GONE);
@@ -550,15 +551,6 @@ public class PreviewActivity extends BaseActivity implements Device.Delegate, Fr
         }
     }
 
-    public void onRotateClicked(View v) {
-        ToggleButton theSwitch = (ToggleButton) v;
-        if (theSwitch.isChecked()) {
-            thermalImageView.setRotation(180);
-        } else {
-            thermalImageView.setRotation(0);
-        }
-    }
-
     public void onImagePickClicked(View v) {
         if (opacityMask == null) {
             Intent galleryIntent = new Intent(
@@ -579,6 +571,14 @@ public class PreviewActivity extends BaseActivity implements Device.Delegate, Fr
                 switch (item.getItemId()) {
                     case R.id.action_dump_viewer:
                         startActivity(new Intent(PreviewActivity.this, DumpViewerActivity.class));
+                        return true;
+
+                    case R.id.action_switch_rotate:
+                        if (thermalImageView.getRotation() == 0f) {
+                            thermalImageView.setRotation(180f);
+                        } else {
+                            thermalImageView.setRotation(0f);
+                        }
                         return true;
 
                     default:

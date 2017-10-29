@@ -22,6 +22,7 @@
 
     <!-- Menu Items -->
     <string name="dump_viewer">Thermal Dump Viewer</string>
+    <string name="rotate_view">Rotate View</string>
 
     <!-- Messages -->
     <string name="noContourSelected">No contour selected</string>
