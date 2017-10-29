@@ -103,6 +103,7 @@ public class RawThermalDump {
 
         // Generate title; filenameEx: 2017-10-08-16-10-08_rawThermal.dat
         String filename = new File(filepath).getName();
+        String fileType = filename.substring(filename.lastIndexOf("_") + 1, filename.lastIndexOf("."));
         int startIndex = "2017-".length();
         title = String.format("%s/%s %s:%s:%s",
                 filename.substring(startIndex, startIndex + 2),
@@ -111,6 +112,8 @@ public class RawThermalDump {
                 filename.substring(startIndex + 9, startIndex + 11),
                 filename.substring(startIndex + 12, startIndex + 14)
         );
+        if (fileType.equals("rawThermal-reged"))
+            title += "R";
     }
 
     public String getTitle() {
