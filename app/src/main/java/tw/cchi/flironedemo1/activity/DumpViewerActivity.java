@@ -244,7 +244,7 @@ public class DumpViewerActivity extends BaseActivity {
         addThermalDumpExecutorService.execute(new Runnable() {
             @Override
             public void run() {
-                RawThermalDump thermalDump = RawThermalDump.readFromFile(filepath);
+                RawThermalDump thermalDump = RawThermalDump.readFromDumpFile(filepath);
 
                 if (thermalDump != null) {
                     ThermalDumpProcessor thermalDumpProcessor = new ThermalDumpProcessor(thermalDump);

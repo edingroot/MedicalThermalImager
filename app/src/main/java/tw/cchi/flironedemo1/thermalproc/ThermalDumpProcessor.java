@@ -5,30 +5,24 @@ import android.util.Log;
 
 import org.opencv.android.OpenCVLoader;
 import org.opencv.android.Utils;
-import org.opencv.core.Core;
-import org.opencv.core.CvType;
-import org.opencv.core.Mat;
-import org.opencv.core.MatOfPoint;
-import org.opencv.core.MatOfPoint2f;
-import org.opencv.core.Point;
+import org.opencv.core.*;
 
 import tw.cchi.flironedemo1.AppUtils;
 import tw.cchi.flironedemo1.Config;
 
-import static org.opencv.imgproc.Imgproc.pointPolygonTest;
-
 public class ThermalDumpProcessor {
-    public int thermalHistMin = 0; // thermalValue10 = 0 ignored
-    public int thermalHistMax = 0;
-
     private final static int MAX_ALLOWED = 2731 + 1200; // 120 deg Celsius
     private final static double FILTER_RATIO_LOW = 0.005; // Set to 0 to disable
     private final static double FILTER_RATIO_HIGH = 0.0005; // Set to 0 to disable
+
     private int width = 0;
     private int height = 0;
     private int pixelCount = 0;
     private int[] thermalValues10; // 0.1K = 1 (different from RawThermalDump)
-    private int[] thermalHist;
+    private int[] thermalHist; // thermalHist[thermalValue10] = pixelCount
+    private int minThermalValue = 0; // thermalValue10 = 0 ignored
+    private int maxThermalValue = 0;
+
     private volatile Mat generatedImage = null;
 
     static {
@@ -45,16 +39,16 @@ public class ThermalDumpProcessor {
 
         // Load thermalValues10 & calculate thermalHist (same as this.updateThermalHist())
         thermalHist = new int[MAX_ALLOWED];
-        thermalHistMin = pixelCount;
-        thermalHistMax = 0;
+        minThermalValue = Integer.MAX_VALUE;
+        maxThermalValue = Integer.MIN_VALUE;
         for (int i = 0; i < pixelCount; i++) {
             thermalValues10[i] = thermalValues[i] / 10;
-
             thermalHist[thermalValues10[i]]++;
-            if (thermalValues10[i] != 0 && thermalValues10[i] < thermalHistMin)
-                thermalHistMin = thermalValues10[i];
-            if (thermalValues10[i] > thermalHistMax)
-                thermalHistMax = thermalValues10[i];
+
+            if (thermalValues10[i] != 0 && thermalValues10[i] < minThermalValue)
+                minThermalValue = thermalValues10[i];
+            if (thermalValues10[i] > maxThermalValue)
+                maxThermalValue = thermalValues10[i];
         }
     }
 
@@ -70,38 +64,38 @@ public class ThermalDumpProcessor {
     public void autoFilter() {
         int minPixelThreshold;
 
-        Log.i(Config.TAG, String.format("autoFilter - before: min=%d, max=%d", thermalHistMin, thermalHistMax));
+        Log.i(Config.TAG, String.format("autoFilter - before: min=%d, max=%d\n", minThermalValue, maxThermalValue));
 
         minPixelThreshold = (int) (pixelCount * FILTER_RATIO_LOW);
-        for (int i = thermalHistMin; i <= thermalHistMax; i++) {
+        for (int i = minThermalValue; i <= maxThermalValue; i++) {
             if (thermalHist[i] < minPixelThreshold) {
                 thermalHist[i] = 0;
-                thermalHistMin = i;
+                minThermalValue = i;
             } else {
                 break;
             }
         }
 
         minPixelThreshold = (int) (pixelCount * FILTER_RATIO_HIGH);
-        for (int i = thermalHistMax; i >= 0; i--) {
+        for (int i = maxThermalValue; i >= 0; i--) {
             if (thermalHist[i] < minPixelThreshold) {
                 thermalHist[i] = 0;
-                thermalHistMax = i;
+                maxThermalValue = i;
             } else {
                 break;
             }
         }
 
-        Log.i(Config.TAG, String.format("autoFilter - after: min=%d, max=%d", thermalHistMin, thermalHistMax));
+        Log.i(Config.TAG, String.format("autoFilter - after: min=%d, max=%d\n", minThermalValue, maxThermalValue));
 
         // Filter thermalValues10
         for (int i = 0; i < pixelCount; i++) {
-            if (thermalValues10[i] < thermalHistMin) {
-                thermalValues10[i] = thermalHistMin;
-                thermalHist[thermalHistMin]++;
-            } else if (thermalValues10[i] > thermalHistMax) {
-                thermalValues10[i] = thermalHistMax;
-                thermalHist[thermalHistMax]++;
+            if (thermalValues10[i] < minThermalValue) {
+                thermalValues10[i] = minThermalValue;
+                thermalHist[minThermalValue]++;
+            } else if (thermalValues10[i] > maxThermalValue) {
+                thermalValues10[i] = maxThermalValue;
+                thermalHist[maxThermalValue]++;
             }
         }
 
@@ -109,21 +103,20 @@ public class ThermalDumpProcessor {
     }
 
     public void filterBelow(int thermalThreshold10K) {
-        Log.i(Config.TAG, "filterBelow");
-        if (thermalThreshold10K <= thermalHistMin) {
-            Log.e(Config.TAG, String.format("filterBelow: thermalHistMin=%d, newThreshold=%d, ignore.", thermalHistMin, thermalThreshold10K));
+        if (thermalThreshold10K <= minThermalValue) {
+            Log.i(Config.TAG, String.format("filterBelow: minThermalValue=%d, newThreshold=%d, ignore.\n", minThermalValue, thermalThreshold10K));
             return;
         }
 
         // Filter thermalValues10
-        thermalHistMin = thermalThreshold10K;
-        if (thermalHistMin > thermalHistMax)
-            thermalHistMax = thermalHistMin;
+        minThermalValue = thermalThreshold10K;
+        if (minThermalValue > maxThermalValue)
+            maxThermalValue = minThermalValue;
         for (int i = 0; i < pixelCount; i++) {
-            if (thermalValues10[i] < thermalHistMin) {
+            if (thermalValues10[i] < minThermalValue) {
                 thermalHist[thermalValues10[i]]--;
-                thermalHist[thermalHistMin]++;
-                thermalValues10[i] = thermalHistMin;
+                thermalHist[minThermalValue]++;
+                thermalValues10[i] = minThermalValue;
             }
         }
 
@@ -131,20 +124,19 @@ public class ThermalDumpProcessor {
     }
 
     public void filterAbove(int thermalThreshold10K) {
-        if (thermalThreshold10K >= thermalHistMax) {
-            Log.e(Config.TAG, String.format("filterAbove: thermalHistMax=%d, newThreshold=%d, ignore.", thermalHistMax, thermalThreshold10K));
+        if (thermalThreshold10K >= maxThermalValue) {
             return;
         }
 
         // Filter thermalValues10
-        thermalHistMax = thermalThreshold10K;
-        if (thermalHistMax < thermalHistMin)
-            thermalHistMin = thermalHistMax;
+        maxThermalValue = thermalThreshold10K;
+        if (maxThermalValue < minThermalValue)
+            minThermalValue = maxThermalValue;
         for (int i = 0; i < pixelCount; i++) {
-            if (thermalValues10[i] > thermalHistMax) {
+            if (thermalValues10[i] > maxThermalValue) {
                 thermalHist[thermalValues10[i]]--;
-                thermalHist[thermalHistMax]++;
-                thermalValues10[i] = thermalHistMax;
+                thermalHist[maxThermalValue]++;
+                thermalValues10[i] = maxThermalValue;
             }
         }
 
@@ -152,7 +144,6 @@ public class ThermalDumpProcessor {
     }
 
     public void filterFromContour(MatOfPoint contour) {
-        Log.i(Config.TAG, "filterFromContour");
         for (Point point : AppUtils.getPointsOutsideContour(contour, generatedImage.size())) {
             thermalValues10[(int) (point.x + point.y * width)] = 0;
         }
@@ -191,20 +182,52 @@ public class ThermalDumpProcessor {
         }
     }
 
-    private synchronized void generateThermalImage() {
+    /**
+     * Generate grayscale thermal image from temperature values
+     *
+     * @return
+     */
+    public synchronized Mat generateThermalImage() {
+        return generateThermalImage(
+                (minThermalValue - 2731) / 10.0f,
+                (maxThermalValue - 2731) / 10.0f
+        );
+    }
+
+    /**
+     * Generate grayscale thermal image from temperature values
+     * - The interval [temp0, temp255] should NOT be too large, which may cause the generated image only has few colors.
+     *
+     * @param temp0 The minimum temperature of the histogram left most index (0/255)
+     * @param temp255 The minimum temperature of the histogram right most index (255/255)
+     * @return
+     */
+    public synchronized Mat generateThermalImage(float temp0, float temp255) {
         generatedImage = new Mat(height, width, CvType.CV_8UC1);
+        int thermalValue0 = (int) (temp0 * 10) + 2731;
+        int thermalValue255 = (int) (temp255 * 10) + 2731;
+        double hopPer10K = 254.0 / (thermalValue255 - thermalValue0);
 
-        Log.i(Config.TAG, String.format("generateThermalImage - min=%d, max=%d", thermalHistMin, thermalHistMax));
+        // Generate thermalValue-grayLevel LUT: thermalLUT[temp10K] = grayLevel (0~255)
+        short[] thermalLUT = new short[1 + (maxThermalValue > thermalValue255 ? maxThermalValue : thermalValue255)];
 
-        // Generate thermal LUT
-        short[] thermalLUT = new short[thermalHistMax + 1]; // thermalLUT[temp10K] = grayLevel (0~255)
-        double increasePerK = 255.0 / (thermalHistMax - thermalHistMin);
-        double sum = 0;
-        for (int i = thermalHistMin; i <= thermalHistMax; i++) {
-            thermalLUT[i] = sum > 255 ? (short) 255 : (short) sum;
-            sum += increasePerK;
+        // We reserve grayLevel=0 for identifying image moved
+        for (int i = minThermalValue; i < thermalValue0; i++) {
+            thermalLUT[i] = 1;
         }
 
+        // Effective range: [1, 254]
+        double sum = 1;
+        for (int i = thermalValue0; i <= thermalValue255; i++) {
+            thermalLUT[i] = sum > 255 ? (short) 255 : (short) sum;
+            sum += hopPer10K;
+        }
+
+        for (int i = thermalValue255 + 1; i <= maxThermalValue; i++) {
+            thermalLUT[i] = 255;
+        }
+
+        // Generate image from LUT
         for (int row = 0; row < height; row++) {
             for (int col = 0; col < width; col++) {
                 if (thermalValues10[col + row * width] == 0)
@@ -213,20 +236,20 @@ public class ThermalDumpProcessor {
                     generatedImage.put(row, col, thermalLUT[thermalValues10[col + row * width]]);
             }
         }
+
+        return generatedImage;
     }
 
     private void updateThermalHist() {
-        Log.i(Config.TAG, "updateThermalHist");
-
         thermalHist = new int[MAX_ALLOWED];
-        thermalHistMin = pixelCount;
-        thermalHistMax = 0;
+        minThermalValue = pixelCount;
+        maxThermalValue = 0;
         for (int i = 0; i < pixelCount; i++) {
             thermalHist[thermalValues10[i]]++;
-            if (thermalValues10[i] != 0 && thermalValues10[i] < thermalHistMin)
-                thermalHistMin = thermalValues10[i];
-            if (thermalValues10[i] > thermalHistMax)
-                thermalHistMax = thermalValues10[i];
+            if (thermalValues10[i] != 0 && thermalValues10[i] < minThermalValue)
+                minThermalValue = thermalValues10[i];
+            if (thermalValues10[i] > maxThermalValue)
+                maxThermalValue = thermalValues10[i];
         }
     }
 

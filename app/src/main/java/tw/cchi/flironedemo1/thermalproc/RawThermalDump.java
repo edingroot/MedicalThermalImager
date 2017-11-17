@@ -1,10 +1,10 @@
 package tw.cchi.flironedemo1.thermalproc;
 
-import android.util.Log;
-
 import com.flir.flironesdk.RenderedImage;
 
 import org.apache.commons.io.FileUtils;
+import org.opencv.core.Mat;
+import org.opencv.highgui.Highgui;
 
 import java.io.BufferedInputStream;
 import java.io.File;
@@ -26,13 +26,14 @@ public class RawThermalDump {
         this.thermalValues = thermalValues;
     }
 
+    // [For Android]
     public RawThermalDump(RenderedImage renderedImage) {
         this.width = renderedImage.width();
         this.height = renderedImage.height();
         this.thermalValues = renderedImage.thermalPixelValues();
     }
 
-    public static RawThermalDump readFromFile(String filepath) {
+    public static RawThermalDump readFromDumpFile(String filepath) {
         byte[] bytes = readAllBytesFromFile(filepath);
         if (bytes == null || bytes.length < 4) {
             return null;
@@ -77,7 +78,6 @@ public class RawThermalDump {
         try {
             FileUtils.writeByteArrayToFile(new File(filepath), bytes);
         } catch (Exception e) {
-            Log.e("saveRawThermalDump", "Exception: " + e.toString());
             e.printStackTrace();
             return false;
         }
@@ -141,22 +141,36 @@ public class RawThermalDump {
         return (float) (minValue - 27315) / 100;
     }
 
+    /**
+     *
+     * @param x
+     * @param y
+     * @return temperature in degree Celsius or -1 for empty pixel
+     */
     public float getTemperatureAt(int x, int y) {
         int index = y * width + x;
-
         if (index >= thermalValues.length)
             throw new RuntimeException("index < thermalValues.length");
 
-        return (float) (thermalValues[index] - 27315) / 100;
+        int thermalValue = thermalValues[index];
+
+        return thermalValue == 0 ? -1 : (float) (thermalValue - 27315) / 100;
     }
 
+    /**
+     *
+     * @param x
+     * @param y
+     * @return temperature in Kelvin scale or -1 for empty pixel
+     */
     public float getTemperatureKAt(int x, int y) {
         int index = y * width + x;
-
         if (index >= thermalValues.length)
             throw new RuntimeException("index < thermalValues.length");
 
-        return thermalValues[index] / 100.0f;
+        int thermalValue = thermalValues[index];
+
+        return thermalValue == 0 ? -1 : thermalValue / 100.0f;
     }
 
     /**
