@@ -18,7 +18,6 @@ import android.util.Log;
 import android.view.KeyEvent;
 import android.view.MenuItem;
 import android.view.MotionEvent;
-import android.view.OrientationEventListener;
 import android.view.ScaleGestureDetector;
 import android.view.View;
 import android.widget.Button;
@@ -664,7 +663,7 @@ public class PreviewActivity extends BaseActivity implements Device.Delegate, Fr
         });
     }
 
-    private void scanMediaStorageAndAnimate(String filename) {
+    private void scanMediaStorage(String filename, boolean animateFlash) {
         // Call the system media scanner
         MediaScannerConnection.scanFile(PreviewActivity.this,
                 new String[]{filename}, null,
@@ -804,7 +803,7 @@ public class PreviewActivity extends BaseActivity implements Device.Delegate, Fr
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
-                scanMediaStorageAndAnimate(filename);
+                scanMediaStorage(filename, true);
             }
         }).start();
     }
@@ -833,6 +832,7 @@ public class PreviewActivity extends BaseActivity implements Device.Delegate, Fr
                                 if (out != null) {
                                     out.close();
                                 }
+                                scanMediaStorage(filename, false);
                             } catch (IOException e) {
                                 e.printStackTrace();
                             }
@@ -841,9 +841,6 @@ public class PreviewActivity extends BaseActivity implements Device.Delegate, Fr
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
-
-                scanMediaStorageAndAnimate(filename);
-
             }
         }).start();
     }
@@ -858,6 +855,7 @@ public class PreviewActivity extends BaseActivity implements Device.Delegate, Fr
                 RawThermalDump rawThermalDump = new RawThermalDump(renderedImage);
                 if (rawThermalDump.saveToFile(filename)) {
                     showToastMessage("Dumped: " + filename);
+                    scanMediaStorage(filename, false);
                 } else {
                     showToastMessage("Dumped filed.");
                 }
