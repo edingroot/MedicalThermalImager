@@ -71,7 +71,6 @@ public class PreviewActivity extends BaseActivity implements Device.Delegate, Fr
     private volatile boolean imageCaptureRequested = false;
     private volatile boolean thermalAnalyzeRequested = false;
     private volatile boolean thermalDumpRequested = false;
-    private OrientationEventListener orientationEventListener;
     private volatile Device flirOneDevice;
     private FrameProcessor frameProcessor;
     private Device.TuningState currentTuningState = Device.TuningState.Unknown;
@@ -199,13 +198,6 @@ public class PreviewActivity extends BaseActivity implements Device.Delegate, Fr
                 PreviewActivity.this.onRcgnThresSeekBarChanged(bar, value);
             }
         });
-
-        orientationEventListener = new OrientationEventListener(this) {
-            @Override
-            public void onOrientationChanged(int orientation) {
-                deviceRotation = orientation;
-            }
-        };
     }
 
     @Override
@@ -317,7 +309,6 @@ public class PreviewActivity extends BaseActivity implements Device.Delegate, Fr
         flirOneDevice.setPowerUpdateDelegate(this);
         flirOneDevice.startFrameStream(this);
         streamingFrame = true;
-        orientationEventListener.enable();
 
         if (showingMoreInfo) {
             runOnUiThread(new Runnable() {
@@ -339,7 +330,6 @@ public class PreviewActivity extends BaseActivity implements Device.Delegate, Fr
         thermalDumpProcessor = null;
         roiDetector = null;
         thermalBitmap = null;
-        orientationEventListener.disable();
 
         runOnUiThread(new Runnable() {
             @Override
