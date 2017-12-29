@@ -15,20 +15,19 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.OrientationEventListener;
 import android.view.ScaleGestureDetector;
 import android.view.View;
 import android.widget.Button;
-import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.PopupMenu;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
-import android.widget.ToggleButton;
 
 import com.flir.flironesdk.Device;
 import com.flir.flironesdk.FlirUsbDevice;
@@ -292,6 +291,19 @@ public class PreviewActivity extends BaseActivity implements Device.Delegate, Fr
         }
     }
 
+    @Override
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
+        switch (keyCode) {
+            case KeyEvent.KEYCODE_VOLUME_UP:
+            case KeyEvent.KEYCODE_VOLUME_DOWN:
+                triggerImageCapture();
+                return true;
+
+            default:
+                return super.onKeyDown(keyCode, event);
+        }
+    }
+
     public void onDeviceConnected(Device device) {
         Log.i(Config.TAG, "Device connected!");
         runOnUiThread(new Runnable() {
@@ -520,14 +532,7 @@ public class PreviewActivity extends BaseActivity implements Device.Delegate, Fr
     }
 
     public void onCaptureImageClicked(View v) {
-        if (flirOneDevice != null) {
-            if (streamingFrame) {
-                this.imageCaptureRequested = true;
-            } else {
-                captureProcessedImage();
-                dumpThermalData(lastRenderedImage);
-            }
-        }
+        triggerImageCapture();
     }
 
     public void onAnalyzeClicked(View v) {
@@ -706,6 +711,17 @@ public class PreviewActivity extends BaseActivity implements Device.Delegate, Fr
             ex.printStackTrace();
         }
         simConnected = true;
+    }
+
+    private void triggerImageCapture() {
+        if (flirOneDevice != null) {
+            if (streamingFrame) {
+                this.imageCaptureRequested = true;
+            } else {
+                captureProcessedImage();
+                dumpThermalData(lastRenderedImage);
+            }
+        }
     }
 
     private void updateThermalImageView(final Bitmap frame) {
