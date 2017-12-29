@@ -792,7 +792,7 @@ public class PreviewActivity extends BaseActivity implements Device.Delegate, Fr
     }
 
     private void captureThermalImage(final RenderedImage renderedImage) {
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd-HH-mm-ss", Locale.getDefault());
+        SimpleDateFormat sdf = new SimpleDateFormat("MMdd-HHmmss-SSS", Locale.getDefault());
         final String filename = AppUtils.getExportsDir() + "/" + sdf.format(new Date()) + "_thermalImage.jpg";
 
         new Thread(new Runnable() {
@@ -809,7 +809,7 @@ public class PreviewActivity extends BaseActivity implements Device.Delegate, Fr
     }
 
     private void captureProcessedImage() {
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd-HH-mm-ss", Locale.getDefault());
+        SimpleDateFormat sdf = new SimpleDateFormat("MMdd-HHmmss-SSS", Locale.getDefault());
         final String filename = AppUtils.getExportsDir() + "/" + sdf.format(new Date()) + "_processedImage.jpg";
 
         new Thread(new Runnable() {
@@ -846,7 +846,7 @@ public class PreviewActivity extends BaseActivity implements Device.Delegate, Fr
     }
 
     private void dumpThermalData(final RenderedImage renderedImage) {
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd-HH-mm-ss", Locale.getDefault());
+        SimpleDateFormat sdf = new SimpleDateFormat("MMdd-HHmmss-SSS", Locale.getDefault());
         final String filename = AppUtils.getExportsDir() + "/" + sdf.format(new Date()) + "_rawThermal.dat";
 
         new Thread(new Runnable() {
