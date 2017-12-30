@@ -32,8 +32,8 @@ public class ThermalDumpProcessor {
     public ThermalDumpProcessor(RawThermalDump thermalDump) {
         int[] thermalValues = thermalDump.getThermalValues();
 
-        this.width = thermalDump.width;
-        this.height = thermalDump.height;
+        this.width = thermalDump.getWidth();
+        this.height = thermalDump.getHeight();
         this.pixelCount = thermalValues.length;
         this.thermalValues10 = new int[pixelCount];
 

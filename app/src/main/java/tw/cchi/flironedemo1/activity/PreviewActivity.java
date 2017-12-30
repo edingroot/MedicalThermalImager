@@ -742,7 +742,7 @@ public class PreviewActivity extends BaseActivity implements Device.Delegate, Fr
         RawThermalDump rawThermalDump = new RawThermalDump(imageWidth, imageHeight, thermalPixels);
         double averageC;
         if (thermalSpotX == -1) {
-            averageC = rawThermalDump.getTemperature9Average(rawThermalDump.width / 2, rawThermalDump.height / 2);
+            averageC = rawThermalDump.getTemperature9Average(rawThermalDump.getWidth() / 2, rawThermalDump.getHeight() / 2);
         } else {
             averageC = rawThermalDump.getTemperature9Average(thermalSpotX, thermalSpotY);
         }
@@ -795,7 +795,7 @@ public class PreviewActivity extends BaseActivity implements Device.Delegate, Fr
 
     private void captureThermalImage(final RenderedImage renderedImage) {
         SimpleDateFormat sdf = new SimpleDateFormat("MMdd-HHmmss-SSS", Locale.getDefault());
-        final String filename = AppUtils.getExportsDir() + "/" + sdf.format(new Date()) + "_thermalImage.jpg";
+        final String filename = AppUtils.getExportsDir() + "/" + sdf.format(new Date()) + "_flir.jpg";
 
         new Thread(new Runnable() {
             public void run() {
@@ -812,7 +812,7 @@ public class PreviewActivity extends BaseActivity implements Device.Delegate, Fr
 
     private void captureProcessedImage() {
         SimpleDateFormat sdf = new SimpleDateFormat("MMdd-HHmmss-SSS", Locale.getDefault());
-        final String filename = AppUtils.getExportsDir() + "/" + sdf.format(new Date()) + "_processedImage.jpg";
+        final String filename = AppUtils.getExportsDir() + "/" + sdf.format(new Date()) + "_processed.jpg";
 
         new Thread(new Runnable() {
             public void run() {
@@ -849,7 +849,7 @@ public class PreviewActivity extends BaseActivity implements Device.Delegate, Fr
 
     private void dumpThermalData(final RenderedImage renderedImage) {
         SimpleDateFormat sdf = new SimpleDateFormat("MMdd-HHmmss-SSS", Locale.getDefault());
-        final String filename = AppUtils.getExportsDir() + "/" + sdf.format(new Date()) + "_rawThermal.dat";
+        final String filename = AppUtils.getExportsDir() + "/" + sdf.format(new Date()) + "_raw.dat";
 
         new Thread(new Runnable() {
             @Override

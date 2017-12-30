@@ -3,8 +3,6 @@ package tw.cchi.flironedemo1.thermalproc;
 import com.flir.flironesdk.RenderedImage;
 
 import org.apache.commons.io.FileUtils;
-import org.opencv.core.Mat;
-import org.opencv.highgui.Highgui;
 
 import java.io.BufferedInputStream;
 import java.io.File;
@@ -12,19 +10,16 @@ import java.io.FileInputStream;
 import java.io.IOException;
 
 public class RawThermalDump {
-    public int width;
-    public int height;
+    private int formatVersion = 1;
+    private int width;
+    private int height;
+    private int visualDeltaX = 0;
+    private int visualDeltaY = 0;
     private int[] thermalValues; // 0.01K = 1, (C = val/100 - 273.15)
     private int maxValue = -1;
     private int minValue = -1;
     private String filepath;
     private String title;
-
-    public RawThermalDump(int width, int height, int[] thermalValues) {
-        this.width = width;
-        this.height = height;
-        this.thermalValues = thermalValues;
-    }
 
     // [For Android]
     public RawThermalDump(RenderedImage renderedImage) {
@@ -33,7 +28,21 @@ public class RawThermalDump {
         this.thermalValues = renderedImage.thermalPixelValues();
     }
 
+    public RawThermalDump(int width, int height, int[] thermalValues) {
+        this.width = width;
+        this.height = height;
+        this.thermalValues = thermalValues;
+    }
+
+    public RawThermalDump(int width, int height, int[] thermalValues, int visualDeltaX, int visualDeltaY) {
+        this(width, height, thermalValues);
+        this.visualDeltaX = visualDeltaX;
+        this.visualDeltaY = visualDeltaY;
+        this.formatVersion = 2;
+    }
+
     public static RawThermalDump readFromDumpFile(String filepath) {
+        int formatVersion;
         byte[] bytes = readAllBytesFromFile(filepath);
         if (bytes == null || bytes.length < 4) {
             return null;
@@ -42,7 +51,11 @@ public class RawThermalDump {
         int width = bytes2UnsignedInt(bytes[0], bytes[1]);
         int height = bytes2UnsignedInt(bytes[2], bytes[3]);
 
-        if (bytes.length != 4 + width * height * 2)
+        if (bytes.length == 4 + width * height * 2)
+            formatVersion = 1;
+        else if (bytes.length == 4 + width * height * 2)
+            formatVersion = 2;
+        else
             return null;
 
         int[] thermalValues = new int[width * height];
@@ -51,8 +64,17 @@ public class RawThermalDump {
             thermalValues[i] = bytes2UnsignedInt(bytes[byteIndex], bytes[byteIndex + 1]);
         }
 
-        RawThermalDump rawThermalDump = new RawThermalDump(width, height, thermalValues);
+        RawThermalDump rawThermalDump;
+        if (formatVersion == 1) {
+            rawThermalDump = new RawThermalDump(width, height, thermalValues);
+        } else {
+            int index = 4 + width * height;
+            int visualDeltaX = bytes2UnsignedInt(bytes[index], bytes[index + 1]);
+            int visualDeltaY = bytes2UnsignedInt(bytes[index + 2], bytes[index + 3]);
+            rawThermalDump = new RawThermalDump(width, height, thermalValues, visualDeltaX, visualDeltaY);
+        }
         rawThermalDump.setFilepath(filepath);
+
         return rawThermalDump;
     }
 
@@ -62,17 +84,25 @@ public class RawThermalDump {
      * @return
      */
     public boolean saveToFile(String filepath) {
-        int length = width * height;
-        byte[] bytes = new byte[length * 2 + 4];
+        int length = formatVersion == 1 ? 4 + 2 * width * height : 8 + 2 * width * height;
+        byte[] bytes = new byte[length];
 
         bytes[0] = (byte) (width & 0xff);
         bytes[1] = (byte) ((width >> 8) & 0xff);
         bytes[2] = (byte) (height & 0xff);
         bytes[3] = (byte) ((height >> 8) & 0xff);
 
-        for (int i = 0; i < length; i++) {
+        for (int i = 0; i < width * height; i++) {
             bytes[4 + i * 2] = (byte) (thermalValues[i] & 0xff);
             bytes[4 + i * 2 + 1] = (byte) ((thermalValues[i] >> 8) & 0xff);
+        }
+
+        if (formatVersion == 2) {
+            int index = 4 + 2 * width * height;
+            bytes[index] = (byte) (visualDeltaX & 0xff);
+            bytes[index + 1] = (byte) ((visualDeltaX >> 8) & 0xff);
+            bytes[index + 2] = (byte) (visualDeltaY & 0xff);
+            bytes[index + 3] = (byte) ((visualDeltaY >> 8) & 0xff);
         }
 
         try {
@@ -83,6 +113,40 @@ public class RawThermalDump {
         }
 
         return true;
+    }
+
+    public int getWidth() {
+        return width;
+    }
+
+    public int getHeight() {
+        return height;
+    }
+
+    public int getVisualDeltaX() {
+        return visualDeltaX;
+    }
+
+    public boolean setVisualDeltaX(int visualDeltaX) {
+        if (formatVersion == 1) {
+            return false;
+        } else {
+            this.visualDeltaX = visualDeltaX;
+            return true;
+        }
+    }
+
+    public int getVisualDeltaY() {
+        return visualDeltaY;
+    }
+
+    public boolean setVisualDeltaY(int visualDeltaY) {
+        if (formatVersion == 1) {
+            return false;
+        } else {
+            this.visualDeltaY = visualDeltaY;
+            return true;
+        }
     }
 
     public int[] getThermalValues() {
@@ -101,18 +165,18 @@ public class RawThermalDump {
     private void setFilepath(String filepath) {
         this.filepath = filepath;
 
-        // Generate title; filenameEx: 2017-10-08-16-10-08_rawThermal.dat
+        // Generate title; filenameEx: 1008-161008_089_raw.dat
         String filename = new File(filepath).getName();
         String fileType = filename.substring(filename.lastIndexOf("_") + 1, filename.lastIndexOf("."));
-        int startIndex = "2017-".length();
+        // Ignore showing milliseconds on title
         title = String.format("%s/%s %s:%s:%s",
-                filename.substring(startIndex, startIndex + 2),
-                filename.substring(startIndex + 3, startIndex + 5),
-                filename.substring(startIndex + 6, startIndex + 8),
-                filename.substring(startIndex + 9, startIndex + 11),
-                filename.substring(startIndex + 12, startIndex + 14)
+                filename.substring(0, 2),
+                filename.substring(2, 4),
+                filename.substring(5, 7),
+                filename.substring(7, 9),
+                filename.substring(9, 11)
         );
-        if (fileType.equals("rawThermal-reged"))
+        if (fileType.equals("raw-reged"))
             title += "R";
     }
 

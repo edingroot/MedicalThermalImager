@@ -248,8 +248,8 @@ public class DumpViewerActivity extends BaseActivity {
                     Bitmap thermalBitmap = thermalDumpProcessor.getBitmap(1);
 
                     if (thermalSpotX == -1 || thermalSpotY == -1) {
-                        thermalSpotX = thermalDump.width / 2;
-                        thermalSpotY = thermalDump.height / 2;
+                        thermalSpotX = thermalDump.getWidth() / 2;
+                        thermalSpotY = thermalDump.getHeight() / 2;
                     }
 
                     int newIndex;
@@ -324,10 +324,10 @@ public class DumpViewerActivity extends BaseActivity {
         RawThermalDump rawThermalDump = rawThermalDumps.get(selectedThermalDumpIndex);
 
         // Calculate the correspondent point on the thermal image
-        double ratio = (double) rawThermalDump.width / thermalImageView.getMeasuredWidth();
+        double ratio = (double) rawThermalDump.getWidth() / thermalImageView.getMeasuredWidth();
         if (isImageViewCoordinates) {
-            thermalSpotX = AppUtils.trimByRange((int) (x * ratio), 1, rawThermalDump.width - 1);
-            thermalSpotY = AppUtils.trimByRange((int) (y * ratio), 1, rawThermalDump.height - 1);
+            thermalSpotX = AppUtils.trimByRange((int) (x * ratio), 1, rawThermalDump.getWidth() - 1);
+            thermalSpotY = AppUtils.trimByRange((int) (y * ratio), 1, rawThermalDump.getHeight() - 1);
         } else {
             thermalSpotX = x;
             thermalSpotY = y;
@@ -359,7 +359,7 @@ public class DumpViewerActivity extends BaseActivity {
 
         double averageC;
         if (thermalSpotX == -1) {
-            averageC = rawThermalDump.getTemperature9Average(rawThermalDump.width / 2, rawThermalDump.height / 2);
+            averageC = rawThermalDump.getTemperature9Average(rawThermalDump.getWidth() / 2, rawThermalDump.getHeight() / 2);
         } else {
             averageC = rawThermalDump.getTemperature9Average(thermalSpotX, thermalSpotY);
         }
@@ -389,7 +389,7 @@ public class DumpViewerActivity extends BaseActivity {
      * @param y
      */
     private void addToChartParameter(ChartParameter chartParameter, RawThermalDump rawThermalDump, int y) {
-        int width = rawThermalDump.width;
+        int width = rawThermalDump.getWidth();
         float[] temperaturePoints = new float[width];
 
         for (int i = 0; i < width; i++) {
@@ -411,9 +411,9 @@ public class DumpViewerActivity extends BaseActivity {
     private void updateChartParameter(ChartParameter chartParameter, int y) {
         for (int i = 0; i < rawThermalDumps.size(); i++) {
             RawThermalDump rawThermalDump = rawThermalDumps.get(i);
-            float[] temperaturePoints = new float[rawThermalDump.width];
+            float[] temperaturePoints = new float[rawThermalDump.getWidth()];
 
-            for (int j = 0; j < rawThermalDump.width; j++) {
+            for (int j = 0; j < rawThermalDump.getWidth(); j++) {
                 temperaturePoints[j] = rawThermalDump.getTemperatureAt(j, y);
             }
 
