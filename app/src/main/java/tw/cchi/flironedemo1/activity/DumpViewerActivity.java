@@ -144,6 +144,34 @@ public class DumpViewerActivity extends BaseActivity {
     }
 
     @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        DumpViewerActivityPermissionsDispatcher.onRequestPermissionsResult(this,requestCode, grantResults);
+    }
+
+    public void onImagePickClicked(View v) {
+        DumpViewerActivityPermissionsDispatcher.onPickDocWithPermissionCheck(this);
+    }
+
+    @NeedsPermission({Manifest.permission.WRITE_EXTERNAL_STORAGE})
+    public void onPickDoc() {
+        String[] thermalDumpExts = {".dat"};
+        int MAX_FILES_COUNT = 3;
+
+        if(rawThermalDumps.size() > MAX_FILES_COUNT) {
+            showToastMessage("Cannot select more than " + MAX_FILES_COUNT + " items");
+        }  else {
+            FilePickerBuilder.getInstance().setMaxCount(3)
+                    .setSelectedFiles(thermalDumpPaths)
+                    .setActivityTheme(R.style.FilePickerTheme)
+                    .addFileSupport("ThermalDump", thermalDumpExts)
+                    .enableDocSupport(false)
+                    .withOrientation(Orientation.PORTRAIT_ONLY)
+                    .pickFile(this);
+        }
+    }
+
+    @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
@@ -174,9 +202,8 @@ public class DumpViewerActivity extends BaseActivity {
                         for (String path : addPaths) {
                             addThermalDump(path);
                         }
-
                     } else {
-                        if (currentPaths.size() == 0) {
+                        if (thermalDumpPaths.size() == 0) {
                             thermalImageView.setImageBitmap(null);
                         }
                     }
@@ -184,17 +211,6 @@ public class DumpViewerActivity extends BaseActivity {
                 }
                 break;
         }
-
-    }
-
-    @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        DumpViewerActivityPermissionsDispatcher.onRequestPermissionsResult(this,requestCode, grantResults);
-    }
-
-    public void onImagePickClicked(View v) {
-        DumpViewerActivityPermissionsDispatcher.onPickDocWithPermissionCheck(this);
     }
 
     public void onVisualizeHorizonClicked(View v) {
@@ -212,7 +228,6 @@ public class DumpViewerActivity extends BaseActivity {
         }
     }
 
-
     private void showToastMessage(final String message) {
         runOnUiThread(new Runnable() {
             @Override
@@ -220,24 +235,6 @@ public class DumpViewerActivity extends BaseActivity {
                 Toast.makeText(DumpViewerActivity.this, message, Toast.LENGTH_SHORT).show();
             }
         });
-    }
-
-    @NeedsPermission({Manifest.permission.WRITE_EXTERNAL_STORAGE})
-    public void onPickDoc() {
-        String[] thermalDumpExts = {".dat"};
-        int MAX_FILES_COUNT = 3;
-
-        if(rawThermalDumps.size() > MAX_FILES_COUNT) {
-            showToastMessage("Cannot select more than " + MAX_FILES_COUNT + " items");
-        }  else {
-            FilePickerBuilder.getInstance().setMaxCount(3)
-                    .setSelectedFiles(thermalDumpPaths)
-                    .setActivityTheme(R.style.FilePickerTheme)
-                    .addFileSupport("ThermalDump", thermalDumpExts)
-                    .enableDocSupport(false)
-                    .withOrientation(Orientation.PORTRAIT_ONLY)
-                    .pickFile(this);
-        }
     }
 
     private void addThermalDump(final String filepath) {

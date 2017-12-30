@@ -87,11 +87,10 @@ public class PreviewActivity extends BaseActivity implements Device.Delegate, Fr
     private volatile double contrastRatio = 1;
     private volatile double roiDetectionThreshold = 1;
     private volatile double recognitionThreshold = 1;
-    private int deviceRotation = 0;
     private int imageWidth = 0;
     private int imageHeight = 0;
-    private int thermalSpotX = -1;
-    private int thermalSpotY = -1;
+    private int thermalSpotX = -1; // movable spot thermal indicator pX
+    private int thermalSpotY = -1; // movable spot thermal indicator pY
     private boolean showingMoreInfo = false;
 
     @BindView(R.id.controls_top) View topControlsView;
