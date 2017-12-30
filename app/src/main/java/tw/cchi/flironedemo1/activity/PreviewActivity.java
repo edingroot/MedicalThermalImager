@@ -133,6 +133,7 @@ public class PreviewActivity extends BaseActivity implements Device.Delegate, Fr
         RenderedImage.ImageType defaultImageType = RenderedImage.ImageType.ThermalRGBA8888Image;
         frameProcessor = new FrameProcessor(this, this, EnumSet.of(defaultImageType, RenderedImage.ImageType.ThermalRadiometricKelvinImage));
         frameProcessor.setImagePalette(RenderedImage.Palette.Gray);
+        frameProcessor.setEmissivity(0.98f); // human skin, water, frost
 
         /* contentView.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -676,16 +677,18 @@ public class PreviewActivity extends BaseActivity implements Device.Delegate, Fr
 
                 });
 
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                thermalImageView.animate().setDuration(50).scaleY(0).withEndAction((new Runnable() {
-                    public void run() {
-                        thermalImageView.animate().setDuration(50).scaleY(1);
-                    }
-                }));
-            }
-        });
+        if (animateFlash) {
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    thermalImageView.animate().setDuration(50).scaleY(0).withEndAction((new Runnable() {
+                        public void run() {
+                            thermalImageView.animate().setDuration(50).scaleY(1);
+                        }
+                    }));
+                }
+            });
+        }
     }
 
     // -----------------------------------------------------------------
