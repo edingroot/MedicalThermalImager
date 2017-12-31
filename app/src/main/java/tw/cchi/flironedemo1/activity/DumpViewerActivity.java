@@ -10,12 +10,11 @@ import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
-import android.view.MenuItem;
+import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
-import android.widget.PopupMenu;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -40,6 +39,7 @@ import tw.cchi.flironedemo1.adapter.ThermalDumpsRecyclerAdapter;
 import tw.cchi.flironedemo1.model.ChartParameter;
 import tw.cchi.flironedemo1.thermalproc.RawThermalDump;
 import tw.cchi.flironedemo1.thermalproc.ThermalDumpProcessor;
+import tw.cchi.flironedemo1.thermalproc.VisibleImageMask;
 import tw.cchi.flironedemo1.view.MultiChartView;
 
 @RuntimePermissions
@@ -55,7 +55,9 @@ public class DumpViewerActivity extends BaseActivity {
     private ThermalDumpsRecyclerAdapter thermalDumpsRecyclerAdapter;
     private volatile ExecutorService addThermalDumpExecutorService;
     private int selectedThermalDumpIndex = -1;
-    private boolean displayingChart = false;
+    private boolean showingVisibleImage = false;
+    private volatile boolean visibleImageAlignMode = false;
+    private boolean showingChart = false;
 
     private int thermalSpotX = -1;
     private int thermalSpotY = -1;
@@ -66,11 +68,14 @@ public class DumpViewerActivity extends BaseActivity {
     @BindView(R.id.recyclerDumpSwitcher) RecyclerView recyclerDumpSwitcher;
 
     @BindView(R.id.thermalImageView) ImageView thermalImageView;
+    @BindView(R.id.visibleImageView) ImageView visibleImageView;
     @BindView(R.id.thermalChartView) MultiChartView thermalChartView;
 
     @BindView(R.id.layoutTempSpot) RelativeLayout layoutTempSpot;
     @BindView(R.id.spotMeterValue) TextView spotMeterValue;
     @BindView(R.id.horizontalLine) View horizontalLine;
+
+    @BindView(R.id.btnToggleVisible) ImageView btnToggleVisible;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -81,7 +86,7 @@ public class DumpViewerActivity extends BaseActivity {
         thermalChartParameter.setAlpha(0.6f);
 
         // Launch image picker on activity first started
-        onImagePickClicked(findViewById(R.id.imgBtnPick));
+        onImagePickClicked(findViewById(R.id.btnPick));
         showToastMessage(getString(R.string.pick_thermal_images));
 
         thermalImageView.setOnTouchListener(new View.OnTouchListener() {
@@ -144,9 +149,19 @@ public class DumpViewerActivity extends BaseActivity {
         recyclerDumpSwitcher.setLayoutManager(
                 new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
         );
+
+        btnToggleVisible.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View view, MotionEvent motionEvent) {
+                final View propagatedView = view;
+                return new GestureDetector(new GestureDetector.SimpleOnGestureListener() {
+                    public void onLongPress(MotionEvent e) {
+                        onToggleVisibleLongPressed(propagatedView);
+                    }
+                }).onTouchEvent(motionEvent);
+            }
+        });
     }
-
-
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
@@ -222,15 +237,58 @@ public class DumpViewerActivity extends BaseActivity {
         if (rawThermalDumps.size() == 0 || selectedThermalDumpIndex == -1 || thermalSpotY == -1)
             return;
 
-        if (displayingChart) {
+        if (showingChart) {
             thermalChartView.setVisibility(View.GONE);
-            displayingChart = false;
+            showingChart = false;
         } else {
             updateChartParameter(thermalChartParameter, thermalSpotY);
             thermalChartView.updateChart(thermalChartParameter);
             thermalChartView.setVisibility(View.VISIBLE);
-            displayingChart = true;
+            showingChart = true;
         }
+    }
+
+    public void onToggleVisibleClicked(View v) {
+        if (rawThermalDumps.size() == 0 || selectedThermalDumpIndex == -1)
+            return;
+
+        final RawThermalDump rawThermalDump = rawThermalDumps.get(selectedThermalDumpIndex);
+        if (showingVisibleImage) {
+            visibleImageView.setVisibility(View.GONE);
+            showingVisibleImage = visibleImageAlignMode = false;
+        } else {
+            if (!rawThermalDump.isVisibleImageAttached()) {
+                if (!rawThermalDump.attachVisibleImageMask()) {
+                    showToastMessage("Failed to read visible image. Does the jpg file with same name exist?");
+                    return;
+                }
+                rawThermalDump.getVisibleImageMask().processFrame(this, new VisibleImageMask.BitmapUpdateListener() {
+                    @Override
+                    public void onBitmapUpdate(VisibleImageMask maskInstance) {
+                        final VisibleImageMask mask = maskInstance;
+                        if (maskInstance.getLinkedRawThermalDump() == rawThermalDump) {
+                            runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    if (visibleImageAlignMode) {
+                                        visibleImageView.setAlpha(Config.DUMP_VISUAL_MASK_ALPHA / 255f);
+                                    }
+                                    visibleImageView.setImageBitmap(mask.getBitmap());
+                                    visibleImageView.setVisibility(View.VISIBLE);
+                                }
+                            });
+                        }
+                    }
+                });
+            } else {
+                visibleImageView.setVisibility(View.VISIBLE);
+            }
+            showingVisibleImage = true;
+        }
+    }
+
+    public void onToggleVisibleLongPressed(View v) {
+        // TODO: show visible image & visibleImageAlignMode on.
     }
 
     private void showToastMessage(final String message) {
@@ -380,7 +438,7 @@ public class DumpViewerActivity extends BaseActivity {
             }
         });
 
-        if (displayingChart) {
+        if (showingChart) {
             updateChartParameter(thermalChartParameter, thermalSpotY);
             thermalChartView.updateChart(thermalChartParameter);
         }
@@ -466,7 +524,7 @@ public class DumpViewerActivity extends BaseActivity {
 
                     thermalChartParameter.setAxisMax(chartAxisMax);
                     thermalChartParameter.setAxisMin(chartAxisMin);
-                    if (displayingChart) {
+                    if (showingChart) {
                         thermalChartView.updateChart(thermalChartParameter);
                     }
                 }

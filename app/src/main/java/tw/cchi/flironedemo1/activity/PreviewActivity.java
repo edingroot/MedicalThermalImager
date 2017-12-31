@@ -130,7 +130,11 @@ public class PreviewActivity extends BaseActivity implements Device.Delegate, Fr
 //                RenderedImage.ImageType.ThermalRadiometricKelvinImage
 //        ));
         RenderedImage.ImageType defaultImageType = RenderedImage.ImageType.ThermalRGBA8888Image;
-        frameProcessor = new FrameProcessor(this, this, EnumSet.of(defaultImageType, RenderedImage.ImageType.ThermalRadiometricKelvinImage));
+        frameProcessor = new FrameProcessor(this, this, EnumSet.of(
+                defaultImageType,
+                RenderedImage.ImageType.VisibleAlignedRGBA8888Image,
+                RenderedImage.ImageType.ThermalRadiometricKelvinImage
+        ));
         frameProcessor.setImagePalette(RenderedImage.Palette.Gray);
         frameProcessor.setEmissivity(0.98f); // human skin, water, frost
 
@@ -438,7 +442,7 @@ public class PreviewActivity extends BaseActivity implements Device.Delegate, Fr
         }
     }
 
-    // Frame Processor Delegate method, will be called each time a rendered frame is produced
+    // Frame Processor BitmapUpdateListener method, will be called each time a rendered frame is produced
     public void onFrameProcessed(final RenderedImage renderedImage) {
         if (!streamingFrame)
             return;
@@ -446,7 +450,7 @@ public class PreviewActivity extends BaseActivity implements Device.Delegate, Fr
 
         if (imageCaptureRequested) {
             imageCaptureRequested = false;
-            captureThermalImage(renderedImage);
+            captureFLIRImage(renderedImage);
 
             // Dump thermal data as well when capturing image
             thermalDumpRequested = true;
@@ -720,7 +724,7 @@ public class PreviewActivity extends BaseActivity implements Device.Delegate, Fr
         if (opacityMask != null) {
             Canvas canvas = new Canvas(frame);
             Paint alphaPaint = new Paint();
-            alphaPaint.setAlpha(Config.OPACITY_MASK_ALPHA);
+            alphaPaint.setAlpha(Config.PREVIEW_MASK_ALPHA);
             canvas.drawBitmap(opacityMask, 0, 0, alphaPaint);
         }
 
@@ -793,9 +797,8 @@ public class PreviewActivity extends BaseActivity implements Device.Delegate, Fr
         updateThermalSpotValue();
     }
 
-    private void captureThermalImage(final RenderedImage renderedImage) {
-        SimpleDateFormat sdf = new SimpleDateFormat("MMdd-HHmmss-SSS", Locale.getDefault());
-        final String filename = AppUtils.getExportsDir() + "/" + sdf.format(new Date()) + "_flir.jpg";
+    private void captureFLIRImage(final RenderedImage renderedImage) {
+        final String filename = generateCaptureName(Config.POSTFIX_FLIR_IMAGE, "jpg");
 
         new Thread(new Runnable() {
             public void run() {
@@ -810,9 +813,25 @@ public class PreviewActivity extends BaseActivity implements Device.Delegate, Fr
         }).start();
     }
 
+    private void dumpThermalData(final RenderedImage renderedImage) {
+        final String filename = generateCaptureName(Config.POSTFIX_THERMAL_DUMP, "dat");
+
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                RawThermalDump rawThermalDump = new RawThermalDump(renderedImage);
+                if (rawThermalDump.saveToFile(filename)) {
+                    showToastMessage("Dumped: " + filename);
+                    scanMediaStorage(filename, false);
+                } else {
+                    showToastMessage("Dumped filed.");
+                }
+            }
+        }).start();
+    }
+
     private void captureProcessedImage() {
-        SimpleDateFormat sdf = new SimpleDateFormat("MMdd-HHmmss-SSS", Locale.getDefault());
-        final String filename = AppUtils.getExportsDir() + "/" + sdf.format(new Date()) + "_processed.jpg";
+        final String filename = generateCaptureName(Config.POSTFIX_PROCEED_IMAGE, "jpg");
 
         new Thread(new Runnable() {
             public void run() {
@@ -847,22 +866,11 @@ public class PreviewActivity extends BaseActivity implements Device.Delegate, Fr
         }).start();
     }
 
-    private void dumpThermalData(final RenderedImage renderedImage) {
+    private String generateCaptureName(String postfix, String extension) {
         SimpleDateFormat sdf = new SimpleDateFormat("MMdd-HHmmss-SSS", Locale.getDefault());
-        final String filename = AppUtils.getExportsDir() + "/" + sdf.format(new Date()) + "_raw.dat";
-
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                RawThermalDump rawThermalDump = new RawThermalDump(renderedImage);
-                if (rawThermalDump.saveToFile(filename)) {
-                    showToastMessage("Dumped: " + filename);
-                    scanMediaStorage(filename, false);
-                } else {
-                    showToastMessage("Dumped filed.");
-                }
-            }
-        }).start();
+        String dateString = sdf.format(new Date());
+        return AppUtils.getExportsDir() + "/" + dateString.substring(0, dateString.length() - 2) +
+                postfix + "." + extension;
     }
 
     private void performThermalAnalysis(final RenderedImage renderedImage) {
@@ -953,7 +961,7 @@ public class PreviewActivity extends BaseActivity implements Device.Delegate, Fr
 }
 
 // Notes:
-// Device Delegate methods
+// Device BitmapUpdateListener methods
 // Called during device discovery, when a device is connected
 // During this callback, you should save a reference to device
 // You should also set the power update delegate for the device if you have one

@@ -27,6 +27,17 @@
             android:focusableInTouchMode="false"
             android:scaleType="fitCenter"/>
 
+        <ImageView
+            android:id="@+id/visibleImageView"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:adjustViewBounds="true"
+            android:focusable="false"
+            android:focusableInTouchMode="false"
+            android:scaleType="fitCenter"
+            android:visibility="gone"/>
+
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent"
@@ -136,14 +147,25 @@
         android:layout_alignParentStart="true">
 
         <ImageButton
-            android:id="@+id/btnVisualizeHorizon"
+            android:id="@+id/btnToggleVisible"
             style="?metaButtonBarButtonStyle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_alignParentStart="true"
             android:layout_alignParentTop="true"
+            android:onClick="onToggleVisibleClicked"
+            android:src="@android:drawable/ic_menu_camera"/>
+
+        <ImageButton
+            android:id="@+id/btnVisualizeHorizon"
+            style="?metaButtonBarButtonStyle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentTop="true"
+            android:layout_toEndOf="@+id/btnToggleVisible"
             android:onClick="onVisualizeHorizonClicked"
             android:src="@android:drawable/ic_menu_gallery"/>
+
     </RelativeLayout>
 
     <!-- /Movable Indicators -->

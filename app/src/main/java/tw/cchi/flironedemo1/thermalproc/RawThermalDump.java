@@ -1,5 +1,7 @@
 package tw.cchi.flironedemo1.thermalproc;
 
+import android.content.Context;
+
 import com.flir.flironesdk.RenderedImage;
 
 import org.apache.commons.io.FileUtils;
@@ -8,6 +10,8 @@ import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+
+import tw.cchi.flironedemo1.Config;
 
 public class RawThermalDump {
     private int formatVersion = 1;
@@ -20,8 +24,9 @@ public class RawThermalDump {
     private int minValue = -1;
     private String filepath;
     private String title;
+    private VisibleImageMask visibleImageMask; // [Android Only]
 
-    // [For Android]
+    // [Android Only]
     public RawThermalDump(RenderedImage renderedImage) {
         this.width = renderedImage.width();
         this.height = renderedImage.height();
@@ -165,16 +170,17 @@ public class RawThermalDump {
     private void setFilepath(String filepath) {
         this.filepath = filepath;
 
-        // Generate title; filenameEx: 1008-161008_089_raw.dat
+        // Generate title; filenameEx: 1008-161008_2_raw.dat
         String filename = new File(filepath).getName();
         String fileType = filename.substring(filename.lastIndexOf("_") + 1, filename.lastIndexOf("."));
         // Ignore showing milliseconds on title
-        title = String.format("%s/%s %s:%s:%s",
+        title = String.format("%s/%s %s:%s:%s-%s",
                 filename.substring(0, 2),
                 filename.substring(2, 4),
                 filename.substring(5, 7),
                 filename.substring(7, 9),
-                filename.substring(9, 11)
+                filename.substring(9, 11),
+                filename.substring(12, 13)
         );
         if (fileType.equals("raw-reged"))
             title += "R";
@@ -289,5 +295,27 @@ public class RawThermalDump {
             e.printStackTrace();
         }
         return null;
+    }
+
+
+    // ---------------------- [Android Only] ---------------------- //
+
+    public boolean attachVisibleImageMask() {
+        if (visibleImageMask != null) {
+            return true;
+        } else {
+            String visualImagePath = filepath.substring(0, filepath.lastIndexOf("_"))
+                    + Config.POSTFIX_FLIR_IMAGE + ".jpg";
+            visibleImageMask = VisibleImageMask.openVisibleImage(this, visualImagePath);
+            return visibleImageMask != null;
+        }
+    }
+
+    public boolean isVisibleImageAttached() {
+        return visibleImageMask != null;
+    }
+
+    public VisibleImageMask getVisibleImageMask() {
+        return visibleImageMask;
     }
 }
