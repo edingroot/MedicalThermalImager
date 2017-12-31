@@ -67,7 +67,8 @@
         android:layout_height="1dip"
         android:layout_centerHorizontal="true"
         android:layout_centerVertical="true"
-        android:background="@color/indicatorYellow"/>
+        android:background="@color/indicatorYellow"
+        android:visibility="gone"/>
 
     <RelativeLayout
         android:id="@+id/layoutTempSpot"
@@ -157,13 +158,13 @@
             android:src="@android:drawable/ic_menu_camera"/>
 
         <ImageButton
-            android:id="@+id/btnVisualizeHorizon"
+            android:id="@+id/btnToggleHorizonChart"
             style="?metaButtonBarButtonStyle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_alignParentTop="true"
             android:layout_toEndOf="@+id/btnToggleVisible"
-            android:onClick="onVisualizeHorizonClicked"
+            android:onClick="onToggleHorizonChartClicked"
             android:src="@android:drawable/ic_menu_gallery"/>
 
     </RelativeLayout>

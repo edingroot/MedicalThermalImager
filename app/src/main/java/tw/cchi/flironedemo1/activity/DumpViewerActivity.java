@@ -10,7 +10,6 @@ import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
-import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.FrameLayout;
@@ -122,6 +121,9 @@ public class DumpViewerActivity extends BaseActivity {
             @Override
             public void onClick(View v, int position) {
                 selectedThermalDumpIndex = position;
+                if (showingVisibleImage) {
+                    onToggleVisibleClicked(btnToggleVisible);
+                }
                 updateThermalImageView(thermalBitmaps.get(position));
             }
 
@@ -150,15 +152,11 @@ public class DumpViewerActivity extends BaseActivity {
                 new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
         );
 
-        btnToggleVisible.setOnTouchListener(new View.OnTouchListener() {
+        btnToggleVisible.setOnLongClickListener(new View.OnLongClickListener() {
             @Override
-            public boolean onTouch(View view, MotionEvent motionEvent) {
-                final View propagatedView = view;
-                return new GestureDetector(new GestureDetector.SimpleOnGestureListener() {
-                    public void onLongPress(MotionEvent e) {
-                        onToggleVisibleLongPressed(propagatedView);
-                    }
-                }).onTouchEvent(motionEvent);
+            public boolean onLongClick(View view) {
+                onToggleVisibleLongClicked(view);
+                return true;
             }
         });
     }
@@ -223,9 +221,8 @@ public class DumpViewerActivity extends BaseActivity {
                             addThermalDump(path);
                         }
                     } else {
-                        if (thermalDumpPaths.size() == 0) {
+                        if (thermalDumpPaths.size() == 0)
                             thermalImageView.setImageBitmap(null);
-                        }
                     }
                     updateChartAxis();
                 }
@@ -233,17 +230,19 @@ public class DumpViewerActivity extends BaseActivity {
         }
     }
 
-    public void onVisualizeHorizonClicked(View v) {
+    public void onToggleHorizonChartClicked(View v) {
         if (rawThermalDumps.size() == 0 || selectedThermalDumpIndex == -1 || thermalSpotY == -1)
             return;
 
         if (showingChart) {
             thermalChartView.setVisibility(View.GONE);
+            horizontalLine.setVisibility(View.GONE);
             showingChart = false;
         } else {
             updateChartParameter(thermalChartParameter, thermalSpotY);
             thermalChartView.updateChart(thermalChartParameter);
             thermalChartView.setVisibility(View.VISIBLE);
+            horizontalLine.setVisibility(View.VISIBLE);
             showingChart = true;
         }
     }
@@ -270,9 +269,7 @@ public class DumpViewerActivity extends BaseActivity {
                             runOnUiThread(new Runnable() {
                                 @Override
                                 public void run() {
-                                    if (visibleImageAlignMode) {
-                                        visibleImageView.setAlpha(Config.DUMP_VISUAL_MASK_ALPHA / 255f);
-                                    }
+                                    visibleImageView.setAlpha(visibleImageAlignMode ? Config.DUMP_VISUAL_MASK_ALPHA / 255f : 1f);
                                     visibleImageView.setImageBitmap(mask.getBitmap());
                                     visibleImageView.setVisibility(View.VISIBLE);
                                 }
@@ -281,14 +278,29 @@ public class DumpViewerActivity extends BaseActivity {
                     }
                 });
             } else {
+                visibleImageView.setAlpha(visibleImageAlignMode ? Config.DUMP_VISUAL_MASK_ALPHA / 255f : 1f);
                 visibleImageView.setVisibility(View.VISIBLE);
             }
             showingVisibleImage = true;
         }
     }
 
-    public void onToggleVisibleLongPressed(View v) {
-        // TODO: show visible image & visibleImageAlignMode on.
+    public void onToggleVisibleLongClicked(View v) {
+        if (rawThermalDumps.size() == 0 || selectedThermalDumpIndex == -1)
+            return;
+
+        if (visibleImageAlignMode) {
+            visibleImageAlignMode = false;
+            // TODO
+
+        } else {
+            visibleImageAlignMode = true;
+            if (!showingVisibleImage) {
+                onToggleVisibleClicked(btnToggleVisible);
+            }
+            // TODO
+
+        }
     }
 
     private void showToastMessage(final String message) {
@@ -353,6 +365,9 @@ public class DumpViewerActivity extends BaseActivity {
             thermalDumpProcessors.remove(index);
             thermalBitmaps.remove(index);
             removeFromChartParameter(thermalChartParameter, index);
+
+            if (thermalDumpPaths.size() == 0)
+                thermalImageView.setImageBitmap(null);
         }
 
         System.gc();
