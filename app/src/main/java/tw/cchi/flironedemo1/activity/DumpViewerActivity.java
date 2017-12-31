@@ -166,7 +166,7 @@ public class DumpViewerActivity extends BaseActivity {
             public void onClick(View v, int position) {
                 selectedThermalDumpIndex = position;
                 if (showingVisibleImage) {
-                    onToggleVisibleClicked(btnToggleVisible);
+                    showVisibleImage(rawThermalDumps.get(selectedThermalDumpIndex));
                 }
                 updateThermalImageView(thermalBitmaps.get(position));
             }
@@ -295,38 +295,46 @@ public class DumpViewerActivity extends BaseActivity {
         if (rawThermalDumps.size() == 0 || selectedThermalDumpIndex == -1)
             return;
 
-        final RawThermalDump rawThermalDump = rawThermalDumps.get(selectedThermalDumpIndex);
+        RawThermalDump rawThermalDump = rawThermalDumps.get(selectedThermalDumpIndex);
         if (showingVisibleImage) {
             visibleImageView.setVisibility(View.GONE);
             showingVisibleImage = visibleImageAlignMode = false;
         } else {
-            if (!rawThermalDump.isVisibleImageAttached()) {
-                if (!rawThermalDump.attachVisibleImageMask()) {
-                    showToastMessage("Failed to read visible image. Does the jpg file with same name exist?");
-                    return;
-                }
-                rawThermalDump.getVisibleImageMask().processFrame(this, new VisibleImageMask.BitmapUpdateListener() {
-                    @Override
-                    public void onBitmapUpdate(VisibleImageMask maskInstance) {
-                        final VisibleImageMask mask = maskInstance;
-                        if (maskInstance.getLinkedRawThermalDump() == rawThermalDump) {
-                            runOnUiThread(new Runnable() {
-                                @Override
-                                public void run() {
-                                    visibleImageView.setAlpha(visibleImageAlignMode ? Config.DUMP_VISUAL_MASK_ALPHA / 255f : 1f);
-                                    visibleImageView.setImageBitmap(showingMSX4VisibleImage ? mask.getBlendedMSXBitmap() : mask.getVisibleBitmap());
-                                    visibleImageView.setVisibility(View.VISIBLE);
-                                }
-                            });
-                        }
-                    }
-                });
+            if (showVisibleImage(rawThermalDump)) {
+                showingVisibleImage = true;
             } else {
-                visibleImageView.setAlpha(visibleImageAlignMode ? Config.DUMP_VISUAL_MASK_ALPHA / 255f : 1f);
-                visibleImageView.setVisibility(View.VISIBLE);
+                showingVisibleImage = visibleImageAlignMode = false;
             }
-            showingVisibleImage = true;
         }
+    }
+
+    private boolean showVisibleImage(RawThermalDump rawThermalDump) {
+        if (!rawThermalDump.isVisibleImageAttached()) {
+            if (!rawThermalDump.attachVisibleImageMask()) {
+                showToastMessage("Failed to read visible image. Does the jpg file with same name exist?");
+                return false;
+            }
+            rawThermalDump.getVisibleImageMask().processFrame(this, new VisibleImageMask.BitmapUpdateListener() {
+                @Override
+                public void onBitmapUpdate(VisibleImageMask maskInstance) {
+                    final VisibleImageMask mask = maskInstance;
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            visibleImageView.setImageBitmap(showingMSX4VisibleImage ? mask.getBlendedMSXBitmap() : mask.getVisibleBitmap());
+                            visibleImageView.setAlpha(visibleImageAlignMode ? Config.DUMP_VISUAL_MASK_ALPHA / 255f : 1f);
+                            visibleImageView.setVisibility(View.VISIBLE);
+                        }
+                    });
+                }
+            });
+        } else {
+            VisibleImageMask mask = rawThermalDump.getVisibleImageMask();
+            visibleImageView.setImageBitmap(showingMSX4VisibleImage ? mask.getBlendedMSXBitmap() : mask.getVisibleBitmap());
+            visibleImageView.setAlpha(visibleImageAlignMode ? Config.DUMP_VISUAL_MASK_ALPHA / 255f : 1f);
+            visibleImageView.setVisibility(View.VISIBLE);
+        }
+        return true;
     }
 
     public void onToggleVisibleLongClicked(View v) {
@@ -408,7 +416,7 @@ public class DumpViewerActivity extends BaseActivity {
             int newIndex = thermalDumpsRecyclerAdapter.removeDumpSwitch(index);
 
             if (selectedThermalDumpIndex == index) {
-                updateThermalImageView(thermalBitmaps.get(index));
+                updateThermalImageView(thermalBitmaps.get(newIndex));
             }
             selectedThermalDumpIndex = newIndex;
             thermalDumpPaths.remove(index);
