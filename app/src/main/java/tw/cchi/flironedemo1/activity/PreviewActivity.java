@@ -505,12 +505,12 @@ public class PreviewActivity extends BaseActivity implements Device.Delegate, Fr
             // }
         } else {
             /*if (thermalBitmap == null) {
-                thermalBitmap = renderedImage.getBitmap();
+                thermalBitmap = renderedImage.getVisibleBitmap();
             } else {
                 try {
                     renderedImage.copyToBitmap(thermalBitmap);
                 } catch (IllegalArgumentException e) {
-                    thermalBitmap = renderedImage.getBitmap();
+                    thermalBitmap = renderedImage.getVisibleBitmap();
                 }
             }*/
             updateThermalImageView(renderedImage.getBitmap());

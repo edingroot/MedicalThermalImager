@@ -56,6 +56,7 @@ public class DumpViewerActivity extends BaseActivity {
     private int selectedThermalDumpIndex = -1;
     private boolean showingVisibleImage = false;
     private volatile boolean visibleImageAlignMode = false;
+    private volatile boolean showingMSX4VisibleImage = false;
     private boolean showingChart = false;
 
     private int thermalSpotX = -1;
@@ -102,8 +103,16 @@ public class DumpViewerActivity extends BaseActivity {
                     handleThermalImageTouch(x, y, true);
                 }
 
-                // Consume the event, which onClick event will not triggered
+                // Consume the event, which makes onClick event not being triggered
                 return true;
+            }
+        });
+
+        visibleImageView.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View view, MotionEvent motionEvent) {
+                // TODO
+                return false;
             }
         });
 
@@ -270,7 +279,7 @@ public class DumpViewerActivity extends BaseActivity {
                                 @Override
                                 public void run() {
                                     visibleImageView.setAlpha(visibleImageAlignMode ? Config.DUMP_VISUAL_MASK_ALPHA / 255f : 1f);
-                                    visibleImageView.setImageBitmap(mask.getBitmap());
+                                    visibleImageView.setImageBitmap(showingMSX4VisibleImage ? mask.getBlendedMSXBitmap() : mask.getVisibleBitmap());
                                     visibleImageView.setVisibility(View.VISIBLE);
                                 }
                             });
@@ -291,16 +300,23 @@ public class DumpViewerActivity extends BaseActivity {
 
         if (visibleImageAlignMode) {
             visibleImageAlignMode = false;
-            // TODO
-
         } else {
             visibleImageAlignMode = true;
             if (!showingVisibleImage) {
                 onToggleVisibleClicked(btnToggleVisible);
+            } else {
+                visibleImageView.setAlpha(visibleImageAlignMode ? Config.DUMP_VISUAL_MASK_ALPHA / 255f : 1f);
             }
-            // TODO
-
         }
+    }
+
+    public void onVisibleImageViewClicked(View v) {
+        if (rawThermalDumps.size() == 0 || selectedThermalDumpIndex == -1 || visibleImageAlignMode)
+            return;
+
+        VisibleImageMask mask = rawThermalDumps.get(selectedThermalDumpIndex).getVisibleImageMask();
+        showingMSX4VisibleImage = !showingMSX4VisibleImage;
+        visibleImageView.setImageBitmap(showingMSX4VisibleImage ? mask.getBlendedMSXBitmap() : mask.getVisibleBitmap());
     }
 
     private void showToastMessage(final String message) {
