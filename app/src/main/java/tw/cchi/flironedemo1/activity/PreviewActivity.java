@@ -558,7 +558,7 @@ public class PreviewActivity extends BaseActivity implements Device.Delegate, Fr
 
     public void onToolsClicked(View v) {
         PopupMenu popup = new PopupMenu(this, v);
-        popup.inflate(R.menu.tools_menu);
+        popup.inflate(R.menu.preview_tools_menu);
         popup.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
             @Override
             public boolean onMenuItemClick(MenuItem item) {

@@ -100,7 +100,7 @@ public class ThermalDumpsRecyclerAdapter extends RecyclerView.Adapter<ThermalDum
             public void onClick(View v) {
                 if (holderPosition != selectedPosition) {
                     setSelectedPosition(holderPosition);
-                    onInteractionListener.onClick(holderPosition);
+                    onInteractionListener.onClick(v, holderPosition);
                 }
             }
         });
@@ -108,7 +108,7 @@ public class ThermalDumpsRecyclerAdapter extends RecyclerView.Adapter<ThermalDum
         holder.button.setOnLongClickListener(new View.OnLongClickListener() {
             @Override
             public boolean onLongClick(View v) {
-                onInteractionListener.onLongClick(holderPosition);
+                onInteractionListener.onLongClick(v, holderPosition);
                 return true;
             }
         });
@@ -139,8 +139,8 @@ public class ThermalDumpsRecyclerAdapter extends RecyclerView.Adapter<ThermalDum
     }
 
     public interface OnInteractionListener {
-        void onClick(int position);
-        void onLongClick(int position);
+        void onClick(View v, int position);
+        void onLongClick(View v, int position);
     }
 
 }

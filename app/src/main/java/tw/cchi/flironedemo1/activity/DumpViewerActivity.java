@@ -10,10 +10,12 @@ import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
+import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
+import android.widget.PopupMenu;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -109,17 +111,19 @@ public class DumpViewerActivity extends BaseActivity {
             }
         });
 
-        thermalDumpsRecyclerAdapter = new ThermalDumpsRecyclerAdapter(this, new ThermalDumpsRecyclerAdapter.OnInteractionListener() {
+        thermalDumpsRecyclerAdapter = new ThermalDumpsRecyclerAdapter(this,
+                new ThermalDumpsRecyclerAdapter.OnInteractionListener() {
+
             @Override
-            public void onClick(int position) {
+            public void onClick(View v, int position) {
                 selectedThermalDumpIndex = position;
                 updateThermalImageView(thermalBitmaps.get(position));
             }
 
             @Override
-            public void onLongClick(int position) {
+            public void onLongClick(View v, int position) {
+                // Show confirm dialog for closing this thermal dump
                 final int dumpPosition = position;
-
                 new AlertDialog.Builder(DumpViewerActivity.this, R.style.MyAlertDialog)
                         .setTitle("Confirm")
                         .setMessage("Confirm to remove " + rawThermalDumps.get(position).getTitle() + " from display?")
@@ -140,8 +144,9 @@ public class DumpViewerActivity extends BaseActivity {
         recyclerDumpSwitcher.setLayoutManager(
                 new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
         );
-
     }
+
+
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
