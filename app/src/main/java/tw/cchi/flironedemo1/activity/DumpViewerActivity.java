@@ -12,6 +12,7 @@ import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewTreeObserver;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
@@ -64,6 +65,10 @@ public class DumpViewerActivity extends BaseActivity {
     private volatile float chartAxisMax = -1;
     private volatile float chartAxisMin = -1;
 
+    // VisibleImageView dragging
+    private int ongoingDeltaX;
+    private int ongoingDeltaY;
+
     @BindView(R.id.layoutThermalViews) FrameLayout layoutThermalViews;
     @BindView(R.id.recyclerDumpSwitcher) RecyclerView recyclerDumpSwitcher;
 
@@ -111,8 +116,38 @@ public class DumpViewerActivity extends BaseActivity {
         visibleImageView.setOnTouchListener(new View.OnTouchListener() {
             @Override
             public boolean onTouch(View view, MotionEvent motionEvent) {
-                // TODO
-                return false;
+                if (!visibleImageAlignMode)
+                    return false;
+
+                final int x = (int) motionEvent.getRawX();
+                final int y = (int) motionEvent.getRawY();
+                FrameLayout.LayoutParams layoutParams = (FrameLayout.LayoutParams) view.getLayoutParams();
+
+                switch (motionEvent.getAction() & MotionEvent.ACTION_MASK) {
+                    case MotionEvent.ACTION_DOWN:
+                        ongoingDeltaX = x - layoutParams.leftMargin;
+                        ongoingDeltaY = y - layoutParams.topMargin;
+                        break;
+
+                    case MotionEvent.ACTION_MOVE:
+                        layoutParams.leftMargin = x - ongoingDeltaX;
+                        layoutParams.topMargin = y - ongoingDeltaY;
+                        layoutParams.width = thermalImageView.getMeasuredWidth();
+//                        layoutParams.rightMargin = -250;
+//                        layoutParams.bottomMargin = -250;
+                        view.setLayoutParams(layoutParams);
+                        break;
+
+                    case MotionEvent.ACTION_UP:
+                        // TODO
+                        break;
+
+                    case MotionEvent.ACTION_POINTER_DOWN:
+                    case MotionEvent.ACTION_POINTER_UP:
+                        break;
+                }
+                // mRootLayout.invalidate();
+                return true;
             }
         });
 
