@@ -1,7 +1,5 @@
 package tw.cchi.flironedemo1.thermalproc;
 
-import android.content.Context;
-
 import com.flir.flironesdk.RenderedImage;
 
 import org.apache.commons.io.FileUtils;
@@ -13,6 +11,22 @@ import java.io.IOException;
 
 import tw.cchi.flironedemo1.Config;
 
+/**
+ * File format V1:
+ *  Bytes / Data (MSB, LSB), integer
+ *  1 ~ 2		width (number of columns)
+ *  3 ~ 4		height (number of rows)
+ *  5 ~ N		each thermal pixel is stored by 2 bytes (N=width*height*2 + 4)
+ *  (N+1)		EOF
+ *
+ * File format V2:
+ *  1 ~ 2			width (number of columns)
+ *  3 ~ 4			height (number of rows)
+ *  5 ~ M			each thermal pixel is stored by 2 bytes (M=2*width*height + 4)
+ *  (M+1) ~ (M+2)	visual image alignment ΔX
+ *  (M+3) ~ (M+4)	visual image alignment ΔY
+ *  (M+5)			EOF
+ */
 public class RawThermalDump {
     private int formatVersion = 1;
     private int width;
@@ -83,11 +97,6 @@ public class RawThermalDump {
         return rawThermalDump;
     }
 
-    /**
-     * File format: first 0~1 and 2~3 bytes are width and height, and the following each 2 byte represents the temperature in 100*K ( /100 -273.15C)
-     * @param filepath
-     * @return
-     */
     public boolean saveToFile(String filepath) {
         int length = formatVersion == 1 ? 4 + 2 * width * height : 8 + 2 * width * height;
         byte[] bytes = new byte[length];

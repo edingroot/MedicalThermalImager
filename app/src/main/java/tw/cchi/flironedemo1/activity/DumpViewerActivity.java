@@ -10,6 +10,7 @@ import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewTreeObserver;
@@ -66,8 +67,8 @@ public class DumpViewerActivity extends BaseActivity {
     private volatile float chartAxisMin = -1;
 
     // VisibleImageView dragging
-    private int ongoingDeltaX;
-    private int ongoingDeltaY;
+    private int startDraggingX;
+    private int startDraggingY;
 
     @BindView(R.id.layoutThermalViews) FrameLayout layoutThermalViews;
     @BindView(R.id.recyclerDumpSwitcher) RecyclerView recyclerDumpSwitcher;
@@ -113,6 +114,18 @@ public class DumpViewerActivity extends BaseActivity {
             }
         });
 
+        visibleImageView.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
+            @Override
+            public void onGlobalLayout() {
+                int width = thermalImageView.getMeasuredWidth();
+                if (showingVisibleImage && visibleImageView.getMeasuredWidth() != width) {
+                    visibleImageView.getLayoutParams().width = thermalImageView.getMeasuredWidth();
+                    visibleImageView.getLayoutParams().height = thermalImageView.getMeasuredHeight();
+                    visibleImageView.requestLayout();
+                }
+            }
+        });
+
         visibleImageView.setOnTouchListener(new View.OnTouchListener() {
             @Override
             public boolean onTouch(View view, MotionEvent motionEvent) {
@@ -125,16 +138,18 @@ public class DumpViewerActivity extends BaseActivity {
 
                 switch (motionEvent.getAction() & MotionEvent.ACTION_MASK) {
                     case MotionEvent.ACTION_DOWN:
-                        ongoingDeltaX = x - layoutParams.leftMargin;
-                        ongoingDeltaY = y - layoutParams.topMargin;
+                        startDraggingX = x - layoutParams.leftMargin;
+                        startDraggingY = y - layoutParams.topMargin;
                         break;
 
                     case MotionEvent.ACTION_MOVE:
-                        layoutParams.leftMargin = x - ongoingDeltaX;
-                        layoutParams.topMargin = y - ongoingDeltaY;
-                        layoutParams.width = thermalImageView.getMeasuredWidth();
-//                        layoutParams.rightMargin = -250;
-//                        layoutParams.bottomMargin = -250;
+                        layoutParams.gravity = Gravity.NO_GRAVITY;
+                        layoutParams.leftMargin = x - startDraggingX;
+                        layoutParams.topMargin = y - startDraggingY;
+
+                        // Prevent the view from being compressed when moving right or down
+                        layoutParams.rightMargin = -500;
+                        layoutParams.bottomMargin = -500;
                         view.setLayoutParams(layoutParams);
                         break;
 
@@ -306,35 +321,6 @@ public class DumpViewerActivity extends BaseActivity {
                 showingVisibleImage = visibleImageAlignMode = false;
             }
         }
-    }
-
-    private boolean showVisibleImage(RawThermalDump rawThermalDump) {
-        if (!rawThermalDump.isVisibleImageAttached()) {
-            if (!rawThermalDump.attachVisibleImageMask()) {
-                showToastMessage("Failed to read visible image. Does the jpg file with same name exist?");
-                return false;
-            }
-            rawThermalDump.getVisibleImageMask().processFrame(this, new VisibleImageMask.BitmapUpdateListener() {
-                @Override
-                public void onBitmapUpdate(VisibleImageMask maskInstance) {
-                    final VisibleImageMask mask = maskInstance;
-                    runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            visibleImageView.setImageBitmap(showingMSX4VisibleImage ? mask.getBlendedMSXBitmap() : mask.getVisibleBitmap());
-                            visibleImageView.setAlpha(visibleImageAlignMode ? Config.DUMP_VISUAL_MASK_ALPHA / 255f : 1f);
-                            visibleImageView.setVisibility(View.VISIBLE);
-                        }
-                    });
-                }
-            });
-        } else {
-            VisibleImageMask mask = rawThermalDump.getVisibleImageMask();
-            visibleImageView.setImageBitmap(showingMSX4VisibleImage ? mask.getBlendedMSXBitmap() : mask.getVisibleBitmap());
-            visibleImageView.setAlpha(visibleImageAlignMode ? Config.DUMP_VISUAL_MASK_ALPHA / 255f : 1f);
-            visibleImageView.setVisibility(View.VISIBLE);
-        }
-        return true;
     }
 
     public void onToggleVisibleLongClicked(View v) {
@@ -604,6 +590,42 @@ public class DumpViewerActivity extends BaseActivity {
                 }
             }
         }).start();
+    }
+
+    private boolean showVisibleImage(RawThermalDump rawThermalDump) {
+        if (!rawThermalDump.isVisibleImageAttached()) {
+            if (!rawThermalDump.attachVisibleImageMask()) {
+                showToastMessage("Failed to read visible image. Does the jpg file with same name exist?");
+                return false;
+            }
+            rawThermalDump.getVisibleImageMask().processFrame(this, new VisibleImageMask.BitmapUpdateListener() {
+                @Override
+                public void onBitmapUpdate(VisibleImageMask maskInstance) {
+                    final VisibleImageMask mask = maskInstance;
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            updateVisibleImageView(mask);
+                        }
+                    });
+                }
+            });
+        } else {
+            updateVisibleImageView(rawThermalDump.getVisibleImageMask());
+        }
+        return true;
+    }
+
+    private void updateVisibleImageView(VisibleImageMask mask) {
+        visibleImageView.setImageBitmap(showingMSX4VisibleImage ? mask.getBlendedMSXBitmap() : mask.getVisibleBitmap());
+        visibleImageView.setAlpha(visibleImageAlignMode ? Config.DUMP_VISUAL_MASK_ALPHA / 255f : 1f);
+        visibleImageView.setVisibility(View.VISIBLE);
+
+//        // Set initial params for dragging
+//        FrameLayout.LayoutParams layoutParams = (FrameLayout.LayoutParams) visibleImageView.getLayoutParams();
+//        // layout_gravity = center_vertical, visible image not rendered yet
+//        layoutParams.topMargin = -thermalImageView.getMeasuredHeight() / 2;
+//        visibleImageView.setLayoutParams(layoutParams);
     }
 
 }

@@ -54,8 +54,9 @@ public class VisibleImageMask implements FrameProcessor.Delegate {
             @Override
             public void run() {
                 frameProcessor = new FrameProcessor(context, VisibleImageMask.this, IMAGE_TYPES);
-                 frameProcessor.setImagePalette(loadedFrame.getPreviewPalette());
+                frameProcessor.setImagePalette(loadedFrame.getPreviewPalette());
 //                frameProcessor.setImagePalette(RenderedImage.Palette.Iron);
+                frameProcessor.setEmissivity(0.98f); // human skin, water, frost
                 frameProcessor.processFrame(loadedFrame);
             }
         }).start();
