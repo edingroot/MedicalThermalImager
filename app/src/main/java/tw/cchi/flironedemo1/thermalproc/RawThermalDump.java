@@ -23,16 +23,16 @@ import tw.cchi.flironedemo1.Config;
  *  1 ~ 2			width (number of columns)
  *  3 ~ 4			height (number of rows)
  *  5 ~ M			each thermal pixel is stored by 2 bytes (M=2*width*height + 4)
- *  (M+1) ~ (M+2)	visual image alignment ΔX
- *  (M+3) ~ (M+4)	visual image alignment ΔY
+ *  (M+1) ~ (M+2)	visible image alignment X offset
+ *  (M+3) ~ (M+4)	visible image alignment Y offset
  *  (M+5)			EOF
  */
 public class RawThermalDump {
     private int formatVersion = 1;
     private int width;
     private int height;
-    private int visualDeltaX = 0;
-    private int visualDeltaY = 0;
+    private int visibleOffsetX = 0;
+    private int visibleOffsetY = 0;
     private int[] thermalValues; // 0.01K = 1, (C = val/100 - 273.15)
     private int maxValue = -1;
     private int minValue = -1;
@@ -53,10 +53,10 @@ public class RawThermalDump {
         this.thermalValues = thermalValues;
     }
 
-    public RawThermalDump(int width, int height, int[] thermalValues, int visualDeltaX, int visualDeltaY) {
+    public RawThermalDump(int width, int height, int[] thermalValues, int visibleOffsetX, int visualDeltaY) {
         this(width, height, thermalValues);
-        this.visualDeltaX = visualDeltaX;
-        this.visualDeltaY = visualDeltaY;
+        this.visibleOffsetX = visibleOffsetX;
+        this.visibleOffsetY = visualDeltaY;
         this.formatVersion = 2;
     }
 
@@ -72,7 +72,7 @@ public class RawThermalDump {
 
         if (bytes.length == 4 + width * height * 2)
             formatVersion = 1;
-        else if (bytes.length == 4 + width * height * 2)
+        else if (bytes.length == 8 + width * height * 2)
             formatVersion = 2;
         else
             return null;
@@ -87,7 +87,7 @@ public class RawThermalDump {
         if (formatVersion == 1) {
             rawThermalDump = new RawThermalDump(width, height, thermalValues);
         } else {
-            int index = 4 + width * height;
+            int index = 4 + 2 * width * height;
             int visualDeltaX = bytes2UnsignedInt(bytes[index], bytes[index + 1]);
             int visualDeltaY = bytes2UnsignedInt(bytes[index + 2], bytes[index + 3]);
             rawThermalDump = new RawThermalDump(width, height, thermalValues, visualDeltaX, visualDeltaY);
@@ -97,7 +97,7 @@ public class RawThermalDump {
         return rawThermalDump;
     }
 
-    public boolean saveToFile(String filepath) {
+    public synchronized boolean saveToFile(String filepath) {
         int length = formatVersion == 1 ? 4 + 2 * width * height : 8 + 2 * width * height;
         byte[] bytes = new byte[length];
 
@@ -113,10 +113,10 @@ public class RawThermalDump {
 
         if (formatVersion == 2) {
             int index = 4 + 2 * width * height;
-            bytes[index] = (byte) (visualDeltaX & 0xff);
-            bytes[index + 1] = (byte) ((visualDeltaX >> 8) & 0xff);
-            bytes[index + 2] = (byte) (visualDeltaY & 0xff);
-            bytes[index + 3] = (byte) ((visualDeltaY >> 8) & 0xff);
+            bytes[index] = (byte) (visibleOffsetX & 0xff);
+            bytes[index + 1] = (byte) ((visibleOffsetX >> 8) & 0xff);
+            bytes[index + 2] = (byte) (visibleOffsetY & 0xff);
+            bytes[index + 3] = (byte) ((visibleOffsetY >> 8) & 0xff);
         }
 
         try {
@@ -137,30 +137,22 @@ public class RawThermalDump {
         return height;
     }
 
-    public int getVisualDeltaX() {
-        return visualDeltaX;
+    public int getVisibleOffsetX() {
+        return visibleOffsetX;
     }
 
-    public boolean setVisualDeltaX(int visualDeltaX) {
-        if (formatVersion == 1) {
-            return false;
-        } else {
-            this.visualDeltaX = visualDeltaX;
-            return true;
-        }
+    public void setVisibleOffsetX(int visibleOffsetX) {
+        this.formatVersion = 2;
+        this.visibleOffsetX = visibleOffsetX;
     }
 
-    public int getVisualDeltaY() {
-        return visualDeltaY;
+    public int getVisibleOffsetY() {
+        return visibleOffsetY;
     }
 
-    public boolean setVisualDeltaY(int visualDeltaY) {
-        if (formatVersion == 1) {
-            return false;
-        } else {
-            this.visualDeltaY = visualDeltaY;
-            return true;
-        }
+    public void setVisibleOffsetY(int visibleOffsetY) {
+        this.formatVersion = 2;
+        this.visibleOffsetY = visibleOffsetY;
     }
 
     public int[] getThermalValues() {

@@ -143,10 +143,8 @@ public class DumpViewerActivity extends BaseActivity {
                         break;
 
                     case MotionEvent.ACTION_MOVE:
-                        layoutParams.gravity = Gravity.NO_GRAVITY;
                         layoutParams.leftMargin = x - startDraggingX;
                         layoutParams.topMargin = y - startDraggingY;
-
                         // Prevent the view from being compressed when moving right or down
                         layoutParams.rightMargin = -500;
                         layoutParams.bottomMargin = -500;
@@ -154,7 +152,7 @@ public class DumpViewerActivity extends BaseActivity {
                         break;
 
                     case MotionEvent.ACTION_UP:
-                        // TODO
+                        handleVisibleImageDragged();
                         break;
 
                     case MotionEvent.ACTION_POINTER_DOWN:
@@ -605,27 +603,46 @@ public class DumpViewerActivity extends BaseActivity {
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
-                            updateVisibleImageView(mask);
+                            prepareVisibleImageView(mask);
                         }
                     });
                 }
             });
         } else {
-            updateVisibleImageView(rawThermalDump.getVisibleImageMask());
+            prepareVisibleImageView(rawThermalDump.getVisibleImageMask());
         }
         return true;
     }
 
-    private void updateVisibleImageView(VisibleImageMask mask) {
+    private void prepareVisibleImageView(VisibleImageMask mask) {
         visibleImageView.setImageBitmap(showingMSX4VisibleImage ? mask.getBlendedMSXBitmap() : mask.getVisibleBitmap());
         visibleImageView.setAlpha(visibleImageAlignMode ? Config.DUMP_VISUAL_MASK_ALPHA / 255f : 1f);
         visibleImageView.setVisibility(View.VISIBLE);
 
-//        // Set initial params for dragging
-//        FrameLayout.LayoutParams layoutParams = (FrameLayout.LayoutParams) visibleImageView.getLayoutParams();
-//        // layout_gravity = center_vertical, visible image not rendered yet
-//        layoutParams.topMargin = -thermalImageView.getMeasuredHeight() / 2;
-//        visibleImageView.setLayoutParams(layoutParams);
+        // Set initial params
+        FrameLayout.LayoutParams layoutParams = (FrameLayout.LayoutParams) visibleImageView.getLayoutParams();
+        layoutParams.leftMargin = mask.getLinkedRawThermalDump().getVisibleOffsetX() + (int) thermalImageView.getX();
+        layoutParams.topMargin = mask.getLinkedRawThermalDump().getVisibleOffsetY() + (int) thermalImageView.getY();
+
+        // Prevent the view from being compressed when moving right or down
+        layoutParams.rightMargin = -500;
+        layoutParams.bottomMargin = -500;
+
+        visibleImageView.setLayoutParams(layoutParams);
+    }
+
+    private void handleVisibleImageDragged() {
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                RawThermalDump rawThermalDump = rawThermalDumps.get(selectedThermalDumpIndex);
+                int diffX = (int) (visibleImageView.getX() - thermalImageView.getX());
+                int diffY = (int) (visibleImageView.getY() - thermalImageView.getY());
+                rawThermalDump.setVisibleOffsetX(diffX);
+                rawThermalDump.setVisibleOffsetY(diffY);
+                rawThermalDump.saveToFile(rawThermalDump.getFilepath());
+            }
+        }).start();
     }
 
 }
