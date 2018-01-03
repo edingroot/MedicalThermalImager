@@ -10,7 +10,6 @@ import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
-import android.view.Gravity;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewTreeObserver;
@@ -212,7 +211,7 @@ public class DumpViewerActivity extends BaseActivity {
         btnToggleVisible.setOnLongClickListener(new View.OnLongClickListener() {
             @Override
             public boolean onLongClick(View view) {
-                onToggleVisibleLongClicked(view);
+                onToggleVisibleImageLongClicked(view);
                 return true;
             }
         });
@@ -304,7 +303,7 @@ public class DumpViewerActivity extends BaseActivity {
         }
     }
 
-    public void onToggleVisibleClicked(View v) {
+    public void onToggleVisibleImageClicked(View v) {
         if (rawThermalDumps.size() == 0 || selectedThermalDumpIndex == -1)
             return;
 
@@ -321,7 +320,7 @@ public class DumpViewerActivity extends BaseActivity {
         }
     }
 
-    public void onToggleVisibleLongClicked(View v) {
+    public void onToggleVisibleImageLongClicked(View v) {
         if (rawThermalDumps.size() == 0 || selectedThermalDumpIndex == -1)
             return;
 
@@ -330,7 +329,8 @@ public class DumpViewerActivity extends BaseActivity {
         } else {
             visibleImageAlignMode = true;
             if (!showingVisibleImage) {
-                onToggleVisibleClicked(btnToggleVisible);
+                // Show visible image first
+                onToggleVisibleImageClicked(btnToggleVisible);
             } else {
                 visibleImageView.setAlpha(visibleImageAlignMode ? Config.DUMP_VISUAL_MASK_ALPHA / 255f : 1f);
             }
@@ -411,6 +411,12 @@ public class DumpViewerActivity extends BaseActivity {
 
             if (thermalDumpPaths.size() == 0)
                 thermalImageView.setImageBitmap(null);
+
+            // Trigger switching off visible image display
+            if (showingVisibleImage) {
+                visibleImageView.setVisibility(View.GONE);
+                showingVisibleImage = visibleImageAlignMode = false;
+            }
         }
 
         System.gc();
