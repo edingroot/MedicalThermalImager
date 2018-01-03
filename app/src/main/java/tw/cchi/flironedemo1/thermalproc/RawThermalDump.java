@@ -13,7 +13,7 @@ import tw.cchi.flironedemo1.Config;
 
 /**
  * File format V1:
- *  Bytes / Data (MSB, LSB), integer
+ *  Bytes / Data (LSB, MSB), integer
  *  1 ~ 2		width (number of columns)
  *  3 ~ 4		height (number of rows)
  *  5 ~ N		each thermal pixel is stored by 2 bytes (N=width*height*2 + 4)
@@ -67,8 +67,8 @@ public class RawThermalDump {
             return null;
         }
 
-        int width = bytes2UnsignedInt(bytes[0], bytes[1]);
-        int height = bytes2UnsignedInt(bytes[2], bytes[3]);
+        int width = twoBytes2SignedInt(bytes[0], bytes[1]);
+        int height = twoBytes2SignedInt(bytes[2], bytes[3]);
 
         if (bytes.length == 4 + width * height * 2)
             formatVersion = 1;
@@ -80,7 +80,7 @@ public class RawThermalDump {
         int[] thermalValues = new int[width * height];
         for (int i = 0; i < width * height; i++) {
             int byteIndex = 4 + i * 2;
-            thermalValues[i] = bytes2UnsignedInt(bytes[byteIndex], bytes[byteIndex + 1]);
+            thermalValues[i] = twoBytes2SignedInt(bytes[byteIndex], bytes[byteIndex + 1]);
         }
 
         RawThermalDump rawThermalDump;
@@ -88,9 +88,9 @@ public class RawThermalDump {
             rawThermalDump = new RawThermalDump(width, height, thermalValues);
         } else {
             int index = 4 + 2 * width * height;
-            int visualDeltaX = bytes2UnsignedInt(bytes[index], bytes[index + 1]);
-            int visualDeltaY = bytes2UnsignedInt(bytes[index + 2], bytes[index + 3]);
-            rawThermalDump = new RawThermalDump(width, height, thermalValues, visualDeltaX, visualDeltaY);
+            int visibleOffsetX = twoBytes2SignedInt(bytes[index], bytes[index + 1]);
+            int visibleOffsetY = twoBytes2SignedInt(bytes[index + 2], bytes[index + 3]);
+            rawThermalDump = new RawThermalDump(width, height, thermalValues, visibleOffsetX, visibleOffsetY);
         }
         rawThermalDump.setFilepath(filepath);
 
@@ -101,22 +101,17 @@ public class RawThermalDump {
         int length = formatVersion == 1 ? 4 + 2 * width * height : 8 + 2 * width * height;
         byte[] bytes = new byte[length];
 
-        bytes[0] = (byte) (width & 0xff);
-        bytes[1] = (byte) ((width >> 8) & 0xff);
-        bytes[2] = (byte) (height & 0xff);
-        bytes[3] = (byte) ((height >> 8) & 0xff);
+        signedInt2TwoBytes(width, bytes, 0);
+        signedInt2TwoBytes(height, bytes, 2);
 
         for (int i = 0; i < width * height; i++) {
-            bytes[4 + i * 2] = (byte) (thermalValues[i] & 0xff);
-            bytes[4 + i * 2 + 1] = (byte) ((thermalValues[i] >> 8) & 0xff);
+            signedInt2TwoBytes(thermalValues[i], bytes, 4 + i * 2);
         }
 
         if (formatVersion == 2) {
             int index = 4 + 2 * width * height;
-            bytes[index] = (byte) (visibleOffsetX & 0xff);
-            bytes[index + 1] = (byte) ((visibleOffsetX >> 8) & 0xff);
-            bytes[index + 2] = (byte) (visibleOffsetY & 0xff);
-            bytes[index + 3] = (byte) ((visibleOffsetY >> 8) & 0xff);
+            signedInt2TwoBytes(visibleOffsetX, bytes, index);
+            signedInt2TwoBytes(visibleOffsetY, bytes, index + 2);
         }
 
         try {
@@ -275,11 +270,17 @@ public class RawThermalDump {
 
     }
 
-    private static int bytes2UnsignedInt(byte msb, byte lsb) {
-        // Make bytes unsigned
-        int iMsb = 0xff & (int) msb;
-        int iLsb = 0xff & (int) lsb;
-        return iLsb << 8 | iMsb;
+    private static void signedInt2TwoBytes(int number, byte[] bytes, int startFrom) {
+        bytes[startFrom] = (byte) (number & 0xff); // lsb
+        bytes[startFrom + 1] = (byte) ((number & 0xff00) >> 8); // msb
+    }
+
+    private static int twoBytes2SignedInt(byte lsb, byte msb) {
+        int result = (msb & 0xff) << 8 | (lsb & 0xff);
+        // negative number
+        if ((msb & 0x80) == 0x80)
+            result = -1 * ((~result & 0xffff) + 1); // 2's complement
+        return result;
     }
 
     private static byte[] readAllBytesFromFile(String filepath) {
