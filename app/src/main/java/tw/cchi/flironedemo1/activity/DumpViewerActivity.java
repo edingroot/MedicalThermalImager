@@ -399,7 +399,7 @@ public class DumpViewerActivity extends BaseActivity {
         synchronized (dumpListLock) {
             int newIndex = thermalDumpsRecyclerAdapter.removeDumpSwitch(index);
 
-            if (selectedThermalDumpIndex == index) {
+            if (selectedThermalDumpIndex == index && newIndex != -1) {
                 updateThermalImageView(thermalBitmaps.get(newIndex));
             }
             selectedThermalDumpIndex = newIndex;
