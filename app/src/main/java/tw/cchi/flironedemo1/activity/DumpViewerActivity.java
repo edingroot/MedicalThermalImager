@@ -399,6 +399,7 @@ public class DumpViewerActivity extends BaseActivity {
         synchronized (dumpListLock) {
             int newIndex = thermalDumpsRecyclerAdapter.removeDumpSwitch(index);
 
+            // If the dump removing is the one currently displaying & still have some other dumps opened
             if (selectedThermalDumpIndex == index && newIndex != -1) {
                 updateThermalImageView(thermalBitmaps.get(newIndex));
             }
@@ -409,13 +410,18 @@ public class DumpViewerActivity extends BaseActivity {
             thermalBitmaps.remove(index);
             removeFromChartParameter(thermalChartParameter, index);
 
-            if (thermalDumpPaths.size() == 0)
+            if (thermalDumpPaths.size() == 0) {
                 thermalImageView.setImageBitmap(null);
-
-            // Trigger switching off visible image display
-            if (showingVisibleImage) {
-                visibleImageView.setVisibility(View.GONE);
-                showingVisibleImage = visibleImageAlignMode = false;
+                if (showingVisibleImage) {
+                    visibleImageView.setImageBitmap(null);
+                    visibleImageView.setVisibility(View.GONE);
+                    showingVisibleImage = visibleImageAlignMode = false;
+                }
+            } else {
+                if (showingVisibleImage) {
+                    updateVisibleImageView(rawThermalDumps.get(selectedThermalDumpIndex).getVisibleImageMask());
+                    showVisibleImage(rawThermalDumps.get(selectedThermalDumpIndex));
+                }
             }
         }
 
@@ -609,18 +615,18 @@ public class DumpViewerActivity extends BaseActivity {
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
-                            prepareVisibleImageView(mask);
+                            updateVisibleImageView(mask);
                         }
                     });
                 }
             });
         } else {
-            prepareVisibleImageView(rawThermalDump.getVisibleImageMask());
+            updateVisibleImageView(rawThermalDump.getVisibleImageMask());
         }
         return true;
     }
 
-    private void prepareVisibleImageView(VisibleImageMask mask) {
+    private void updateVisibleImageView(VisibleImageMask mask) {
         visibleImageView.setImageBitmap(showingMSX4VisibleImage ? mask.getBlendedMSXBitmap() : mask.getVisibleBitmap());
         visibleImageView.setAlpha(visibleImageAlignMode ? Config.DUMP_VISUAL_MASK_ALPHA / 255f : 1f);
         visibleImageView.setVisibility(View.VISIBLE);
