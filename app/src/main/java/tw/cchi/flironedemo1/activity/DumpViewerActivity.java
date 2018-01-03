@@ -178,6 +178,7 @@ public class DumpViewerActivity extends BaseActivity {
             public void onClick(View v, int position) {
                 selectedThermalDumpIndex = position;
                 if (showingVisibleImage) {
+                    visibleImageAlignMode = false;
                     showVisibleImage(rawThermalDumps.get(selectedThermalDumpIndex));
                 }
                 updateThermalImageView(thermalBitmaps.get(position));
@@ -419,7 +420,7 @@ public class DumpViewerActivity extends BaseActivity {
                 }
             } else {
                 if (showingVisibleImage) {
-                    updateVisibleImageView(rawThermalDumps.get(selectedThermalDumpIndex).getVisibleImageMask());
+                    visibleImageAlignMode = false;
                     showVisibleImage(rawThermalDumps.get(selectedThermalDumpIndex));
                 }
             }
