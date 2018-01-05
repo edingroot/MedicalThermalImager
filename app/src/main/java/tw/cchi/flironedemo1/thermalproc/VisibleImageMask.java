@@ -13,8 +13,8 @@ import java.util.EnumSet;
 
 public class VisibleImageMask implements FrameProcessor.Delegate {
     private static final EnumSet<RenderedImage.ImageType> IMAGE_TYPES = EnumSet.of(
-            RenderedImage.ImageType.VisibleAlignedRGBA8888Image,
-            RenderedImage.ImageType.BlendedMSXRGBA8888Image
+            RenderedImage.ImageType.VisibleAlignedRGBA8888Image
+//            RenderedImage.ImageType.BlendedMSXRGBA8888Image
     );
     private final RawThermalDump rawThermalDump;
     private BitmapUpdateListener bitmapUpdateListener;
@@ -24,7 +24,7 @@ public class VisibleImageMask implements FrameProcessor.Delegate {
     private FrameProcessor frameProcessor;
     private volatile int proceedTypes = 0;
     private volatile Bitmap visibleBitmap;
-    private volatile Bitmap blendedMSXBitmap;
+//    private volatile Bitmap blendedMSXBitmap;
 
     /**
      * Please use {@link #openVisibleImage(RawThermalDump, String)} to get a new instance.
@@ -72,9 +72,9 @@ public class VisibleImageMask implements FrameProcessor.Delegate {
             visibleBitmap = Bitmap.createBitmap(renderedImage.width(), renderedImage.height(), Bitmap.Config.ARGB_8888);
             visibleBitmap.copyPixelsFromBuffer(ByteBuffer.wrap(renderedImage.pixelData()));
 
-        } else if (renderedImage.imageType() == RenderedImage.ImageType.BlendedMSXRGBA8888Image) {
-            blendedMSXBitmap = Bitmap.createBitmap(renderedImage.width(), renderedImage.height(), Bitmap.Config.ARGB_8888);
-            blendedMSXBitmap.copyPixelsFromBuffer(ByteBuffer.wrap(renderedImage.pixelData()));
+//        } else if (renderedImage.imageType() == RenderedImage.ImageType.BlendedMSXRGBA8888Image) {
+//            blendedMSXBitmap = Bitmap.createBitmap(renderedImage.width(), renderedImage.height(), Bitmap.Config.ARGB_8888);
+//            blendedMSXBitmap.copyPixelsFromBuffer(ByteBuffer.wrap(renderedImage.pixelData()));
         }
 
         if (++proceedTypes == IMAGE_TYPES.size()) {
@@ -87,9 +87,9 @@ public class VisibleImageMask implements FrameProcessor.Delegate {
         return visibleBitmap;
     }
 
-    public Bitmap getBlendedMSXBitmap() {
-        return blendedMSXBitmap;
-    }
+//    public Bitmap getBlendedMSXBitmap() {
+//        return blendedMSXBitmap;
+//    }
 
     public interface BitmapUpdateListener {
         void onBitmapUpdate(VisibleImageMask maskInstance);

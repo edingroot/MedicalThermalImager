@@ -57,7 +57,6 @@ public class DumpViewerActivity extends BaseActivity {
     private int selectedThermalDumpIndex = -1;
     private boolean showingVisibleImage = false;
     private volatile boolean visibleImageAlignMode = false;
-    private volatile boolean showingMSX4VisibleImage = false;
     private boolean showingChart = false;
 
     private int thermalSpotX = -1;
@@ -336,15 +335,6 @@ public class DumpViewerActivity extends BaseActivity {
                 visibleImageView.setAlpha(visibleImageAlignMode ? Config.DUMP_VISUAL_MASK_ALPHA / 255f : 1f);
             }
         }
-    }
-
-    public void onVisibleImageViewClicked(View v) {
-        if (rawThermalDumps.size() == 0 || selectedThermalDumpIndex == -1 || visibleImageAlignMode)
-            return;
-
-        VisibleImageMask mask = rawThermalDumps.get(selectedThermalDumpIndex).getVisibleImageMask();
-        showingMSX4VisibleImage = !showingMSX4VisibleImage;
-        visibleImageView.setImageBitmap(showingMSX4VisibleImage ? mask.getBlendedMSXBitmap() : mask.getVisibleBitmap());
     }
 
     private void showToastMessage(final String message) {
@@ -628,7 +618,7 @@ public class DumpViewerActivity extends BaseActivity {
     }
 
     private void updateVisibleImageView(VisibleImageMask mask) {
-        visibleImageView.setImageBitmap(showingMSX4VisibleImage ? mask.getBlendedMSXBitmap() : mask.getVisibleBitmap());
+        visibleImageView.setImageBitmap(mask.getVisibleBitmap());
         visibleImageView.setAlpha(visibleImageAlignMode ? Config.DUMP_VISUAL_MASK_ALPHA / 255f : 1f);
         visibleImageView.setVisibility(View.VISIBLE);
 
