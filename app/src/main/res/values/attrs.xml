@@ -9,7 +9,7 @@
         <attr name="metaButtonBarButtonStyle" format="reference" />
     </declare-styleable>
 
-    <!-- For OpenCV -->
+    <!-- OpenCV -->
     <declare-styleable name = "CameraBridgeViewBase" >
         <attr name="show_fps" format="boolean"/>
         <attr name="camera_id" format="integer" >
@@ -19,7 +19,7 @@
         </attr>
     </declare-styleable>
 
-    <!-- For com.vashisthg.startpointseekbar -->
+    <!-- com.vashisthg.startpointseekbar -->
     <declare-styleable name="StartPointSeekBar">
         <attr name="minValue" format="float"/>
         <attr name="maxValue" format="float"/>
@@ -28,6 +28,12 @@
         <attr name="thumbPressedDrawable" format="reference"></attr>
         <attr name="defaultBackgroundColor" format="color"></attr>
         <attr name="defaultBackgroundRangeColor" format="color"></attr>
+    </declare-styleable>
+
+    <!-- .view.ThermalSpotView -->
+    <declare-styleable name="ThermalSpotView">
+        <attr name="spotId" format="integer"/>
+        <attr name="showId" format="boolean"/>
     </declare-styleable>
 
 </resources>

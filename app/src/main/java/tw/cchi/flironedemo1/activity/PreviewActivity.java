@@ -249,7 +249,6 @@ public class PreviewActivity extends BaseActivity implements Device.Delegate, Fr
     @Override
     public void onStop() {
         // We must unregister our usb receiver, otherwise we will steal events from other apps
-        Log.e(Config.TAG, "PreviewActivity onStop, stopping discovery!");
         Device.stopDiscovery();
         flirOneDevice = null;
         super.onStop();

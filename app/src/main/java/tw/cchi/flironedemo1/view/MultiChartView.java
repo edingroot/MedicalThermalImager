@@ -4,6 +4,7 @@ import android.content.Context;
 import android.graphics.Color;
 import android.util.AttributeSet;
 import android.view.LayoutInflater;
+import android.view.View;
 import android.widget.RelativeLayout;
 
 import com.github.mikephil.charting.charts.LineChart;
@@ -23,15 +24,15 @@ import tw.cchi.flironedemo1.activity.BaseActivity;
 import tw.cchi.flironedemo1.model.ChartParameter;
 
 public class MultiChartView extends RelativeLayout {
+    private View rootView;
     private ChartParameter chartParameter;
 
     @BindView(R.id.chart1) LineChart lineChart;
 
     public MultiChartView(Context context, AttributeSet attrs) {
         super(context, attrs);
-        LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-        inflater.inflate(R.layout.view_multi_thermalcharts, this, true);
-        ButterKnife.bind(this);
+        rootView = inflate(context, R.layout.view_multi_thermalcharts, this);
+        ButterKnife.bind(this, rootView);
         initLineChart();
     }
 

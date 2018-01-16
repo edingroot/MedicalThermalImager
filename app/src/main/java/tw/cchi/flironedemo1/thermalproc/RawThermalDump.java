@@ -9,6 +9,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 
+import tw.cchi.flironedemo1.AppUtils;
 import tw.cchi.flironedemo1.Config;
 
 /**
@@ -247,9 +248,8 @@ public class RawThermalDump {
      * @return The average temperature in degree Celsius
      */
     public double getTemperature9Average(int x, int y) {
-        int centerPixelIndex = width * y + x;
-
-        int[] centerPixelIndexes = new int[]{
+        int centerPixelIndex = AppUtils.trimByRange(width * y + x, width + 1, width * (height - 1));
+        int[] centerPixelIndexes = new int[] {
                 centerPixelIndex, centerPixelIndex - 1, centerPixelIndex + 1,
                 centerPixelIndex - width,
                 centerPixelIndex - width - 1,
