@@ -50,7 +50,7 @@ public class ThermalSpotsHelper {
      * @param imageViewY (int)thermalImageView.getY()
      */
     public synchronized void addThermalSpot(int spotId, int imageViewWidth, int imageViewY) {
-        final ThermalSpotView thermalSpotView = new ThermalSpotView(context, parentView, spotId, true);
+        final ThermalSpotView thermalSpotView = new ThermalSpotView(context, spotId, true);
 
         thermalSpotView.setOnTouchListener(new View.OnTouchListener() {
             @Override

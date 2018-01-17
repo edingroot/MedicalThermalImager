@@ -45,9 +45,9 @@ public class ThermalSpotView extends RelativeLayout {
         onAttrsUpdate();
     }
 
-    public ThermalSpotView(Context context, ViewGroup parentView, int spotId, boolean showId) {
+    public ThermalSpotView(Context context, int spotId, boolean showId) {
         super(context);
-        View rootView = inflate(context, R.layout.view_thermal_spot, parentView);
+        View rootView = inflate(context, R.layout.view_thermal_spot, this);
         ButterKnife.bind(this, rootView);
 
         this.spotId = spotId;
@@ -62,10 +62,6 @@ public class ThermalSpotView extends RelativeLayout {
      */
     private void initLayoutParams() {
         LayoutParams params = new LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-
-        // Prevent the view from being compressed when moving right or down
-        params.rightMargin = -100;
-        params.bottomMargin = -100;
 
         params.addRule(RelativeLayout.CENTER_HORIZONTAL, TRUE);
         params.addRule(RelativeLayout.CENTER_VERTICAL, TRUE);
@@ -106,6 +102,11 @@ public class ThermalSpotView extends RelativeLayout {
         if (!moved) {
             params.addRule(RelativeLayout.CENTER_VERTICAL, 0);
             params.addRule(RelativeLayout.CENTER_HORIZONTAL, 0);
+
+            // Prevent the view from being compressed when moving right or down
+            params.rightMargin = -100;
+            params.bottomMargin = -100;
+
             moved = true;
         }
 
