@@ -469,6 +469,7 @@ public class DumpViewerActivity extends BaseActivity {
     /**
      * Add thermal values on specific horizontal line on the thermal dump to the chart parameter.
      * [Note] Not calling updateChartAxis() here because it will be called when all thermalDumps are added
+     *
      * @param chartParameter
      * @param rawThermalDump
      * @param y

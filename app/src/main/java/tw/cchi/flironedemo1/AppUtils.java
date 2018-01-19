@@ -28,6 +28,7 @@ public class AppUtils {
 
     /**
      * Effective range: min <= val < max
+     *
      * @param val
      * @param min
      * @param max
@@ -53,21 +54,27 @@ public class AppUtils {
     public static Point[] getPointsInsideContour(MatOfPoint contour, Size imageSize) {
         Mat mask = Mat.zeros(imageSize, CvType.CV_8UC1);
         ArrayList<MatOfPoint> contours = new ArrayList<>();
+
         contours.add(contour);
         drawContours(mask, contours, 0, new Scalar(255), FILLED);
+
         Mat insidePointsMat = new Mat(contour.size(), contour.type());
         Core.findNonZero(mask, insidePointsMat);
+
         return new MatOfPoint(insidePointsMat).toArray();
     }
 
     public static Point[] getPointsOutsideContour(MatOfPoint contour, Size imageSize) {
         Mat mask = new Mat(imageSize, CvType.CV_8UC1);
-        mask.setTo(new Scalar(255));
         ArrayList<MatOfPoint> contours = new ArrayList<>();
+
         contours.add(contour);
+        mask.setTo(new Scalar(255));
         drawContours(mask, contours, 0, new Scalar(0), FILLED);
+
         Mat insidePointsMat = new Mat(contour.size(), contour.type());
         Core.findNonZero(mask, insidePointsMat);
+
         return new MatOfPoint(insidePointsMat).toArray();
     }
 

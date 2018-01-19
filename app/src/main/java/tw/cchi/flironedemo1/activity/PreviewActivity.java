@@ -123,16 +123,11 @@ public class PreviewActivity extends BaseActivity implements Device.Delegate, Fr
         super.onCreate(savedInstanceState);
         OpenCVLoader.initDebug();
         setContentView(R.layout.activity_preview);
-        ButterKnife.bind(this);
+        ButterKnife.bind(this)
+;
 
-//        frameProcessor = new FrameProcessor(this, this, EnumSet.of(
-//                RenderedImage.ImageType.VisibleAlignedRGBA8888Image,
-//                RenderedImage.ImageType.ThermalRadiometricKelvinImage
-//        ));
-        RenderedImage.ImageType defaultImageType = RenderedImage.ImageType.ThermalRGBA8888Image;
         frameProcessor = new FrameProcessor(this, this, EnumSet.of(
-                defaultImageType,
-                RenderedImage.ImageType.VisibleAlignedRGBA8888Image,
+                RenderedImage.ImageType.ThermalRGBA8888Image,
                 RenderedImage.ImageType.ThermalRadiometricKelvinImage
         ));
         frameProcessor.setImagePalette(RenderedImage.Palette.Gray);
@@ -443,8 +438,7 @@ public class PreviewActivity extends BaseActivity implements Device.Delegate, Fr
 
     // Frame Processor BitmapUpdateListener method, will be called each time a rendered frame is produced
     public void onFrameProcessed(final RenderedImage renderedImage) {
-        if (!streamingFrame)
-            return;
+        if (!streamingFrame) return;
         lastRenderedImage = renderedImage;
 
         if (imageCaptureRequested) {
@@ -461,25 +455,6 @@ public class PreviewActivity extends BaseActivity implements Device.Delegate, Fr
             this.thermalPixels = renderedImage.thermalPixelValues();
 
             updateThermalSpotValue();
-
-            // if radiometric is the only type, also show the image
-            if (frameProcessor.getImageTypes().size() == 1) {
-                // example of a custom colorization, maps temperatures 0-100C to 8-bit gray-scale
-                byte[] argbPixels = new byte[imageWidth * imageHeight * 4];
-                final byte aPixValue = (byte) 255;
-                for (int p = 0; p < thermalPixels.length; p++) {
-                    int destP = p * 4;
-                    byte pixValue = (byte) (Math.min(0xff, Math.max(0x00, (thermalPixels[p] - 27315) * (255.0 / 10000.0))));
-
-                    argbPixels[destP + 3] = aPixValue;
-                    // red pixel
-                    argbPixels[destP] = argbPixels[destP + 1] = argbPixels[destP + 2] = pixValue;
-                }
-
-                final Bitmap demoBitmap = Bitmap.createBitmap(imageWidth, renderedImage.height(), Bitmap.Config.RGB_565);
-                demoBitmap.copyPixelsFromBuffer(ByteBuffer.wrap(argbPixels));
-                updateThermalImageView(demoBitmap);
-            }
 
             if (thermalAnalyzeRequested) {
                 thermalAnalyzeRequested = false;
@@ -503,15 +478,6 @@ public class PreviewActivity extends BaseActivity implements Device.Delegate, Fr
             //     Log.i(Config.TAG, "ImageType=" + type);
             // }
         } else {
-            /*if (thermalBitmap == null) {
-                thermalBitmap = renderedImage.getVisibleBitmap();
-            } else {
-                try {
-                    renderedImage.copyToBitmap(thermalBitmap);
-                } catch (IllegalArgumentException e) {
-                    thermalBitmap = renderedImage.getVisibleBitmap();
-                }
-            }*/
             updateThermalImageView(renderedImage.getBitmap());
         }
     }
