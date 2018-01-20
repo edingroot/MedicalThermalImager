@@ -99,8 +99,8 @@ public class DumpViewerActivity extends BaseActivity {
                     handleThermalImageTouch(x, y);
                 }
 
-                // Not consuming onTouch event
-                return false;
+                // Consuming the onTouch event in order to capture future movement
+                return true;
             }
         });
 
@@ -455,7 +455,6 @@ public class DumpViewerActivity extends BaseActivity {
     }
 
     private void handleThermalImageTouch(int x, int y) {
-        System.out.printf("handleThermalImageTouch: x=%d, y=%d\n", x, y);
         if (tabResources.getCount() == 0)
             return;
 
