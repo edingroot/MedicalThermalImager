@@ -404,24 +404,24 @@ public class DumpViewerActivity extends BaseActivity {
             }
         });
 
-        if (frame != null) {
+        // Create new thermalSpotsHelper if not existed
+        if (frame != null && tabResources.getThermalSpotHelper() == null) {
             // Execute after view measuring and layouting
             thermalImageView.post(new Runnable() {
                 @Override
                 public void run() {
-                    // Create new thermalSpotsHelper if not existed
-                    if (tabResources.getThermalSpotHelper() == null) {
-                        ThermalSpotsHelper thermalSpotsHelper = new ThermalSpotsHelper(
-                                DumpViewerActivity.this, topView, tabResources.getRawThermalDump()
-                        );
-                        // Add a spot numbered 1 by default
-                        thermalSpotsHelper.addThermalSpot(
-                                1,
-                                thermalImageView.getMeasuredWidth(),
-                                thermalImageView.getTop()
-                        );
-                        tabResources.setThermalSpotsHelper(thermalSpotsHelper);
-                    }
+                    ThermalSpotsHelper thermalSpotsHelper = new ThermalSpotsHelper(
+                            DumpViewerActivity.this, topView, tabResources.getRawThermalDump()
+                    );
+
+                    // Add a spot numbered 1 by default
+                    thermalSpotsHelper.addThermalSpot(
+                            1,
+                            thermalImageView.getMeasuredWidth(),
+                            thermalImageView.getTop()
+                    );
+
+                    tabResources.addThermalSpotsHelper(thermalSpotsHelper);
                 }
             });
         }

@@ -42,7 +42,6 @@ public class ViewerTabResourcesHelper {
         return rawThermalDumps;
     }
 
-
     public String getThermlDumpPath() {
         return thermalDumpPaths.get(currentIndex);
     }
@@ -95,8 +94,8 @@ public class ViewerTabResourcesHelper {
         currentIndex = newIndex;
     }
 
-    public void setThermalSpotsHelper(ThermalSpotsHelper thermalSpotsHelper) {
-        thermalSpotsHelpers.setValueAt(currentIndex, thermalSpotsHelper);
+    public void addThermalSpotsHelper(ThermalSpotsHelper thermalSpotsHelper) {
+        thermalSpotsHelpers.append(currentIndex, thermalSpotsHelper);
     }
 
 }

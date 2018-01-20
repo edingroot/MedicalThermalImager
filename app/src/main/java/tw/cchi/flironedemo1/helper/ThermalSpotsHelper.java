@@ -43,6 +43,10 @@ public class ThermalSpotsHelper {
         this.spotsVisible = spotsVisible;
     }
 
+    public int getCount() {
+        return thermalSpotViews.size();
+    }
+
     /**
      *
      * @param spotId
@@ -102,7 +106,7 @@ public class ThermalSpotsHelper {
         Point thermalPosition = new Point(
                 thermalViewPositionConversion(viewPosition.x, viewPosition.y, ratio)
         );
-        thermalPixelPositions.setValueAt(spotView.getSpotId(), thermalPosition);
+        thermalPixelPositions.append(spotView.getSpotId(), thermalPosition);
 
         double averageC = rawThermalDump.getTemperature9Average(thermalPosition.x, thermalPosition.y);
         spotView.setTemperature(averageC);
