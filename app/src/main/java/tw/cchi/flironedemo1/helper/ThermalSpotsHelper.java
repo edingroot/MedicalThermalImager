@@ -125,7 +125,7 @@ public class ThermalSpotsHelper {
     }
 
     /**
-     * Note: This method should be called after {@link #setImageViewMetrics(int, int)} called
+     * Note: This method should be called after {@link #setImageViewMetrics(int, int, int)} called
      *
      * @param spotView
      */

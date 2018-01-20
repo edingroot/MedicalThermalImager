@@ -248,7 +248,7 @@ public class RawThermalDump {
      * @return The average temperature in degree Celsius
      */
     public double getTemperature9Average(int x, int y) {
-        int centerPixelIndex = AppUtils.trimByRange(width * y + x, width + 1, width * (height - 1));
+        int centerPixelIndex = AppUtils.trimByRange(width * y + x, width + 1, width * (height - 1) - 1);
         int[] centerPixelIndexes = new int[] {
                 centerPixelIndex, centerPixelIndex - 1, centerPixelIndex + 1,
                 centerPixelIndex - width,
