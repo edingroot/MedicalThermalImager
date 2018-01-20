@@ -112,6 +112,8 @@ public class ViewerTabResourcesHelper {
             rawThermalDumps.remove(removeIndex);
             thermalDumpProcessors.remove(removeIndex);
             thermalBitmaps.remove(removeIndex);
+
+            thermalSpotsHelpers.get(removeIndex).dispose();
             thermalSpotsHelpers.remove(removeIndex);
         }
         currentIndex = newIndex;

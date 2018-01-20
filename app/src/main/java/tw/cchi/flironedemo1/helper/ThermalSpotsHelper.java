@@ -97,6 +97,10 @@ public class ThermalSpotsHelper {
         });
     }
 
+    public void dispose() {
+        setSpotsVisible(false);
+    }
+
     private void updateThermalValue(ThermalSpotView spotView) {
         int imageViewWidth = imageViewMetrics.get(spotView.getSpotId()).first;
         int offsetY = imageViewMetrics.get(spotView.getSpotId()).second;

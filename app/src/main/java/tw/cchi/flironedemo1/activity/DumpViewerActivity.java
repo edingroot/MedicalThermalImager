@@ -177,7 +177,7 @@ public class DumpViewerActivity extends BaseActivity {
                 if (thermalSpotsHelper != null) thermalSpotsHelper.setSpotsVisible(false);
                 tabResources.setCurrentIndex(position);
                 thermalSpotsHelper = tabResources.getThermalSpotHelper();
-                if (thermalSpotsHelper != null) thermalSpotsHelper.setSpotsVisible(false);
+                if (thermalSpotsHelper != null) thermalSpotsHelper.setSpotsVisible(true);
 
                 if (showingVisibleImage) {
                     visibleImageAlignMode = false;
@@ -372,7 +372,6 @@ public class DumpViewerActivity extends BaseActivity {
                         tabResources.setCurrentIndex(newIndex);
                         updateThermalImageView(thermalBitmap);
                     }
-
                 } else {
                     showToastMessage("Failed reading thermal dump");
                 }
@@ -416,9 +415,8 @@ public class DumpViewerActivity extends BaseActivity {
             }
         });
 
+        // Create new thermalSpotsHelper if not existed after view measured
         if (frame != null && tabResources.getCount() != 0 && tabResources.getThermalSpotHelper() == null) {
-            // Create new thermalSpotsHelper if not existed
-            // Execute after view measuring and layouting
             thermalImageView.post(new Runnable() {
                 @Override
                 public void run() {
