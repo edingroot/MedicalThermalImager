@@ -440,8 +440,9 @@ public class DumpViewerActivity extends BaseActivity {
                                 DumpViewerActivity.this, topView, rawThermalDump
                         );
                         thermalSpotsHelper.addThermalSpot(
-                                1, thermalImageView.getMeasuredWidth(),
-                                thermalImageView.getTop() + layoutThermalViews.getTop()
+                                1,
+                                thermalImageView.getMeasuredWidth(),
+                                thermalImageView.getTop()
                         );
                         thermalSpotsHelpers.append(thermalDumpIndex, thermalSpotsHelper);
                     }

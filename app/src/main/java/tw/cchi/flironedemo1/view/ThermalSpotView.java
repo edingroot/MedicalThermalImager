@@ -8,6 +8,7 @@ import android.support.annotation.Nullable;
 import android.util.AttributeSet;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
@@ -22,7 +23,6 @@ public class ThermalSpotView extends RelativeLayout {
     private boolean showId;
     private boolean moved;
 
-    @BindView(R.id.layoutRoot) RelativeLayout layoutRoot;
     @BindView(R.id.txtSpotId) TextView txtSpotId;
     @BindView(R.id.txtSpotValue) TextView txtSpotValue;
 
@@ -66,7 +66,7 @@ public class ThermalSpotView extends RelativeLayout {
         params.addRule(RelativeLayout.CENTER_HORIZONTAL, TRUE);
         params.addRule(RelativeLayout.CENTER_VERTICAL, TRUE);
 
-        layoutRoot.setLayoutParams(params);
+        setLayoutParams(params);
         moved = false;
     }
 
@@ -96,34 +96,35 @@ public class ThermalSpotView extends RelativeLayout {
      */
     public void setCenterPosition(int x, int y) {
         LayoutParams params = (RelativeLayout.LayoutParams) getLayoutParams();
-        params.leftMargin = x - layoutRoot.getMeasuredWidth() / 2;
-        params.topMargin = y - layoutRoot.getMeasuredHeight() / 2 + this.getTop();
+        params.leftMargin = x - getMeasuredWidth() / 2;
+        params.topMargin = y - getMeasuredHeight() / 2;
 
         if (!moved) {
             params.addRule(RelativeLayout.CENTER_VERTICAL, 0);
             params.addRule(RelativeLayout.CENTER_HORIZONTAL, 0);
 
             // Prevent the view from being compressed when moving right or down
-            params.rightMargin = -100;
-            params.bottomMargin = -100;
+            params.rightMargin = -getMeasuredWidth();
+            params.bottomMargin = -getMeasuredHeight();
 
             moved = true;
         }
 
-        layoutRoot.setLayoutParams(params);
+        setLayoutParams(params);
+        invalidate();
     }
 
     public Point getCenterPosition() {
         LayoutParams params = (RelativeLayout.LayoutParams) getLayoutParams();
         if (!moved) {
             return new Point(
-                    layoutRoot.getLeft() + layoutRoot.getWidth() / 2,
-                    layoutRoot.getTop() + layoutRoot.getHeight() / 2
+                    this.getLeft() + this.getMeasuredWidth() / 2,
+                    this.getTop() + this.getMeasuredHeight() / 2
             );
         } else {
             return new Point(
-                    params.leftMargin + layoutRoot.getMeasuredWidth() / 2,
-                    params.topMargin + layoutRoot.getMeasuredHeight() / 2 - layoutRoot.getTop()
+                    params.leftMargin + this.getMeasuredWidth() / 2,
+                    params.topMargin + this.getMeasuredHeight() / 2
             );
         }
     }

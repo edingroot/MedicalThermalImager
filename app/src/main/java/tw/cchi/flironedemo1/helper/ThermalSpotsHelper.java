@@ -22,8 +22,8 @@ public class ThermalSpotsHelper {
     private SparseArray<Point> thermalPixelPositions = new SparseArray<>(); // <spotId, actual position on the thermal dump>
     private SparseArray<Pair<Integer, Integer>> imageViewMetrics = new SparseArray<>(); // <spotId, Pair<width, pY + parentsY>>
 
-    private int spotStartDraggingX;
-    private int spotStartDraggingY;
+    private int spotDraggingDeltaX;
+    private int spotDraggingDeltaY;
 
     public ThermalSpotsHelper(Context context, ViewGroup parentView, RawThermalDump rawThermalDump) {
         this.context = context;
@@ -49,7 +49,7 @@ public class ThermalSpotsHelper {
      * @param imageViewWidth thermalImageView.getMeasuredWidth()
      * @param imageViewY (int)thermalImageView.getY()
      */
-    public synchronized void addThermalSpot(int spotId, int imageViewWidth, int imageViewY) {
+    public synchronized void addThermalSpot(int spotId, final int imageViewWidth, final int imageViewY) {
         final ThermalSpotView thermalSpotView = new ThermalSpotView(context, spotId, true);
 
         thermalSpotView.setOnTouchListener(new View.OnTouchListener() {
@@ -58,27 +58,19 @@ public class ThermalSpotsHelper {
                 int x = (int) motionEvent.getRawX();
                 int y = (int) motionEvent.getRawY();
                 ThermalSpotView spotView = (ThermalSpotView) view;
-                RelativeLayout.LayoutParams layoutParams = (RelativeLayout.LayoutParams) view.getLayoutParams();
 
-                // TODO
                 switch (motionEvent.getAction() & MotionEvent.ACTION_MASK) {
                     case MotionEvent.ACTION_DOWN:
-                        spotStartDraggingX = x;
-                        spotStartDraggingY = y;
-                        break;
+                        Point centerPoint = thermalSpotView.getCenterPosition();
+                        spotDraggingDeltaX = x - centerPoint.x;
+                        spotDraggingDeltaY = y - centerPoint.y;
 
                     case MotionEvent.ACTION_MOVE:
-                        layoutParams.leftMargin = x - spotStartDraggingX;
-                        layoutParams.topMargin = y - spotStartDraggingY;
-                        view.setLayoutParams(layoutParams);
+                        thermalSpotView.setCenterPosition(x - spotDraggingDeltaX, y - spotDraggingDeltaY);
                         updateThermalValue(spotView);
                         break;
 
                     case MotionEvent.ACTION_UP:
-                        updateThermalValue(spotView);
-
-                        break;
-
                     case MotionEvent.ACTION_POINTER_DOWN:
                     case MotionEvent.ACTION_POINTER_UP:
                         break;
