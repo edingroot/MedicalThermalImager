@@ -9,7 +9,6 @@ import android.support.annotation.NonNull;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewTreeObserver;
@@ -43,11 +42,13 @@ import tw.cchi.flironedemo1.view.MultiChartView;
 
 @RuntimePermissions
 public class DumpViewerActivity extends BaseActivity {
+    private static final int MAX_OPENING_FILES = 3;
+
     private volatile ViewerTabResourcesHelper tabResources = new ViewerTabResourcesHelper();
     private volatile ChartParameter thermalChartParameter;
     private ThermalDumpsRecyclerAdapter thermalDumpsRecyclerAdapter;
 
-    private volatile ExecutorService addThermalDumpExecutorService;
+    private volatile ExecutorService addThermalDumpExecutor;
     private boolean showingVisibleImage = false;
     private volatile boolean visibleImageAlignMode = false;
     private boolean showingChart = false;
@@ -196,7 +197,7 @@ public class DumpViewerActivity extends BaseActivity {
                         .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
-                                removeThermalDump(dumpPosition);
+                                removeThermalDump(dumpPosition, false);
                             }
                         })
                         .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
@@ -233,10 +234,9 @@ public class DumpViewerActivity extends BaseActivity {
     @NeedsPermission({Manifest.permission.WRITE_EXTERNAL_STORAGE})
     public void onPickDoc() {
         String[] thermalDumpExts = {".dat"};
-        int MAX_FILES_COUNT = 3;
 
-        if(tabResources.getCount() > MAX_FILES_COUNT) {
-            showToastMessage("Cannot select more than " + MAX_FILES_COUNT + " items");
+        if(tabResources.getCount() > MAX_OPENING_FILES) {
+            showToastMessage("Cannot select more than " + MAX_OPENING_FILES + " items");
         }  else {
             FilePickerBuilder.getInstance().setMaxCount(3)
                     .setSelectedFiles(tabResources.getThermalDumpPaths())
@@ -269,13 +269,14 @@ public class DumpViewerActivity extends BaseActivity {
                         }
                     }
 
-                    for (String path : removePaths) {
-                        removeThermalDump(tabResources.indexOf(path));
-                    }
+                    // Update thermalImageView just on the last time
+                    for (int i = 0; i < removePaths.size(); i++)
+                        removeThermalDump(tabResources.indexOf(removePaths.get(i)), (i != removePaths.size() - 1));
 
                     if (addPaths.size() > 0) {
-                        if (addThermalDumpExecutorService == null || addThermalDumpExecutorService.isShutdown() || addThermalDumpExecutorService.isTerminated())
-                            addThermalDumpExecutorService = Executors.newCachedThreadPool();
+                        if (addThermalDumpExecutor == null || addThermalDumpExecutor.isShutdown() || addThermalDumpExecutor.isTerminated())
+                            addThermalDumpExecutor = Executors.newCachedThreadPool();
+
                         for (String path : addPaths) {
                             addThermalDump(path);
                         }
@@ -349,7 +350,7 @@ public class DumpViewerActivity extends BaseActivity {
     }
 
     private void addThermalDump(final String filepath) {
-        addThermalDumpExecutorService.execute(new Runnable() {
+        addThermalDumpExecutor.execute(new Runnable() {
             @Override
             public void run() {
                 RawThermalDump thermalDump = RawThermalDump.readFromDumpFile(filepath);
@@ -366,6 +367,7 @@ public class DumpViewerActivity extends BaseActivity {
                     addToChartParameter(thermalChartParameter, thermalDump, horizontalLineY);
 
                     int newIndex = thermalDumpsRecyclerAdapter.addDumpSwitch(thermalDump.getTitle());
+                    System.out.printf("addThermalDump: currIndex=%d, newIndex=%d\n", tabResources.getCurrentIndex(), newIndex);
                     if (tabResources.getCurrentIndex() != newIndex) {
                         tabResources.setCurrentIndex(newIndex);
                         updateThermalImageView(thermalBitmap);
@@ -378,12 +380,13 @@ public class DumpViewerActivity extends BaseActivity {
         });
     }
 
-    private void removeThermalDump(int index) {
+    private void removeThermalDump(int index, boolean ignoreImageViewUpdate) {
         int currentIndex = tabResources.getCurrentIndex();
         int newIndex = thermalDumpsRecyclerAdapter.removeDumpSwitch(index);
 
         // If the dump removing is the one that currently displaying & still have some other dumps opened
-        if (currentIndex == index && newIndex != -1) {
+        if (currentIndex == index && newIndex != -1 && !ignoreImageViewUpdate) {
+            System.out.printf("removeThermalDump: update thermal image view - currIndex=%d, newIndex=%d\n", currentIndex, newIndex);
             updateThermalImageView(tabResources.getThermalBitmap());
         }
         tabResources.removeResources(index, newIndex);
@@ -413,12 +416,17 @@ public class DumpViewerActivity extends BaseActivity {
             }
         });
 
-        // Create new thermalSpotsHelper if not existed
-        if (frame != null && tabResources.getThermalSpotHelper() == null) {
+        if (frame != null && tabResources.getCount() != 0 && tabResources.getThermalSpotHelper() == null) {
+            // Create new thermalSpotsHelper if not existed
             // Execute after view measuring and layouting
             thermalImageView.post(new Runnable() {
                 @Override
                 public void run() {
+                    System.out.printf("In thermalImageView.post: tabResources.getCount=%d, tabResources.currIndex=%d\n",
+                            tabResources.getCount(),
+                            tabResources.getCurrentIndex()
+                    );
+
                     ThermalSpotsHelper thermalSpotsHelper = new ThermalSpotsHelper(
                             DumpViewerActivity.this, topView, tabResources.getRawThermalDump()
                     );
@@ -501,18 +509,18 @@ public class DumpViewerActivity extends BaseActivity {
         new Thread(new Runnable() {
             @Override
             public void run() {
-                Log.i(Config.TAG, "updateChartAxis: waiting for all addThermalDump threads finished");
+                System.out.println("updateChartAxis: waiting for all addThermalDump threads finished");
 
-                // Wait until all addThermalDump threads finished
-                addThermalDumpExecutorService.shutdown();
+                // Stop accepting new tasks (prepare for termination)
+                addThermalDumpExecutor.shutdown();
                 try {
-                    // All tasks have finished or the time has been reached
-                    addThermalDumpExecutorService.awaitTermination(1, TimeUnit.MINUTES);
+                    // Wait until all tasks have finished or the time has been reached
+                    addThermalDumpExecutor.awaitTermination(15, TimeUnit.SECONDS);
                 } catch (InterruptedException e) {}
                 if (DumpViewerActivity.this.isDestroyed())
                     return;
 
-                Log.i(Config.TAG, "updateChartAxis: addThermalDumpExecutorService terminated");
+                System.out.println("updateChartAxis: addThermalDumpExecutor terminated");
 
                 float max = Float.MIN_VALUE;
                 float min = Float.MAX_VALUE;

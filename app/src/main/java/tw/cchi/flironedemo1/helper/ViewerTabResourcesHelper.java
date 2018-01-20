@@ -23,43 +23,66 @@ public class ViewerTabResourcesHelper {
     }
 
     public void setCurrentIndex(int index) {
+        System.out.println("ViewerTabResourcesHelper: setCurrentIndex=" + index);
         this.currentIndex = index;
     }
 
     public int getCount() {
-        return thermalDumpPaths.size();
+        synchronized (listsLock) {
+            return thermalDumpPaths.size();
+        }
     }
 
     public int indexOf(String thermalDumpPath) {
-        return thermalDumpPaths.indexOf(thermalDumpPath);
+        synchronized (listsLock) {
+            return thermalDumpPaths.indexOf(thermalDumpPath);
+        }
     }
 
     public ArrayList<String> getThermalDumpPaths() {
-        return thermalDumpPaths;
+        synchronized (listsLock) {
+            return thermalDumpPaths;
+        }
     }
 
     public ArrayList<RawThermalDump> getRawThermalDumps() {
-        return rawThermalDumps;
+        synchronized (listsLock) {
+            return rawThermalDumps;
+        }
     }
 
     public String getThermlDumpPath() {
-        return thermalDumpPaths.get(currentIndex);
+        synchronized (listsLock) {
+            return thermalDumpPaths.get(currentIndex);
+        }
     }
 
     public RawThermalDump getRawThermalDump() {
-        return rawThermalDumps.get(currentIndex);
+        System.out.println("resHelper getDump currentIndex=" + currentIndex);
+        synchronized (listsLock) {
+            if (currentIndex == -1) return null;
+            return rawThermalDumps.get(currentIndex);
+        }
     }
 
     public ThermalDumpProcessor getThermalDumpProcessor() {
-        return thermalDumpProcessors.get(currentIndex);
+        synchronized (listsLock) {
+            return thermalDumpProcessors.get(currentIndex);
+        }
     }
 
     public Bitmap getThermalBitmap() {
-        return thermalBitmaps.get(currentIndex);
+        synchronized (listsLock) {
+            return thermalBitmaps.get(currentIndex);
+        }
     }
 
     public ThermalSpotsHelper getThermalSpotHelper() {
         return thermalSpotsHelpers.get(currentIndex);
+    }
+
+    public void addThermalSpotsHelper(ThermalSpotsHelper thermalSpotsHelper) {
+        thermalSpotsHelpers.append(currentIndex, thermalSpotsHelper);
     }
 
 
@@ -92,10 +115,6 @@ public class ViewerTabResourcesHelper {
             thermalSpotsHelpers.remove(removeIndex);
         }
         currentIndex = newIndex;
-    }
-
-    public void addThermalSpotsHelper(ThermalSpotsHelper thermalSpotsHelper) {
-        thermalSpotsHelpers.append(currentIndex, thermalSpotsHelper);
     }
 
 }

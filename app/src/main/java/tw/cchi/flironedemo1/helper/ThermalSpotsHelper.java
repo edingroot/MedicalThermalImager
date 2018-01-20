@@ -7,7 +7,6 @@ import android.util.SparseArray;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.RelativeLayout;
 
 import tw.cchi.flironedemo1.thermalproc.RawThermalDump;
 import tw.cchi.flironedemo1.view.ThermalSpotView;
@@ -54,6 +53,7 @@ public class ThermalSpotsHelper {
      * @param imageViewY (int)thermalImageView.getY()
      */
     public synchronized void addThermalSpot(int spotId, final int imageViewWidth, final int imageViewY) {
+        System.out.printf("addThermalSpot: %d, %d, %d\n", spotId, imageViewWidth, imageViewY);
         final ThermalSpotView thermalSpotView = new ThermalSpotView(context, spotId, true);
 
         thermalSpotView.setOnTouchListener(new View.OnTouchListener() {
