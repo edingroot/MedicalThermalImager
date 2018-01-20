@@ -9,7 +9,9 @@ import tw.cchi.flironedemo1.thermalproc.RawThermalDump;
 import tw.cchi.flironedemo1.thermalproc.ThermalDumpProcessor;
 
 public class ViewerTabResourcesHelper {
-    private int currentIndex = 0;
+    private final Object listsLock = new Object();
+    private int currentIndex = -1;
+
     private volatile ArrayList<String> thermalDumpPaths = new ArrayList<>(); // manage opened dumps by path because filepicker returns selected paths
     private volatile ArrayList<RawThermalDump> rawThermalDumps = new ArrayList<>();
     private volatile ArrayList<ThermalDumpProcessor> thermalDumpProcessors = new ArrayList<>();
@@ -21,10 +23,10 @@ public class ViewerTabResourcesHelper {
     }
 
     public void setCurrentIndex(int index) {
-        this.currentIndex = currentIndex;
+        this.currentIndex = index;
     }
 
-    public int tabsCount() {
+    public int getCount() {
         return thermalDumpPaths.size();
     }
 
@@ -69,26 +71,27 @@ public class ViewerTabResourcesHelper {
      * @param rawThermalDump
      * @param thermalDumpProcessor
      * @param thermalBitmap
-     * @return the new currentIndex
+     * @return {{@link #getCount()}}
      */
     public int addResources(String thermalDumpPath, RawThermalDump rawThermalDump,
                             ThermalDumpProcessor thermalDumpProcessor, Bitmap thermalBitmap) {
-        currentIndex++;
-
-        thermalDumpPaths.add(thermalDumpPath);
-        rawThermalDumps.add(rawThermalDump);
-        thermalDumpProcessors.add(thermalDumpProcessor);
-        thermalBitmaps.add(thermalBitmap);
-
-        return currentIndex;
+        synchronized (listsLock) {
+            thermalDumpPaths.add(thermalDumpPath);
+            rawThermalDumps.add(rawThermalDump);
+            thermalDumpProcessors.add(thermalDumpProcessor);
+            thermalBitmaps.add(thermalBitmap);
+        }
+        return getCount();
     }
 
     public void removeResources(int removeIndex, int newIndex) {
-        thermalDumpPaths.remove(removeIndex);
-        rawThermalDumps.remove(removeIndex);
-        thermalDumpProcessors.remove(removeIndex);
-        thermalBitmaps.remove(removeIndex);
-        thermalSpotsHelpers.remove(removeIndex);
+        synchronized (listsLock) {
+            thermalDumpPaths.remove(removeIndex);
+            rawThermalDumps.remove(removeIndex);
+            thermalDumpProcessors.remove(removeIndex);
+            thermalBitmaps.remove(removeIndex);
+            thermalSpotsHelpers.remove(removeIndex);
+        }
         currentIndex = newIndex;
     }
 

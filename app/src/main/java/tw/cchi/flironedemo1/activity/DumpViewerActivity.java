@@ -43,11 +43,10 @@ import tw.cchi.flironedemo1.view.MultiChartView;
 
 @RuntimePermissions
 public class DumpViewerActivity extends BaseActivity {
-
-    private final Object dumpListLock = new Object();
-    private volatile ChartParameter thermalChartParameter;
     private volatile ViewerTabResourcesHelper tabResources = new ViewerTabResourcesHelper();
+    private volatile ChartParameter thermalChartParameter;
     private ThermalDumpsRecyclerAdapter thermalDumpsRecyclerAdapter;
+
     private volatile ExecutorService addThermalDumpExecutorService;
     private boolean showingVisibleImage = false;
     private volatile boolean visibleImageAlignMode = false;
@@ -227,7 +226,7 @@ public class DumpViewerActivity extends BaseActivity {
         String[] thermalDumpExts = {".dat"};
         int MAX_FILES_COUNT = 3;
 
-        if(tabResources.tabsCount() > MAX_FILES_COUNT) {
+        if(tabResources.getCount() > MAX_FILES_COUNT) {
             showToastMessage("Cannot select more than " + MAX_FILES_COUNT + " items");
         }  else {
             FilePickerBuilder.getInstance().setMaxCount(3)
@@ -272,7 +271,7 @@ public class DumpViewerActivity extends BaseActivity {
                             addThermalDump(path);
                         }
                     } else {
-                        if (tabResources.tabsCount() == 0)
+                        if (tabResources.getCount() == 0)
                             thermalImageView.setImageBitmap(null);
                     }
                     updateChartAxis();
@@ -282,7 +281,7 @@ public class DumpViewerActivity extends BaseActivity {
     }
 
     public void onToggleHorizonChartClicked(View v) {
-        if (tabResources.tabsCount() == 0 || horizontalLineY == -1)
+        if (tabResources.getCount() == 0 || horizontalLineY == -1)
             return;
 
         if (showingChart) {
@@ -299,7 +298,7 @@ public class DumpViewerActivity extends BaseActivity {
     }
 
     public void onToggleVisibleImageClicked(View v) {
-        if (tabResources.tabsCount() == 0)
+        if (tabResources.getCount() == 0)
             return;
 
         if (showingVisibleImage) {
@@ -315,7 +314,7 @@ public class DumpViewerActivity extends BaseActivity {
     }
 
     public void onToggleVisibleImageLongClicked(View v) {
-        if (tabResources.tabsCount() == 0)
+        if (tabResources.getCount() == 0)
             return;
 
         if (visibleImageAlignMode) {
@@ -354,13 +353,10 @@ public class DumpViewerActivity extends BaseActivity {
                         horizontalLineY = thermalDump.getHeight() / 2;
                     }
 
-                    int newIndex;
-                    synchronized (dumpListLock) {
-                        tabResources.addResources(filepath, thermalDump, thermalDumpProcessor, thermalBitmap);
-                        addToChartParameter(thermalChartParameter, thermalDump, horizontalLineY);
-                        newIndex = thermalDumpsRecyclerAdapter.addDumpSwitch(thermalDump.getTitle());
-                    }
+                    tabResources.addResources(filepath, thermalDump, thermalDumpProcessor, thermalBitmap);
+                    addToChartParameter(thermalChartParameter, thermalDump, horizontalLineY);
 
+                    int newIndex = thermalDumpsRecyclerAdapter.addDumpSwitch(thermalDump.getTitle());
                     if (tabResources.getCurrentIndex() != newIndex) {
                         tabResources.setCurrentIndex(newIndex);
                         updateThermalImageView(thermalBitmap);
@@ -374,32 +370,29 @@ public class DumpViewerActivity extends BaseActivity {
     }
 
     private void removeThermalDump(int index) {
-        synchronized (dumpListLock) {
-            int currentIndex = tabResources.getCurrentIndex();
-            int newIndex = thermalDumpsRecyclerAdapter.removeDumpSwitch(index);
+        int currentIndex = tabResources.getCurrentIndex();
+        int newIndex = thermalDumpsRecyclerAdapter.removeDumpSwitch(index);
 
-            // If the dump removing is the one that currently displaying & still have some other dumps opened
-            if (currentIndex == index && newIndex != -1) {
-                updateThermalImageView(tabResources.getThermalBitmap());
+        // If the dump removing is the one that currently displaying & still have some other dumps opened
+        if (currentIndex == index && newIndex != -1) {
+            updateThermalImageView(tabResources.getThermalBitmap());
+        }
+        tabResources.removeResources(index, newIndex);
+        removeFromChartParameter(thermalChartParameter, index);
+
+        if (tabResources.getCount() == 0) {
+            thermalImageView.setImageBitmap(null);
+            if (showingVisibleImage) {
+                visibleImageView.setImageBitmap(null);
+                visibleImageView.setVisibility(View.GONE);
+                showingVisibleImage = visibleImageAlignMode = false;
             }
-            tabResources.removeResources(index, newIndex);
-            removeFromChartParameter(thermalChartParameter, index);
-
-            if (tabResources.tabsCount() == 0) {
-                thermalImageView.setImageBitmap(null);
-                if (showingVisibleImage) {
-                    visibleImageView.setImageBitmap(null);
-                    visibleImageView.setVisibility(View.GONE);
-                    showingVisibleImage = visibleImageAlignMode = false;
-                }
-            } else {
-                if (showingVisibleImage) {
-                    visibleImageAlignMode = false;
-                    showVisibleImage(tabResources.getRawThermalDump());
-                }
+        } else {
+            if (showingVisibleImage) {
+                visibleImageAlignMode = false;
+                showVisibleImage(tabResources.getRawThermalDump());
             }
         }
-
         System.gc();
     }
 
@@ -435,7 +428,7 @@ public class DumpViewerActivity extends BaseActivity {
     }
 
     private void handleThermalImageTouch(int x, int y) {
-        if (tabResources.tabsCount() == 0)
+        if (tabResources.getCount() == 0)
             return;
 
         // Set horizontal line location
@@ -458,7 +451,7 @@ public class DumpViewerActivity extends BaseActivity {
      * @param rawThermalDump
      * @param y
      */
-    private void addToChartParameter(ChartParameter chartParameter, RawThermalDump rawThermalDump, int y) {
+    private synchronized void addToChartParameter(ChartParameter chartParameter, RawThermalDump rawThermalDump, int y) {
         int width = rawThermalDump.getWidth();
         float[] temperaturePoints = new float[width];
 
