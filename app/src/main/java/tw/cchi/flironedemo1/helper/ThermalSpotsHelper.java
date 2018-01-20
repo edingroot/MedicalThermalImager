@@ -71,6 +71,7 @@ public class ThermalSpotsHelper {
 
                     case MotionEvent.ACTION_MOVE:
                         thermalSpotView.setCenterPosition(x - spotDraggingDeltaX, y - spotDraggingDeltaY);
+                        view.invalidate();
                         updateThermalValue(spotView);
                         break;
 

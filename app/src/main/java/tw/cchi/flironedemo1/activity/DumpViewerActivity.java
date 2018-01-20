@@ -104,8 +104,8 @@ public class DumpViewerActivity extends BaseActivity {
             }
         });
 
-        // TODO: use view.post(new Runnable)?
-        // Wait until the view have been measured
+        // Wait until the view have been measured (visibility state considered)
+        // Ref: https://stackoverflow.com/questions/36586146/ongloballayoutlistener-vs-postrunnable
         visibleImageView.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
             @Override
             public void onGlobalLayout() {
@@ -141,6 +141,7 @@ public class DumpViewerActivity extends BaseActivity {
                         layoutParams.rightMargin = -500;
                         layoutParams.bottomMargin = -500;
                         view.setLayoutParams(layoutParams);
+                        view.invalidate();
                         break;
 
                     case MotionEvent.ACTION_UP:
@@ -151,7 +152,6 @@ public class DumpViewerActivity extends BaseActivity {
                     case MotionEvent.ACTION_POINTER_UP:
                         break;
                 }
-                // mRootLayout.invalidate();
                 return true;
             }
         });
@@ -169,11 +169,20 @@ public class DumpViewerActivity extends BaseActivity {
 
             @Override
             public void onClick(View v, int position) {
+                ThermalSpotsHelper thermalSpotsHelper;
+
+                // Hide all spots of the old dump, switch to new tab resources, show spots of the new dump
+                thermalSpotsHelper = tabResources.getThermalSpotHelper();
+                if (thermalSpotsHelper != null) thermalSpotsHelper.setSpotsVisible(false);
                 tabResources.setCurrentIndex(position);
+                thermalSpotsHelper = tabResources.getThermalSpotHelper();
+                if (thermalSpotsHelper != null) thermalSpotsHelper.setSpotsVisible(false);
+
                 if (showingVisibleImage) {
                     visibleImageAlignMode = false;
                     showVisibleImage(tabResources.getRawThermalDump());
                 }
+
                 updateThermalImageView(tabResources.getThermalBitmap());
             }
 
