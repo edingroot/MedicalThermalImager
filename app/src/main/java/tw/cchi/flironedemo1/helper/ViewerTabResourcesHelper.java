@@ -11,12 +11,14 @@ import tw.cchi.flironedemo1.thermalproc.ThermalDumpProcessor;
 public class ViewerTabResourcesHelper {
     private final Object listsLock = new Object();
     private int currentIndex = -1;
+    private int thermalSpotHelperId = 0;
 
-    private volatile ArrayList<String> thermalDumpPaths = new ArrayList<>(); // manage opened dumps by path because filepicker returns selected paths
-    private volatile ArrayList<RawThermalDump> rawThermalDumps = new ArrayList<>();
-    private volatile ArrayList<ThermalDumpProcessor> thermalDumpProcessors = new ArrayList<>();
-    private volatile ArrayList<Bitmap> thermalBitmaps = new ArrayList<>();
-    private SparseArray<ThermalSpotsHelper> thermalSpotsHelpers = new SparseArray<>(); // <thermalDumpIndex, ThermalSpotsHelper>
+    private ArrayList<String> thermalDumpPaths = new ArrayList<>(); // manage opened dumps by path because filepicker returns selected paths
+    private ArrayList<RawThermalDump> rawThermalDumps = new ArrayList<>();
+    private ArrayList<ThermalDumpProcessor> thermalDumpProcessors = new ArrayList<>();
+    private ArrayList<Bitmap> thermalBitmaps = new ArrayList<>();
+    private ArrayList<Integer> thermalSpotHelperIds = new ArrayList<>(); // <index, thermalSpotHelperId>
+    private SparseArray<ThermalSpotsHelper> thermalSpotsHelpers = new SparseArray<>(); // <thermalSpotHelperId, ThermalSpotHelper>
 
     public int getCurrentIndex() {
         return currentIndex;
@@ -77,12 +79,25 @@ public class ViewerTabResourcesHelper {
         }
     }
 
+    /**
+     * @return null if not existed
+     */
     public ThermalSpotsHelper getThermalSpotHelper() {
-        return thermalSpotsHelpers.get(currentIndex);
+        synchronized (listsLock) {
+            if (thermalSpotHelperIds.size() > currentIndex) {
+                return thermalSpotsHelpers.get(thermalSpotHelperIds.get(currentIndex));
+            } else {
+                return null;
+            }
+        }
     }
 
     public void addThermalSpotsHelper(ThermalSpotsHelper thermalSpotsHelper) {
-        thermalSpotsHelpers.append(currentIndex, thermalSpotsHelper);
+        synchronized (listsLock) {
+            thermalSpotHelperIds.add(thermalSpotHelperId);
+            thermalSpotsHelpers.append(thermalSpotHelperId, thermalSpotsHelper);
+            thermalSpotHelperId++;
+        }
     }
 
 
@@ -113,10 +128,19 @@ public class ViewerTabResourcesHelper {
             thermalDumpProcessors.remove(removeIndex);
             thermalBitmaps.remove(removeIndex);
 
-            thermalSpotsHelpers.get(removeIndex).dispose();
-            thermalSpotsHelpers.remove(removeIndex);
+            if (getThermalSpotHelper() != null) {
+                getThermalSpotHelper().dispose();
+                removeThermalSpotsHelper(removeIndex);
+            }
         }
         currentIndex = newIndex;
+    }
+
+    private void removeThermalSpotsHelper(int index) {
+        if (thermalSpotHelperIds.size() > currentIndex) {
+            thermalSpotsHelpers.remove(thermalSpotHelperIds.get(index));
+            thermalSpotHelperIds.remove(index);
+        }
     }
 
 }

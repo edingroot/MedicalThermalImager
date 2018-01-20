@@ -383,13 +383,19 @@ public class DumpViewerActivity extends BaseActivity {
         int currentIndex = tabResources.getCurrentIndex();
         int newIndex = thermalDumpsRecyclerAdapter.removeDumpSwitch(index);
 
+        tabResources.removeResources(index, newIndex);
+        removeDataFromChartParameter(thermalChartParameter, index);
+
         // If the dump removing is the one that currently displaying & still have some other dumps opened
         if (currentIndex == index && newIndex != -1 && !ignoreImageViewUpdate) {
             System.out.printf("removeThermalDump: update thermal image view - currIndex=%d, newIndex=%d\n", currentIndex, newIndex);
+            ThermalSpotsHelper thermalSpotsHelper;
+
             updateThermalImageView(tabResources.getThermalBitmap());
+            thermalSpotsHelper = tabResources.getThermalSpotHelper();
+            if (thermalSpotsHelper != null)
+                thermalSpotsHelper.setSpotsVisible(true);
         }
-        tabResources.removeResources(index, newIndex);
-        removeFromChartParameter(thermalChartParameter, index);
 
         if (tabResources.getCount() == 0) {
             thermalImageView.setImageBitmap(null);
@@ -477,12 +483,13 @@ public class DumpViewerActivity extends BaseActivity {
     }
 
     /**
-     * Note: Not calling updateChartAxis() here
+     * Remove data (float array) from chart parameter by index.
+     *  Note: Not calling updateChartAxis() here
      *
      * @param chartParameter
      * @param index
      */
-    private void removeFromChartParameter(ChartParameter chartParameter, int index) {
+    private void removeDataFromChartParameter(ChartParameter chartParameter, int index) {
         chartParameter.removeFloatArray(index);
     }
 
