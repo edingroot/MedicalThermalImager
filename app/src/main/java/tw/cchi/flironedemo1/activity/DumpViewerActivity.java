@@ -69,7 +69,6 @@ public class DumpViewerActivity extends BaseActivity {
     @BindView(R.id.visibleImageView) ImageView visibleImageView;
     @BindView(R.id.thermalChartView) MultiChartView thermalChartView;
 
-
     @BindView(R.id.horizontalLine) View horizontalLine;
 
     @BindView(R.id.btnToggleVisible) ImageView btnToggleVisible;
@@ -277,8 +276,11 @@ public class DumpViewerActivity extends BaseActivity {
                         if (addThermalDumpExecutor == null || addThermalDumpExecutor.isShutdown() || addThermalDumpExecutor.isTerminated())
                             addThermalDumpExecutor = Executors.newCachedThreadPool();
 
+                        // Make a short delay to avoid various async problems :P
+                        // and also make dumps added sequentially
+                        int delay = 0;
                         for (String path : addPaths) {
-                            addThermalDump(path);
+                            addThermalDump(path, 30 * delay++);
                         }
                     } else {
                         if (tabResources.getCount() == 0)
@@ -349,10 +351,14 @@ public class DumpViewerActivity extends BaseActivity {
         });
     }
 
-    private void addThermalDump(final String filepath) {
+    private void addThermalDump(final String filepath, final long delay) {
         addThermalDumpExecutor.execute(new Runnable() {
             @Override
             public void run() {
+                try {
+                    Thread.sleep(delay);
+                } catch (InterruptedException e) {}
+
                 RawThermalDump thermalDump = RawThermalDump.readFromDumpFile(filepath);
 
                 if (thermalDump != null) {
@@ -449,6 +455,7 @@ public class DumpViewerActivity extends BaseActivity {
     }
 
     private void handleThermalImageTouch(int x, int y) {
+        System.out.printf("handleThermalImageTouch: x=%d, y=%d\n", x, y);
         if (tabResources.getCount() == 0)
             return;
 
