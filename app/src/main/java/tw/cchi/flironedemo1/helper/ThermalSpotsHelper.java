@@ -2,7 +2,6 @@ package tw.cchi.flironedemo1.helper;
 
 import android.content.Context;
 import android.graphics.Point;
-import android.util.Pair;
 import android.util.SparseArray;
 import android.view.MotionEvent;
 import android.view.View;
@@ -21,7 +20,7 @@ public class ThermalSpotsHelper {
     private boolean spotsVisible = true;
 
     private SparseArray<ThermalSpotView> thermalSpotViews = new SparseArray<>(); // <spotId, ThermalSpotView>
-    private SparseArray<Point> thermalPixelPositions = new SparseArray<>(); // <spotId, actual position on the thermal dump>
+//    private SparseArray<Point> actualThermalPositions = new SparseArray<>(); // <spotId, actual position on the thermal dump>
 
     private int spotDraggingDeltaX;
     private int spotDraggingDeltaY;
@@ -50,11 +49,12 @@ public class ThermalSpotsHelper {
 
     /**
      * @param imageViewWidth thermalImageView.getMeasuredWidth()
-     * @param imageViewY (int)thermalImageView.getY()
+     * @param imageViewRawY  thermalImageView.getTop() + Sum(ALL_PARENTS_OF_thermalImageView .getTop())
      */
-    public void setImageViewMetrics(int imageViewWidth, int imageViewY) {
+    public void setImageViewMetrics(int imageViewWidth, int imageViewRawY) {
+        System.out.printf("setImageViewMetrics: imageViewWidth=%d, imageViewRawY=%d\n", imageViewWidth, imageViewRawY);
         this.imageViewWidth = imageViewWidth;
-        this.imageViewY =imageViewY;
+        this.imageViewY =imageViewRawY;
     }
 
     public synchronized void addThermalSpot(int spotId) {
@@ -133,7 +133,7 @@ public class ThermalSpotsHelper {
         Point thermalPosition = new Point(
                 thermalViewPositionConversion(viewPosition.x, viewPosition.y, ratio)
         );
-        thermalPixelPositions.append(spotView.getSpotId(), thermalPosition);
+//        actualThermalPositions.append(spotView.getSpotId(), thermalPosition);
 
         double averageC = rawThermalDump.getTemperature9Average(thermalPosition.x, thermalPosition.y);
         spotView.setTemperature(averageC);

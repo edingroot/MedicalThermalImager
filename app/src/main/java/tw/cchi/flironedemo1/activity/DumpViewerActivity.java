@@ -457,15 +457,33 @@ public class DumpViewerActivity extends BaseActivity {
                             tabResources.getCurrentIndex()
                     );
 
-                    ThermalSpotsHelper thermalSpotsHelper = new ThermalSpotsHelper(
-                            DumpViewerActivity.this, topView, tabResources.getRawThermalDump()
-                    );
+                    // Make a short delay (at least 20ms) to wait ui thread for correct thermalImageView.getTop() value
+                    new Thread(new Runnable() {
+                        @Override
+                        public void run() {
+                            try {
+                                Thread.sleep(100);
+                            } catch (InterruptedException e) {}
 
-                    // Add a spot numbered 1 by default
-                    thermalSpotsHelper.addThermalSpot(1);
-                    thermalSpotsHelper.setImageViewMetrics(thermalImageView.getMeasuredWidth(), thermalImageView.getTop());
+                            final ThermalSpotsHelper thermalSpotsHelper = new ThermalSpotsHelper(
+                                    DumpViewerActivity.this, topView, tabResources.getRawThermalDump()
+                            );
 
-                    tabResources.addThermalSpotsHelper(thermalSpotsHelper);
+                            // Add a spot numbered 1 by default
+                            runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    thermalSpotsHelper.addThermalSpot(1);
+                                }
+                            });
+
+                            thermalSpotsHelper.setImageViewMetrics(
+                                    thermalImageView.getMeasuredWidth(),
+                                    thermalImageView.getTop() + layoutThermalViews.getTop()
+                            );
+                            tabResources.addThermalSpotsHelper(thermalSpotsHelper);
+                        }
+                    }).start();
                 }
             });
         }

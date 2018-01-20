@@ -9,10 +9,10 @@
         android:id="@+id/txtSpotId"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignEnd="@id/spotMeterIcon"
+        android:layout_alignEnd="@id/txtSpotValue"
         android:layout_alignParentTop="true"
         android:layout_marginBottom="-6dp"
-        android:layout_marginStart="30dp"
+        android:layout_marginEnd="5dp"
         android:alpha="0.9"
         android:shadowColor="#000000"
         android:shadowDx="0"
@@ -42,6 +42,7 @@
         android:shadowDx="0"
         android:shadowDy="0"
         android:shadowRadius="3"
-        android:textAppearance="?android:attr/textAppearanceSmall"/>
+        android:textAppearance="?android:attr/textAppearanceSmall"
+        android:textSize="12sp"/>
 
 </RelativeLayout>
