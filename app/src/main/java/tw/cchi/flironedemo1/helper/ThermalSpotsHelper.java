@@ -15,11 +15,13 @@ public class ThermalSpotsHelper {
     private Context context;
     private ViewGroup parentView;
     private RawThermalDump rawThermalDump;
+    private int lastSpotId = -1;
+    private int imageViewWidth = -1;
+    private int imageViewY = -1;
     private boolean spotsVisible = true;
 
     private SparseArray<ThermalSpotView> thermalSpotViews = new SparseArray<>(); // <spotId, ThermalSpotView>
     private SparseArray<Point> thermalPixelPositions = new SparseArray<>(); // <spotId, actual position on the thermal dump>
-    private SparseArray<Pair<Integer, Integer>> imageViewMetrics = new SparseArray<>(); // <spotId, Pair<width, pY + parentsY>>
 
     private int spotDraggingDeltaX;
     private int spotDraggingDeltaY;
@@ -47,12 +49,15 @@ public class ThermalSpotsHelper {
     }
 
     /**
-     *
-     * @param spotId
      * @param imageViewWidth thermalImageView.getMeasuredWidth()
      * @param imageViewY (int)thermalImageView.getY()
      */
-    public synchronized void addThermalSpot(int spotId, final int imageViewWidth, final int imageViewY) {
+    public void setImageViewMetrics(int imageViewWidth, int imageViewY) {
+        this.imageViewWidth = imageViewWidth;
+        this.imageViewY =imageViewY;
+    }
+
+    public synchronized void addThermalSpot(int spotId) {
         System.out.printf("addThermalSpot: %d, %d, %d\n", spotId, imageViewWidth, imageViewY);
         final ThermalSpotView thermalSpotView = new ThermalSpotView(context, spotId, true);
 
@@ -86,7 +91,7 @@ public class ThermalSpotsHelper {
 
         thermalSpotViews.append(spotId, thermalSpotView);
         parentView.addView(thermalSpotView);
-        imageViewMetrics.append(spotId, new Pair(imageViewWidth, imageViewY));
+        lastSpotId = spotId;
 
         // After view is rendered, run on UI thread
         thermalSpotView.post(new Runnable() {
@@ -97,17 +102,34 @@ public class ThermalSpotsHelper {
         });
     }
 
+    public int getLastSpotId() {
+        return lastSpotId;
+    }
+
+    public void removeLastThermalSpot() {
+        ThermalSpotView thermalSpotView = thermalSpotViews.get(lastSpotId);
+        parentView.removeView(thermalSpotView);
+        thermalSpotViews.remove(lastSpotId);
+        lastSpotId = thermalSpotViews.keyAt(thermalSpotViews.size() - 1);
+    }
+
     public void dispose() {
         setSpotsVisible(false);
     }
 
+    /**
+     * Note: This method should be called after {@link #setImageViewMetrics(int, int)} called
+     *
+     * @param spotView
+     */
     private void updateThermalValue(ThermalSpotView spotView) {
-        int imageViewWidth = imageViewMetrics.get(spotView.getSpotId()).first;
-        int offsetY = imageViewMetrics.get(spotView.getSpotId()).second;
+        if (imageViewWidth == -1 || imageViewY == -1) {
+            throw new RuntimeException("Error: cannot calculate position conversion ratio due to image view metrics not set");
+        }
         double ratio = (double) rawThermalDump.getWidth() / imageViewWidth;
 
         Point viewPosition = spotView.getCenterPosition();
-        viewPosition.y -= offsetY;
+        viewPosition.y -= imageViewY;
         Point thermalPosition = new Point(
                 thermalViewPositionConversion(viewPosition.x, viewPosition.y, ratio)
         );

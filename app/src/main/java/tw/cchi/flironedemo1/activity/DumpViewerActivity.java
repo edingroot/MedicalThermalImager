@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
+import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -72,6 +73,7 @@ public class DumpViewerActivity extends BaseActivity {
     @BindView(R.id.horizontalLine) View horizontalLine;
 
     @BindView(R.id.btnToggleVisible) ImageView btnToggleVisible;
+    @BindView(R.id.fabAddSpot) FloatingActionButton fabAddSpot;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -218,6 +220,14 @@ public class DumpViewerActivity extends BaseActivity {
                 return true;
             }
         });
+
+        fabAddSpot.setOnLongClickListener(new View.OnLongClickListener() {
+            @Override
+            public boolean onLongClick(View v) {
+                onFabAddSpotLongClicked(v);
+                return true;
+            }
+        });
     }
 
     @Override
@@ -280,7 +290,7 @@ public class DumpViewerActivity extends BaseActivity {
                         // and also make dumps added sequentially
                         int delay = 0;
                         for (String path : addPaths) {
-                            addThermalDump(path, 30 * delay++);
+                            addThermalDump(path, 50 * delay++);
                         }
                     } else {
                         if (tabResources.getCount() == 0)
@@ -289,23 +299,6 @@ public class DumpViewerActivity extends BaseActivity {
                     updateChartAxis();
                 }
                 break;
-        }
-    }
-
-    public void onToggleHorizonChartClicked(View v) {
-        if (tabResources.getCount() == 0 || horizontalLineY == -1)
-            return;
-
-        if (showingChart) {
-            thermalChartView.setVisibility(View.GONE);
-            horizontalLine.setVisibility(View.GONE);
-            showingChart = false;
-        } else {
-            updateChartParameter(thermalChartParameter, horizontalLineY);
-            thermalChartView.updateChart(thermalChartParameter);
-            thermalChartView.setVisibility(View.VISIBLE);
-            horizontalLine.setVisibility(View.VISIBLE);
-            showingChart = true;
         }
     }
 
@@ -340,6 +333,33 @@ public class DumpViewerActivity extends BaseActivity {
                 visibleImageView.setAlpha(visibleImageAlignMode ? Config.DUMP_VISUAL_MASK_ALPHA / 255f : 1f);
             }
         }
+    }
+
+    public void onToggleHorizonChartClicked(View v) {
+        if (tabResources.getCount() == 0 || horizontalLineY == -1)
+            return;
+
+        if (showingChart) {
+            thermalChartView.setVisibility(View.GONE);
+            horizontalLine.setVisibility(View.GONE);
+            showingChart = false;
+        } else {
+            updateChartParameter(thermalChartParameter, horizontalLineY);
+            thermalChartView.updateChart(thermalChartParameter);
+            thermalChartView.setVisibility(View.VISIBLE);
+            horizontalLine.setVisibility(View.VISIBLE);
+            showingChart = true;
+        }
+    }
+
+    public void onFabAddSpotClicked(View v) {
+        ThermalSpotsHelper thermalSpotsHelper = tabResources.getThermalSpotHelper();
+        thermalSpotsHelper.addThermalSpot(thermalSpotsHelper.getLastSpotId() + 1);
+    }
+
+    public void onFabAddSpotLongClicked(View v) {
+        ThermalSpotsHelper thermalSpotsHelper = tabResources.getThermalSpotHelper();
+        thermalSpotsHelper.removeLastThermalSpot();
     }
 
     private void showToastMessage(final String message) {
@@ -442,11 +462,8 @@ public class DumpViewerActivity extends BaseActivity {
                     );
 
                     // Add a spot numbered 1 by default
-                    thermalSpotsHelper.addThermalSpot(
-                            1,
-                            thermalImageView.getMeasuredWidth(),
-                            thermalImageView.getTop()
-                    );
+                    thermalSpotsHelper.addThermalSpot(1);
+                    thermalSpotsHelper.setImageViewMetrics(thermalImageView.getMeasuredWidth(), thermalImageView.getTop());
 
                     tabResources.addThermalSpotsHelper(thermalSpotsHelper);
                 }
