@@ -479,6 +479,7 @@ public class DumpViewerActivity extends BaseActivity {
 
                             thermalSpotsHelper.setImageViewMetrics(
                                     thermalImageView.getMeasuredWidth(),
+                                    thermalImageView.getMeasuredHeight(),
                                     thermalImageView.getTop() + layoutThermalViews.getTop()
                             );
                             tabResources.addThermalSpotsHelper(thermalSpotsHelper);

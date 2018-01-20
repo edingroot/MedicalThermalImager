@@ -7,6 +7,7 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 
+import tw.cchi.flironedemo1.AppUtils;
 import tw.cchi.flironedemo1.thermalproc.RawThermalDump;
 import tw.cchi.flironedemo1.view.ThermalSpotView;
 
@@ -16,7 +17,8 @@ public class ThermalSpotsHelper {
     private RawThermalDump rawThermalDump;
     private int lastSpotId = -1;
     private int imageViewWidth = -1;
-    private int imageViewY = -1;
+    private int imageViewHeight = -1;
+    private int imageViewRawY = -1;
     private boolean spotsVisible = true;
 
     private SparseArray<ThermalSpotView> thermalSpotViews = new SparseArray<>(); // <spotId, ThermalSpotView>
@@ -48,17 +50,20 @@ public class ThermalSpotsHelper {
     }
 
     /**
-     * @param imageViewWidth thermalImageView.getMeasuredWidth()
-     * @param imageViewRawY  thermalImageView.getTop() + Sum(ALL_PARENTS_OF_thermalImageView .getTop())
+     * @param imageViewWidth  thermalImageView.getMeasuredWidth()
+     * @param imageViewHeight thermalImageView.getMeasuredHeight()
+     * @param imageViewRawY   thermalImageView.getTop() + Sum(ALL_PARENTS_OF_thermalImageView .getTop())
      */
-    public void setImageViewMetrics(int imageViewWidth, int imageViewRawY) {
-        System.out.printf("setImageViewMetrics: imageViewWidth=%d, imageViewRawY=%d\n", imageViewWidth, imageViewRawY);
+    public void setImageViewMetrics(int imageViewWidth, int imageViewHeight, int imageViewRawY) {
+        System.out.printf("setImageViewMetrics: imageViewWidth=%d, imageViewHeight=%d, imageViewRawY=%d\n",
+                imageViewWidth, imageViewHeight, imageViewRawY);
         this.imageViewWidth = imageViewWidth;
-        this.imageViewY =imageViewRawY;
+        this.imageViewHeight = imageViewHeight;
+        this.imageViewRawY =imageViewRawY;
     }
 
     public synchronized void addThermalSpot(int spotId) {
-        System.out.printf("addThermalSpot: %d, %d, %d\n", spotId, imageViewWidth, imageViewY);
+        System.out.printf("addThermalSpot: spotId=%d\n", spotId);
         final ThermalSpotView thermalSpotView = new ThermalSpotView(context, spotId, true);
 
         thermalSpotView.setOnTouchListener(new View.OnTouchListener() {
@@ -75,7 +80,9 @@ public class ThermalSpotsHelper {
                         spotDraggingDeltaY = y - centerPoint.y;
 
                     case MotionEvent.ACTION_MOVE:
-                        thermalSpotView.setCenterPosition(x - spotDraggingDeltaX, y - spotDraggingDeltaY);
+                        int centerX = AppUtils.trimByRange(x - spotDraggingDeltaX, 0, imageViewWidth);
+                        int centerY = AppUtils.trimByRange(y - spotDraggingDeltaY, imageViewRawY, imageViewRawY + imageViewHeight);
+                        thermalSpotView.setCenterPosition(centerX, centerY);
                         view.invalidate();
                         updateThermalValue(spotView);
                         break;
@@ -123,13 +130,13 @@ public class ThermalSpotsHelper {
      * @param spotView
      */
     private void updateThermalValue(ThermalSpotView spotView) {
-        if (imageViewWidth == -1 || imageViewY == -1) {
+        if (imageViewWidth == -1 || imageViewRawY == -1) {
             throw new RuntimeException("Error: cannot calculate position conversion ratio due to image view metrics not set");
         }
         double ratio = (double) rawThermalDump.getWidth() / imageViewWidth;
 
         Point viewPosition = spotView.getCenterPosition();
-        viewPosition.y -= imageViewY;
+        viewPosition.y -= imageViewRawY;
         Point thermalPosition = new Point(
                 thermalViewPositionConversion(viewPosition.x, viewPosition.y, ratio)
         );
