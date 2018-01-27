@@ -2,40 +2,85 @@ package tw.cchi.flironedemo1.dialog;
 
 import android.app.Dialog;
 import android.content.Context;
+import android.os.Handler;
+import android.os.Looper;
+import android.os.Message;
+import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ProgressBar;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import tw.cchi.flironedemo1.R;
+import tw.cchi.flironedemo1.adapter.PatientSelectsRecyclerAdapter;
+import tw.cchi.flironedemo1.db.AppDatabase;
+import tw.cchi.flironedemo1.db.Patient;
 
 public class SelectPatientDialog {
-    private Context context;
+    private static final int UPDATE_PATIENT = 1;
+
+    private final Context context;
     private OnInteractionListener onInteractionListener;
     private Dialog dialog;
-    private String selectedPatientUUID;
+    private Handler handler;
+    private AppDatabase database;
+    private PatientSelectsRecyclerAdapter patientRecyclerAdapter;
+
+    private List<Patient> patients;
+    private String selectedPatientUUID = null;
 
     @BindView(R.id.editPatientName) EditText editPatientName;
     @BindView(R.id.btnAddPatient) Button btnAddPatient;
+    @BindView(R.id.progressBarLoading) ProgressBar progressBarLoading;
     @BindView(R.id.recyclerPatientList) RecyclerView recyclerPatientList;
     @BindView(R.id.btnOk) Button btnOk;
 
     public SelectPatientDialog(Context context, OnInteractionListener onInteractionListener) {
         this.context = context;
         this.onInteractionListener = onInteractionListener;
+        this.database = AppDatabase.getInstance(context);
+
+        this.handler = new Handler(Looper.getMainLooper()) {
+            @Override
+            public void handleMessage(Message message) {
+                switch (message.what) {
+                    case UPDATE_PATIENT:
+                        ArrayList<String> patientNames = new ArrayList<>();
+                        for (Patient patient : patients)
+                            patientNames.add(patient.getName());
+                        patientRecyclerAdapter.setPatientNames(patientNames);
+                        progressBarLoading.setVisibility(View.GONE);
+                        recyclerPatientList.setVisibility(View.VISIBLE);
+                        break;
+                }
+            }
+        };
     }
 
     public SelectPatientDialog show() {
         dialog = new Dialog(context, R.style.DialogTheme);
         dialog.setContentView(R.layout.dialog_select_patient);
         ButterKnife.bind(this, dialog);
+        dialog.setTitle(context.getString(R.string.select_patient));
         initComponents();
 
-        dialog.setTitle(context.getString(R.string.select_patient));
-        dialog.show();
+        // Load data from database
+        setUILoading();
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                patients = database.patientDAO().getAll();
+                handler.sendEmptyMessage(UPDATE_PATIENT);
+            }
+        }).start();
 
+        dialog.show();
         return this;
     }
 
@@ -43,8 +88,16 @@ public class SelectPatientDialog {
         btnAddPatient.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                String patientName = editPatientName.getText().toString();
-                // TODO
+                final String patientName = editPatientName.getText().toString();
+                setUILoading();
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        database.patientDAO().insertAll(new Patient(patientName));
+                        patients = database.patientDAO().getAll();
+                        handler.sendEmptyMessage(UPDATE_PATIENT);
+                    }
+                }).start();
             }
         });
 
@@ -55,11 +108,41 @@ public class SelectPatientDialog {
                 dismiss();
             }
         });
+
+        patientRecyclerAdapter = new PatientSelectsRecyclerAdapter(context, new PatientSelectsRecyclerAdapter.OnInteractionListener() {
+            @Override
+            public void onSelected(View v, int position) {
+                selectedPatientUUID = position == -1 ? null : patients.get(position).getUuid();
+            }
+
+            @Override
+            public void onRemoveClicked(View v, final int position) {
+                // TODO: confirm before removal
+                // Remove patient data from database
+                setUILoading();
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        Patient patientRemoving = patients.get(position);
+                        if (selectedPatientUUID.equals(patientRemoving.getUuid()))
+                            patientRecyclerAdapter.setSelectedPosition(-1);
+
+                        database.patientDAO().delete(patientRemoving);
+                        patients = database.patientDAO().getAll();
+                        handler.sendEmptyMessage(UPDATE_PATIENT);
+                    }
+                }).start();
+            }
+        });
+        recyclerPatientList.setAdapter(patientRecyclerAdapter);
+        recyclerPatientList.setLayoutManager(
+                new LinearLayoutManager(context, LinearLayoutManager.VERTICAL, false)
+        );
     }
 
-    public void setSelectedPatientUUID(String selectedPatientUUID) {
-        this.selectedPatientUUID = selectedPatientUUID;
-        // TODO
+    private void setUILoading() {
+        progressBarLoading.setVisibility(View.VISIBLE);
+        recyclerPatientList.setVisibility(View.GONE);
     }
 
     public void dismiss() {
@@ -70,5 +153,4 @@ public class SelectPatientDialog {
     public interface OnInteractionListener {
         void onOkClicked(String selectedPatientUUID);
     }
-
 }

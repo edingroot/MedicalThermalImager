@@ -16,6 +16,7 @@
     <string name="add">Add</string>
     <string name="remove">Remove</string>
     <string name="close">Close</string>
+    <string name="ok">OK</string>
 
     <!-- PreviewActivity: Secondary Controls Panel -->
     <string name="contrast">Contrast</string>

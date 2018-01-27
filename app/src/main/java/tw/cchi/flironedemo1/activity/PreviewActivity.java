@@ -135,7 +135,7 @@ public class PreviewActivity extends BaseActivity implements Device.Delegate, Fr
 
         /* contentView.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onClick(View view) {
+            public void onSelected(View view) {
                 resetAnalysis();
             }
         }); */
@@ -171,7 +171,7 @@ public class PreviewActivity extends BaseActivity implements Device.Delegate, Fr
                 }
                 mScaleDetector.onTouchEvent(event);
 
-                // Consume the event, which onClick event will not triggered
+                // Consume the event, which onSelected event will not triggered
                 return true;
             }
         });
