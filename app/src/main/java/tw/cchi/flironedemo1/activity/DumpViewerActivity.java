@@ -27,6 +27,7 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import droidninja.filepicker.FilePickerBuilder;
 import droidninja.filepicker.FilePickerConst;
+import droidninja.filepicker.models.sort.SortingTypes;
 import droidninja.filepicker.utils.Orientation;
 import permissions.dispatcher.NeedsPermission;
 import permissions.dispatcher.RuntimePermissions;
@@ -251,6 +252,7 @@ public class DumpViewerActivity extends BaseActivity {
                     .setSelectedFiles(tabResources.getThermalDumpPaths())
                     .setActivityTheme(R.style.FilePickerTheme)
                     .addFileSupport("ThermalDump", thermalDumpExts)
+                    .sortDocumentsBy(SortingTypes.name)
                     .enableDocSupport(false)
                     .withOrientation(Orientation.PORTRAIT_ONLY)
                     .pickFile(this);
