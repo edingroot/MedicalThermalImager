@@ -26,7 +26,8 @@ public class ThermalDumpProcessor {
     private volatile Mat generatedImage = null;
 
     static {
-        OpenCVLoader.initDebug();
+        OpenCVLoader.initDebug(); // [For Android]
+        // System.loadLibrary(Core.NATIVE_LIBRARY_NAME); // [For native java]
     }
 
     public ThermalDumpProcessor(RawThermalDump thermalDump) {
@@ -58,7 +59,7 @@ public class ThermalDumpProcessor {
         for (int i = 0; i < pixelCount; i++) {
             thermalValues[i] = thermalValues10[i] * 10;
         }
-        return new RawThermalDump(width, height, thermalValues);
+        return new RawThermalDump(1, width, height, thermalValues);
     }
 
     public void autoFilter() {
@@ -152,7 +153,7 @@ public class ThermalDumpProcessor {
     }
 
     /**
-     * Get generated image with contrast adjusted with contrastRatio.
+     * [For Android] Get generated image with contrast adjusted with contrastRatio.
      *
      * @param contrastRatio Enhance contrast if > 1 and vise versa.
      */

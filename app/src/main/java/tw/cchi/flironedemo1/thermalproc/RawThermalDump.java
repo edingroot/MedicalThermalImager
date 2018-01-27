@@ -3,42 +3,64 @@ package tw.cchi.flironedemo1.thermalproc;
 import com.flir.flironesdk.RenderedImage;
 
 import org.apache.commons.io.FileUtils;
+import org.opencv.core.Point;
 
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.nio.charset.Charset;
+import java.nio.charset.CharsetEncoder;
+import java.util.ArrayList;
+import java.util.Arrays;
 
 import tw.cchi.flironedemo1.AppUtils;
 import tw.cchi.flironedemo1.Config;
 
 /**
- * File format V1:
+ * File format v1:
  *  Bytes / Data (LSB, MSB), integer
- *  1 ~ 2		width (number of columns)
- *  3 ~ 4		height (number of rows)
- *  5 ~ N		each thermal pixel is stored by 2 bytes (N=width*height*2 + 4)
- *  (N+1)		EOF
+ *  0 ~ 1		width (number of columns)
+ *  2 ~ 3		height (number of rows)
+ *  4 ~ M		each thermal pixel is stored by 2 bytes (N=width*height*2 + 4 - 1)
+ *  (M+1)		EOF
  *
- * File format V2:
- *  1 ~ 2			width (number of columns)
- *  3 ~ 4			height (number of rows)
- *  5 ~ M			each thermal pixel is stored by 2 bytes (M=2*width*height + 4)
- *  (M+1) ~ (M+2)	visible image alignment X offset
- *  (M+3) ~ (M+4)	visible image alignment Y offset
- *  (M+5)			EOF
+ * File format v2:
+ *  0 ~ 1		     width (number of columns)
+ *  2 ~ 3		     height (number of rows)
+ *  4 ~ M			 each thermal pixel is stored by 2 bytes (M=2*width*height + 4 - 1)
+ *  (M+1) ~ (M+2)	 visible image alignment X offset
+ *  (M+3) ~ (M+4)	 visible image alignment Y offset
+ *  (M+5)			 EOF
+ *
+ * File format v3:
+ *  0 ~ 1            width (number of columns)
+ *  2 ~ 3            height (number of rows)
+ *  4                file format version (=3)
+ *  5 ~ M            each thermal pixel is stored by 2 bytes (M=2*width*height + 5 - 1)
+ *  (M+1) ~ (M+2)    visible image alignment X offset
+ *  (M+3) ~ (M+4)    visible image alignment Y offset
+ *  (M+5) ~ (M+10)   -
+ *  (M+11) ~ (M+50)  title tag (up to 40 ascii chars)
+ *  (M+51) ~ (M+82)  patient UUID (32 ascii chars, no '-')
+ *  (M+83) ~ (M+90)  -
+ *  (M+91)           number of thermal spot markers (up to 20 spot markers)
+ *  (M+92) ~ (M+171) thermal spot marker #1 ~ #20, (x: 2 bytes, y: 2 bytes)
+ *  (M+172)          EOF
  */
 public class RawThermalDump {
     private int formatVersion = 1;
+    private String title = null;
+    private String patientUUID = null;
     private int width;
     private int height;
+    private int[] thermalValues; // 0.01K = 1, (C = val/100 - 273.15)
     private int visibleOffsetX = 0;
     private int visibleOffsetY = 0;
-    private int[] thermalValues; // 0.01K = 1, (C = val/100 - 273.15)
+    private ArrayList<Point> spotMarkers = null;
     private int maxValue = -1;
     private int minValue = -1;
     private String filepath;
-    private String title;
     private VisibleImageMask visibleImageMask; // [Android Only]
 
     // [Android Only]
@@ -48,21 +70,15 @@ public class RawThermalDump {
         this.thermalValues = renderedImage.thermalPixelValues();
     }
 
-    public RawThermalDump(int width, int height, int[] thermalValues) {
+    public RawThermalDump(int formatVersion, int width, int height, int[] thermalValues) {
+        this.formatVersion = formatVersion;
         this.width = width;
         this.height = height;
         this.thermalValues = thermalValues;
     }
 
-    public RawThermalDump(int width, int height, int[] thermalValues, int visibleOffsetX, int visualDeltaY) {
-        this(width, height, thermalValues);
-        this.visibleOffsetX = visibleOffsetX;
-        this.visibleOffsetY = visualDeltaY;
-        this.formatVersion = 2;
-    }
-
     public static RawThermalDump readFromDumpFile(String filepath) {
-        int formatVersion;
+        int formatVersion = -1, thermalPixelOffset = -1, M = -1;
         byte[] bytes = readAllBytesFromFile(filepath);
         if (bytes == null || bytes.length < 4) {
             return null;
@@ -71,48 +87,123 @@ public class RawThermalDump {
         int width = twoBytes2SignedInt(bytes[0], bytes[1]);
         int height = twoBytes2SignedInt(bytes[2], bytes[3]);
 
-        if (bytes.length == 4 + width * height * 2)
-            formatVersion = 1;
-        else if (bytes.length == 8 + width * height * 2)
-            formatVersion = 2;
-        else
+        // Validate and identify file format version
+        boolean versionMatched = false;
+        for (int i = 1; i <= 3; i++) {
+            if (bytes.length == FileFormat.getByteLength(i, width, height)) {
+                formatVersion = i;
+                thermalPixelOffset = FileFormat.getThermalPixelOffset(formatVersion);
+                M = 2 * width * height + thermalPixelOffset - 1;
+                versionMatched = true;
+                break;
+            }
+        }
+        if (!versionMatched)
             return null;
 
         int[] thermalValues = new int[width * height];
         for (int i = 0; i < width * height; i++) {
-            int byteIndex = 4 + i * 2;
+            int byteIndex = thermalPixelOffset + i * 2;
             thermalValues[i] = twoBytes2SignedInt(bytes[byteIndex], bytes[byteIndex + 1]);
         }
 
-        RawThermalDump rawThermalDump;
-        if (formatVersion == 1) {
-            rawThermalDump = new RawThermalDump(width, height, thermalValues);
-        } else {
-            int index = 4 + 2 * width * height;
-            int visibleOffsetX = twoBytes2SignedInt(bytes[index], bytes[index + 1]);
-            int visibleOffsetY = twoBytes2SignedInt(bytes[index + 2], bytes[index + 3]);
-            rawThermalDump = new RawThermalDump(width, height, thermalValues, visibleOffsetX, visibleOffsetY);
-        }
+        RawThermalDump rawThermalDump = new RawThermalDump(formatVersion, width, height, thermalValues);
         rawThermalDump.setFilepath(filepath);
+
+        if (formatVersion >= 2) {
+            rawThermalDump.visibleOffsetX = twoBytes2SignedInt(bytes[M + 1], bytes[M + 2]);
+            rawThermalDump.visibleOffsetY = twoBytes2SignedInt(bytes[M + 3], bytes[M + 4]);
+        }
+
+        if (formatVersion >= 3) {
+            // Read title tag
+            int eofIndex = M + 11;
+            while (eofIndex <= M + 50 && bytes[eofIndex] != 0) eofIndex++;
+            if (eofIndex != M + 11) {
+                rawThermalDump.title = new String(Arrays.copyOfRange(bytes, M + 11, eofIndex));
+            }
+
+            // Read patient UUID
+            if (bytes[M + 51] != 0) {
+                rawThermalDump.patientUUID = new String(Arrays.copyOfRange(bytes, M + 51, M + 82 + 1));
+            }
+
+            // Read spot marker positions
+            rawThermalDump.spotMarkers = new ArrayList<>();
+            int numberOfSpots = bytes[M + 91];
+            if (numberOfSpots > 20) {
+                return null;
+            }
+            for (int i = 0; i < numberOfSpots; i++) {
+                int index = M + 92 + 4 * i;
+                Point point = new Point(
+                        twoBytes2SignedInt(bytes[index], bytes[index + 1]),
+                        twoBytes2SignedInt(bytes[index + 2], bytes[index + 3])
+                );
+                rawThermalDump.spotMarkers.add(point);
+            }
+        }
 
         return rawThermalDump;
     }
 
     public synchronized boolean saveToFile(String filepath) {
-        int length = formatVersion == 1 ? 4 + 2 * width * height : 8 + 2 * width * height;
-        byte[] bytes = new byte[length];
+        byte[] bytes = new byte[FileFormat.getByteLength(formatVersion, width, height)];
+        int thermalPixelOffset = FileFormat.getThermalPixelOffset(formatVersion);
+        int M = width * height * 2 + thermalPixelOffset - 1;
 
         signedInt2TwoBytes(width, bytes, 0);
         signedInt2TwoBytes(height, bytes, 2);
 
-        for (int i = 0; i < width * height; i++) {
-            signedInt2TwoBytes(thermalValues[i], bytes, 4 + i * 2);
+        if (formatVersion >= 3) {
+            bytes[4] = (byte) formatVersion;
         }
 
-        if (formatVersion == 2) {
-            int index = 4 + 2 * width * height;
-            signedInt2TwoBytes(visibleOffsetX, bytes, index);
-            signedInt2TwoBytes(visibleOffsetY, bytes, index + 2);
+        for (int i = 0; i < width * height; i++) {
+            signedInt2TwoBytes(thermalValues[i], bytes, thermalPixelOffset + i * 2);
+        }
+
+        // Visible image offset
+        if (formatVersion >= 2) {
+            signedInt2TwoBytes(visibleOffsetX, bytes, M + 1);
+            signedInt2TwoBytes(visibleOffsetY, bytes, M + 3);
+        }
+
+        if (formatVersion >= 3) {
+            // Title tag
+            if (title != null) {
+                byte[] titleTagBytes = this.title.getBytes();
+                for (int i = 0; i < titleTagBytes.length; i++) {
+                    bytes[M + 11 + i] = titleTagBytes[i];
+                }
+                bytes[M + 11 + titleTagBytes.length] = 0; // end-of-string character
+            } else {
+                // Set the first char as EOF
+                bytes[M + 11] = 0;
+            }
+
+            // Patient UUID
+            if (patientUUID != null) {
+                byte[] patientUUIDBytes = this.patientUUID.getBytes();
+                for (int i = 0; i < 32; i++) {
+                    bytes[M + 51 + i] = patientUUIDBytes[i];
+                }
+            } else {
+                // Set the first char as EOF
+                bytes[M + 51] = 0;
+            }
+
+            // Spot maker positions
+            if (spotMarkers != null) {
+                if (spotMarkers.size() > 20) return false;
+                bytes[M + 91] = (byte) spotMarkers.size();
+                for (int i = 0; i < spotMarkers.size(); i++) {
+                    Point point = spotMarkers.get(i);
+                    int index = M + 92 + 4 * i;
+                    signedInt2TwoBytes((int) point.x, bytes, index);
+                    signedInt2TwoBytes((int) point.y, bytes, index + 2);
+                }
+            }
         }
 
         try {
@@ -138,7 +229,7 @@ public class RawThermalDump {
     }
 
     public void setVisibleOffsetX(int visibleOffsetX) {
-        this.formatVersion = 2;
+        if (formatVersion < 2) formatVersion = 2;
         this.visibleOffsetX = visibleOffsetX;
     }
 
@@ -147,7 +238,7 @@ public class RawThermalDump {
     }
 
     public void setVisibleOffsetY(int visibleOffsetY) {
-        this.formatVersion = 2;
+        if (formatVersion < 2) formatVersion = 2;
         this.visibleOffsetY = visibleOffsetY;
     }
 
@@ -185,6 +276,42 @@ public class RawThermalDump {
 
     public String getTitle() {
         return title;
+    }
+
+    public boolean setTitle(String title) {
+        if (title.length() > 40 || !isPureAscii(title))
+            return false;
+
+        if (formatVersion < 3) formatVersion = 3;
+        this.title = title;
+        return true;
+    }
+
+    public ArrayList<Point> getSpotMarkers() {
+        return spotMarkers;
+    }
+
+    public boolean setSpotMarkers(ArrayList<Point> spotMarkers) {
+        if (spotMarkers.size() > 20)
+            return false;
+
+        if (formatVersion < 3) formatVersion = 3;
+        this.spotMarkers = spotMarkers;
+        return true;
+    }
+
+    public String getPatientUUID() {
+        return patientUUID;
+    }
+
+    public boolean setPatientUUID(String patientUUID) {
+        patientUUID = patientUUID.replace("-", "");
+        if (patientUUID.length() != 32)
+            return false;
+
+        if (formatVersion < 3) formatVersion = 3;
+        this.patientUUID = patientUUID;
+        return true;
     }
 
     public float getMaxTemperature() {
@@ -283,6 +410,11 @@ public class RawThermalDump {
         return result;
     }
 
+    public static boolean isPureAscii(String v) {
+        CharsetEncoder asciiEncoder = Charset.forName("US-ASCII").newEncoder(); // or "ISO-8859-1" for ISO Latin 1
+        return asciiEncoder.canEncode(v);
+    }
+
     private static byte[] readAllBytesFromFile(String filepath) {
         File file = new File(filepath);
         int size = (int) file.length();
@@ -299,6 +431,27 @@ public class RawThermalDump {
         return null;
     }
 
+    private static class FileFormat {
+        private static int getByteLength(int formatVersion, int width, int height) {
+            final int[] lengths = new int[]{
+                    4   + width * height * 2,
+                    8   + width * height * 2,
+                    176 + width * height * 2
+            };
+            if (formatVersion < 1 || formatVersion > lengths.length)
+                return -1;
+            else
+                return lengths[formatVersion - 1];
+        }
+
+        private static int getThermalPixelOffset(int formatVersion) {
+            int[] offsets = new int[]{4, 4, 5};
+            if (formatVersion < 1 || formatVersion > offsets.length)
+                return -1;
+            else
+                return offsets[formatVersion - 1];
+        }
+    }
 
     // ---------------------- [Android Only] ---------------------- //
 

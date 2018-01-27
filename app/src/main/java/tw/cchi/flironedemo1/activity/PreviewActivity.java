@@ -708,7 +708,7 @@ public class PreviewActivity extends BaseActivity implements Device.Delegate, Fr
         if (thermalPixels == null)
             return;
 
-        RawThermalDump rawThermalDump = new RawThermalDump(imageWidth, imageHeight, thermalPixels);
+        RawThermalDump rawThermalDump = new RawThermalDump(1, imageWidth, imageHeight, thermalPixels);
         double averageC;
         if (thermalSpotX == -1) {
             averageC = rawThermalDump.getTemperature9Average(rawThermalDump.getWidth() / 2, rawThermalDump.getHeight() / 2);
@@ -846,7 +846,7 @@ public class PreviewActivity extends BaseActivity implements Device.Delegate, Fr
             @Override
             public void run() {
                 Log.i(Config.TAG, "thermalAnalyze preprocess started");
-                RawThermalDump thermalDump = new RawThermalDump(renderedImage.width(), renderedImage.height(), thermalPixels);
+                RawThermalDump thermalDump = new RawThermalDump(1, renderedImage.width(), renderedImage.height(), thermalPixels);
                 thermalDumpProcessor = new ThermalDumpProcessor(thermalDump);
                 thermalDumpProcessor.autoFilter();
                 thermalDumpProcessor.filterBelow(2731 + 200); // 320, 350
