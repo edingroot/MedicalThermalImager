@@ -7,10 +7,13 @@ import android.os.Looper;
 import android.os.Message;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.view.KeyEvent;
 import android.view.View;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ProgressBar;
+import android.widget.TextView;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -85,19 +88,24 @@ public class SelectPatientDialog {
     }
 
     private void initComponents() {
+        editPatientName.setImeActionLabel("Add", KeyEvent.KEYCODE_ENTER);
+        editPatientName.setOnEditorActionListener(new TextView.OnEditorActionListener() {
+            @Override
+            public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
+                handleAddPatient();
+
+                // Hide virtual keyboard
+                InputMethodManager imm = (InputMethodManager) context.getSystemService(Context.INPUT_METHOD_SERVICE);
+                if (imm != null)
+                    imm.hideSoftInputFromWindow(editPatientName.getWindowToken(), 0);
+                return true;
+            }
+        });
+
         btnAddPatient.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                final String patientName = editPatientName.getText().toString();
-                setUILoading();
-                new Thread(new Runnable() {
-                    @Override
-                    public void run() {
-                        database.patientDAO().insertAll(new Patient(patientName));
-                        patients = database.patientDAO().getAll();
-                        handler.sendEmptyMessage(UPDATE_PATIENT);
-                    }
-                }).start();
+                handleAddPatient();
             }
         });
 
@@ -118,6 +126,7 @@ public class SelectPatientDialog {
             @Override
             public void onRemoveClicked(View v, final int position) {
                 // TODO: confirm before removal
+
                 // Remove patient data from database
                 setUILoading();
                 new Thread(new Runnable() {
@@ -138,6 +147,21 @@ public class SelectPatientDialog {
         recyclerPatientList.setLayoutManager(
                 new LinearLayoutManager(context, LinearLayoutManager.VERTICAL, false)
         );
+    }
+
+    private void handleAddPatient() {
+        final String patientName = editPatientName.getText().toString();
+        editPatientName.setText("");
+
+        setUILoading();
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                database.patientDAO().insertAll(new Patient(patientName));
+                patients = database.patientDAO().getAll();
+                handler.sendEmptyMessage(UPDATE_PATIENT);
+            }
+        }).start();
     }
 
     private void setUILoading() {

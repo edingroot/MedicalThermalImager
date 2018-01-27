@@ -24,9 +24,10 @@
         android:layout_centerVertical="true"
         android:layout_margin="12dp"
         android:layout_toEndOf="@id/txtChecked"
+        android:layout_toStartOf="@id/txtRemove"
         android:text="Patient Name"
         android:textSize="20sp"
-        />
+        android:textStyle="bold"/>
 
     <TextView
         android:id="@+id/txtRemove"
@@ -34,7 +35,8 @@
         android:layout_height="wrap_content"
         android:layout_alignParentEnd="true"
         android:layout_centerVertical="true"
-        android:layout_marginEnd="10dp"
+        android:padding="10dp"
+        android:paddingStart="12dp"
         android:text="✕"
         android:textAllCaps="false"
         android:textSize="14sp"/>

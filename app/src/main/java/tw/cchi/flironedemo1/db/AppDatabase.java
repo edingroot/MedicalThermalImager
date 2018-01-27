@@ -11,8 +11,8 @@ import tw.cchi.flironedemo1.db.converter.DateConverter;
 @Database(entities = {Patient.class}, version = 1)
 @TypeConverters(DateConverter.class)
 public abstract class AppDatabase extends RoomDatabase {
-    private static AppDatabase instance;
     private static final String DATABASE_NAME = "appdb.db";
+    private static AppDatabase instance;
 
     public abstract PatientDAO patientDAO();
 
@@ -31,5 +31,4 @@ public abstract class AppDatabase extends RoomDatabase {
                 AppDatabase.class, DATABASE_NAME)
                 .build();
     }
-
 }
