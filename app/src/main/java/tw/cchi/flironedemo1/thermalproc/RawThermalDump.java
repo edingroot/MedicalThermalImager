@@ -178,7 +178,7 @@ public class RawThermalDump {
                 }
                 bytes[M + 11 + titleTagBytes.length] = 0; // end-of-string character
             } else {
-                // Set the first char as EOF
+                // Set the first char as NULL
                 bytes[M + 11] = 0;
             }
 
@@ -189,7 +189,7 @@ public class RawThermalDump {
                     bytes[M + 51 + i] = patientUUIDBytes[i];
                 }
             } else {
-                // Set the first char as EOF
+                // Set the first char as NULL
                 bytes[M + 51] = 0;
             }
 

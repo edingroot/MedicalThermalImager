@@ -12,7 +12,12 @@
     <string name="txtTuning">Tuning...</string>
     <string name="tools">Tools</string>
 
-    <!-- Secondary Controls Panel -->
+    <string name="name">Name</string>
+    <string name="add">Add</string>
+    <string name="remove">Remove</string>
+    <string name="close">Close</string>
+
+    <!-- PreviewActivity: Secondary Controls Panel -->
     <string name="contrast">Contrast</string>
     <string name="roi_threshold">ROI Thres.</string>
     <string name="rcgn_threshold">Rcgn. Thres.</string>
@@ -25,6 +30,9 @@
     <string name="pick_mask">Pick Mask Image</string>
     <string name="unset_mask">Unset Mask Image</string>
     <string name="rotate_view">Rotate View</string>
+
+    <!-- SelectPatientDialog -->
+    <string name="select_patient">Select Patient</string>
 
     <!-- Messages -->
     <string name="noContourSelected">No contour selected</string>

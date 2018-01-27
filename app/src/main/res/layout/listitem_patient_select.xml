@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:theme="@style/DialogTheme">
+
+    <TextView
+        android:id="@+id/txtChecked"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentStart="true"
+        android:layout_centerVertical="true"
+        android:layout_marginStart="5dp"
+        android:text="✓"
+        android:textSize="20sp"
+        android:textStyle="bold"/>
+
+    <TextView
+        android:id="@+id/txtPatientName"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerVertical="true"
+        android:layout_margin="12dp"
+        android:layout_toEndOf="@id/txtChecked"
+        android:text="Patient Name"
+        android:textSize="20sp"
+        />
+
+    <TextView
+        android:id="@+id/txtRemove"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentEnd="true"
+        android:layout_centerVertical="true"
+        android:layout_marginEnd="10dp"
+        android:text="✕"
+        android:textAllCaps="false"
+        android:textSize="14sp"/>
+
+</RelativeLayout>

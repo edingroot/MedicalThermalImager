@@ -19,6 +19,10 @@
         <!--<item name="metaButtonBarButtonStyle">@style/ButtonBarButton</item>-->
     </style>
 
+    <style name="DialogTheme" parent="@android:style/Theme.Holo.Dialog">
+        <item name="android:textSize">16sp</item>
+    </style>
+
     <!--<style name="ButtonBar">-->
         <!--<item name="android:paddingLeft">2dp</item>-->
         <!--<item name="android:paddingTop">5dp</item>-->

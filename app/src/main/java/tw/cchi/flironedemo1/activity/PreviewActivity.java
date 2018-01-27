@@ -56,6 +56,7 @@ import butterknife.ButterKnife;
 import tw.cchi.flironedemo1.AppUtils;
 import tw.cchi.flironedemo1.Config;
 import tw.cchi.flironedemo1.R;
+import tw.cchi.flironedemo1.dialog.SelectPatientDialog;
 import tw.cchi.flironedemo1.thermalproc.ROIDetector;
 import tw.cchi.flironedemo1.thermalproc.RawThermalDump;
 import tw.cchi.flironedemo1.thermalproc.ThermalDumpProcessor;
@@ -77,8 +78,9 @@ public class PreviewActivity extends BaseActivity implements Device.Delegate, Fr
     private volatile int[] thermalPixels;
     private volatile Bitmap thermalBitmap; // last frame updated to imageview
     private volatile Bitmap opacityMask;
+    private SelectPatientDialog selectPatientDialog;
 
-    // Related to thermal analysis
+    // Thermal analysis related
     private volatile ROIDetector roiDetector;
     private ThermalDumpProcessor thermalDumpProcessor;
     private volatile Thread contourProcessingThread;
@@ -122,8 +124,7 @@ public class PreviewActivity extends BaseActivity implements Device.Delegate, Fr
         super.onCreate(savedInstanceState);
         OpenCVLoader.initDebug();
         setContentView(R.layout.activity_preview);
-        ButterKnife.bind(this)
-;
+        ButterKnife.bind(this);
 
         frameProcessor = new FrameProcessor(this, this, EnumSet.of(
                 RenderedImage.ImageType.ThermalRGBA8888Image,
@@ -513,7 +514,18 @@ public class PreviewActivity extends BaseActivity implements Device.Delegate, Fr
     }
 
     public void onSelectPatientClicked(View v) {
-        // TODO
+        if (selectPatientDialog == null) {
+            selectPatientDialog =
+                    new SelectPatientDialog(this, new SelectPatientDialog.OnInteractionListener() {
+                @Override
+                public void onOkClicked(String selectedPatientUUID) {
+                    // TODO
+                }
+            });
+        }
+
+        // TODO: selectPatientDialog.setSelectedPatientUUID();
+        selectPatientDialog.show();
     }
 
     public void onToolsClicked(View v) {
