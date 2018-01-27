@@ -112,7 +112,6 @@ public class PreviewActivity extends BaseActivity implements Device.Delegate, Fr
     @BindView(R.id.txtRcgnThresValue) TextView txtRcgnThresValue;
     @BindView(R.id.btnFilter) Button btnFilter;
     @BindView(R.id.btnRcgHigh) Button btnRcgHigh;
-    @BindView(R.id.imgBtnPick) ImageButton imgBtnPick;
     @BindView(R.id.btnTools) Button btnTools;
     @BindView(R.id.editTuningState) TextView editTuningState;
 
@@ -269,7 +268,6 @@ public class PreviewActivity extends BaseActivity implements Device.Delegate, Fr
                     String filepath = cursor.getString(columnIndex);
                     cursor.close();
                     opacityMask = BitmapFactory.decodeFile(filepath);
-                    imgBtnPick.setBackgroundColor(getResources().getColor(android.R.color.holo_blue_dark));
 
                     // Reconnect sim device if it was connected previously
                     if (simConnected && flirOneDevice == null) {
@@ -514,26 +512,33 @@ public class PreviewActivity extends BaseActivity implements Device.Delegate, Fr
         }
     }
 
-    public void onImagePickClicked(View v) {
-        if (opacityMask == null) {
-            Intent galleryIntent = new Intent(
-                    Intent.ACTION_PICK, android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
-            startActivityForResult(galleryIntent, ACTION_PICK_FROM_GALLERY);
-        } else {
-            opacityMask = null;
-            imgBtnPick.setBackgroundColor(0);
-        }
+    public void onSelectPatientClicked(View v) {
+        // TODO
     }
 
     public void onToolsClicked(View v) {
         PopupMenu popup = new PopupMenu(this, v);
         popup.inflate(R.menu.preview_tools_menu);
+
+        String pickMaskTitle = getString(opacityMask == null ? R.string.pick_mask : R.string.unset_mask);
+        popup.getMenu().findItem(R.id.action_pick_mask).setTitle(pickMaskTitle);
+
         popup.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
             @Override
             public boolean onMenuItemClick(MenuItem item) {
                 switch (item.getItemId()) {
                     case R.id.action_dump_viewer:
                         startActivity(new Intent(PreviewActivity.this, DumpViewerActivity.class));
+                        return true;
+
+                    case R.id.action_pick_mask:
+                        if (opacityMask == null) {
+                            Intent galleryIntent = new Intent(
+                                    Intent.ACTION_PICK, android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+                            startActivityForResult(galleryIntent, ACTION_PICK_FROM_GALLERY);
+                        } else {
+                            opacityMask = null;
+                        }
                         return true;
 
                     case R.id.action_switch_rotate:
