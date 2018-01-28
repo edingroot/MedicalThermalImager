@@ -10,7 +10,7 @@ import android.arch.persistence.room.PrimaryKey;
 import java.util.Date;
 import java.util.UUID;
 
-@Entity(tableName = "thermaldumps",
+@Entity(tableName = "capture_records",
         foreignKeys = {
             @ForeignKey(
                 entity = Patient.class,
@@ -21,7 +21,7 @@ import java.util.UUID;
         indices = {
             @Index(value = "patient_uuid")
         })
-public class ThermalDump {
+public class CaptureRecord {
     @PrimaryKey
     @ColumnInfo(name = "uuid")
     private String uuid;
@@ -42,7 +42,7 @@ public class ThermalDump {
     private Date createdAt;
 
     @Ignore
-    public ThermalDump(String title, String dumpPath, String imagePath) {
+    public CaptureRecord(String title, String dumpPath, String imagePath) {
         this.uuid = UUID.randomUUID().toString();
         this.title = title;
         this.dumpPath = dumpPath;
@@ -50,7 +50,7 @@ public class ThermalDump {
         this.createdAt = new Date(System.currentTimeMillis());
     }
 
-    public ThermalDump(String uuid, String title, String dumpPath, String imagePath, Date createdAt) {
+    public CaptureRecord(String uuid, String title, String dumpPath, String imagePath, Date createdAt) {
         this.uuid = uuid;
         this.title = title;
         this.dumpPath = dumpPath;
