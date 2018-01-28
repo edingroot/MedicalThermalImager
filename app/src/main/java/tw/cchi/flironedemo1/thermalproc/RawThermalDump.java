@@ -148,6 +148,8 @@ public class RawThermalDump {
     }
 
     public synchronized boolean saveToFile(String filepath) {
+        setFilepath(filepath);
+
         byte[] bytes = new byte[FileFormat.getByteLength(formatVersion, width, height)];
         int thermalPixelOffset = FileFormat.getThermalPixelOffset(formatVersion);
         int M = width * height * 2 + thermalPixelOffset - 1;
@@ -216,6 +218,27 @@ public class RawThermalDump {
         return true;
     }
 
+    public static String generateTitleFromFilepath(String filepath) {
+        String title;
+
+        // Generate title; filepathEx: 1008-161008_2_raw.dat
+        String filename = new File(filepath).getName();
+        String fileType = filename.substring(filename.lastIndexOf("_") + 1, filename.lastIndexOf("."));
+        // Ignore showing milliseconds on title
+        title = String.format("%s/%s %s:%s:%s-%s",
+                filename.substring(0, 2),
+                filename.substring(2, 4),
+                filename.substring(5, 7),
+                filename.substring(7, 9),
+                filename.substring(9, 11),
+                filename.substring(12, 13)
+        );
+        if (fileType.equals("raw-reged"))
+            title += "R";
+
+        return title;
+    }
+
     public int getWidth() {
         return width;
     }
@@ -257,21 +280,7 @@ public class RawThermalDump {
 
     private void setFilepath(String filepath) {
         this.filepath = filepath;
-
-        // Generate title; filenameEx: 1008-161008_2_raw.dat
-        String filename = new File(filepath).getName();
-        String fileType = filename.substring(filename.lastIndexOf("_") + 1, filename.lastIndexOf("."));
-        // Ignore showing milliseconds on title
-        title = String.format("%s/%s %s:%s:%s-%s",
-                filename.substring(0, 2),
-                filename.substring(2, 4),
-                filename.substring(5, 7),
-                filename.substring(7, 9),
-                filename.substring(9, 11),
-                filename.substring(12, 13)
-        );
-        if (fileType.equals("raw-reged"))
-            title += "R";
+        this.title = generateTitleFromFilepath(filepath);
     }
 
     public String getTitle() {

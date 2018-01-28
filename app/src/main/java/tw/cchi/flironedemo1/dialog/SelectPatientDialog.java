@@ -66,6 +66,24 @@ public class SelectPatientDialog {
         };
     }
 
+    /**
+     * @param patientUUID null if no patient selected
+     */
+    public void setSelectedPatientUUID(String patientUUID) {
+        this.selectedPatientUUID = patientUUID;
+
+        int selectedPatientIndex = -1;
+        if (patientUUID != null) {
+            for (int i = 0; i < patients.size(); i++) {
+                if (patients.get(i).getUuid().equals(patientUUID)) {
+                    selectedPatientIndex = i;
+                    break;
+                }
+            }
+        }
+        patientRecyclerAdapter.setSelectedPosition(selectedPatientIndex);
+    }
+
     public SelectPatientDialog show() {
         dialog = new Dialog(context, R.style.DialogTheme);
         dialog.setContentView(R.layout.dialog_select_patient);

@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "9000345932774d3a5872a68205f0eace",
+    "identityHash": "87794263e26715936cb7ba7173c5c619",
     "entities": [
       {
         "tableName": "patients",
@@ -34,8 +34,8 @@
         "foreignKeys": []
       },
       {
-        "tableName": "thermaldumps",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`uuid` TEXT, `patient_uuid` TEXT, `title` TEXT, `path_dump` TEXT, `path_image` TEXT, `created_at` INTEGER, PRIMARY KEY(`uuid`), FOREIGN KEY(`patient_uuid`) REFERENCES `patients`(`uuid`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "tableName": "capture_records",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`uuid` TEXT, `patient_uuid` TEXT, `title` TEXT, `filename_prefix` TEXT, `created_at` INTEGER, PRIMARY KEY(`uuid`), FOREIGN KEY(`patient_uuid`) REFERENCES `patients`(`uuid`) ON UPDATE NO ACTION ON DELETE CASCADE )",
         "fields": [
           {
             "fieldPath": "uuid",
@@ -53,13 +53,8 @@
             "affinity": "TEXT"
           },
           {
-            "fieldPath": "dumpPath",
-            "columnName": "path_dump",
-            "affinity": "TEXT"
-          },
-          {
-            "fieldPath": "imagePath",
-            "columnName": "path_image",
+            "fieldPath": "filenamePrefix",
+            "columnName": "filename_prefix",
             "affinity": "TEXT"
           },
           {
@@ -76,12 +71,12 @@
         },
         "indices": [
           {
-            "name": "index_thermaldumps_patient_uuid",
+            "name": "index_capture_records_patient_uuid",
             "unique": false,
             "columnNames": [
               "patient_uuid"
             ],
-            "createSql": "CREATE  INDEX `index_thermaldumps_patient_uuid` ON `${TABLE_NAME}` (`patient_uuid`)"
+            "createSql": "CREATE  INDEX `index_capture_records_patient_uuid` ON `${TABLE_NAME}` (`patient_uuid`)"
           }
         ],
         "foreignKeys": [
@@ -101,7 +96,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, \"9000345932774d3a5872a68205f0eace\")"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, \"87794263e26715936cb7ba7173c5c619\")"
     ]
   }
 }

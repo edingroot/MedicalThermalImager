@@ -31,6 +31,9 @@ public class PatientSelectsRecyclerAdapter extends RecyclerView.Adapter<PatientS
         notifyDataSetChanged();
     }
 
+    /**
+     * @param selectedPosition set as -1 if no item selected
+     */
     public void setSelectedPosition(int selectedPosition) {
         this.selectedPosition = selectedPosition;
         notifyDataSetChanged();

@@ -14,10 +14,11 @@ import tw.cchi.flironedemo1.db.converter.DateConverter;
 }, version = 1)
 @TypeConverters(DateConverter.class)
 public abstract class AppDatabase extends RoomDatabase {
-    private static final String DATABASE_NAME = "appdb.db";
+    public static final String DATABASE_NAME = "appdb.db";
     private static AppDatabase instance;
 
     public abstract PatientDAO patientDAO();
+    public abstract CaptureRecordDAO captureRecordDAO();
 
     public static AppDatabase getInstance(final Context context) {
         if (instance == null) {

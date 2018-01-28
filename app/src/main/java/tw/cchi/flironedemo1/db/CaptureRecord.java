@@ -32,29 +32,26 @@ public class CaptureRecord {
     @ColumnInfo(name = "title")
     private String title;
 
-    @ColumnInfo(name = "path_dump")
-    private String dumpPath;
-
-    @ColumnInfo(name = "path_image")
-    private String imagePath;
+    @ColumnInfo(name = "filename_prefix")
+    private String filenamePrefix;
 
     @ColumnInfo(name = "created_at")
     private Date createdAt;
 
     @Ignore
-    public CaptureRecord(String title, String dumpPath, String imagePath) {
+    public CaptureRecord(String patientUuid, String title, String filenamePrefix) {
         this.uuid = UUID.randomUUID().toString();
+        this.patientUuid = patientUuid;
         this.title = title;
-        this.dumpPath = dumpPath;
-        this.imagePath = imagePath;
+        this.filenamePrefix = filenamePrefix;
         this.createdAt = new Date(System.currentTimeMillis());
     }
 
-    public CaptureRecord(String uuid, String title, String dumpPath, String imagePath, Date createdAt) {
+    public CaptureRecord(String uuid, String patientUuid, String title, String filenamePrefix, Date createdAt) {
         this.uuid = uuid;
+        this.patientUuid = patientUuid;
         this.title = title;
-        this.dumpPath = dumpPath;
-        this.imagePath = imagePath;
+        this.filenamePrefix = filenamePrefix;
         this.createdAt = createdAt;
     }
 
@@ -82,12 +79,8 @@ public class CaptureRecord {
         this.title = title;
     }
 
-    public String getDumpPath() {
-        return dumpPath;
-    }
-
-    public String getImagePath() {
-        return imagePath;
+    public String getFilenamePrefix() {
+        return filenamePrefix;
     }
 
     public Date getCreatedAt() {

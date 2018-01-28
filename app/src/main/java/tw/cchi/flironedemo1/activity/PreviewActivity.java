@@ -49,6 +49,8 @@ import butterknife.ButterKnife;
 import tw.cchi.flironedemo1.AppUtils;
 import tw.cchi.flironedemo1.Config;
 import tw.cchi.flironedemo1.R;
+import tw.cchi.flironedemo1.db.AppDatabase;
+import tw.cchi.flironedemo1.db.helper.PatientThermalDumpsHelper;
 import tw.cchi.flironedemo1.dialog.SelectPatientDialog;
 import tw.cchi.flironedemo1.thermalproc.ROIDetector;
 import tw.cchi.flironedemo1.thermalproc.RawThermalDump;
@@ -65,6 +67,7 @@ public class PreviewActivity extends BaseActivity implements Device.Delegate, Fr
     private volatile Bitmap thermalBitmap; // last frame updated to imageview
     private volatile Bitmap opacityMask;
     private SelectPatientDialog selectPatientDialog;
+    private PatientThermalDumpsHelper dbPatientDumpsHelper;
 
     private volatile boolean simConnected = false;
     private volatile boolean streamingFrame = false;
@@ -75,6 +78,7 @@ public class PreviewActivity extends BaseActivity implements Device.Delegate, Fr
     private boolean showingMoreInfo = false;
     private int thermalSpotX = -1; // movable spot thermal indicator pX
     private int thermalSpotY = -1; // movable spot thermal indicator pY
+    private String selectedPatientUUID = null;
 
     // Thermal analysis related
     private volatile ROIDetector roiDetector;
@@ -115,6 +119,8 @@ public class PreviewActivity extends BaseActivity implements Device.Delegate, Fr
         OpenCVLoader.initDebug();
         setContentView(R.layout.activity_preview);
         ButterKnife.bind(this);
+
+        dbPatientDumpsHelper = new PatientThermalDumpsHelper(AppDatabase.getInstance(this));
 
         frameProcessor = new FrameProcessor(this, this, EnumSet.of(
                 RenderedImage.ImageType.ThermalRGBA8888Image,
@@ -449,9 +455,14 @@ public class PreviewActivity extends BaseActivity implements Device.Delegate, Fr
 
             if (imageCaptureRequested) {
                 imageCaptureRequested = false;
-                String filename = AppUtils.generateCaptureTitle();
-                captureFLIRImage(renderedImage, filename + Config.POSTFIX_FLIR_IMAGE + ".jpg");
-                captureRawThermalDump(renderedImage, filename + Config.POSTFIX_THERMAL_DUMP + ".dat");
+
+                String filenamePrefix = AppUtils.generateCaptureFilename();
+                String dumpFilepath = filenamePrefix + Config.POSTFIX_THERMAL_DUMP + ".dat";
+                captureFLIRImage(renderedImage, filenamePrefix + Config.POSTFIX_FLIR_IMAGE + ".jpg");
+                captureRawThermalDump(renderedImage, dumpFilepath);
+
+                String title = RawThermalDump.generateTitleFromFilepath(dumpFilepath);
+                dbPatientDumpsHelper.addCaptureRecord(selectedPatientUUID, title, filenamePrefix);
             }
 
             // (DEBUG) Show image types
@@ -501,12 +512,12 @@ public class PreviewActivity extends BaseActivity implements Device.Delegate, Fr
                     new SelectPatientDialog(this, new SelectPatientDialog.OnInteractionListener() {
                 @Override
                 public void onOkClicked(String selectedPatientUUID) {
-                    // TODO
+                    PreviewActivity.this.selectedPatientUUID = selectedPatientUUID;
                 }
             });
         }
 
-        // TODO: selectPatientDialog.setSelectedPatientUUID();
+        selectPatientDialog.setSelectedPatientUUID(selectedPatientUUID);
         selectPatientDialog.show();
     }
 
@@ -677,9 +688,9 @@ public class PreviewActivity extends BaseActivity implements Device.Delegate, Fr
             if (streamingFrame) {
                 this.imageCaptureRequested = true;
             } else {
-                String filename = AppUtils.generateCaptureTitle();
-                captureProcessedImage(filename + Config.POSTFIX_PROCEED_IMAGE + ".jpg");
-                captureRawThermalDump(lastRenderedImage, filename + Config.POSTFIX_THERMAL_DUMP + ".dat");
+                String filenamePrefix = AppUtils.generateCaptureFilename();
+                captureProcessedImage(filenamePrefix + Config.POSTFIX_PROCEED_IMAGE + ".jpg");
+                captureRawThermalDump(lastRenderedImage, filenamePrefix + Config.POSTFIX_THERMAL_DUMP + ".dat");
             }
         }
     }

@@ -22,8 +22,8 @@ public interface CaptureRecordDAO {
     CaptureRecord findByTitle(String title);
 
     @Insert
-    void insertAll(CaptureRecord... thermaldumps);
+    void insertAll(CaptureRecord... captureRecords);
 
     @Delete
-    void delete(CaptureRecord thermaldump);
+    void delete(CaptureRecord captureRecord);
 }

@@ -81,7 +81,7 @@ public class AppUtils {
         return new MatOfPoint(insidePointsMat).toArray();
     }
 
-    public static String generateCaptureTitle() {
+    public static String generateCaptureFilename() {
         SimpleDateFormat sdf = new SimpleDateFormat("MMdd-HHmmss-SSS", Locale.getDefault());
         String dateString = sdf.format(new Date());
         return getExportsDir() + "/" + dateString.substring(0, dateString.length() - 2);
