@@ -8,7 +8,10 @@ import android.content.Context;
 
 import tw.cchi.flironedemo1.db.converter.DateConverter;
 
-@Database(entities = {Patient.class}, version = 1)
+@Database(entities = {
+        Patient.class,
+        ThermalDump.class
+}, version = 1)
 @TypeConverters(DateConverter.class)
 public abstract class AppDatabase extends RoomDatabase {
     private static final String DATABASE_NAME = "appdb.db";

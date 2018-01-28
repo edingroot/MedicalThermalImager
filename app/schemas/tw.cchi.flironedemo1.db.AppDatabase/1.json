@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "2e751e81099a40d6c2f149a2efcb926b",
+    "identityHash": "9000345932774d3a5872a68205f0eace",
     "entities": [
       {
         "tableName": "patients",
@@ -32,11 +32,76 @@
         },
         "indices": [],
         "foreignKeys": []
+      },
+      {
+        "tableName": "thermaldumps",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`uuid` TEXT, `patient_uuid` TEXT, `title` TEXT, `path_dump` TEXT, `path_image` TEXT, `created_at` INTEGER, PRIMARY KEY(`uuid`), FOREIGN KEY(`patient_uuid`) REFERENCES `patients`(`uuid`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "uuid",
+            "columnName": "uuid",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "patientUuid",
+            "columnName": "patient_uuid",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "title",
+            "columnName": "title",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "dumpPath",
+            "columnName": "path_dump",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "imagePath",
+            "columnName": "path_image",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "createdAt",
+            "columnName": "created_at",
+            "affinity": "INTEGER"
+          }
+        ],
+        "primaryKey": {
+          "columnNames": [
+            "uuid"
+          ],
+          "autoGenerate": false
+        },
+        "indices": [
+          {
+            "name": "index_thermaldumps_patient_uuid",
+            "unique": false,
+            "columnNames": [
+              "patient_uuid"
+            ],
+            "createSql": "CREATE  INDEX `index_thermaldumps_patient_uuid` ON `${TABLE_NAME}` (`patient_uuid`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "patients",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "patient_uuid"
+            ],
+            "referencedColumns": [
+              "uuid"
+            ]
+          }
+        ]
       }
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, \"2e751e81099a40d6c2f149a2efcb926b\")"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, \"9000345932774d3a5872a68205f0eace\")"
     ]
   }
 }
