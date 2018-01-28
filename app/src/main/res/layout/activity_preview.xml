@@ -353,36 +353,13 @@
 
     </RelativeLayout>
 
-    <RelativeLayout
+    <tw.cchi.flironedemo1.view.ThermalSpotView
+        android:id="@+id/thermalSpotView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_centerHorizontal="true"
         android:layout_centerVertical="true"
-        android:id="@+id/layoutTempSpot">
-
-        <ImageView
-            android:id="@+id/spotMeterIcon"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_centerHorizontal="true"
-            android:layout_centerVertical="true"
-            android:alpha="0.9"
-            android:src="@android:drawable/ic_menu_mylocation"/>
-
-        <TextView
-            android:id="@+id/spotMeterValue"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_centerHorizontal="true"
-            android:layout_centerVertical="true"
-            android:alpha="0.9"
-            android:paddingTop="55dp"
-            android:shadowColor="#000000"
-            android:shadowDx="0"
-            android:shadowDy="0"
-            android:shadowRadius="3"
-            android:textAppearance="?android:attr/textAppearanceSmall"/>
-
-    </RelativeLayout>
+        android:visibility="gone"
+        custom:showId="false"/>
 
 </RelativeLayout>

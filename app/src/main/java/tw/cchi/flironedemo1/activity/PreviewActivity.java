@@ -60,6 +60,7 @@ import tw.cchi.flironedemo1.dialog.SelectPatientDialog;
 import tw.cchi.flironedemo1.thermalproc.ROIDetector;
 import tw.cchi.flironedemo1.thermalproc.RawThermalDump;
 import tw.cchi.flironedemo1.thermalproc.ThermalDumpProcessor;
+import tw.cchi.flironedemo1.view.ThermalSpotView;
 
 public class PreviewActivity extends BaseActivity implements Device.Delegate, FrameProcessor.Delegate, Device.StreamDelegate, Device.PowerUpdateDelegate {
     public static final int ACTION_PICK_FROM_GALLERY = 100;
@@ -100,10 +101,9 @@ public class PreviewActivity extends BaseActivity implements Device.Delegate, Fr
     @BindView(R.id.fullscreen_content) View contentView;
     @BindView(R.id.imageView) ImageView thermalImageView;
     @BindView(R.id.pleaseConnect) TextView pleaseConnect;
-    @BindView(R.id.layoutTempSpot) RelativeLayout layoutTempSpot;
-    @BindView(R.id.spotMeterValue) TextView spotMeterValue;
     @BindView(R.id.batteryLevelTextView) TextView batteryLevelTextView;
     @BindView(R.id.batteryChargeIndicator) ImageView batteryChargeIndicator;
+    @BindView(R.id.thermalSpotView) ThermalSpotView thermalSpotView;
 
     @BindView(R.id.secondaryControlsContainer) View secondaryControlsContainer;
     @BindView(R.id.contrastSeekBar) StartPointSeekBar contrastSeekBar;
@@ -228,6 +228,7 @@ public class PreviewActivity extends BaseActivity implements Device.Delegate, Fr
     @Override
     public void onPause() {
         super.onPause();
+        selectPatientDialog.dismiss();
         if (flirOneDevice != null) {
             flirOneDevice.stopFrameStream();
         }
@@ -298,6 +299,7 @@ public class PreviewActivity extends BaseActivity implements Device.Delegate, Fr
             @Override
             public void run() {
                 pleaseConnect.setVisibility(View.GONE);
+                thermalSpotView.setVisibility(View.VISIBLE);
             }
         });
 
@@ -334,7 +336,7 @@ public class PreviewActivity extends BaseActivity implements Device.Delegate, Fr
                 thermalImageView.setImageBitmap(Bitmap.createBitmap(1, 1, Bitmap.Config.RGB_565));
                 batteryLevelTextView.setText("--");
                 batteryChargeIndicator.setVisibility(View.GONE);
-                spotMeterValue.setText("");
+                thermalSpotView.setVisibility(View.GONE);
                 thermalImageView.clearColorFilter();
                 thermalImageView.setImageResource(android.R.color.transparent);
                 findViewById(R.id.tuningProgressBar).setVisibility(View.GONE);
@@ -726,21 +728,17 @@ public class PreviewActivity extends BaseActivity implements Device.Delegate, Fr
             return;
 
         RawThermalDump rawThermalDump = new RawThermalDump(1, imageWidth, imageHeight, thermalPixels);
-        double averageC;
+        final double averageC;
         if (thermalSpotX == -1) {
             averageC = rawThermalDump.getTemperature9Average(rawThermalDump.getWidth() / 2, rawThermalDump.getHeight() / 2);
         } else {
             averageC = rawThermalDump.getTemperature9Average(thermalSpotX, thermalSpotY);
         }
 
-        NumberFormat numberFormat = NumberFormat.getInstance();
-        numberFormat.setMaximumFractionDigits(2);
-        numberFormat.setMinimumFractionDigits(2);
-        final String spotMeterValue = numberFormat.format(averageC) + "ºC";
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                PreviewActivity.this.spotMeterValue.setText(spotMeterValue);
+                PreviewActivity.this.thermalSpotView.setTemperature(averageC);
             }
         });
     }
@@ -768,13 +766,10 @@ public class PreviewActivity extends BaseActivity implements Device.Delegate, Fr
             }
         }
 
-        // Set indication spot location
-        RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams) layoutTempSpot.getLayoutParams();
-        params.leftMargin = x - layoutTempSpot.getMeasuredWidth() / 2;
-        params.topMargin = y - layoutTempSpot.getMeasuredHeight() / 2 + thermalImageView.getTop();
-        params.addRule(RelativeLayout.CENTER_HORIZONTAL, 0);
-        params.addRule(RelativeLayout.CENTER_VERTICAL, 0);
-        layoutTempSpot.setLayoutParams(params);
+        thermalSpotView.setCenterPosition(
+                x + thermalImageView.getLeft(),
+                y + thermalImageView.getTop()
+        );
 
         updateThermalSpotValue();
     }
