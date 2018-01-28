@@ -58,7 +58,7 @@ public class SelectPatientDialog {
                         for (Patient patient : patients)
                             patientNames.add(patient.getName());
                         patientRecyclerAdapter.setPatientNames(patientNames);
-                        progressBarLoading.setVisibility(View.GONE);
+                        progressBarLoading.setVisibility(View.INVISIBLE);
                         recyclerPatientList.setVisibility(View.VISIBLE);
                         break;
                 }
@@ -71,17 +71,8 @@ public class SelectPatientDialog {
      */
     public void setSelectedPatientUUID(String patientUUID) {
         this.selectedPatientUUID = patientUUID;
-
-        int selectedPatientIndex = -1;
-        if (patientUUID != null) {
-            for (int i = 0; i < patients.size(); i++) {
-                if (patients.get(i).getUuid().equals(patientUUID)) {
-                    selectedPatientIndex = i;
-                    break;
-                }
-            }
-        }
-        patientRecyclerAdapter.setSelectedPosition(selectedPatientIndex);
+        if (patientRecyclerAdapter != null)
+            updateSelectedPatientByUUID(patientUUID);
     }
 
     public SelectPatientDialog show() {
@@ -164,6 +155,22 @@ public class SelectPatientDialog {
         recyclerPatientList.setLayoutManager(
                 new LinearLayoutManager(context, LinearLayoutManager.VERTICAL, false)
         );
+        updateSelectedPatientByUUID(selectedPatientUUID);
+    }
+
+    private void updateSelectedPatientByUUID(String patientUUID) {
+        if (patientRecyclerAdapter == null) return;
+
+        int selectedPatientIndex = -1;
+        if (patientUUID != null) {
+            for (int i = 0; i < patients.size(); i++) {
+                if (patients.get(i).getUuid().equals(patientUUID)) {
+                    selectedPatientIndex = i;
+                    break;
+                }
+            }
+        }
+        patientRecyclerAdapter.setSelectedPosition(selectedPatientIndex);
     }
 
     private void handleAddPatient() {
