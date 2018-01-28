@@ -88,7 +88,6 @@ public class SelectPatientDialog {
     }
 
     private void initComponents() {
-        editPatientName.setImeActionLabel("Add", KeyEvent.KEYCODE_ENTER);
         editPatientName.setOnEditorActionListener(new TextView.OnEditorActionListener() {
             @Override
             public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
@@ -133,7 +132,7 @@ public class SelectPatientDialog {
                     @Override
                     public void run() {
                         Patient patientRemoving = patients.get(position);
-                        if (selectedPatientUUID.equals(patientRemoving.getUuid()))
+                        if (selectedPatientUUID != null && selectedPatientUUID.equals(patientRemoving.getUuid()))
                             patientRecyclerAdapter.setSelectedPosition(-1);
 
                         database.patientDAO().delete(patientRemoving);
