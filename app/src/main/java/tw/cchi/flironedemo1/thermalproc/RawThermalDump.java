@@ -426,9 +426,10 @@ public class RawThermalDump {
 
     private static byte[] readAllBytesFromFile(String filepath) {
         File file = new File(filepath);
+        if (!file.exists()) return null;
+
         int size = (int) file.length();
         byte[] bytes = new byte[size];
-
         try {
             BufferedInputStream buf = new BufferedInputStream(new FileInputStream(file));
             buf.read(bytes, 0, bytes.length);
@@ -437,6 +438,7 @@ public class RawThermalDump {
         } catch (IOException e) {
             e.printStackTrace();
         }
+
         return null;
     }
 

@@ -29,6 +29,7 @@
     <!-- Menu Items: preview_tools_menu -->
     <string name="dump_viewer">Thermal Dump Viewer</string>
     <string name="pick_mask">Pick Mask Image</string>
+    <string name="export_csv">Export to CSV</string>
     <string name="unset_mask">Unset Mask Image</string>
     <string name="rotate_view">Rotate View</string>
 

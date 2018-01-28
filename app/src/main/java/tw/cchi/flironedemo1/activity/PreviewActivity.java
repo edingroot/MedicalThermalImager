@@ -42,7 +42,10 @@ import org.opencv.core.MatOfPoint;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.EnumSet;
+import java.util.Locale;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -52,6 +55,7 @@ import tw.cchi.flironedemo1.R;
 import tw.cchi.flironedemo1.db.AppDatabase;
 import tw.cchi.flironedemo1.db.helper.PatientThermalDumpsHelper;
 import tw.cchi.flironedemo1.dialog.SelectPatientDialog;
+import tw.cchi.flironedemo1.helper.CSVExportHelper;
 import tw.cchi.flironedemo1.thermalproc.ROIDetector;
 import tw.cchi.flironedemo1.thermalproc.RawThermalDump;
 import tw.cchi.flironedemo1.thermalproc.ThermalDumpProcessor;
@@ -68,6 +72,7 @@ public class PreviewActivity extends BaseActivity implements Device.Delegate, Fr
     private volatile Bitmap opacityMask;
     private SelectPatientDialog selectPatientDialog;
     private PatientThermalDumpsHelper dbPatientDumpsHelper;
+    private CSVExportHelper csvExportHelper;
 
     private volatile boolean simConnected = false;
     private volatile boolean streamingFrame = false;
@@ -121,6 +126,7 @@ public class PreviewActivity extends BaseActivity implements Device.Delegate, Fr
         ButterKnife.bind(this);
 
         dbPatientDumpsHelper = new PatientThermalDumpsHelper(AppDatabase.getInstance(this));
+        csvExportHelper = new CSVExportHelper(this, AppDatabase.getInstance(this));
 
         frameProcessor = new FrameProcessor(this, this, EnumSet.of(
                 RenderedImage.ImageType.ThermalRGBA8888Image,
@@ -535,6 +541,12 @@ public class PreviewActivity extends BaseActivity implements Device.Delegate, Fr
                 switch (item.getItemId()) {
                     case R.id.action_dump_viewer:
                         startActivity(new Intent(PreviewActivity.this, DumpViewerActivity.class));
+                        return true;
+
+                    case R.id.export_csv:
+                        SimpleDateFormat sdf = new SimpleDateFormat("MMdd-HHmmss", Locale.getDefault());
+                        String csvFilepath = AppUtils.getExportsDir() + "/" + "RecordsExport_" + sdf.format(new Date()) + ".csv";
+                        csvExportHelper.exportAllCaptureRecords(csvFilepath);
                         return true;
 
                     case R.id.action_pick_mask:
