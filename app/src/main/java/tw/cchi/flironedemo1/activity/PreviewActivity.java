@@ -21,10 +21,8 @@ import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
 import android.view.View;
 import android.widget.Button;
-import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.PopupMenu;
-import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -44,12 +42,7 @@ import org.opencv.core.MatOfPoint;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.text.NumberFormat;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.EnumSet;
-import java.util.Locale;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -71,7 +64,6 @@ public class PreviewActivity extends BaseActivity implements Device.Delegate, Fr
     private volatile boolean runningContourProcessing = false;
     private volatile boolean imageCaptureRequested = false;
     private volatile boolean thermalAnalyzeRequested = false;
-    private volatile boolean thermalDumpRequested = false;
     private volatile Device flirOneDevice;
     private FrameProcessor frameProcessor;
     private Device.TuningState currentTuningState = Device.TuningState.Unknown;
@@ -228,10 +220,8 @@ public class PreviewActivity extends BaseActivity implements Device.Delegate, Fr
     @Override
     public void onPause() {
         super.onPause();
-        selectPatientDialog.dismiss();
-        if (flirOneDevice != null) {
-            flirOneDevice.stopFrameStream();
-        }
+        if (selectPatientDialog != null) selectPatientDialog.dismiss();
+        if (flirOneDevice != null) flirOneDevice.stopFrameStream();
     }
 
     @Override
@@ -442,14 +432,6 @@ public class PreviewActivity extends BaseActivity implements Device.Delegate, Fr
         if (!streamingFrame) return;
         lastRenderedImage = renderedImage;
 
-        if (imageCaptureRequested) {
-            imageCaptureRequested = false;
-            captureFLIRImage(renderedImage);
-
-            // Dump thermal data as well when capturing image
-            thermalDumpRequested = true;
-        }
-
         if (renderedImage.imageType() == RenderedImage.ImageType.ThermalRadiometricKelvinImage) {
             this.imageWidth = renderedImage.width();
             this.imageHeight = renderedImage.height();
@@ -469,9 +451,12 @@ public class PreviewActivity extends BaseActivity implements Device.Delegate, Fr
                     performThermalAnalysis(renderedImage);
                 }
             }
-            if (thermalDumpRequested) {
-                thermalDumpRequested = false;
-                dumpThermalData(renderedImage);
+
+            if (imageCaptureRequested) {
+                imageCaptureRequested = false;
+                String filename = AppUtils.generateCaptureTitle();
+                captureFLIRImage(renderedImage, filename + Config.POSTFIX_FLIR_IMAGE + ".jpg");
+                captureRawThermalDump(renderedImage, filename + Config.POSTFIX_THERMAL_DUMP + ".dat");
             }
 
             // (DEBUG) Show image types
@@ -697,8 +682,9 @@ public class PreviewActivity extends BaseActivity implements Device.Delegate, Fr
             if (streamingFrame) {
                 this.imageCaptureRequested = true;
             } else {
-                captureProcessedImage();
-                dumpThermalData(lastRenderedImage);
+                String filename = AppUtils.generateCaptureTitle();
+                captureProcessedImage(filename + Config.POSTFIX_FLIR_IMAGE + ".jpg");
+                captureRawThermalDump(lastRenderedImage, filename + Config.POSTFIX_THERMAL_DUMP + ".dat");
             }
         }
     }
@@ -774,9 +760,7 @@ public class PreviewActivity extends BaseActivity implements Device.Delegate, Fr
         updateThermalSpotValue();
     }
 
-    private void captureFLIRImage(final RenderedImage renderedImage) {
-        final String filename = generateCaptureName(Config.POSTFIX_FLIR_IMAGE, "jpg");
-
+    private void captureFLIRImage(final RenderedImage renderedImage, final String filename) {
         new Thread(new Runnable() {
             public void run() {
                 try {
@@ -790,9 +774,7 @@ public class PreviewActivity extends BaseActivity implements Device.Delegate, Fr
         }).start();
     }
 
-    private void dumpThermalData(final RenderedImage renderedImage) {
-        final String filename = generateCaptureName(Config.POSTFIX_THERMAL_DUMP, "dat");
-
+    private void captureRawThermalDump(final RenderedImage renderedImage, final String filename) {
         new Thread(new Runnable() {
             @Override
             public void run() {
@@ -807,9 +789,7 @@ public class PreviewActivity extends BaseActivity implements Device.Delegate, Fr
         }).start();
     }
 
-    private void captureProcessedImage() {
-        final String filename = generateCaptureName(Config.POSTFIX_PROCEED_IMAGE, "jpg");
-
+    private void captureProcessedImage(final String filename) {
         new Thread(new Runnable() {
             public void run() {
                 try {
@@ -841,13 +821,6 @@ public class PreviewActivity extends BaseActivity implements Device.Delegate, Fr
                 }
             }
         }).start();
-    }
-
-    private String generateCaptureName(String postfix, String extension) {
-        SimpleDateFormat sdf = new SimpleDateFormat("MMdd-HHmmss-SSS", Locale.getDefault());
-        String dateString = sdf.format(new Date());
-        return AppUtils.getExportsDir() + "/" + dateString.substring(0, dateString.length() - 2) +
-                postfix + "." + extension;
     }
 
     private void performThermalAnalysis(final RenderedImage renderedImage) {

@@ -11,8 +11,11 @@ import org.opencv.core.Scalar;
 import org.opencv.core.Size;
 
 import java.io.File;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
 import static org.opencv.core.Core.FILLED;
 import static org.opencv.imgproc.Imgproc.drawContours;
@@ -76,6 +79,12 @@ public class AppUtils {
         Core.findNonZero(mask, insidePointsMat);
 
         return new MatOfPoint(insidePointsMat).toArray();
+    }
+
+    public static String generateCaptureTitle() {
+        SimpleDateFormat sdf = new SimpleDateFormat("MMdd-HHmmss-SSS", Locale.getDefault());
+        String dateString = sdf.format(new Date());
+        return getExportsDir() + "/" + dateString.substring(0, dateString.length() - 2);
     }
 
 }
