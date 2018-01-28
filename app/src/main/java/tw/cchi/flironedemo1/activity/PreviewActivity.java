@@ -457,8 +457,9 @@ public class PreviewActivity extends BaseActivity implements Device.Delegate, Fr
                 imageCaptureRequested = false;
 
                 String filenamePrefix = AppUtils.generateCaptureFilename();
-                String dumpFilepath = filenamePrefix + Config.POSTFIX_THERMAL_DUMP + ".dat";
-                captureFLIRImage(renderedImage, filenamePrefix + Config.POSTFIX_FLIR_IMAGE + ".jpg");
+                String filepathPrefix = AppUtils.getExportsDir() + "/" + filenamePrefix;
+                String dumpFilepath = filepathPrefix + Config.POSTFIX_THERMAL_DUMP + ".dat";
+                captureFLIRImage(renderedImage, filepathPrefix + Config.POSTFIX_FLIR_IMAGE + ".jpg");
                 captureRawThermalDump(renderedImage, dumpFilepath);
 
                 String title = RawThermalDump.generateTitleFromFilepath(dumpFilepath);
@@ -688,9 +689,9 @@ public class PreviewActivity extends BaseActivity implements Device.Delegate, Fr
             if (streamingFrame) {
                 this.imageCaptureRequested = true;
             } else {
-                String filenamePrefix = AppUtils.generateCaptureFilename();
-                captureProcessedImage(filenamePrefix + Config.POSTFIX_PROCEED_IMAGE + ".jpg");
-                captureRawThermalDump(lastRenderedImage, filenamePrefix + Config.POSTFIX_THERMAL_DUMP + ".dat");
+                String filepathPrefix = AppUtils.getExportsDir() + "/" + AppUtils.generateCaptureFilename();
+                captureProcessedImage(filepathPrefix + Config.POSTFIX_PROCEED_IMAGE + ".jpg");
+                captureRawThermalDump(lastRenderedImage, filepathPrefix + Config.POSTFIX_THERMAL_DUMP + ".dat");
             }
         }
     }

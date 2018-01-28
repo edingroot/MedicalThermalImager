@@ -84,7 +84,7 @@ public class AppUtils {
     public static String generateCaptureFilename() {
         SimpleDateFormat sdf = new SimpleDateFormat("MMdd-HHmmss-SSS", Locale.getDefault());
         String dateString = sdf.format(new Date());
-        return getExportsDir() + "/" + dateString.substring(0, dateString.length() - 2);
+        return dateString.substring(0, dateString.length() - 2);
     }
 
 }
