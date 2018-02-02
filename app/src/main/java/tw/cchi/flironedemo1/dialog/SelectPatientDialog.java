@@ -2,9 +2,11 @@ package tw.cchi.flironedemo1.dialog;
 
 import android.app.Dialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.KeyEvent;
@@ -21,6 +23,7 @@ import java.util.List;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import tw.cchi.flironedemo1.R;
+import tw.cchi.flironedemo1.activity.DumpViewerActivity;
 import tw.cchi.flironedemo1.adapter.PatientSelectsRecyclerAdapter;
 import tw.cchi.flironedemo1.db.AppDatabase;
 import tw.cchi.flironedemo1.db.Patient;
@@ -133,22 +136,36 @@ public class SelectPatientDialog {
 
             @Override
             public void onRemoveClicked(View v, final int position) {
-                // TODO: confirm before removal
+                // Confirm before removal
+                final Patient patientRemoving = patients.get(position);
+                new AlertDialog.Builder(context, R.style.MyAlertDialog)
+                        .setTitle("Confirm")
+                        .setMessage(
+                                "Confirm to remove " + patientRemoving.getName() +
+                                        " and all related capture record (list for exporting CSV, not thermal data) from database?")
+                        .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                // Remove patient data from database
+                                setUILoading();
+                                new Thread(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        if (selectedPatientUUID != null && selectedPatientUUID.equals(patientRemoving.getUuid()))
+                                            patientRecyclerAdapter.setSelectedPosition(-1);
 
-                // Remove patient data from database
-                setUILoading();
-                new Thread(new Runnable() {
-                    @Override
-                    public void run() {
-                        Patient patientRemoving = patients.get(position);
-                        if (selectedPatientUUID != null && selectedPatientUUID.equals(patientRemoving.getUuid()))
-                            patientRecyclerAdapter.setSelectedPosition(-1);
-
-                        database.patientDAO().delete(patientRemoving);
-                        patients = database.patientDAO().getAll();
-                        handler.sendEmptyMessage(UPDATE_PATIENT);
-                    }
-                }).start();
+                                        database.patientDAO().delete(patientRemoving);
+                                        patients = database.patientDAO().getAll();
+                                        handler.sendEmptyMessage(UPDATE_PATIENT);
+                                    }
+                                }).start();
+                            }
+                        })
+                        .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                            }
+                        }).show();
             }
         });
         recyclerPatientList.setAdapter(patientRecyclerAdapter);
