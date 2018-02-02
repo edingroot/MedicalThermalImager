@@ -296,6 +296,9 @@ public class RawThermalDump {
         return true;
     }
 
+    /**
+     * @return Empty ArrayList instance if no spot stored
+     */
     public ArrayList<Point> getSpotMarkers() {
         return spotMarkers;
     }

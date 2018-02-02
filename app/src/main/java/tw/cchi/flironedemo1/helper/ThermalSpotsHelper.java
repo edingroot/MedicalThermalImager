@@ -7,6 +7,8 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 
+import java.util.ArrayList;
+
 import tw.cchi.flironedemo1.AppUtils;
 import tw.cchi.flironedemo1.thermalproc.RawThermalDump;
 import tw.cchi.flironedemo1.view.ThermalSpotView;
@@ -27,10 +29,29 @@ public class ThermalSpotsHelper {
     private int spotDraggingDeltaX;
     private int spotDraggingDeltaY;
 
+    /**
+     * Constructor: auto add thermal spots specified in thermal dump file
+     *
+     * @param context
+     * @param parentView
+     * @param rawThermalDump
+     */
     public ThermalSpotsHelper(Context context, ViewGroup parentView, RawThermalDump rawThermalDump) {
         this.context = context;
         this.parentView = parentView;
         this.rawThermalDump = rawThermalDump;
+
+        // Add thermal spots if exists
+        ArrayList<org.opencv.core.Point> spotMarkers = rawThermalDump.getSpotMarkers();
+        if (spotMarkers.size() > 0) {
+            for (int i = 0; i < spotMarkers.size(); i++) {
+                org.opencv.core.Point spotPosition = spotMarkers.get(i);
+                addThermalSpot(i + 1, (int) spotPosition.x, (int) spotPosition.y);
+            }
+        } else {
+            // If there is no spot position information in dump file, add one default spot
+            addThermalSpot(1);
+        }
     }
 
     public void setSpotsVisible(boolean spotsVisible) {
@@ -63,7 +84,10 @@ public class ThermalSpotsHelper {
     }
 
     public synchronized void addThermalSpot(int spotId) {
-        System.out.printf("addThermalSpot: spotId=%d\n", spotId);
+        addThermalSpot(spotId, -1, -1);
+    }
+
+    public synchronized void addThermalSpot(final int spotId, int x, int y) {
         final ThermalSpotView thermalSpotView = new ThermalSpotView(context, spotId, true);
 
         thermalSpotView.setOnTouchListener(new View.OnTouchListener() {
@@ -88,6 +112,13 @@ public class ThermalSpotsHelper {
                         break;
 
                     case MotionEvent.ACTION_UP:
+                        // Store spot position in thermal dump files
+                        Point position = thermalSpotView.getCenterPosition();
+                        ArrayList<org.opencv.core.Point> spotMarkers = rawThermalDump.getSpotMarkers();
+                        spotMarkers.get(spotView.getSpotId()).set(new double[] {position.x, position.y});
+                        rawThermalDump.saveToFile(rawThermalDump.getFilepath());
+                        break;
+
                     case MotionEvent.ACTION_POINTER_DOWN:
                     case MotionEvent.ACTION_POINTER_UP:
                         break;
@@ -95,6 +126,11 @@ public class ThermalSpotsHelper {
                 return true;
             }
         });
+
+        if (x != -1 && y != -1) {
+            // TODO: set initial position when it is not specified
+//            thermalSpotView.setCenterPosition(x, y);
+        }
 
         thermalSpotViews.append(spotId, thermalSpotView);
         parentView.addView(thermalSpotView);

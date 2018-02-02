@@ -470,15 +470,6 @@ public class DumpViewerActivity extends BaseActivity {
                             final ThermalSpotsHelper thermalSpotsHelper = new ThermalSpotsHelper(
                                     DumpViewerActivity.this, topView, tabResources.getRawThermalDump()
                             );
-
-                            // Add a spot numbered 1 by default
-                            runOnUiThread(new Runnable() {
-                                @Override
-                                public void run() {
-                                    thermalSpotsHelper.addThermalSpot(1);
-                                }
-                            });
-
                             thermalSpotsHelper.setImageViewMetrics(
                                     thermalImageView.getMeasuredWidth(),
                                     thermalImageView.getMeasuredHeight(),
