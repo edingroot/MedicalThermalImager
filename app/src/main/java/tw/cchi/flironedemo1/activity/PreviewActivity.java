@@ -543,12 +543,6 @@ public class PreviewActivity extends BaseActivity implements Device.Delegate, Fr
                         startActivity(new Intent(PreviewActivity.this, DumpViewerActivity.class));
                         return true;
 
-                    case R.id.export_csv:
-                        SimpleDateFormat sdf = new SimpleDateFormat("MMdd-HHmmss", Locale.getDefault());
-                        String csvFilepath = AppUtils.getExportsDir() + "/" + "RecordsExport_" + sdf.format(new Date()) + ".csv";
-                        csvExportHelper.exportAllCaptureRecords(csvFilepath);
-                        return true;
-
                     case R.id.action_pick_mask:
                         if (opacityMask == null) {
                             Intent galleryIntent = new Intent(
@@ -557,6 +551,12 @@ public class PreviewActivity extends BaseActivity implements Device.Delegate, Fr
                         } else {
                             opacityMask = null;
                         }
+                        return true;
+
+                    case R.id.export_csv:
+                        SimpleDateFormat sdf = new SimpleDateFormat("MMdd-HHmmss", Locale.getDefault());
+                        String csvFilepath = AppUtils.getExportsDir() + "/" + "RecordsExport_" + sdf.format(new Date()) + ".csv";
+                        csvExportHelper.exportAllCaptureRecords(csvFilepath);
                         return true;
 
                     case R.id.action_switch_rotate:

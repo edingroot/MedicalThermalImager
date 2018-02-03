@@ -8,6 +8,8 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.Queue;
 
 import tw.cchi.flironedemo1.AppUtils;
 import tw.cchi.flironedemo1.thermalproc.RawThermalDump;
@@ -25,6 +27,7 @@ public class ThermalSpotsHelper {
 
     private SparseArray<ThermalSpotView> thermalSpotViews = new SparseArray<>(); // <spotId, ThermalSpotView>
 //    private SparseArray<Point> actualThermalPositions = new SparseArray<>(); // <spotId, actual position on the thermal dump>
+    private Queue<Integer> spotValueUpdateQueue = new LinkedList<>(); // spotView spotId for spot views waiting to be update thermal value
 
     private int spotDraggingDeltaX;
     private int spotDraggingDeltaY;
@@ -46,11 +49,17 @@ public class ThermalSpotsHelper {
         if (spotMarkers.size() > 0) {
             for (int i = 0; i < spotMarkers.size(); i++) {
                 org.opencv.core.Point spotPosition = spotMarkers.get(i);
-                addThermalSpot(i + 1, (int) spotPosition.x, (int) spotPosition.y);
+                addThermalSpot(i + 1, (int) spotPosition.x, (int) spotPosition.y, false);
             }
         } else {
-            // If there is no spot position information in dump file, add one default spot
-            addThermalSpot(1);
+            // If there is no spot position information in dump file, add one default spot.
+            // run on the UI thread
+            parentView.post(new Runnable() {
+                @Override
+                public void run() {
+                    addThermalSpot(1);
+                }
+            });
         }
     }
 
@@ -81,13 +90,23 @@ public class ThermalSpotsHelper {
         this.imageViewWidth = imageViewWidth;
         this.imageViewHeight = imageViewHeight;
         this.imageViewRawY =imageViewRawY;
+        processSpotValueUpdateQueue();
     }
 
     public synchronized void addThermalSpot(int spotId) {
-        addThermalSpot(spotId, -1, -1);
+        addThermalSpot(spotId, -1, -1, true);
     }
 
-    public synchronized void addThermalSpot(final int spotId, int x, int y) {
+    /**
+     * No need to run on UI thread.
+     *
+     * @param spotId
+     * @param x
+     * @param y
+     * @param appendToDump
+     */
+    public synchronized void addThermalSpot(final int spotId, int x, int y, boolean appendToDump) {
+        System.out.printf("addThermalSpot: spootId=%s, x=%d, y=%d\n", spotId, x, y);
         final ThermalSpotView thermalSpotView = new ThermalSpotView(context, spotId, true);
 
         thermalSpotView.setOnTouchListener(new View.OnTouchListener() {
@@ -115,8 +134,8 @@ public class ThermalSpotsHelper {
                         // Store spot position in thermal dump files
                         Point position = thermalSpotView.getCenterPosition();
                         ArrayList<org.opencv.core.Point> spotMarkers = rawThermalDump.getSpotMarkers();
-                        spotMarkers.get(spotView.getSpotId()).set(new double[] {position.x, position.y});
-                        rawThermalDump.saveToFile(rawThermalDump.getFilepath());
+                        spotMarkers.get(spotView.getSpotId() - 1).set(new double[] {position.x, position.y});
+                        rawThermalDump.saveAsync();
                         break;
 
                     case MotionEvent.ACTION_POINTER_DOWN:
@@ -133,16 +152,27 @@ public class ThermalSpotsHelper {
         }
 
         thermalSpotViews.append(spotId, thermalSpotView);
-        parentView.addView(thermalSpotView);
         lastSpotId = spotId;
 
+        // Add and save to thermal dump file
+        if (appendToDump) {
+            Point position = thermalSpotView.getCenterPosition();
+            ArrayList<org.opencv.core.Point> spotMarkers = rawThermalDump.getSpotMarkers();
+            spotMarkers.add(new org.opencv.core.Point(position.x, position.y));
+            rawThermalDump.setSpotMarkers(spotMarkers);
+            rawThermalDump.saveAsync();
+        }
+
         // After view is rendered, run on UI thread
-        thermalSpotView.post(new Runnable() {
+        parentView.post(new Runnable() {
             @Override
             public void run() {
+                parentView.addView(thermalSpotView);
                 updateThermalValue(thermalSpotView);
             }
         });
+
+
     }
 
     public int getLastSpotId() {
@@ -150,6 +180,12 @@ public class ThermalSpotsHelper {
     }
 
     public void removeLastThermalSpot() {
+        // Remove and save to thermal dump file
+        ArrayList<org.opencv.core.Point> spotMarkers = rawThermalDump.getSpotMarkers();
+        spotMarkers.remove(thermalSpotViews.indexOfKey(lastSpotId));
+        rawThermalDump.setSpotMarkers(spotMarkers);
+        rawThermalDump.saveAsync();
+
         ThermalSpotView thermalSpotView = thermalSpotViews.get(lastSpotId);
         parentView.removeView(thermalSpotView);
         thermalSpotViews.remove(lastSpotId);
@@ -160,6 +196,13 @@ public class ThermalSpotsHelper {
         setSpotsVisible(false);
     }
 
+    private void processSpotValueUpdateQueue() {
+        while (!spotValueUpdateQueue.isEmpty()) {
+            int spotId = spotValueUpdateQueue.poll();
+            updateThermalValue(thermalSpotViews.get(spotId));
+        }
+    }
+
     /**
      * Note: This method should be called after {@link #setImageViewMetrics(int, int, int)} called
      *
@@ -167,7 +210,10 @@ public class ThermalSpotsHelper {
      */
     private void updateThermalValue(ThermalSpotView spotView) {
         if (imageViewWidth == -1 || imageViewRawY == -1) {
-            throw new RuntimeException("Error: cannot calculate position conversion ratio due to image view metrics not set");
+            // throw new RuntimeException("Error: cannot calculate position conversion ratio due to image view metrics not set");
+
+            // Wait for view metrics set in order to calculate position conversion ratio
+            spotValueUpdateQueue.add(spotView.getSpotId());
         }
         double ratio = (double) rawThermalDump.getWidth() / imageViewWidth;
 

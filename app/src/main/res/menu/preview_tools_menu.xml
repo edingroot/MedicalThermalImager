@@ -8,13 +8,13 @@
         app:showAsAction="never"/>
 
     <item
-        android:id="@+id/export_csv"
-        android:title="@string/export_csv"
+        android:id="@+id/action_pick_mask"
+        android:title="@string/pick_mask"
         app:showAsAction="never"/>
 
     <item
-        android:id="@+id/action_pick_mask"
-        android:title="@string/pick_mask"
+        android:id="@+id/export_csv"
+        android:title="@string/export_csv"
         app:showAsAction="never"/>
 
     <item

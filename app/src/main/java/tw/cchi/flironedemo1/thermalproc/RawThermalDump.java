@@ -57,7 +57,7 @@ public class RawThermalDump {
     private int[] thermalValues; // 0.01K = 1, (C = val/100 - 273.15)
     private int visibleOffsetX = 0;
     private int visibleOffsetY = 0;
-    private ArrayList<Point> spotMarkers = null;
+    private ArrayList<Point> spotMarkers = new ArrayList<>();
     private int maxValue = -1;
     private int minValue = -1;
     private String filepath;
@@ -129,22 +129,41 @@ public class RawThermalDump {
             }
 
             // Read spot marker positions
-            rawThermalDump.spotMarkers = new ArrayList<>();
             int numberOfSpots = bytes[M + 91];
             if (numberOfSpots > 20) {
                 return null;
-            }
-            for (int i = 0; i < numberOfSpots; i++) {
-                int index = M + 92 + 4 * i;
-                Point point = new Point(
-                        twoBytes2SignedInt(bytes[index], bytes[index + 1]),
-                        twoBytes2SignedInt(bytes[index + 2], bytes[index + 3])
-                );
-                rawThermalDump.spotMarkers.add(point);
+            } else if (numberOfSpots > 0) {
+                rawThermalDump.spotMarkers.clear();
+                for (int i = 0; i < numberOfSpots; i++) {
+                    int index = M + 92 + 4 * i;
+                    Point point = new Point(
+                            twoBytes2SignedInt(bytes[index], bytes[index + 1]),
+                            twoBytes2SignedInt(bytes[index + 2], bytes[index + 3])
+                    );
+                    rawThermalDump.spotMarkers.add(point);
+                }
             }
         }
 
         return rawThermalDump;
+    }
+
+    public synchronized void saveAsync() {
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                save();
+            }
+        }).start();
+    }
+
+    public synchronized boolean save() {
+        if (filepath != null) {
+            return saveToFile(filepath);
+        } else {
+            System.err.println("RawThermalDump: calling save() with null filepath.");
+            return false;
+        }
     }
 
     public synchronized boolean saveToFile(String filepath) {
@@ -196,15 +215,13 @@ public class RawThermalDump {
             }
 
             // Spot maker positions
-            if (spotMarkers != null) {
-                if (spotMarkers.size() > 20) return false;
-                bytes[M + 91] = (byte) spotMarkers.size();
-                for (int i = 0; i < spotMarkers.size(); i++) {
-                    Point point = spotMarkers.get(i);
-                    int index = M + 92 + 4 * i;
-                    signedInt2TwoBytes((int) point.x, bytes, index);
-                    signedInt2TwoBytes((int) point.y, bytes, index + 2);
-                }
+            if (spotMarkers.size() > 20) return false;
+            bytes[M + 91] = (byte) spotMarkers.size();
+            for (int i = 0; i < spotMarkers.size(); i++) {
+                Point point = spotMarkers.get(i);
+                int index = M + 92 + 4 * i;
+                signedInt2TwoBytes((int) point.x, bytes, index);
+                signedInt2TwoBytes((int) point.y, bytes, index + 2);
             }
         }
 

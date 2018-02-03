@@ -640,7 +640,7 @@ public class DumpViewerActivity extends BaseActivity {
                 int diffY = (int) (visibleImageView.getY() - thermalImageView.getY());
                 rawThermalDump.setVisibleOffsetX(diffX);
                 rawThermalDump.setVisibleOffsetY(diffY);
-                rawThermalDump.saveToFile(rawThermalDump.getFilepath());
+                rawThermalDump.save();
             }
         }).start();
     }
