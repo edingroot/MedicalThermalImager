@@ -60,7 +60,6 @@ public class ViewerTabResourcesHelper {
     }
 
     public RawThermalDump getRawThermalDump() {
-        System.out.println("resHelper getDump currentIndex=" + currentIndex);
         synchronized (listsLock) {
             if (currentIndex == -1) return null;
             return rawThermalDumps.get(currentIndex);
@@ -137,7 +136,7 @@ public class ViewerTabResourcesHelper {
     }
 
     private void removeThermalSpotsHelper(int index) {
-        if (thermalSpotHelperIds.size() > currentIndex) {
+        if (thermalSpotHelperIds.size() > index) {
             thermalSpotsHelpers.remove(thermalSpotHelperIds.get(index));
             thermalSpotHelperIds.remove(index);
         }
