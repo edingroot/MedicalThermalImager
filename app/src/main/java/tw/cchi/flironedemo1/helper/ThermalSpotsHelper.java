@@ -274,7 +274,7 @@ public class ThermalSpotsHelper {
     /**
      * View position => Thermal pixel position
      */
-    private Point thermalViewPositionConversion(int x, int y, double ratio) {
+    public Point thermalViewPositionConversion(int x, int y, double ratio) {
         x = (int) (x * ratio);
         y = (int) (y * ratio);
         return new Point(x, y);

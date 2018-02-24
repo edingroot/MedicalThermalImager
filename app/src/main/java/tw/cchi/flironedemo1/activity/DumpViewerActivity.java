@@ -31,6 +31,7 @@ import droidninja.filepicker.models.sort.SortingTypes;
 import droidninja.filepicker.utils.Orientation;
 import permissions.dispatcher.NeedsPermission;
 import permissions.dispatcher.RuntimePermissions;
+import tw.cchi.flironedemo1.AppUtils;
 import tw.cchi.flironedemo1.Config;
 import tw.cchi.flironedemo1.R;
 import tw.cchi.flironedemo1.adapter.ThermalDumpsRecyclerAdapter;
@@ -55,7 +56,7 @@ public class DumpViewerActivity extends BaseActivity {
     private volatile boolean visibleImageAlignMode = false;
     private boolean showingChart = false;
 
-    private int horizontalLineY = -1;
+    private int horizontalLineY = -1; // pY (on the thermal dump) of horizontal indicator on showingChart mode
     private volatile float chartAxisMax = -1;
     private volatile float chartAxisMin = -1;
 
@@ -493,6 +494,11 @@ public class DumpViewerActivity extends BaseActivity {
         params.topMargin = y + layoutThermalViews.getTop() + thermalImageView.getTop();
         params.addRule(RelativeLayout.CENTER_VERTICAL, 0);
         horizontalLine.setLayoutParams(params);
+
+        // Calculate the correspondent point on the thermal image
+        int thermalDumpHeight = tabResources.getRawThermalDump().getHeight();
+        double ratio = (double) thermalDumpHeight / thermalImageView.getMeasuredHeight();
+        horizontalLineY = AppUtils.trimByRange((int) (y * ratio), 1, thermalDumpHeight - 1);
 
         if (showingChart) {
             updateChartParameter(thermalChartParameter, horizontalLineY);
