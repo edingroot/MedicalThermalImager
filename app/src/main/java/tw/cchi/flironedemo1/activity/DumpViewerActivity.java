@@ -356,7 +356,8 @@ public class DumpViewerActivity extends BaseActivity {
 
     public void onFabAddSpotClicked(View v) {
         ThermalSpotsHelper thermalSpotsHelper = tabResources.getThermalSpotHelper();
-        thermalSpotsHelper.addThermalSpot(thermalSpotsHelper.getLastSpotId() + 1);
+        int lastSpotId = thermalSpotsHelper.getLastSpotId();
+        thermalSpotsHelper.addThermalSpot(lastSpotId == -1 ? 1 : lastSpotId + 1);
     }
 
     public void onFabAddSpotLongClicked(View v) {

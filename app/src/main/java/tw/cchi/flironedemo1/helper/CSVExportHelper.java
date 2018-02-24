@@ -29,8 +29,6 @@ public class CSVExportHelper {
     }
 
     public void exportAllCaptureRecords(final String filepath) {
-        showToastMessage("Exporting CSV...");
-
         new Thread(new Runnable() {
             @Override
             public void run() {
@@ -62,19 +60,26 @@ public class CSVExportHelper {
                         for (double temp : spotValues)
                             rowBuilder.append(String.format(",%.2f", temp));
                     } else {
-                        System.out.println("Skip reading spotValues of: " + captureRecord.getFilenamePrefix());
+                        System.out.println("Dump not found, skip reading spotValues of: " + captureRecord.getFilenamePrefix());
+                        // TODO: remove this record from database
+                        continue;
                     }
 
                     outputBuilder.append(rowBuilder).append("\n");
                 }
 
-                // Title row
-                StringBuilder rowBuilder = new StringBuilder("patientUUID,patientName,filenamePrefix,takenAt,title");
-                for (int i = 1; i <= maxSpotCount; i++) {
-                    rowBuilder.append(",spot").append(i);
+                if (outputBuilder.length() == 0) {
+                    showToastMessage("No data exported.");
+                    return;
                 }
-                rowBuilder.append("\n");
-                outputBuilder.insert(0, rowBuilder);
+
+                // Title row
+                StringBuilder titleRowBuilder = new StringBuilder("patientUUID,patientName,filenamePrefix,takenAt,title");
+                for (int i = 1; i <= maxSpotCount; i++) {
+                    titleRowBuilder.append(",spot").append(i);
+                }
+                titleRowBuilder.append("\n");
+                outputBuilder.insert(0, titleRowBuilder);
 
                 // Write to file
                 BufferedWriter outputWriter = null;
@@ -115,6 +120,7 @@ public class CSVExportHelper {
         ArrayList<Point> spotMarkers = rawThermalDump.getSpotMarkers();
         if (spotMarkers != null) {
             for (Point point : spotMarkers) {
+                System.out.printf("CSV Export (%.0f, %.0f) = %.2f\n", point.x, point.y, rawThermalDump.getTemperature9Average((int) point.x, (int) point.y));
                 spotValues.add(rawThermalDump.getTemperature9Average((int) point.x, (int) point.y));
             }
         }
