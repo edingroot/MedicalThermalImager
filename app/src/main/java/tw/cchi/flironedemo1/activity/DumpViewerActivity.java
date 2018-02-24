@@ -395,6 +395,7 @@ public class DumpViewerActivity extends BaseActivity {
 
                     tabResources.addResources(filepath, thermalDump, thermalDumpProcessor, thermalBitmap);
                     addToChartParameter(thermalChartParameter, thermalDump, horizontalLineY);
+                    thermalChartView.updateChart(thermalChartParameter);
 
                     int newIndex = thermalDumpsRecyclerAdapter.addDumpSwitch(thermalDump.getTitle());
                     System.out.printf("addThermalDump: currIndex=%d, newIndex=%d\n", tabResources.getCurrentIndex(), newIndex);
@@ -415,6 +416,7 @@ public class DumpViewerActivity extends BaseActivity {
 
         tabResources.removeResources(index, newIndex);
         removeDataFromChartParameter(thermalChartParameter, index);
+        thermalChartView.updateChart(thermalChartParameter);
 
         // If the dump removing is the one that currently displaying & still have some other dumps opened
         if (currentIndex == index && newIndex != -1 && !ignoreImageViewUpdate) {
@@ -429,6 +431,13 @@ public class DumpViewerActivity extends BaseActivity {
 
         if (tabResources.getCount() == 0) {
             thermalImageView.setImageBitmap(null);
+
+            if (showingChart) {
+                thermalChartView.setVisibility(View.GONE);
+                horizontalLine.setVisibility(View.GONE);
+                showingChart = false;
+            }
+
             if (showingVisibleImage) {
                 visibleImageView.setImageBitmap(null);
                 visibleImageView.setVisibility(View.GONE);
