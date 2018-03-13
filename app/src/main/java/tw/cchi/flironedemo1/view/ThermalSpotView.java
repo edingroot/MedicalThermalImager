@@ -4,15 +4,21 @@ import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.res.TypedArray;
 import android.graphics.Point;
+import android.os.Handler;
+import android.os.Looper;
 import android.support.annotation.Nullable;
 import android.util.AttributeSet;
+import android.util.Pair;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import java.text.NumberFormat;
+import java.util.LinkedList;
+import java.util.Queue;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -22,6 +28,8 @@ public class ThermalSpotView extends RelativeLayout {
     private int spotId;
     private boolean showId;
     private boolean moved;
+    private Queue<Runnable> beforeMeasureQueue = new LinkedList<>();
+    private OnPlacedListener onPlacedListener;
 
     @BindView(R.id.txtSpotId) TextView txtSpotId;
     @BindView(R.id.txtSpotValue) TextView txtSpotValue;
@@ -57,6 +65,19 @@ public class ThermalSpotView extends RelativeLayout {
         onAttrsUpdate();
     }
 
+    @Override
+    protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+        super.onMeasure(widthMeasureSpec, heightMeasureSpec);
+
+        while (!beforeMeasureQueue.isEmpty()) {
+            new Thread(beforeMeasureQueue.poll()).start();
+        }
+
+        if (onPlacedListener != null) {
+            onPlacedListener.onPlaced();
+        }
+    }
+
     /**
      * By default, the position is centered vertical & horizontally
      */
@@ -83,50 +104,84 @@ public class ThermalSpotView extends RelativeLayout {
         this.spotId = spotId;
     }
 
+    public void setOnPlacedListener(OnPlacedListener onPlacedListener) {
+        this.onPlacedListener = onPlacedListener;
+    }
+
     @SuppressLint("SetTextI18n")
     public void setTemperature(double spotValue) {
         NumberFormat numberFormat = NumberFormat.getInstance();
         numberFormat.setMaximumFractionDigits(2);
         numberFormat.setMinimumFractionDigits(2);
-        txtSpotValue.setText(numberFormat.format(spotValue) + "ºC");
+        txtSpotValue.setText(" " + numberFormat.format(spotValue) + "ºC");
     }
 
     /**
      * Set the position on the screen, use the center point of this view as reference.
      */
-    public void setCenterPosition(int x, int y) {
-        LayoutParams params = (RelativeLayout.LayoutParams) getLayoutParams();
-        params.leftMargin = x - getMeasuredWidth() / 2;
-        params.topMargin = y - getMeasuredHeight() / 2;
+    public synchronized void setCenterPosition(final int x, final int y) {
+        Runnable runnable = new Runnable() {
+            @Override
+            public void run() {
+                System.out.printf("setCenterPosition: (%d,%d)\n", x, y);
+                final LayoutParams params = (RelativeLayout.LayoutParams) getLayoutParams();
+                params.leftMargin = x - getMeasuredWidth() / 2;
+                params.topMargin = y - getMeasuredHeight() / 2;
+                System.out.printf("setCenterPosition: margins=(%d,%d)\n", params.leftMargin, params.topMargin);
 
-        if (!moved) {
-            params.addRule(RelativeLayout.CENTER_VERTICAL, 0);
-            params.addRule(RelativeLayout.CENTER_HORIZONTAL, 0);
+                if (!moved) {
+                    params.addRule(RelativeLayout.CENTER_VERTICAL, 0);
+                    params.addRule(RelativeLayout.CENTER_HORIZONTAL, 0);
 
-            // Prevent the view from being compressed when moving right or down
-            params.rightMargin = -getMeasuredWidth();
-            params.bottomMargin = -getMeasuredHeight();
+                    // Prevent the view from being compressed when moving right or down
+                    params.rightMargin = -getMeasuredWidth();
+                    params.bottomMargin = -getMeasuredHeight();
 
-            moved = true;
+                    moved = true;
+                }
+
+                // Run on UI thread
+                new Handler(Looper.getMainLooper()).post(new Runnable() {
+                    @Override
+                    public void run() {
+                        setLayoutParams(params);
+                        invalidate();
+                    }
+                });
+            }
+        };
+
+        // Queue runnable if view not measured
+        if (getMeasuredWidth() == 0 || getMeasuredHeight() == 0) {
+            beforeMeasureQueue.add(runnable);
+        } else {
+            new Thread(runnable).start();
         }
-
-        setLayoutParams(params);
-        invalidate();
     }
 
     public Point getCenterPosition() {
         LayoutParams params = (RelativeLayout.LayoutParams) getLayoutParams();
+        Point point;
         if (!moved) {
-            return new Point(
-                    this.getLeft() + this.getMeasuredWidth() / 2,
-                    this.getTop() + this.getMeasuredHeight() / 2
+            point = new Point(
+                    getLeft() + getMeasuredWidth() / 2,
+                    getTop() + getMeasuredHeight() / 2
             );
         } else {
-            return new Point(
+            point = new Point(
                     params.leftMargin + this.getMeasuredWidth() / 2,
                     params.topMargin + this.getMeasuredHeight() / 2
             );
         }
+
+        System.out.printf("getCenterPosition: (%d,%d)\n", point.x, point.y);
+
+        return point;
+    }
+
+    public interface OnPlacedListener {
+        // Called after view is measured and spot is placed to the correct position
+        void onPlaced();
     }
 
 }

@@ -42,6 +42,7 @@
         android:shadowDx="0"
         android:shadowDy="0"
         android:shadowRadius="3"
+        android:text="000.00ºC"
         android:textAppearance="?android:attr/textAppearanceSmall"
         android:textSize="12sp"/>
 

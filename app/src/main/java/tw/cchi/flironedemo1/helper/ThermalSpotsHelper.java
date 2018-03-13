@@ -7,6 +7,7 @@ import android.util.SparseArray;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.ViewTreeObserver;
 
 import java.util.ArrayList;
 import java.util.LinkedList;
@@ -109,7 +110,6 @@ public class ThermalSpotsHelper {
      * @param appendToDump
      */
     public synchronized void addThermalSpot(final int spotId, int x, int y, boolean appendToDump) {
-        System.out.printf("addThermalSpot: spotId=%s, x=%d, y=%d\n", spotId, x, y);
         final ThermalSpotView thermalSpotView = new ThermalSpotView(context, spotId, true);
 
         thermalSpotView.setOnTouchListener(new View.OnTouchListener() {
@@ -145,6 +145,13 @@ public class ThermalSpotsHelper {
             }
         });
 
+        thermalSpotView.setOnPlacedListener(new ThermalSpotView.OnPlacedListener() {
+            @Override
+            public void onPlaced() {
+                updateThermalValue(thermalSpotView);
+            }
+        });
+
         if (x != -1 && y != -1) {
             thermalSpotView.setCenterPosition(x, y);
         } else {
@@ -168,11 +175,8 @@ public class ThermalSpotsHelper {
             @Override
             public void run() {
                 parentView.addView(thermalSpotView);
-                updateThermalValue(thermalSpotView);
             }
         });
-
-
     }
 
     public int getLastSpotId() {
@@ -216,8 +220,15 @@ public class ThermalSpotsHelper {
             int spotId = pair.first;
             Point rawPosition = pair.second;
 
+            System.out.printf("RestoreThermalSpot@BfConv: spotId=%s, x=%d, y=%d\n", spotId, rawPosition.x, rawPosition.y);
+
+            // Convert position on rawThermalImage to position on the imageView
             double ratio = (double) imageViewWidth / rawThermalDump.getWidth();
             Point viewPosition = thermalViewPositionConversion(rawPosition.x, rawPosition.y, ratio);
+            viewPosition.y += imageViewRawY;
+
+            System.out.printf("RestoreThermalSpot@AfConv: spotId=%s, x=%d, y=%d\n", spotId, viewPosition.x, viewPosition.y);
+
             addThermalSpot(spotId, viewPosition.x, viewPosition.y, false);
         }
     }
@@ -233,8 +244,11 @@ public class ThermalSpotsHelper {
         Point viewPosition = spotView.getCenterPosition();
         ArrayList<org.opencv.core.Point> spotMarkers = rawThermalDump.getSpotMarkers();
 
+        System.out.printf("Store2dump@BfConv id=%d, pos=(%d, %d)\n", spotView.getSpotId(), viewPosition.x, viewPosition.y);
+
         Point rawPosition = thermalViewPositionConversion(viewPosition.x, viewPosition.y - imageViewRawY, ratio);
-        System.out.printf("Store2dump id=%d, pos=(%d, %d), temp=%.2f\n", spotView.getSpotId(), rawPosition.x, rawPosition.y, rawThermalDump.getTemperature9Average(rawPosition.x, rawPosition.y));
+
+        System.out.printf("Store2dump@AfConv id=%d, pos=(%d, %d), temp=%.2f\n", spotView.getSpotId(), rawPosition.x, rawPosition.y, rawThermalDump.getTemperature9Average(rawPosition.x, rawPosition.y));
 
         spotMarkers.get(spotView.getSpotId() - 1).set(new double[]{rawPosition.x, rawPosition.y});
         rawThermalDump.setSpotMarkers(spotMarkers);
@@ -272,9 +286,9 @@ public class ThermalSpotsHelper {
     }
 
     /**
-     * View position => Thermal pixel position
+     * View position <=> Thermal pixel position
      */
-    public Point thermalViewPositionConversion(int x, int y, double ratio) {
+    private Point thermalViewPositionConversion(int x, int y, double ratio) {
         x = (int) (x * ratio);
         y = (int) (y * ratio);
         return new Point(x, y);
