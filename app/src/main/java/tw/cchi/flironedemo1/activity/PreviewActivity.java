@@ -709,23 +709,29 @@ public class PreviewActivity extends BaseActivity implements Device.Delegate, Fr
     }
 
     private void updateThermalImageView(final Bitmap frame) {
-        // Draw opacity mask if assigned
-        if (opacityMask != null) {
-            Canvas canvas = new Canvas(frame);
-            Paint alphaPaint = new Paint();
-            alphaPaint.setAlpha(Config.PREVIEW_MASK_ALPHA);
-            canvas.drawBitmap(opacityMask, 0, 0, alphaPaint);
-        }
-
-        runOnUiThread(new Runnable() {
+        new Thread(new Runnable() {
             @Override
             public void run() {
-                thermalImageView.setImageBitmap(frame);
-            }
-        });
+                // Draw opacity mask if assigned
+                if (opacityMask != null) {
+                    Canvas canvas = new Canvas(frame);
+                    Paint alphaPaint = new Paint();
+                    alphaPaint.setAlpha(Config.PREVIEW_MASK_ALPHA);
+                    canvas.drawBitmap(opacityMask, 0, 0, alphaPaint);
+                }
 
-        // Perform a native deep copy to avoid object referencing
-        thermalBitmap = frame.copy(frame.getConfig(), frame.isMutable());
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        thermalImageView.setImageBitmap(frame);
+                    }
+                });
+
+                // Perform a native deep copy to avoid object referencing
+                // TODO: thread safe
+                thermalBitmap = frame.copy(frame.getConfig(), frame.isMutable());
+            }
+        }).start();
     }
 
     private synchronized void updateThermalSpotValue() {
