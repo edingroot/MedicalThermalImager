@@ -728,24 +728,29 @@ public class PreviewActivity extends BaseActivity implements Device.Delegate, Fr
         thermalBitmap = frame.copy(frame.getConfig(), frame.isMutable());
     }
 
-    private void updateThermalSpotValue() {
+    private synchronized void updateThermalSpotValue() {
         if (lastRenderedImage == null)
             return;
 
-        final double averageC;
-        RawThermalDump rawThermalDump = new RawThermalDump(
-                1, lastRenderedImage.width(), lastRenderedImage.height(), lastRenderedImage.thermalPixelValues());
-        if (thermalSpotX == -1) {
-            averageC = rawThermalDump.getTemperature9Average(rawThermalDump.getWidth() / 2, rawThermalDump.getHeight() / 2);
-        } else {
-            averageC = rawThermalDump.getTemperature9Average(thermalSpotX, thermalSpotY);
-        }
-        runOnUiThread(new Runnable() {
+        new Thread(new Runnable() {
             @Override
             public void run() {
-                PreviewActivity.this.thermalSpotView.setTemperature(averageC);
+                final double averageC;
+                RawThermalDump rawThermalDump = new RawThermalDump(
+                        1, lastRenderedImage.width(), lastRenderedImage.height(), lastRenderedImage.thermalPixelValues());
+                if (thermalSpotX == -1) {
+                    averageC = rawThermalDump.getTemperature9Average(rawThermalDump.getWidth() / 2, rawThermalDump.getHeight() / 2);
+                } else {
+                    averageC = rawThermalDump.getTemperature9Average(thermalSpotX, thermalSpotY);
+                }
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        PreviewActivity.this.thermalSpotView.setTemperature(averageC);
+                    }
+                });
             }
-        });
+        }).start();
     }
 
     /**
