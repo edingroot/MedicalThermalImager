@@ -20,7 +20,6 @@ import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
 import android.view.View;
-import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.PopupMenu;
 import android.widget.TextView;
@@ -586,7 +585,6 @@ public class PreviewActivity extends BaseActivity implements Device.Delegate, Fr
     }
 
     /**
-     *
      * @param x the pX value on the imageView
      * @param y the pY value on the imageView
      */

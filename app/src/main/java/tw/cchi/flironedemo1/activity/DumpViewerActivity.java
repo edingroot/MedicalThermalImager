@@ -177,7 +177,7 @@ public class DumpViewerActivity extends BaseActivity {
         if(tabResources.getCount() > MAX_OPENING_FILES) {
             showToastMessage("Cannot select more than " + MAX_OPENING_FILES + " items");
         }  else {
-            FilePickerBuilder.getInstance().setMaxCount(3)
+            FilePickerBuilder.getInstance().setMaxCount(MAX_OPENING_FILES)
                     .setSelectedFiles(tabResources.getThermalDumpPaths())
                     .setActivityTheme(R.style.FilePickerTheme)
                     .addFileSupport("ThermalDump", thermalDumpExts)
@@ -217,11 +217,12 @@ public class DumpViewerActivity extends BaseActivity {
                         if (addThermalDumpExecutor == null || addThermalDumpExecutor.isShutdown() || addThermalDumpExecutor.isTerminated())
                             addThermalDumpExecutor = Executors.newCachedThreadPool();
 
+                        // TODO: Fix
                         // Make a short delay to avoid various async problems :P
                         // and also make dumps added sequentially
                         int delay = 0;
                         for (String path : addPaths) {
-                            addThermalDump(path, 50 * delay++);
+                            addThermalDump(path, 120 * delay++);
                         }
                     } else {
                         if (tabResources.getCount() == 0)

@@ -119,13 +119,12 @@ public class ViewerTabResourcesHelper {
 
 
     /**
-     * Add resources of the new tab except ThermalSpotsHelper
+     * Add resources of the new tab except ThermalSpotsHelper.
      *
      * @param thermalDumpPath
      * @param rawThermalDump
      * @param thermalDumpProcessor
-     * @param thermalBitmap
-     * @return {{@link #getCount()}}
+     * @return
      */
     public int addResources(String thermalDumpPath, RawThermalDump rawThermalDump,
                             ThermalDumpProcessor thermalDumpProcessor) {
@@ -145,6 +144,7 @@ public class ViewerTabResourcesHelper {
             rawThermalDumps.remove(removeIndex);
             thermalDumpProcessors.remove(removeIndex);
             grayBitmaps.remove(removeIndex);
+            coloredBitmaps.remove(removeIndex);
 
             if (getThermalSpotHelper() != null) {
                 getThermalSpotHelper().dispose();
