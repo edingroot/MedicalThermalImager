@@ -1,5 +1,6 @@
 package tw.cchi.flironedemo1.adapter;
 
+import android.app.Activity;
 import android.content.Context;
 import android.support.v4.content.res.ResourcesCompat;
 import android.support.v7.widget.RecyclerView;
@@ -17,13 +18,13 @@ import tw.cchi.flironedemo1.R;
 import tw.cchi.flironedemo1.ui.base.BaseActivity;
 
 public class ThermalDumpsRecyclerAdapter extends RecyclerView.Adapter<ThermalDumpsRecyclerAdapter.ViewHolder> {
-    private final Context context;
+    private final Activity activity;
     private final OnInteractionListener onInteractionListener;
     private ArrayList<String> titles = new ArrayList<>();
     private int selectedPosition = -1;
 
-    public ThermalDumpsRecyclerAdapter(Context context, OnInteractionListener onInteractionListener) {
-        this.context = context;
+    public ThermalDumpsRecyclerAdapter(Activity activity, OnInteractionListener onInteractionListener) {
+        this.activity = activity;
         this.onInteractionListener = onInteractionListener;
     }
 
@@ -37,7 +38,7 @@ public class ThermalDumpsRecyclerAdapter extends RecyclerView.Adapter<ThermalDum
         if (titles.size() == 1) {
             selectedPosition = 0;
         }
-        BaseActivity.getInstance().runOnUiThread(new Runnable() {
+        activity.runOnUiThread(new Runnable() {
             @Override
             public void run() {
                 notifyDataSetChanged();
@@ -86,12 +87,12 @@ public class ThermalDumpsRecyclerAdapter extends RecyclerView.Adapter<ThermalDum
 
         if (selectedPosition == position) {
             holder.button.setBackground(
-                    ResourcesCompat.getDrawable(context.getResources(), R.drawable.dumpbtn_selected, null)
+                    ResourcesCompat.getDrawable(activity.getResources(), R.drawable.dumpbtn_selected, null)
             );
         } else {
             // holder.button.setBackgroundResource(android.R.drawable.btn_default); // android default button style
             holder.button.setBackground(
-                    ResourcesCompat.getDrawable(context.getResources(), R.drawable.dumpbtn_normal, null)
+                    ResourcesCompat.getDrawable(activity.getResources(), R.drawable.dumpbtn_normal, null)
             );
         }
 

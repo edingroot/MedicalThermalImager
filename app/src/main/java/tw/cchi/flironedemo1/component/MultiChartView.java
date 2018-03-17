@@ -18,11 +18,13 @@ import java.util.ArrayList;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import butterknife.Unbinder;
 import tw.cchi.flironedemo1.R;
-import tw.cchi.flironedemo1.ui.base.BaseActivity;
 import tw.cchi.flironedemo1.model.ChartParameter;
 
 public class MultiChartView extends RelativeLayout {
+    private Unbinder unbinder;
+
     private View rootView;
     private ChartParameter chartParameter;
 
@@ -31,7 +33,9 @@ public class MultiChartView extends RelativeLayout {
     public MultiChartView(Context context, AttributeSet attrs) {
         super(context, attrs);
         rootView = inflate(context, R.layout.view_multi_thermalcharts, this);
-        ButterKnife.bind(this, rootView);
+
+        unbinder = ButterKnife.bind(this, rootView);
+
         initLineChart();
     }
 
@@ -72,7 +76,8 @@ public class MultiChartView extends RelativeLayout {
             leftAxis.setAxisMinimum(chartParameter.getAxisMin());
         }
 
-        BaseActivity.getInstance().runOnUiThread(new Runnable() {
+        // Run on the ui thread
+        this.post(new Runnable() {
             @Override
             public void run() {
                 lineChart.invalidate();
@@ -96,5 +101,13 @@ public class MultiChartView extends RelativeLayout {
         leftAxis.setDrawZeroLine(false);
         leftAxis.setEnabled(true);
         lineChart.getAxisRight().setEnabled(false);
+    }
+
+    @Override
+    protected void onDetachedFromWindow() {
+        if (unbinder != null)
+            unbinder.unbind();
+
+        super.onDetachedFromWindow();
     }
 }

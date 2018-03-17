@@ -2,28 +2,40 @@ package tw.cchi.flironedemo1;
 
 import android.app.Application;
 
+import tw.cchi.flironedemo1.di.component.ApplicationComponent;
+import tw.cchi.flironedemo1.di.component.DaggerApplicationComponent;
+import tw.cchi.flironedemo1.di.module.ApplicationModule;
+
 /**
  * This is able to be access globally in whole app
  */
-public class MyApplication extends Application {
-    private static MyApplication instance;
+public class MvpApplication extends Application {
+    private ApplicationComponent mApplicationComponent;
 
     @Override
     public void onCreate() {
         super.onCreate();
-        instance = this;
+
+        mApplicationComponent = DaggerApplicationComponent.builder()
+                .applicationModule(new ApplicationModule(this)).build();
+        mApplicationComponent.inject(this);
 
         // copyDatabaseToSDCard();
     }
 
-    public static MyApplication getInstance() {
-        // no need to consider whether instance is null or not here
-        return instance;
+    public ApplicationComponent getComponent() {
+        return mApplicationComponent;
     }
 
-    /**
-     * copyDatabaseToSDCard: Copy db file to sdcard for development purpose.
-     */
+    // Needed to replace the component with a test specific one
+    public void setComponent(ApplicationComponent applicationComponent) {
+        mApplicationComponent = applicationComponent;
+    }
+
+
+//    /**
+//     * copyDatabaseToSDCard: Copy db file to sdcard for development purpose.
+//     */
 //    private void copyDatabaseToSDCard() {
 //        try {
 //            File sd = Environment.getExternalStorageDirectory();

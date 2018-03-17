@@ -6,6 +6,8 @@ import android.util.SparseArray;
 
 import java.util.ArrayList;
 
+import javax.inject.Inject;
+
 import tw.cchi.flironedemo1.thermalproc.RawThermalDump;
 import tw.cchi.flironedemo1.thermalproc.ThermalDumpProcessor;
 
@@ -21,6 +23,10 @@ public class ViewerTabResourcesHelper {
     private ArrayList<Bitmap> coloredBitmaps = new ArrayList<>();
     private ArrayList<Integer> thermalSpotHelperIds = new ArrayList<>(); // <index, thermalSpotHelperId>
     private SparseArray<ThermalSpotsHelper> thermalSpotsHelpers = new SparseArray<>(); // <thermalSpotHelperId, ThermalSpotHelper>
+
+    @Inject
+    public ViewerTabResourcesHelper() {
+    }
 
     public int getCurrentIndex() {
         return currentIndex;

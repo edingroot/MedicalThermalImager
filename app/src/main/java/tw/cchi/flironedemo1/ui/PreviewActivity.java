@@ -48,11 +48,12 @@ import tw.cchi.flironedemo1.Config;
 import tw.cchi.flironedemo1.R;
 import tw.cchi.flironedemo1.db.AppDatabase;
 import tw.cchi.flironedemo1.db.helper.PatientThermalDumpsHelper;
-import tw.cchi.flironedemo1.dialog.SelectPatientDialog;
+import tw.cchi.flironedemo1.ui.dialog.SelectPatientDialog;
 import tw.cchi.flironedemo1.helper.CSVExportHelper;
 import tw.cchi.flironedemo1.thermalproc.RawThermalDump;
 import tw.cchi.flironedemo1.component.ThermalSpotView;
 import tw.cchi.flironedemo1.ui.base.BaseActivity;
+import tw.cchi.flironedemo1.ui.dumpviewer.DumpViewerActivity;
 
 public class PreviewActivity extends BaseActivity implements Device.Delegate, FrameProcessor.Delegate, Device.StreamDelegate, Device.PowerUpdateDelegate {
     public static final int ACTION_PICK_FROM_GALLERY = 100;

@@ -1,4 +1,4 @@
-package tw.cchi.flironedemo1.dialog;
+package tw.cchi.flironedemo1.ui.dialog;
 
 import android.app.Dialog;
 import android.content.Context;

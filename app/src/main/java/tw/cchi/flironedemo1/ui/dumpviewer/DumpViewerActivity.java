@@ -1,4 +1,4 @@
-package tw.cchi.flironedemo1.ui;
+package tw.cchi.flironedemo1.ui.dumpviewer;
 
 import android.Manifest;
 import android.content.DialogInterface;
@@ -23,6 +23,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
+import javax.inject.Inject;
+
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
@@ -38,20 +40,20 @@ import tw.cchi.flironedemo1.AppUtils;
 import tw.cchi.flironedemo1.Config;
 import tw.cchi.flironedemo1.R;
 import tw.cchi.flironedemo1.adapter.ThermalDumpsRecyclerAdapter;
+import tw.cchi.flironedemo1.component.MultiChartView;
 import tw.cchi.flironedemo1.helper.ThermalSpotsHelper;
 import tw.cchi.flironedemo1.helper.ViewerTabResourcesHelper;
 import tw.cchi.flironedemo1.model.ChartParameter;
 import tw.cchi.flironedemo1.thermalproc.RawThermalDump;
 import tw.cchi.flironedemo1.thermalproc.ThermalDumpProcessor;
 import tw.cchi.flironedemo1.thermalproc.VisibleImageMask;
-import tw.cchi.flironedemo1.component.MultiChartView;
 import tw.cchi.flironedemo1.ui.base.BaseActivity;
 
 @RuntimePermissions
 public class DumpViewerActivity extends BaseActivity {
     private static final int MAX_OPENING_FILES = 8;
 
-    private volatile ViewerTabResourcesHelper tabResources = new ViewerTabResourcesHelper();
+    @Inject volatile ViewerTabResourcesHelper tabResources;
     private volatile ChartParameter thermalChartParameter;
     private ThermalDumpsRecyclerAdapter thermalDumpsRecyclerAdapter;
     private volatile ExecutorService addThermalDumpExecutor;
@@ -84,7 +86,10 @@ public class DumpViewerActivity extends BaseActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_dump_viewer);
-        ButterKnife.bind(this);
+
+        getActivityComponent().inject(this);
+        setUnBinder(ButterKnife.bind(this));
+
         thermalChartParameter = new ChartParameter(ChartParameter.ChartType.MULTI_LINE_CURVE);
         thermalChartParameter.setAlpha(0.6f);
 

@@ -18,14 +18,6 @@
     <string name="close">Close</string>
     <string name="ok">OK</string>
 
-    <!-- PreviewActivity: Secondary Controls Panel -->
-    <string name="contrast">Contrast</string>
-    <string name="roi_threshold">ROI Thres.</string>
-    <string name="rcgn_threshold">Rcgn. Thres.</string>
-    <string name="actions">Actions</string>
-    <string name="filter">Filter</string>
-    <string name="rcgHigh">RecognizeHigh</string>
-
     <!-- Menu Items: preview_tools_menu -->
     <string name="dump_viewer">Thermal Dump Viewer</string>
     <string name="pick_mask">Pick Mask Image</string>
@@ -40,5 +32,6 @@
     <string name="noContourSelected">No contour selected</string>
     <string name="processingContour">Processing on selected contour</string>
     <string name="pick_thermal_images">Pick thermal dump files(*.dat) to visualize</string>
+    <string name="error_occurred">Error occurred</string>
 
 </resources>
