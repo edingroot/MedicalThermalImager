@@ -23,5 +23,5 @@ allprojects {
 }
 
 ext {
-    roomVersion = '1.0.0-alpha5'
+    roomVersion = '1.1.0-alpha3'
 }

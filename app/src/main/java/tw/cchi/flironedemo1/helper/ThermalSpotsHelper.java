@@ -2,17 +2,22 @@ package tw.cchi.flironedemo1.helper;
 
 import android.content.Context;
 import android.graphics.Point;
-import android.util.Pair;
 import android.util.SparseArray;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.ViewTreeObserver;
 
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.Queue;
 
+import io.reactivex.Observable;
+import io.reactivex.ObservableEmitter;
+import io.reactivex.ObservableOnSubscribe;
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.functions.Consumer;
+import io.reactivex.functions.Function;
+import io.reactivex.schedulers.Schedulers;
 import tw.cchi.flironedemo1.AppUtils;
 import tw.cchi.flironedemo1.thermalproc.RawThermalDump;
 import tw.cchi.flironedemo1.view.ThermalSpotView;
@@ -22,15 +27,14 @@ public class ThermalSpotsHelper {
     private ViewGroup parentView;
     private RawThermalDump rawThermalDump;
     private int lastSpotId = -1;
+    private boolean viewMetricsSet = false;
     private int imageViewWidth = -1;
     private int imageViewHeight = -1;
     private int imageViewRawY = -1;
     private boolean spotsVisible = true;
 
     private SparseArray<ThermalSpotView> thermalSpotViews = new SparseArray<>(); // <spotId, ThermalSpotView>
-//    private SparseArray<Point> actualThermalPositions = new SparseArray<>(); // <spotId, actual position on the thermal dump>
-    private Queue<Integer> spotValueUpdateQueue = new LinkedList<>(); // spotView spotId for spot views waiting to be update thermal value
-    private Queue<Pair<Integer, Point>> restoreSpotsQueue = new LinkedList<>(); // <spotId, spotRawPosition>
+    private Queue<Runnable> runnablesOnSetViewMetrics = new LinkedList<>();
 
     private int spotDraggingDeltaX;
     private int spotDraggingDeltaY;
@@ -52,7 +56,7 @@ public class ThermalSpotsHelper {
         if (spotMarkers.size() > 0) {
             for (int i = 0; i < spotMarkers.size(); i++) {
                 org.opencv.core.Point spotPosition = spotMarkers.get(i);
-                restoreSpotsQueue.add(new Pair<>(i + 1, new Point((int) spotPosition.x, (int) spotPosition.y)));
+                restoreThermalSpot(i + 1, spotPosition.x, spotPosition.y);
             }
         } else {
             // If there is no spot position information in dump file, add one default spot.
@@ -90,11 +94,16 @@ public class ThermalSpotsHelper {
     public void setImageViewMetrics(int imageViewWidth, int imageViewHeight, int imageViewRawY) {
         System.out.printf("setImageViewMetrics: imageViewWidth=%d, imageViewHeight=%d, imageViewRawY=%d\n",
                 imageViewWidth, imageViewHeight, imageViewRawY);
+        
         this.imageViewWidth = imageViewWidth;
         this.imageViewHeight = imageViewHeight;
         this.imageViewRawY =imageViewRawY;
-        processSpotValueUpdateQueue();
-        processRestoreSpotsQueue();
+        this.viewMetricsSet = true;
+
+        // Execute runnables
+        while (!runnablesOnSetViewMetrics.isEmpty()) {
+            new Thread(runnablesOnSetViewMetrics.poll()).start();
+        }
     }
 
     public synchronized void addThermalSpot(int spotId) {
@@ -207,32 +216,6 @@ public class ThermalSpotsHelper {
         setSpotsVisible(false);
     }
 
-    private void processSpotValueUpdateQueue() {
-        while (!spotValueUpdateQueue.isEmpty()) {
-            int spotId = spotValueUpdateQueue.poll();
-            updateThermalValue(thermalSpotViews.get(spotId));
-        }
-    }
-
-    private void processRestoreSpotsQueue() {
-        while (!restoreSpotsQueue.isEmpty()) {
-            Pair<Integer, Point> pair = restoreSpotsQueue.poll();
-            int spotId = pair.first;
-            Point rawPosition = pair.second;
-
-            System.out.printf("RestoreThermalSpot@BfConv: spotId=%s, x=%d, y=%d\n", spotId, rawPosition.x, rawPosition.y);
-
-            // Convert position on rawThermalImage to position on the imageView
-            double ratio = (double) imageViewWidth / rawThermalDump.getWidth();
-            Point viewPosition = thermalViewPositionConversion(rawPosition.x, rawPosition.y, ratio);
-            viewPosition.y += imageViewRawY;
-
-            System.out.printf("RestoreThermalSpot@AfConv: spotId=%s, x=%d, y=%d\n", spotId, viewPosition.x, viewPosition.y);
-
-            addThermalSpot(spotId, viewPosition.x, viewPosition.y, false);
-        }
-    }
-
     /**
      * Store spot position in thermal dump files
      *
@@ -255,32 +238,47 @@ public class ThermalSpotsHelper {
         rawThermalDump.saveAsync();
     }
 
+    private void restoreThermalSpot(final int spotId, final double rawX, final double rawY) {
+        runIfViewMetricsSet(new Runnable() {
+            @Override
+            public void run() {
+                System.out.printf("RestoreThermalSpot@BfConv: spotId=%s, x=%.0f, y==%.0f\n", spotId, rawX, rawY);
+
+                // Convert position on rawThermalImage to position on the imageView
+                double ratio = (double) imageViewWidth / rawThermalDump.getWidth();
+                Point viewPosition = thermalViewPositionConversion((int) rawX, (int) rawY, ratio);
+                viewPosition.y += imageViewRawY;
+
+                System.out.printf("RestoreThermalSpot@AfConv: spotId=%s, x=%d, y=%d\n", spotId, viewPosition.x, viewPosition.y);
+
+                addThermalSpot(spotId, viewPosition.x, viewPosition.y, false);
+            }
+        });
+    }
+
     /**
      * Note: This method should be called after {@link #setImageViewMetrics(int, int, int)} called
      *
      * @param spotView
      */
     private void updateThermalValue(final ThermalSpotView spotView) {
-        if (imageViewWidth == -1 || imageViewRawY == -1) {
-            // throw new RuntimeException("Error: cannot calculate position conversion ratio due to image view metrics not set");
-
-            // Wait for view metrics set in order to calculate position conversion ratio
-            spotValueUpdateQueue.add(spotView.getSpotId());
-        }
-        double ratio = (double) rawThermalDump.getWidth() / imageViewWidth;
-
-        Point viewPosition = spotView.getCenterPosition();
-        viewPosition.y -= imageViewRawY;
-        Point thermalPosition = new Point(
-                thermalViewPositionConversion(viewPosition.x, viewPosition.y, ratio)
-        );
-//        actualThermalPositions.append(spotView.getSpotId(), thermalPosition);
-
-        final double averageC = rawThermalDump.getTemperature9Average(thermalPosition.x, thermalPosition.y);
-        spotView.post(new Runnable() {
+        runIfViewMetricsSet(new Runnable() {
             @Override
             public void run() {
-                spotView.setTemperature(averageC);
+                double ratio = (double) rawThermalDump.getWidth() / imageViewWidth;
+                Point viewPosition = spotView.getCenterPosition();
+                viewPosition.y -= imageViewRawY;
+                Point thermalPosition = new Point(
+                        thermalViewPositionConversion(viewPosition.x, viewPosition.y, ratio)
+                );
+
+                final double averageC = rawThermalDump.getTemperature9Average(thermalPosition.x, thermalPosition.y);
+                spotView.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        spotView.setTemperature(averageC);
+                    }
+                });
             }
         });
     }
@@ -292,6 +290,14 @@ public class ThermalSpotsHelper {
         x = (int) (x * ratio);
         y = (int) (y * ratio);
         return new Point(x, y);
+    }
+
+    private void runIfViewMetricsSet(Runnable runnable) {
+        if (viewMetricsSet) {
+            new Thread(runnable).start();
+        } else {
+            runnablesOnSetViewMetrics.add(runnable);
+        }
     }
 
 }
