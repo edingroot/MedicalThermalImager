@@ -1,4 +1,4 @@
-package tw.cchi.flironedemo1.activity;
+package tw.cchi.flironedemo1.ui.base;
 
 import android.app.Activity;
 import android.support.v7.app.AppCompatActivity;

@@ -1,9 +1,8 @@
-package tw.cchi.flironedemo1.view;
+package tw.cchi.flironedemo1.component;
 
 import android.content.Context;
 import android.graphics.Color;
 import android.util.AttributeSet;
-import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.RelativeLayout;
 
@@ -20,7 +19,7 @@ import java.util.ArrayList;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import tw.cchi.flironedemo1.R;
-import tw.cchi.flironedemo1.activity.BaseActivity;
+import tw.cchi.flironedemo1.ui.base.BaseActivity;
 import tw.cchi.flironedemo1.model.ChartParameter;
 
 public class MultiChartView extends RelativeLayout {

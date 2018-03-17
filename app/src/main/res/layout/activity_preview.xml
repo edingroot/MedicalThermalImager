@@ -5,7 +5,7 @@
                 xmlns:custom="http://schemas.android.com/apk/res-auto"
                 android:background="@android:color/background_dark"
                 android:orientation="vertical"
-                tools:context=".activity.PreviewActivity"
+                tools:context=".ui.PreviewActivity"
                 android:keepScreenOn="true"
                 android:id="@+id/topView"
                 android:touchscreenBlocksFocus="false">
@@ -184,7 +184,7 @@
 
     </RelativeLayout>
 
-    <tw.cchi.flironedemo1.view.ThermalSpotView
+    <tw.cchi.flironedemo1.component.ThermalSpotView
         android:id="@+id/thermalSpotView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"

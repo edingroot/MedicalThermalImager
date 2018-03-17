@@ -14,7 +14,7 @@ import java.util.Locale;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import tw.cchi.flironedemo1.R;
-import tw.cchi.flironedemo1.activity.BaseActivity;
+import tw.cchi.flironedemo1.ui.base.BaseActivity;
 
 public class ThermalDumpsRecyclerAdapter extends RecyclerView.Adapter<ThermalDumpsRecyclerAdapter.ViewHolder> {
     private final Context context;

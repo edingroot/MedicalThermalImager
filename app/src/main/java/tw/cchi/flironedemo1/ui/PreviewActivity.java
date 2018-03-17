@@ -1,4 +1,4 @@
-package tw.cchi.flironedemo1.activity;
+package tw.cchi.flironedemo1.ui;
 
 import android.app.Activity;
 import android.content.Intent;
@@ -51,7 +51,8 @@ import tw.cchi.flironedemo1.db.helper.PatientThermalDumpsHelper;
 import tw.cchi.flironedemo1.dialog.SelectPatientDialog;
 import tw.cchi.flironedemo1.helper.CSVExportHelper;
 import tw.cchi.flironedemo1.thermalproc.RawThermalDump;
-import tw.cchi.flironedemo1.view.ThermalSpotView;
+import tw.cchi.flironedemo1.component.ThermalSpotView;
+import tw.cchi.flironedemo1.ui.base.BaseActivity;
 
 public class PreviewActivity extends BaseActivity implements Device.Delegate, FrameProcessor.Delegate, Device.StreamDelegate, Device.PowerUpdateDelegate {
     public static final int ACTION_PICK_FROM_GALLERY = 100;

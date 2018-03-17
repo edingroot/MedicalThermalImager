@@ -23,7 +23,6 @@ import java.util.List;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import tw.cchi.flironedemo1.R;
-import tw.cchi.flironedemo1.activity.DumpViewerActivity;
 import tw.cchi.flironedemo1.adapter.PatientSelectsRecyclerAdapter;
 import tw.cchi.flironedemo1.db.AppDatabase;
 import tw.cchi.flironedemo1.db.Patient;

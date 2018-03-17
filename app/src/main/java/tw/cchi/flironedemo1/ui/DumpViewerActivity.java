@@ -1,4 +1,4 @@
-package tw.cchi.flironedemo1.activity;
+package tw.cchi.flironedemo1.ui;
 
 import android.Manifest;
 import android.content.DialogInterface;
@@ -44,7 +44,8 @@ import tw.cchi.flironedemo1.model.ChartParameter;
 import tw.cchi.flironedemo1.thermalproc.RawThermalDump;
 import tw.cchi.flironedemo1.thermalproc.ThermalDumpProcessor;
 import tw.cchi.flironedemo1.thermalproc.VisibleImageMask;
-import tw.cchi.flironedemo1.view.MultiChartView;
+import tw.cchi.flironedemo1.component.MultiChartView;
+import tw.cchi.flironedemo1.ui.base.BaseActivity;
 
 @RuntimePermissions
 public class DumpViewerActivity extends BaseActivity {

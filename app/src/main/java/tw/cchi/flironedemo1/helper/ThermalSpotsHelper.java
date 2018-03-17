@@ -13,7 +13,7 @@ import java.util.Queue;
 
 import tw.cchi.flironedemo1.AppUtils;
 import tw.cchi.flironedemo1.thermalproc.RawThermalDump;
-import tw.cchi.flironedemo1.view.ThermalSpotView;
+import tw.cchi.flironedemo1.component.ThermalSpotView;
 
 public class ThermalSpotsHelper {
     private Context context;
