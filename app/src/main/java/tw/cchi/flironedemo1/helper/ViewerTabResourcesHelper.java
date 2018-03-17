@@ -1,6 +1,7 @@
 package tw.cchi.flironedemo1.helper;
 
 import android.graphics.Bitmap;
+import android.support.annotation.Nullable;
 import android.util.SparseArray;
 
 import java.util.ArrayList;
@@ -16,7 +17,8 @@ public class ViewerTabResourcesHelper {
     private ArrayList<String> thermalDumpPaths = new ArrayList<>(); // manage opened dumps by path because filepicker returns selected paths
     private ArrayList<RawThermalDump> rawThermalDumps = new ArrayList<>();
     private ArrayList<ThermalDumpProcessor> thermalDumpProcessors = new ArrayList<>();
-    private ArrayList<Bitmap> thermalBitmaps = new ArrayList<>();
+    private ArrayList<Bitmap> grayBitmaps = new ArrayList<>();
+    private ArrayList<Bitmap> coloredBitmaps = new ArrayList<>();
     private ArrayList<Integer> thermalSpotHelperIds = new ArrayList<>(); // <index, thermalSpotHelperId>
     private SparseArray<ThermalSpotsHelper> thermalSpotsHelpers = new SparseArray<>(); // <thermalSpotHelperId, ThermalSpotHelper>
 
@@ -72,9 +74,25 @@ public class ViewerTabResourcesHelper {
         }
     }
 
-    public Bitmap getThermalBitmap() {
+    public Bitmap getThermalBitmap(int contrastRatio, boolean colored) {
         synchronized (listsLock) {
-            return thermalBitmaps.get(currentIndex);
+            Bitmap bitmap = colored ? coloredBitmaps.get(currentIndex) : grayBitmaps.get(currentIndex);
+
+            if (bitmap == null) {
+                bitmap = getThermalDumpProcessor().getBitmap(contrastRatio, colored);
+                setThermalBitmap(colored, bitmap);
+            }
+
+            return bitmap;
+        }
+    }
+
+    private void setThermalBitmap(boolean colored, Bitmap thermalBitmap) {
+        synchronized (listsLock) {
+            if (colored)
+                coloredBitmaps.set(currentIndex, thermalBitmap);
+            else
+                grayBitmaps.add(currentIndex, thermalBitmap);
         }
     }
 
@@ -110,12 +128,13 @@ public class ViewerTabResourcesHelper {
      * @return {{@link #getCount()}}
      */
     public int addResources(String thermalDumpPath, RawThermalDump rawThermalDump,
-                            ThermalDumpProcessor thermalDumpProcessor, Bitmap thermalBitmap) {
+                            ThermalDumpProcessor thermalDumpProcessor) {
         synchronized (listsLock) {
             thermalDumpPaths.add(thermalDumpPath);
             rawThermalDumps.add(rawThermalDump);
             thermalDumpProcessors.add(thermalDumpProcessor);
-            thermalBitmaps.add(thermalBitmap);
+            grayBitmaps.add(null);
+            coloredBitmaps.add(null);
         }
         return getCount();
     }
@@ -125,7 +144,7 @@ public class ViewerTabResourcesHelper {
             thermalDumpPaths.remove(removeIndex);
             rawThermalDumps.remove(removeIndex);
             thermalDumpProcessors.remove(removeIndex);
-            thermalBitmaps.remove(removeIndex);
+            grayBitmaps.remove(removeIndex);
 
             if (getThermalSpotHelper() != null) {
                 getThermalSpotHelper().dispose();

@@ -6,7 +6,7 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
-import android.support.design.widget.FloatingActionButton;
+import android.support.annotation.Nullable;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -53,10 +53,12 @@ public class DumpViewerActivity extends BaseActivity {
     private volatile ViewerTabResourcesHelper tabResources = new ViewerTabResourcesHelper();
     private volatile ChartParameter thermalChartParameter;
     private ThermalDumpsRecyclerAdapter thermalDumpsRecyclerAdapter;
-
     private volatile ExecutorService addThermalDumpExecutor;
+
     private boolean showingVisibleImage = false;
     private volatile boolean visibleImageAlignMode = false;
+    private int contrastRatio = 1;
+    private boolean coloredMode = true;
     private boolean showingChart = false;
 
     private int horizontalLineY = -1; // pY (on the thermal dump) of horizontal indicator on showingChart mode
@@ -86,7 +88,7 @@ public class DumpViewerActivity extends BaseActivity {
         thermalChartParameter.setAlpha(0.6f);
 
         // Launch image picker on activity first started
-        onImagePickClick(findViewById(R.id.btnPick));
+        onImagePickClick(null);
         showToastMessage(getString(R.string.pick_thermal_images));
 
         // Wait until the view have been measured (visibility state considered)
@@ -118,19 +120,22 @@ public class DumpViewerActivity extends BaseActivity {
             public void onClick(View v, int position) {
                 ThermalSpotsHelper thermalSpotsHelper;
 
-                // Hide all spots of the old dump, switch to new tab resources, show spots of the new dump
+                // Hide all spots of the last dump, switch to new tab resources, show spots of the new dump
                 thermalSpotsHelper = tabResources.getThermalSpotHelper();
-                if (thermalSpotsHelper != null) thermalSpotsHelper.setSpotsVisible(false);
+                if (thermalSpotsHelper != null)
+                    thermalSpotsHelper.setSpotsVisible(false);
                 tabResources.setCurrentIndex(position);
+
                 thermalSpotsHelper = tabResources.getThermalSpotHelper();
-                if (thermalSpotsHelper != null) thermalSpotsHelper.setSpotsVisible(true);
+                if (thermalSpotsHelper != null)
+                    thermalSpotsHelper.setSpotsVisible(true);
 
                 if (showingVisibleImage) {
                     visibleImageAlignMode = false;
                     showVisibleImage(tabResources.getRawThermalDump());
                 }
 
-                updateThermalImageView(tabResources.getThermalBitmap());
+                updateThermalImageView();
             }
 
             @Override
@@ -283,12 +288,12 @@ public class DumpViewerActivity extends BaseActivity {
     }
 
     @OnClick(R.id.btnPick)
-    public void onImagePickClick(View v) {
+    public void onImagePickClick(@Nullable View v) {
         DumpViewerActivityPermissionsDispatcher.onPickDocWithPermissionCheck(this);
     }
 
     @OnClick(R.id.btnToggleVisible)
-    public void onToggleVisibleImageClick(View v) {
+    public void onToggleVisibleImageClick(@Nullable View v) {
         if (tabResources.getCount() == 0)
             return;
 
@@ -296,6 +301,7 @@ public class DumpViewerActivity extends BaseActivity {
             visibleImageView.setVisibility(View.GONE);
             showingVisibleImage = visibleImageAlignMode = false;
         } else {
+
             if (showVisibleImage(tabResources.getRawThermalDump())) {
                 showingVisibleImage = true;
             } else {
@@ -305,7 +311,7 @@ public class DumpViewerActivity extends BaseActivity {
     }
 
     @OnLongClick(R.id.btnToggleVisible)
-    public boolean onToggleVisibleImageLongClicked(View v) {
+    public boolean onToggleVisibleImageLongClick(View v) {
         if (tabResources.getCount() == 0)
             return true;
 
@@ -324,8 +330,14 @@ public class DumpViewerActivity extends BaseActivity {
         return true;
     }
 
+    @OnClick(R.id.btnToggleColoredMode)
+    public void onToggleColoredModeClick(@Nullable View v) {
+        coloredMode = !coloredMode;
+        updateThermalImageView();
+    }
+
     @OnClick(R.id.btnToggleHorizonChart)
-    public void onToggleHorizonChartClicked(View v) {
+    public void onToggleHorizonChartClick(@Nullable View v) {
         if (tabResources.getCount() == 0 || horizontalLineY == -1)
             return;
 
@@ -378,13 +390,12 @@ public class DumpViewerActivity extends BaseActivity {
 
                 if (thermalDump != null) {
                     ThermalDumpProcessor thermalDumpProcessor = new ThermalDumpProcessor(thermalDump);
-                    Bitmap thermalBitmap = thermalDumpProcessor.getBitmap(1, true);
 
                     if (horizontalLineY == -1) {
                         horizontalLineY = thermalDump.getHeight() / 2;
                     }
 
-                    tabResources.addResources(filepath, thermalDump, thermalDumpProcessor, thermalBitmap);
+                    tabResources.addResources(filepath, thermalDump, thermalDumpProcessor);
                     addToChartParameter(thermalChartParameter, thermalDump, horizontalLineY);
                     thermalChartView.updateChart(thermalChartParameter);
 
@@ -392,7 +403,7 @@ public class DumpViewerActivity extends BaseActivity {
                     System.out.printf("addThermalDump: currIndex=%d, newIndex=%d\n", tabResources.getCurrentIndex(), newIndex);
                     if (tabResources.getCurrentIndex() != newIndex) {
                         tabResources.setCurrentIndex(newIndex);
-                        updateThermalImageView(thermalBitmap);
+                        updateThermalImageView();
                     }
                 } else {
                     showToastMessage("Failed reading thermal dump");
@@ -414,7 +425,7 @@ public class DumpViewerActivity extends BaseActivity {
             System.out.printf("removeThermalDump: update thermal image view - currIndex=%d, newIndex=%d\n", currentIndex, newIndex);
             ThermalSpotsHelper thermalSpotsHelper;
 
-            updateThermalImageView(tabResources.getThermalBitmap());
+            updateThermalImageView();
             thermalSpotsHelper = tabResources.getThermalSpotHelper();
             if (thermalSpotsHelper != null)
                 thermalSpotsHelper.setSpotsVisible(true);
@@ -423,17 +434,9 @@ public class DumpViewerActivity extends BaseActivity {
         if (tabResources.getCount() == 0) {
             thermalImageView.setImageBitmap(null);
 
-            if (showingChart) {
-                thermalChartView.setVisibility(View.GONE);
-                horizontalLine.setVisibility(View.GONE);
-                showingChart = false;
-            }
+            if (showingVisibleImage) onToggleVisibleImageClick(null);
+            if (showingChart) onToggleHorizonChartClick(null);
 
-            if (showingVisibleImage) {
-                visibleImageView.setImageBitmap(null);
-                visibleImageView.setVisibility(View.GONE);
-                showingVisibleImage = visibleImageAlignMode = false;
-            }
         } else {
             if (showingVisibleImage) {
                 visibleImageAlignMode = false;
@@ -443,7 +446,9 @@ public class DumpViewerActivity extends BaseActivity {
         System.gc();
     }
 
-    private void updateThermalImageView(final Bitmap frame) {
+    private void updateThermalImageView() {
+        final Bitmap frame = tabResources.getThermalBitmap(contrastRatio, coloredMode);
+
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
@@ -598,6 +603,13 @@ public class DumpViewerActivity extends BaseActivity {
     }
 
     private boolean showVisibleImage(RawThermalDump rawThermalDump) {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                updateVisibleImageView(null);
+            }
+        });
+
         if (!rawThermalDump.isVisibleImageAttached()) {
             if (!rawThermalDump.attachVisibleImageMask()) {
                 showToastMessage("Failed to read visible image. Does the jpg file with same name exist?");
@@ -607,6 +619,7 @@ public class DumpViewerActivity extends BaseActivity {
                 @Override
                 public void onBitmapUpdate(VisibleImageMask maskInstance) {
                     final VisibleImageMask mask = maskInstance;
+
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
@@ -622,6 +635,11 @@ public class DumpViewerActivity extends BaseActivity {
     }
 
     private void updateVisibleImageView(VisibleImageMask mask) {
+        if (mask == null) {
+            visibleImageView.setImageBitmap(null);
+            return;
+        }
+
         visibleImageView.setImageBitmap(mask.getVisibleBitmap());
         visibleImageView.setAlpha(visibleImageAlignMode ? Config.DUMP_VISUAL_MASK_ALPHA / 255f : 1f);
         visibleImageView.setVisibility(View.VISIBLE);

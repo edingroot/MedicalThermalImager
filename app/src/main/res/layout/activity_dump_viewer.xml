@@ -120,7 +120,16 @@
             android:layout_height="wrap_content"
             android:layout_alignParentStart="true"
             android:layout_alignParentTop="true"
-            android:src="@android:drawable/ic_menu_camera"/>
+            android:src="@android:drawable/ic_menu_view"/>
+
+        <ImageButton
+            android:id="@+id/btnToggleColoredMode"
+            style="?metaButtonBarButtonStyle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentTop="true"
+            android:layout_toEndOf="@+id/btnToggleVisible"
+            android:src="@android:drawable/ic_menu_compass"/>
 
         <ImageButton
             android:id="@+id/btnToggleHorizonChart"
@@ -128,8 +137,8 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_alignParentTop="true"
-            android:layout_toEndOf="@+id/btnToggleVisible"
-            android:src="@android:drawable/ic_menu_gallery"/>
+            android:layout_toEndOf="@+id/btnToggleColoredMode"
+            android:src="@android:drawable/ic_menu_sort_by_size"/>
 
         <android.support.design.widget.FloatingActionButton
             android:id="@+id/fabAddSpot"

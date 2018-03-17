@@ -164,7 +164,9 @@ public class ThermalDumpProcessor {
         Mat resultMat = getImageMat(contrastRatio, colored);
         Bitmap resultBmp = Bitmap.createBitmap(width, height, Bitmap.Config.RGB_565);
 
-        Imgproc.cvtColor(resultMat, resultMat, Imgproc.COLOR_BGR2RGB);
+        if (colored)
+            Imgproc.cvtColor(resultMat, resultMat, Imgproc.COLOR_BGR2RGB);
+
         Utils.matToBitmap(resultMat, resultBmp);
         return resultBmp;
     }
@@ -175,25 +177,20 @@ public class ThermalDumpProcessor {
      * @param contrastRatio Enhance contrast if > 1 and vise versa.
      */
     public Mat getImageMat(double contrastRatio, boolean colored) {
-        Mat result;
-
         if (generatedImage == null) {
             generateThermalImage();
         }
 
-        if (contrastRatio == 1) {
-            result = generatedImage;
-        } else {
-            result = generatedImage.clone();
-
+        Mat result = generatedImage.clone();
+        if (contrastRatio != 1) {
             // convertTo: last 2 params are the alpha and beta values
              generatedImage.convertTo(result, -1, contrastRatio, 0);
-
-            return result;
         }
 
-        if (colored)
+        if (colored) {
+            Core.bitwise_not(result, result);
             Contrib.applyColorMap(result, result, Contrib.COLORMAP_RAINBOW);
+        }
 
         return result;
     }
