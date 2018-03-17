@@ -25,6 +25,9 @@ import java.util.concurrent.TimeUnit;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import butterknife.OnClick;
+import butterknife.OnLongClick;
+import butterknife.OnTouch;
 import droidninja.filepicker.FilePickerBuilder;
 import droidninja.filepicker.FilePickerConst;
 import droidninja.filepicker.models.sort.SortingTypes;
@@ -74,9 +77,6 @@ public class DumpViewerActivity extends BaseActivity {
 
     @BindView(R.id.horizontalLine) View horizontalLine;
 
-    @BindView(R.id.btnToggleVisible) ImageView btnToggleVisible;
-    @BindView(R.id.fabAddSpot) FloatingActionButton fabAddSpot;
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -86,27 +86,8 @@ public class DumpViewerActivity extends BaseActivity {
         thermalChartParameter.setAlpha(0.6f);
 
         // Launch image picker on activity first started
-        onImagePickClicked(findViewById(R.id.btnPick));
+        onImagePickClick(findViewById(R.id.btnPick));
         showToastMessage(getString(R.string.pick_thermal_images));
-
-        thermalImageView.setOnTouchListener(new View.OnTouchListener() {
-            @Override
-            public boolean onTouch(View v, MotionEvent event) {
-                if (thermalImageView.getMeasuredHeight() > 0) {
-                    int x = (int) event.getX();
-                    int y = (int) event.getY();
-                    if (y < 0) {
-                        y = 0;
-                    } else if (y >= thermalImageView.getMeasuredHeight()) {
-                        y = thermalImageView.getMeasuredHeight() - 1;
-                    }
-                    handleThermalImageTouch(x, y);
-                }
-
-                // Consuming the onTouch event in order to capture future movement
-                return true;
-            }
-        });
 
         // Wait until the view have been measured (visibility state considered)
         // Ref: https://stackoverflow.com/questions/36586146/ongloballayoutlistener-vs-postrunnable
@@ -119,44 +100,6 @@ public class DumpViewerActivity extends BaseActivity {
                     visibleImageView.getLayoutParams().height = thermalImageView.getMeasuredHeight();
                     visibleImageView.requestLayout();
                 }
-            }
-        });
-
-        visibleImageView.setOnTouchListener(new View.OnTouchListener() {
-            @Override
-            public boolean onTouch(View view, MotionEvent motionEvent) {
-                if (!visibleImageAlignMode)
-                    return false;
-
-                final int x = (int) motionEvent.getRawX();
-                final int y = (int) motionEvent.getRawY();
-                FrameLayout.LayoutParams layoutParams = (FrameLayout.LayoutParams) view.getLayoutParams();
-
-                switch (motionEvent.getAction() & MotionEvent.ACTION_MASK) {
-                    case MotionEvent.ACTION_DOWN:
-                        startDraggingX = x - layoutParams.leftMargin;
-                        startDraggingY = y - layoutParams.topMargin;
-                        break;
-
-                    case MotionEvent.ACTION_MOVE:
-                        layoutParams.leftMargin = x - startDraggingX;
-                        layoutParams.topMargin = y - startDraggingY;
-                        // Prevent the view from being compressed when moving right or down
-                        layoutParams.rightMargin = -500;
-                        layoutParams.bottomMargin = -500;
-                        view.setLayoutParams(layoutParams);
-                        view.invalidate();
-                        break;
-
-                    case MotionEvent.ACTION_UP:
-                        handleVisibleImageDragged();
-                        break;
-
-                    case MotionEvent.ACTION_POINTER_DOWN:
-                    case MotionEvent.ACTION_POINTER_UP:
-                        break;
-                }
-                return true;
             }
         });
 
@@ -214,32 +157,12 @@ public class DumpViewerActivity extends BaseActivity {
         recyclerDumpSwitcher.setLayoutManager(
                 new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
         );
-
-        btnToggleVisible.setOnLongClickListener(new View.OnLongClickListener() {
-            @Override
-            public boolean onLongClick(View view) {
-                onToggleVisibleImageLongClicked(view);
-                return true;
-            }
-        });
-
-        fabAddSpot.setOnLongClickListener(new View.OnLongClickListener() {
-            @Override
-            public boolean onLongClick(View v) {
-                onFabAddSpotLongClicked(v);
-                return true;
-            }
-        });
     }
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         DumpViewerActivityPermissionsDispatcher.onRequestPermissionsResult(this,requestCode, grantResults);
-    }
-
-    public void onImagePickClicked(View v) {
-        DumpViewerActivityPermissionsDispatcher.onPickDocWithPermissionCheck(this);
     }
 
     @NeedsPermission({Manifest.permission.WRITE_EXTERNAL_STORAGE})
@@ -305,7 +228,67 @@ public class DumpViewerActivity extends BaseActivity {
         }
     }
 
-    public void onToggleVisibleImageClicked(View v) {
+
+    @OnTouch(R.id.thermalImageView)
+    public boolean onThermalImageViewTouch(View v, MotionEvent event) {
+        if (thermalImageView.getMeasuredHeight() > 0) {
+            int x = (int) event.getX();
+            int y = (int) event.getY();
+            if (y < 0) {
+                y = 0;
+            } else if (y >= thermalImageView.getMeasuredHeight()) {
+                y = thermalImageView.getMeasuredHeight() - 1;
+            }
+            handleThermalImageTouch(x, y);
+        }
+
+        // Consuming the onTouch event in order to capture future movement
+        return true;
+    }
+
+    @OnTouch(R.id.visibleImageView)
+    public boolean onVisibleImageViewTouch(View view, MotionEvent motionEvent) {
+        if (!visibleImageAlignMode)
+            return false;
+
+        final int x = (int) motionEvent.getRawX();
+        final int y = (int) motionEvent.getRawY();
+        FrameLayout.LayoutParams layoutParams = (FrameLayout.LayoutParams) view.getLayoutParams();
+
+        switch (motionEvent.getAction() & MotionEvent.ACTION_MASK) {
+            case MotionEvent.ACTION_DOWN:
+                startDraggingX = x - layoutParams.leftMargin;
+                startDraggingY = y - layoutParams.topMargin;
+                break;
+
+            case MotionEvent.ACTION_MOVE:
+                layoutParams.leftMargin = x - startDraggingX;
+                layoutParams.topMargin = y - startDraggingY;
+                // Prevent the view from being compressed when moving right or down
+                layoutParams.rightMargin = -500;
+                layoutParams.bottomMargin = -500;
+                view.setLayoutParams(layoutParams);
+                view.invalidate();
+                break;
+
+            case MotionEvent.ACTION_UP:
+                handleVisibleImageDragged();
+                break;
+
+            case MotionEvent.ACTION_POINTER_DOWN:
+            case MotionEvent.ACTION_POINTER_UP:
+                break;
+        }
+        return true;
+    }
+
+    @OnClick(R.id.btnPick)
+    public void onImagePickClick(View v) {
+        DumpViewerActivityPermissionsDispatcher.onPickDocWithPermissionCheck(this);
+    }
+
+    @OnClick(R.id.btnToggleVisible)
+    public void onToggleVisibleImageClick(View v) {
         if (tabResources.getCount() == 0)
             return;
 
@@ -321,9 +304,10 @@ public class DumpViewerActivity extends BaseActivity {
         }
     }
 
-    public void onToggleVisibleImageLongClicked(View v) {
+    @OnLongClick(R.id.btnToggleVisible)
+    public boolean onToggleVisibleImageLongClicked(View v) {
         if (tabResources.getCount() == 0)
-            return;
+            return true;
 
         if (visibleImageAlignMode) {
             visibleImageAlignMode = false;
@@ -331,13 +315,16 @@ public class DumpViewerActivity extends BaseActivity {
             visibleImageAlignMode = true;
             if (!showingVisibleImage) {
                 // Show visible image first
-                onToggleVisibleImageClicked(btnToggleVisible);
+                onToggleVisibleImageClick(v);
             } else {
                 visibleImageView.setAlpha(visibleImageAlignMode ? Config.DUMP_VISUAL_MASK_ALPHA / 255f : 1f);
             }
         }
+
+        return true;
     }
 
+    @OnClick(R.id.btnToggleHorizonChart)
     public void onToggleHorizonChartClicked(View v) {
         if (tabResources.getCount() == 0 || horizontalLineY == -1)
             return;
@@ -355,16 +342,20 @@ public class DumpViewerActivity extends BaseActivity {
         }
     }
 
-    public void onFabAddSpotClicked(View v) {
+    @OnClick(R.id.fabAddSpot)
+    public void onFabAddSpotClick(View v) {
         ThermalSpotsHelper thermalSpotsHelper = tabResources.getThermalSpotHelper();
         int lastSpotId = thermalSpotsHelper.getLastSpotId();
         thermalSpotsHelper.addThermalSpot(lastSpotId == -1 ? 1 : lastSpotId + 1);
     }
 
-    public void onFabAddSpotLongClicked(View v) {
+    @OnLongClick(R.id.fabAddSpot)
+    public boolean onFabAddSpotLongClick(View v) {
         ThermalSpotsHelper thermalSpotsHelper = tabResources.getThermalSpotHelper();
         thermalSpotsHelper.removeLastThermalSpot();
+        return true;
     }
+
 
     private void showToastMessage(final String message) {
         runOnUiThread(new Runnable() {

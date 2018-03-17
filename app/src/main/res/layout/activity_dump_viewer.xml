@@ -86,7 +86,6 @@
             style="?metaButtonBarButtonStyle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:onClick="onImagePickClicked"
             android:src="@android:drawable/ic_input_add"/>
 
         <HorizontalScrollView
@@ -121,7 +120,6 @@
             android:layout_height="wrap_content"
             android:layout_alignParentStart="true"
             android:layout_alignParentTop="true"
-            android:onClick="onToggleVisibleImageClicked"
             android:src="@android:drawable/ic_menu_camera"/>
 
         <ImageButton
@@ -131,18 +129,16 @@
             android:layout_height="wrap_content"
             android:layout_alignParentTop="true"
             android:layout_toEndOf="@+id/btnToggleVisible"
-            android:onClick="onToggleHorizonChartClicked"
             android:src="@android:drawable/ic_menu_gallery"/>
 
         <android.support.design.widget.FloatingActionButton
             android:id="@+id/fabAddSpot"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_alignParentRight="true"
+            android:layout_alignParentEnd="true"
             android:layout_centerVertical="true"
             android:src="@android:drawable/ic_menu_add"
-            android:clickable="true"
-            android:onClick="onFabAddSpotClicked"/>
+            android:clickable="true"/>
 
     </RelativeLayout>
 
