@@ -73,7 +73,8 @@ public class ThermalSpotView extends RelativeLayout {
             new Thread(beforeMeasureQueue.poll()).start();
         }
 
-        if (onPlacedListener != null) {
+        if (moved && onPlacedListener != null) {
+            moved = false;
             onPlacedListener.onPlaced();
         }
     }
