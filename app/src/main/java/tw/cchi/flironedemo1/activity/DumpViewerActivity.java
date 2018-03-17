@@ -45,7 +45,7 @@ import tw.cchi.flironedemo1.view.MultiChartView;
 
 @RuntimePermissions
 public class DumpViewerActivity extends BaseActivity {
-    private static final int MAX_OPENING_FILES = 3;
+    private static final int MAX_OPENING_FILES = 8;
 
     private volatile ViewerTabResourcesHelper tabResources = new ViewerTabResourcesHelper();
     private volatile ChartParameter thermalChartParameter;
