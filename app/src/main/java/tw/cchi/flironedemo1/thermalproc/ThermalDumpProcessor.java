@@ -5,7 +5,10 @@ import android.util.Log;
 
 import org.opencv.android.OpenCVLoader;
 import org.opencv.android.Utils;
+import org.opencv.contrib.Contrib;
 import org.opencv.core.*;
+import org.opencv.highgui.Highgui;
+import org.opencv.imgproc.Imgproc;
 
 import tw.cchi.flironedemo1.AppUtils;
 import tw.cchi.flironedemo1.Config;
@@ -157,9 +160,12 @@ public class ThermalDumpProcessor {
      *
      * @param contrastRatio Enhance contrast if > 1 and vise versa.
      */
-    public Bitmap getBitmap(double contrastRatio) {
+    public Bitmap getBitmap(double contrastRatio, boolean colored) {
+        Mat resultMat = getImageMat(contrastRatio, colored);
         Bitmap resultBmp = Bitmap.createBitmap(width, height, Bitmap.Config.RGB_565);
-        Utils.matToBitmap(getImageMat(contrastRatio), resultBmp);
+
+        Imgproc.cvtColor(resultMat, resultMat, Imgproc.COLOR_BGR2RGB);
+        Utils.matToBitmap(resultMat, resultBmp);
         return resultBmp;
     }
 
@@ -168,19 +174,28 @@ public class ThermalDumpProcessor {
      *
      * @param contrastRatio Enhance contrast if > 1 and vise versa.
      */
-    public Mat getImageMat(double contrastRatio) {
+    public Mat getImageMat(double contrastRatio, boolean colored) {
+        Mat result;
+
         if (generatedImage == null) {
             generateThermalImage();
         }
 
         if (contrastRatio == 1) {
-            return generatedImage;
+            result = generatedImage;
         } else {
-            Mat result = generatedImage.clone();
+            result = generatedImage.clone();
+
             // convertTo: last 2 params are the alpha and beta values
-            generatedImage.convertTo(result, -1, contrastRatio, 0);
+             generatedImage.convertTo(result, -1, contrastRatio, 0);
+
             return result;
         }
+
+        if (colored)
+            Contrib.applyColorMap(result, result, Contrib.COLORMAP_RAINBOW);
+
+        return result;
     }
 
     /**

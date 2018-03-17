@@ -387,7 +387,7 @@ public class DumpViewerActivity extends BaseActivity {
 
                 if (thermalDump != null) {
                     ThermalDumpProcessor thermalDumpProcessor = new ThermalDumpProcessor(thermalDump);
-                    Bitmap thermalBitmap = thermalDumpProcessor.getBitmap(1);
+                    Bitmap thermalBitmap = thermalDumpProcessor.getBitmap(1, true);
 
                     if (horizontalLineY == -1) {
                         horizontalLineY = thermalDump.getHeight() / 2;
