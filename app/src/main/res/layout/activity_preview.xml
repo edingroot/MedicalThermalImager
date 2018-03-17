@@ -45,71 +45,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_alignParentStart="true"
-                android:onClick="onSelectPatientClicked"
                 android:src="@android:drawable/ic_menu_my_calendar"/>
-
-            <ImageButton
-                android:id="@+id/imgBtnAnalyze"
-                style="?metaButtonBarButtonStyle"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_toEndOf="@id/imgBtnSelectPatient"
-                android:onClick="onAnalyzeClicked"
-                android:src="@android:drawable/ic_menu_mapmode"/>
-
-            <ImageButton
-                android:id="@+id/imgBtnCapture"
-                style="?metaButtonBarButtonStyle"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_centerHorizontal="true"
-                android:onClick="onCaptureImageClicked"
-                android:src="@android:drawable/ic_menu_camera"/>
-
-            <Button
-                android:id="@+id/btnTune"
-                style="?metaButtonBarButtonStyle"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_toStartOf="@id/btnTools"
-                android:onClick="onTuneClicked"
-                android:text="@string/performTuning"
-                android:textSize="14sp"/>
-
-            <Button
-                android:id="@+id/btnTools"
-                style="?metaButtonBarButtonStyle"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_alignParentEnd="true"
-                android:onClick="onToolsClicked"
-                android:text="@string/tools"/>
-
-
-        </RelativeLayout>
-
-        <RelativeLayout
-            android:id="@+id/content_controls_bottom"
-            style="?metaButtonBarStyle"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_alignParentBottom="true"
-            android:background="@color/black_overlay"
-            android:columnCount="3"
-            android:rowCount="1"
-            tools:ignore="UselessParent">
-
-            <ToggleButton
-                android:id="@+id/btnToggleMoreInfo"
-                style="?metaButtonBarButtonStyle"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_alignParentStart="true"
-                android:checked="true"
-                android:onClick="onToggleMoreInfoClicked"
-                android:textColor="@color/colorControlGray"
-                android:textOff="@string/toggle_more_info"
-                android:textOn="@string/toggle_less_info"/>
 
             <LinearLayout
                 android:layout_width="wrap_content"
@@ -152,12 +88,51 @@
             </LinearLayout>
 
             <Button
+                android:id="@+id/btnTools"
+                style="?metaButtonBarButtonStyle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentEnd="true"
+                android:text="@string/tools"/>
+
+
+        </RelativeLayout>
+
+        <RelativeLayout
+            android:id="@+id/content_controls_bottom"
+            style="?metaButtonBarStyle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_alignParentBottom="true"
+            android:background="@color/black_overlay"
+            android:columnCount="3"
+            android:rowCount="1"
+            tools:ignore="UselessParent">
+
+            <Button
+                android:id="@+id/btnTune"
+                style="?metaButtonBarButtonStyle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentStart="true"
+                android:layout_centerVertical="true"
+                android:text="@string/performTuning"
+                android:textSize="14sp"/>
+
+            <ImageButton
+                android:id="@+id/imgBtnCapture"
+                style="?metaButtonBarButtonStyle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerHorizontal="true"
+                android:src="@android:drawable/ic_menu_camera"/>
+
+            <Button
                 android:id="@+id/connect_sim_button"
                 style="?metaButtonBarButtonStyle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_alignParentEnd="true"
-                android:onClick="onConnectSimClicked"
                 android:text="@string/connectSim"/>
 
         </RelativeLayout>

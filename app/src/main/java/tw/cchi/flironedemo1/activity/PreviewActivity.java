@@ -43,6 +43,7 @@ import java.util.Locale;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import butterknife.OnClick;
 import tw.cchi.flironedemo1.AppUtils;
 import tw.cchi.flironedemo1.Config;
 import tw.cchi.flironedemo1.R;
@@ -83,8 +84,6 @@ public class PreviewActivity extends BaseActivity implements Device.Delegate, Fr
     @BindView(R.id.batteryLevelTextView) TextView batteryLevelTextView;
     @BindView(R.id.batteryChargeIndicator) ImageView batteryChargeIndicator;
     @BindView(R.id.thermalSpotView) ThermalSpotView thermalSpotView;
-
-    @BindView(R.id.btnTools) Button btnTools;
     @BindView(R.id.txtTuningState) TextView editTuningState;
 
     @Override
@@ -391,43 +390,24 @@ public class PreviewActivity extends BaseActivity implements Device.Delegate, Fr
     }
 
 
-    public void onTuneClicked(View v) {
-        if (flirOneDevice != null) {
-            flirOneDevice.performTuning();
-        }
-    }
-
-    public void onCaptureImageClicked(View v) {
-        triggerImageCapture();
-    }
-
-    public void onConnectSimClicked(View v) {
-        if (flirOneDevice == null) {
-            connectSimulatedDevice();
-
-        } else if (flirOneDevice instanceof SimulatedDevice) {
-            flirOneDevice.close();
-            flirOneDevice = null;
-            simConnected = false;
-        }
-    }
-
-    public void onSelectPatientClicked(View v) {
+    @OnClick(R.id.imgBtnSelectPatient)
+    public void onSelectPatientClick(View v) {
         if (selectPatientDialog == null) {
             selectPatientDialog =
                     new SelectPatientDialog(this, new SelectPatientDialog.OnInteractionListener() {
-                @Override
-                public void onOkClicked(String selectedPatientUUID) {
-                    PreviewActivity.this.selectedPatientUUID = selectedPatientUUID;
-                }
-            });
+                        @Override
+                        public void onOkClicked(String selectedPatientUUID) {
+                            PreviewActivity.this.selectedPatientUUID = selectedPatientUUID;
+                        }
+                    });
         }
 
         selectPatientDialog.setSelectedPatientUUID(selectedPatientUUID);
         selectPatientDialog.show();
     }
 
-    public void onToolsClicked(View v) {
+    @OnClick(R.id.btnTools)
+    public void onToolsClick(View v) {
         PopupMenu popup = new PopupMenu(this, v);
         popup.inflate(R.menu.preview_tools_menu);
 
@@ -474,6 +454,31 @@ public class PreviewActivity extends BaseActivity implements Device.Delegate, Fr
         popup.show();
     }
 
+    @OnClick(R.id.btnTune)
+    public void onTuneClick(View v) {
+        if (flirOneDevice != null) {
+            flirOneDevice.performTuning();
+        }
+    }
+
+    @OnClick(R.id.imgBtnCapture)
+    public void onCaptureImageClick(View v) {
+        triggerImageCapture();
+    }
+
+    @OnClick(R.id.connect_sim_button)
+    public void onConnectSimClick(View v) {
+        if (flirOneDevice == null) {
+            connectSimulatedDevice();
+
+        } else if (flirOneDevice instanceof SimulatedDevice) {
+            flirOneDevice.close();
+            flirOneDevice = null;
+            simConnected = false;
+        }
+    }
+
+
     private void showToastMessage(final String message) {
         runOnUiThread(new Runnable() {
             @Override
@@ -509,8 +514,6 @@ public class PreviewActivity extends BaseActivity implements Device.Delegate, Fr
             });
         }
     }
-
-    // -----------------------------------------------------------------
 
     private void connectSimulatedDevice() {
         try {
