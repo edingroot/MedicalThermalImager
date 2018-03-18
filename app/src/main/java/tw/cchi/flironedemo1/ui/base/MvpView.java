@@ -1,6 +1,8 @@
 package tw.cchi.flironedemo1.ui.base;
 
+import android.content.DialogInterface;
 import android.support.annotation.StringRes;
+import android.support.v7.app.AlertDialog;
 
 /**
  * Base interface that any class that wants to act as a View in the MVP (Model View Presenter)
@@ -12,6 +14,9 @@ public interface MvpView {
     void showLoading();
 
     void hideLoading();
+
+    AlertDialog showAlertDialog(String title, String message,
+                                DialogInterface.OnClickListener onYesClicked, DialogInterface.OnClickListener onNoClicked);
 
     void showSnackBar(String message);
 

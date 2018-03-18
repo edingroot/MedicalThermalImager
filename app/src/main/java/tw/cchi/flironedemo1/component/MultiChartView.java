@@ -20,6 +20,7 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.Unbinder;
 import tw.cchi.flironedemo1.R;
+import tw.cchi.flironedemo1.di.BgThreadAvail;
 import tw.cchi.flironedemo1.model.ChartParameter;
 
 public class MultiChartView extends RelativeLayout {
@@ -39,6 +40,7 @@ public class MultiChartView extends RelativeLayout {
         initLineChart();
     }
 
+    @BgThreadAvail
     public synchronized void updateChart(ChartParameter chartParameter) {
         this.chartParameter = chartParameter;
 

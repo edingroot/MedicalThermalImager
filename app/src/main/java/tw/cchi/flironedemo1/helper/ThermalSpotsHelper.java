@@ -235,7 +235,7 @@ public class ThermalSpotsHelper {
         runIfViewMetricsSet(new Runnable() {
             @Override
             public void run() {
-                System.out.printf("RestoreThermalSpot@BfConv: spotId=%s, x=%.0f, y==%.0f\n", spotId, rawX, rawY);
+                System.out.printf("RestoreThermalSpot@BfConv: spotId=%s, x=%.0f, y=%.0f\n", spotId, rawX, rawY);
 
                 // Convert position on rawThermalImage to position on the imageView
                 double ratio = (double) imageViewWidth / rawThermalDump.getWidth();

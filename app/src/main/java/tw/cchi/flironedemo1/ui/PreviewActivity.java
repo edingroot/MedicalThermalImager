@@ -360,7 +360,7 @@ public class PreviewActivity extends BaseActivity implements Device.Delegate, Fr
         }
     }
 
-    // Frame Processor BitmapUpdateListener method, will be called each time a rendered frame is produced
+    // Frame Processor OnFrameProcessedListener method, will be called each time a rendered frame is produced
     public void onFrameProcessed(final RenderedImage renderedImage) {
         if (!streamingFrame) return;
         lastRenderedImage = renderedImage;
@@ -638,7 +638,7 @@ public class PreviewActivity extends BaseActivity implements Device.Delegate, Fr
 }
 
 // Notes:
-// Device BitmapUpdateListener methods
+// Device OnFrameProcessedListener methods
 // Called during device discovery, when a device is connected
 // During this callback, you should save a reference to device
 // You should also set the power update delegate for the device if you have one

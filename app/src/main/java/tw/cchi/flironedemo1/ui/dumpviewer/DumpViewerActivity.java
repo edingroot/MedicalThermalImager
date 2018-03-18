@@ -7,21 +7,17 @@ import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.MotionEvent;
 import android.view.View;
-import android.view.ViewTreeObserver;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
-import android.widget.Toast;
+
+import com.jakewharton.rxbinding2.view.RxView;
 
 import java.util.ArrayList;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 
 import javax.inject.Inject;
 
@@ -34,39 +30,27 @@ import droidninja.filepicker.FilePickerBuilder;
 import droidninja.filepicker.FilePickerConst;
 import droidninja.filepicker.models.sort.SortingTypes;
 import droidninja.filepicker.utils.Orientation;
+import io.reactivex.Observable;
 import permissions.dispatcher.NeedsPermission;
 import permissions.dispatcher.RuntimePermissions;
-import tw.cchi.flironedemo1.AppUtils;
 import tw.cchi.flironedemo1.Config;
 import tw.cchi.flironedemo1.R;
 import tw.cchi.flironedemo1.adapter.ThermalDumpsRecyclerAdapter;
 import tw.cchi.flironedemo1.component.MultiChartView;
+import tw.cchi.flironedemo1.di.BgThreadAvail;
 import tw.cchi.flironedemo1.helper.ThermalSpotsHelper;
-import tw.cchi.flironedemo1.helper.ViewerTabResourcesHelper;
 import tw.cchi.flironedemo1.model.ChartParameter;
 import tw.cchi.flironedemo1.thermalproc.RawThermalDump;
-import tw.cchi.flironedemo1.thermalproc.ThermalDumpProcessor;
 import tw.cchi.flironedemo1.thermalproc.VisibleImageMask;
 import tw.cchi.flironedemo1.ui.base.BaseActivity;
 
 @RuntimePermissions
-public class DumpViewerActivity extends BaseActivity {
-    private static final int MAX_OPENING_FILES = 8;
+public class DumpViewerActivity extends BaseActivity implements DumpViewerMvpView {
+    private static final int MAX_OPEN_FILES = 8;
 
-    @Inject volatile ViewerTabResourcesHelper tabResources;
-    private volatile ChartParameter thermalChartParameter;
+    @Inject DumpViewerMvpPresenter<DumpViewerMvpView> presenter;
+
     private ThermalDumpsRecyclerAdapter thermalDumpsRecyclerAdapter;
-    private volatile ExecutorService addThermalDumpExecutor;
-
-    private boolean showingVisibleImage = false;
-    private volatile boolean visibleImageAlignMode = false;
-    private int contrastRatio = 1;
-    private boolean coloredMode = true;
-    private boolean showingChart = false;
-
-    private int horizontalLineY = -1; // pY (on the thermal dump) of horizontal indicator on showingChart mode
-    private volatile float chartAxisMax = -1;
-    private volatile float chartAxisMin = -1;
 
     // VisibleImageView dragging
     private int startDraggingX;
@@ -89,79 +73,40 @@ public class DumpViewerActivity extends BaseActivity {
 
         getActivityComponent().inject(this);
         setUnBinder(ButterKnife.bind(this));
+        presenter.onAttach(this);
 
-        thermalChartParameter = new ChartParameter(ChartParameter.ChartType.MULTI_LINE_CURVE);
-        thermalChartParameter.setAlpha(0.6f);
-
-        // Launch image picker on activity first started
-        onImagePickClick(null);
-        showToastMessage(getString(R.string.pick_thermal_images));
-
-        // Wait until the view have been measured (visibility state considered)
-        // Ref: https://stackoverflow.com/questions/36586146/ongloballayoutlistener-vs-postrunnable
-        visibleImageView.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
-            @Override
-            public void onGlobalLayout() {
-                int width = thermalImageView.getMeasuredWidth();
-                if (showingVisibleImage && visibleImageView.getMeasuredWidth() != width) {
-                    visibleImageView.getLayoutParams().width = thermalImageView.getMeasuredWidth();
-                    visibleImageView.getLayoutParams().height = thermalImageView.getMeasuredHeight();
-                    visibleImageView.requestLayout();
-                }
-            }
-        });
-
+        // TODO: remove after checking
         // Pass touch event to the underlying layout
-        thermalChartView.setOnTouchListener(new View.OnTouchListener() {
-            @Override
-            public boolean onTouch(View v, MotionEvent event) {
-                return false;
-            }
-        });
+//        thermalChartView.setOnTouchListener(new View.OnTouchListener() {
+//            @Override
+//            public boolean onTouch(View v, MotionEvent event) {
+//                return false;
+//            }
+//        });
 
         thermalDumpsRecyclerAdapter = new ThermalDumpsRecyclerAdapter(this,
                 new ThermalDumpsRecyclerAdapter.OnInteractionListener() {
 
             @Override
             public void onClick(View v, int position) {
-                ThermalSpotsHelper thermalSpotsHelper;
-
-                // Hide all spots of the last dump, switch to new tab resources, show spots of the new dump
-                thermalSpotsHelper = tabResources.getThermalSpotHelper();
-                if (thermalSpotsHelper != null)
-                    thermalSpotsHelper.setSpotsVisible(false);
-                tabResources.setCurrentIndex(position);
-
-                thermalSpotsHelper = tabResources.getThermalSpotHelper();
-                if (thermalSpotsHelper != null)
-                    thermalSpotsHelper.setSpotsVisible(true);
-
-                if (showingVisibleImage) {
-                    visibleImageAlignMode = false;
-                    showVisibleImage(tabResources.getRawThermalDump());
-                }
-
-                updateThermalImageView();
+                presenter.switchDumpTab(position);
             }
 
             @Override
-            public void onLongClick(View v, int position) {
+            public void onLongClick(View v, final int position) {
                 // Show confirm dialog for closing this thermal dump
-                final int dumpPosition = position;
-                new AlertDialog.Builder(DumpViewerActivity.this, R.style.MyAlertDialog)
-                        .setTitle("Confirm")
-                        .setMessage("Confirm to remove " + tabResources.getRawThermalDump().getTitle() + " from display?")
-                        .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                showAlertDialog(
+                        "Confirm",
+                        "Confirm to remove " + presenter.getDumpTitle() + " from display?",
+                        new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
-                                removeThermalDump(dumpPosition, false);
+                                presenter.removeThermalDump(position);
                             }
-                        })
-                        .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                        }, new DialogInterface.OnClickListener() {
                             @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                            }
-                        }).show();
+                            public void onClick(DialogInterface dialog, int which) {}
+                        });
             }
         });
         recyclerDumpSwitcher.setAdapter(thermalDumpsRecyclerAdapter);
@@ -177,21 +122,17 @@ public class DumpViewerActivity extends BaseActivity {
     }
 
     @NeedsPermission({Manifest.permission.WRITE_EXTERNAL_STORAGE})
-    public void onPickDoc() {
+    public void onPickDoc(ArrayList<String> selectedFiles) {
         String[] thermalDumpExts = {".dat"};
 
-        if(tabResources.getCount() > MAX_OPENING_FILES) {
-            showToastMessage("Cannot select more than " + MAX_OPENING_FILES + " items");
-        }  else {
-            FilePickerBuilder.getInstance().setMaxCount(MAX_OPENING_FILES)
-                    .setSelectedFiles(tabResources.getThermalDumpPaths())
-                    .setActivityTheme(R.style.FilePickerTheme)
-                    .addFileSupport("ThermalDump", thermalDumpExts)
-                    .sortDocumentsBy(SortingTypes.name)
-                    .enableDocSupport(false)
-                    .withOrientation(Orientation.PORTRAIT_ONLY)
-                    .pickFile(this);
-        }
+        FilePickerBuilder.getInstance().setMaxCount(MAX_OPEN_FILES)
+                .setSelectedFiles(selectedFiles)
+                .setActivityTheme(R.style.FilePickerTheme)
+                .addFileSupport("ThermalDump", thermalDumpExts)
+                .sortDocumentsBy(SortingTypes.name)
+                .enableDocSupport(false)
+                .withOrientation(Orientation.PORTRAIT_ONLY)
+                .pickFile(this);
     }
 
     @Override
@@ -201,40 +142,7 @@ public class DumpViewerActivity extends BaseActivity {
         switch (requestCode) {
             case FilePickerConst.REQUEST_CODE_DOC:
                 if (resultCode == RESULT_OK && data != null) {
-                    ArrayList<String> addPaths = new ArrayList<>();
-                    ArrayList<String> removePaths = new ArrayList<>(tabResources.getThermalDumpPaths());
-                    ArrayList<String> currentPaths = new ArrayList<>(tabResources.getThermalDumpPaths());
-
-                    addPaths.addAll(data.getStringArrayListExtra(FilePickerConst.KEY_SELECTED_DOCS));
-
-                    for (String path : currentPaths) {
-                        // Selected file has already been added
-                        if (addPaths.contains(path)) {
-                            addPaths.remove(path);
-                            removePaths.remove(path);
-                        }
-                    }
-
-                    // Update thermalImageView just on the last time
-                    for (int i = 0; i < removePaths.size(); i++)
-                        removeThermalDump(tabResources.indexOf(removePaths.get(i)), (i != removePaths.size() - 1));
-
-                    if (addPaths.size() > 0) {
-                        if (addThermalDumpExecutor == null || addThermalDumpExecutor.isShutdown() || addThermalDumpExecutor.isTerminated())
-                            addThermalDumpExecutor = Executors.newCachedThreadPool();
-
-                        // TODO: Fix
-                        // Make a short delay to avoid various async problems :P
-                        // and also make dumps added sequentially
-                        int delay = 0;
-                        for (String path : addPaths) {
-                            addThermalDump(path, 120 * delay++);
-                        }
-                    } else {
-                        if (tabResources.getCount() == 0)
-                            thermalImageView.setImageBitmap(null);
-                    }
-                    updateChartAxis();
+                    presenter.updateDumpsAfterPick(data.getStringArrayListExtra(FilePickerConst.KEY_SELECTED_DOCS));
                 }
                 break;
         }
@@ -244,23 +152,22 @@ public class DumpViewerActivity extends BaseActivity {
     @OnTouch(R.id.thermalImageView)
     public boolean onThermalImageViewTouch(View v, MotionEvent event) {
         if (thermalImageView.getMeasuredHeight() > 0) {
-            int x = (int) event.getX();
             int y = (int) event.getY();
             if (y < 0) {
                 y = 0;
             } else if (y >= thermalImageView.getMeasuredHeight()) {
                 y = thermalImageView.getMeasuredHeight() - 1;
             }
-            handleThermalImageTouch(x, y);
+            presenter.updateHorizontalLine(y);
         }
 
-        // Consuming the onTouch event in order to capture future movement
+        // Consume the onTouch event in order to capture future movement
         return true;
     }
 
     @OnTouch(R.id.visibleImageView)
     public boolean onVisibleImageViewTouch(View view, MotionEvent motionEvent) {
-        if (!visibleImageAlignMode)
+        if (!presenter.isVisibleImageAlignMode())
             return false;
 
         final int x = (int) motionEvent.getRawX();
@@ -284,7 +191,9 @@ public class DumpViewerActivity extends BaseActivity {
                 break;
 
             case MotionEvent.ACTION_UP:
-                handleVisibleImageDragged();
+                int diffX = (int) (visibleImageView.getX() - thermalImageView.getX());
+                int diffY = (int) (visibleImageView.getY() - thermalImageView.getY());
+                presenter.updateVisibleImageOffset(diffX, diffY);
                 break;
 
             case MotionEvent.ACTION_POINTER_DOWN:
@@ -295,353 +204,100 @@ public class DumpViewerActivity extends BaseActivity {
     }
 
     @OnClick(R.id.btnPick)
-    public void onImagePickClick(@Nullable View v) {
-        DumpViewerActivityPermissionsDispatcher.onPickDocWithPermissionCheck(this);
+    public void onImagePickClick(View v) {
+        presenter.pickImages();
     }
 
     @OnClick(R.id.btnToggleVisible)
-    public void onToggleVisibleImageClick(@Nullable View v) {
-        if (tabResources.getCount() == 0)
-            return;
-
-        if (showingVisibleImage) {
-            visibleImageView.setVisibility(View.GONE);
-            showingVisibleImage = visibleImageAlignMode = false;
-        } else {
-
-            if (showVisibleImage(tabResources.getRawThermalDump())) {
-                showingVisibleImage = true;
-            } else {
-                showingVisibleImage = visibleImageAlignMode = false;
-            }
-        }
+    public void onToggleVisibleImageClick(View v) {
+        presenter.toggleVisibleImage();
     }
 
     @OnLongClick(R.id.btnToggleVisible)
     public boolean onToggleVisibleImageLongClick(View v) {
-        if (tabResources.getCount() == 0)
-            return true;
-
-        if (visibleImageAlignMode) {
-            visibleImageAlignMode = false;
-        } else {
-            visibleImageAlignMode = true;
-            if (!showingVisibleImage) {
-                // Show visible image first
-                onToggleVisibleImageClick(v);
-            } else {
-                visibleImageView.setAlpha(visibleImageAlignMode ? Config.DUMP_VISUAL_MASK_ALPHA / 255f : 1f);
-            }
-        }
-
+        presenter.toggleVisibleImageAlignMode();
         return true;
     }
 
     @OnClick(R.id.btnToggleColoredMode)
     public void onToggleColoredModeClick(@Nullable View v) {
-        coloredMode = !coloredMode;
-        updateThermalImageView();
+        presenter.toggleColoredMode();
     }
 
     @OnClick(R.id.btnToggleHorizonChart)
     public void onToggleHorizonChartClick(@Nullable View v) {
-        if (tabResources.getCount() == 0 || horizontalLineY == -1)
-            return;
-
-        if (showingChart) {
-            thermalChartView.setVisibility(View.GONE);
-            horizontalLine.setVisibility(View.GONE);
-            showingChart = false;
-        } else {
-            updateChartParameter(thermalChartParameter, horizontalLineY);
-            thermalChartView.updateChart(thermalChartParameter);
-            thermalChartView.setVisibility(View.VISIBLE);
-            horizontalLine.setVisibility(View.VISIBLE);
-            showingChart = true;
-        }
+        presenter.toggleHorizonChart();
     }
 
     @OnClick(R.id.fabAddSpot)
     public void onFabAddSpotClick(View v) {
-        ThermalSpotsHelper thermalSpotsHelper = tabResources.getThermalSpotHelper();
-        int lastSpotId = thermalSpotsHelper.getLastSpotId();
-        thermalSpotsHelper.addThermalSpot(lastSpotId == -1 ? 1 : lastSpotId + 1);
+        presenter.addThermalSpot();
     }
 
     @OnLongClick(R.id.fabAddSpot)
     public boolean onFabAddSpotLongClick(View v) {
-        ThermalSpotsHelper thermalSpotsHelper = tabResources.getThermalSpotHelper();
-        thermalSpotsHelper.removeLastThermalSpot();
+        presenter.removeLastThermalSpot();
         return true;
     }
 
 
-    private void showToastMessage(final String message) {
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                Toast.makeText(DumpViewerActivity.this, message, Toast.LENGTH_SHORT).show();
-            }
-        });
+    @Override
+    public Observable<Object> getThermalImageViewGlobalLayouts() {
+        return RxView.globalLayouts(thermalImageView);
     }
 
-    private void addThermalDump(final String filepath, final long delay) {
-        addThermalDumpExecutor.execute(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    Thread.sleep(delay);
-                } catch (InterruptedException e) {}
-
-                RawThermalDump thermalDump = RawThermalDump.readFromDumpFile(filepath);
-
-                if (thermalDump != null) {
-                    ThermalDumpProcessor thermalDumpProcessor = new ThermalDumpProcessor(thermalDump);
-
-                    if (horizontalLineY == -1) {
-                        horizontalLineY = thermalDump.getHeight() / 2;
-                    }
-
-                    tabResources.addResources(filepath, thermalDump, thermalDumpProcessor);
-                    addToChartParameter(thermalChartParameter, thermalDump, horizontalLineY);
-                    thermalChartView.updateChart(thermalChartParameter);
-
-                    int newIndex = thermalDumpsRecyclerAdapter.addDumpSwitch(thermalDump.getTitle());
-                    System.out.printf("addThermalDump: currIndex=%d, newIndex=%d\n", tabResources.getCurrentIndex(), newIndex);
-                    if (tabResources.getCurrentIndex() != newIndex) {
-                        tabResources.setCurrentIndex(newIndex);
-                        updateThermalImageView();
-                    }
-                } else {
-                    showToastMessage("Failed reading thermal dump");
-                }
-            }
-        });
+    @Override
+    public Observable<Object> getVisibleImageViewLayoutObservable() {
+        return RxView.globalLayouts(visibleImageView);
     }
 
-    private void removeThermalDump(int index, boolean ignoreImageViewUpdate) {
-        int currentIndex = tabResources.getCurrentIndex();
-        int newIndex = thermalDumpsRecyclerAdapter.removeDumpSwitch(index);
-
-        tabResources.removeResources(index, newIndex);
-        removeDataFromChartParameter(thermalChartParameter, index);
-        thermalChartView.updateChart(thermalChartParameter);
-
-        // If the dump removing is the one that currently displaying & still have some other dumps opened
-        if (currentIndex == index && newIndex != -1 && !ignoreImageViewUpdate) {
-            System.out.printf("removeThermalDump: update thermal image view - currIndex=%d, newIndex=%d\n", currentIndex, newIndex);
-            ThermalSpotsHelper thermalSpotsHelper;
-
-            updateThermalImageView();
-            thermalSpotsHelper = tabResources.getThermalSpotHelper();
-            if (thermalSpotsHelper != null)
-                thermalSpotsHelper.setSpotsVisible(true);
-        }
-
-        if (tabResources.getCount() == 0) {
-            thermalImageView.setImageBitmap(null);
-
-            if (showingVisibleImage) onToggleVisibleImageClick(null);
-            if (showingChart) onToggleHorizonChartClick(null);
-
-        } else {
-            if (showingVisibleImage) {
-                visibleImageAlignMode = false;
-                showVisibleImage(tabResources.getRawThermalDump());
-            }
-        }
-        System.gc();
+    @Override
+    public ThermalSpotsHelper createThermalSpotsHelper(RawThermalDump rawThermalDump) {
+        final ThermalSpotsHelper thermalSpotsHelper = new ThermalSpotsHelper(this, topView, rawThermalDump);
+        thermalSpotsHelper.setImageViewMetrics(
+                thermalImageView.getMeasuredWidth(),
+                thermalImageView.getMeasuredHeight(),
+                thermalImageView.getTop() + layoutThermalViews.getTop()
+        );
+        return thermalSpotsHelper;
     }
 
-    private void updateThermalImageView() {
-        final Bitmap frame = tabResources.getThermalBitmap(contrastRatio, coloredMode);
-
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                thermalImageView.setImageBitmap(frame);
-            }
-        });
-
-        // Create new thermalSpotsHelper if not existed after view measured
-        if (frame != null && tabResources.getCount() != 0 && tabResources.getThermalSpotHelper() == null) {
-            thermalImageView.post(new Runnable() {
-                @Override
-                public void run() {
-                    System.out.printf("In thermalImageView.post: tabResources.getCount=%d, tabResources.currIndex=%d\n",
-                            tabResources.getCount(),
-                            tabResources.getCurrentIndex()
-                    );
-
-                    // Make a short delay (at least 20ms) to wait ui thread for correct thermalImageView.getTop() value
-                    new Thread(new Runnable() {
-                        @Override
-                        public void run() {
-                            try {
-                                Thread.sleep(100);
-                            } catch (InterruptedException e) {}
-
-                            final ThermalSpotsHelper thermalSpotsHelper = new ThermalSpotsHelper(
-                                    DumpViewerActivity.this, topView, tabResources.getRawThermalDump()
-                            );
-                            thermalSpotsHelper.setImageViewMetrics(
-                                    thermalImageView.getMeasuredWidth(),
-                                    thermalImageView.getMeasuredHeight(),
-                                    thermalImageView.getTop() + layoutThermalViews.getTop()
-                            );
-                            tabResources.addThermalSpotsHelper(thermalSpotsHelper);
-                        }
-                    }).start();
-                }
-            });
+    @Override
+    public void resizeVisibleImageViewToThermalImage() {
+        if (visibleImageView.getMeasuredWidth() != thermalImageView.getMeasuredWidth()) {
+            visibleImageView.getLayoutParams().width = thermalImageView.getMeasuredWidth();
+            visibleImageView.getLayoutParams().height = thermalImageView.getMeasuredHeight();
+            visibleImageView.requestLayout();
         }
     }
 
-    private void handleThermalImageTouch(int x, int y) {
-        if (tabResources.getCount() == 0)
-            return;
+    @Override
+    public void launchImagePicker(ArrayList<String> pickedFiles) {
+        DumpViewerActivityPermissionsDispatcher.onPickDocWithPermissionCheck(this, pickedFiles);
+    }
 
-        // Set horizontal line location
-        RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams) horizontalLine.getLayoutParams();
-        params.topMargin = y + layoutThermalViews.getTop() + thermalImageView.getTop();
-        params.addRule(RelativeLayout.CENTER_VERTICAL, 0);
-        horizontalLine.setLayoutParams(params);
+    @Override
+    public void updateThermalImageView(@Nullable Bitmap frame) {
+        thermalImageView.setImageBitmap(frame);
+    }
 
-        // Calculate the correspondent point on the thermal image
-        int thermalDumpHeight = tabResources.getRawThermalDump().getHeight();
-        double ratio = (double) thermalDumpHeight / thermalImageView.getMeasuredHeight();
-        horizontalLineY = AppUtils.trimByRange((int) (y * ratio), 1, thermalDumpHeight - 1);
-
-        if (showingChart) {
-            updateChartParameter(thermalChartParameter, horizontalLineY);
-            thermalChartView.updateChart(thermalChartParameter);
-        }
+    @Override
+    public int getThermalImageViewHeight() {
+        return thermalImageView.getMeasuredHeight();
     }
 
     /**
-     * Add thermal values on specific horizontal line on the thermal dump to the chart parameter.
-     * [Note] Not calling updateChartAxis() here because it will be called when all thermalDumps are added
-     *
-     * @param chartParameter
-     * @param rawThermalDump
-     * @param y
+     * @param opacity Works only when visible is true
      */
-    private synchronized void addToChartParameter(ChartParameter chartParameter, RawThermalDump rawThermalDump, int y) {
-        int width = rawThermalDump.getWidth();
-        float[] temperaturePoints = new float[width];
-
-        for (int i = 0; i < width; i++) {
-            temperaturePoints[i] = rawThermalDump.getTemperatureAt(i, y);
-        }
-        chartParameter.addFloatArray(rawThermalDump.getTitle(), temperaturePoints);
+    @Override
+    public void setVisibleImageViewVisible(boolean visible, float opacity) {
+        visibleImageView.setVisibility(visible ? View.VISIBLE : View.INVISIBLE);
+        if (visible)
+            visibleImageView.setAlpha(opacity);
     }
 
-    /**
-     * Remove data (float array) from chart parameter by index.
-     *  Note: Not calling updateChartAxis() here
-     *
-     * @param chartParameter
-     * @param index
-     */
-    private void removeDataFromChartParameter(ChartParameter chartParameter, int index) {
-        chartParameter.removeFloatArray(index);
-    }
-
-    private void updateChartParameter(ChartParameter chartParameter, int y) {
-        ArrayList<RawThermalDump> rawThermalDumps = tabResources.getRawThermalDumps();
-        for (int i = 0; i < rawThermalDumps.size(); i++) {
-            RawThermalDump rawThermalDump = rawThermalDumps.get(i);
-            float[] temperaturePoints = new float[rawThermalDump.getWidth()];
-
-            for (int j = 0; j < rawThermalDump.getWidth(); j++) {
-                temperaturePoints[j] = rawThermalDump.getTemperatureAt(j, y);
-            }
-
-            chartParameter.updateFloatArray(i, temperaturePoints);
-        }
-    }
-
-    /**
-     * Calculate max and min temperature among all thermal dumps and update chart axis.
-     */
-    private void updateChartAxis() {
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                System.out.println("updateChartAxis: waiting for all addThermalDump threads finished");
-
-                // Stop accepting new tasks (prepare for termination)
-                addThermalDumpExecutor.shutdown();
-                try {
-                    // Wait until all tasks have finished or the time has been reached
-                    addThermalDumpExecutor.awaitTermination(15, TimeUnit.SECONDS);
-                } catch (InterruptedException e) {}
-                if (DumpViewerActivity.this.isDestroyed())
-                    return;
-
-                System.out.println("updateChartAxis: addThermalDumpExecutor terminated");
-
-                float max = Float.MIN_VALUE;
-                float min = Float.MAX_VALUE;
-
-                for (RawThermalDump rawThermalDump : tabResources.getRawThermalDumps()) {
-                    if (rawThermalDump.getMaxTemperature() > max)
-                        max = rawThermalDump.getMaxTemperature();
-                    if (rawThermalDump.getMinTemperature() < min)
-                        min = rawThermalDump.getMinTemperature();
-                }
-
-                if (max != chartAxisMax || min != chartAxisMin) {
-                    /* max = (float) Math.ceil(max) + 9;
-                    max -= max % 10;
-                    min = (float) Math.floor(min);
-                    min -= min % 10; */
-                    chartAxisMax = max;
-                    chartAxisMin = min;
-
-                    thermalChartParameter.setAxisMax(chartAxisMax);
-                    thermalChartParameter.setAxisMin(chartAxisMin);
-                    if (showingChart) {
-                        thermalChartView.updateChart(thermalChartParameter);
-                    }
-                }
-            }
-        }).start();
-    }
-
-    private boolean showVisibleImage(RawThermalDump rawThermalDump) {
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                updateVisibleImageView(null);
-            }
-        });
-
-        if (!rawThermalDump.isVisibleImageAttached()) {
-            if (!rawThermalDump.attachVisibleImageMask()) {
-                showToastMessage("Failed to read visible image. Does the jpg file with same name exist?");
-                return false;
-            }
-            rawThermalDump.getVisibleImageMask().processFrame(this, new VisibleImageMask.BitmapUpdateListener() {
-                @Override
-                public void onBitmapUpdate(VisibleImageMask maskInstance) {
-                    final VisibleImageMask mask = maskInstance;
-
-                    runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            updateVisibleImageView(mask);
-                        }
-                    });
-                }
-            });
-        } else {
-            updateVisibleImageView(rawThermalDump.getVisibleImageMask());
-        }
-        return true;
-    }
-
-    private void updateVisibleImageView(VisibleImageMask mask) {
+    @Override
+    public void updateVisibleImageView(@Nullable VisibleImageMask mask, boolean visibleImageAlignMode) {
         if (mask == null) {
             visibleImageView.setImageBitmap(null);
             return;
@@ -663,18 +319,51 @@ public class DumpViewerActivity extends BaseActivity {
         visibleImageView.setLayoutParams(layoutParams);
     }
 
-    private void handleVisibleImageDragged() {
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                RawThermalDump rawThermalDump = tabResources.getRawThermalDump();
-                int diffX = (int) (visibleImageView.getX() - thermalImageView.getX());
-                int diffY = (int) (visibleImageView.getY() - thermalImageView.getY());
-                rawThermalDump.setVisibleOffsetX(diffX);
-                rawThermalDump.setVisibleOffsetY(diffY);
-                rawThermalDump.save();
-            }
-        }).start();
+    @Override
+    public void setHorizontalLineVisible(boolean visible) {
+        horizontalLine.setVisibility(visible ? View.VISIBLE : View.INVISIBLE);
     }
 
+    @Override
+    public void setHorizontalLineY(int y) {
+        RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams) horizontalLine.getLayoutParams();
+        params.topMargin = y + layoutThermalViews.getTop() + thermalImageView.getTop();
+        params.addRule(RelativeLayout.CENTER_VERTICAL, 0);
+        horizontalLine.setLayoutParams(params);
+    }
+
+    @Override
+    public void setThermalChartVisible(boolean visible) {
+        thermalChartView.setVisibility(visible ? View.VISIBLE : View.INVISIBLE);
+    }
+
+    @Override
+    @BgThreadAvail
+    public void updateThermalChart(ChartParameter thermalChartParameter) {
+        thermalChartView.updateChart(thermalChartParameter);
+    }
+
+    /**
+     * @param title
+     * @return Index of the new active tab
+     */
+    @Override
+    public int addDumpTab(String title) {
+        return thermalDumpsRecyclerAdapter.addDumpSwitch(title);
+    }
+
+    /**
+     * @param index
+     * @return Index of the new active tab or -1 for no tab after removing
+     */
+    @Override
+    public int removeDumpTab(int index) {
+        return thermalDumpsRecyclerAdapter.removeDumpSwitch(index);
+    }
+
+    @Override
+    protected void onDestroy() {
+        presenter.onDetach();
+        super.onDestroy();
+    }
 }

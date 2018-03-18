@@ -11,13 +11,15 @@ import java.io.File;
 import java.nio.ByteBuffer;
 import java.util.EnumSet;
 
+import tw.cchi.flironedemo1.di.NewThread;
+
 public class VisibleImageMask implements FrameProcessor.Delegate {
     private static final EnumSet<RenderedImage.ImageType> IMAGE_TYPES = EnumSet.of(
             RenderedImage.ImageType.VisibleAlignedRGBA8888Image
 //            RenderedImage.ImageType.BlendedMSXRGBA8888Image
     );
     private final RawThermalDump rawThermalDump;
-    private BitmapUpdateListener bitmapUpdateListener;
+    private OnFrameProcessedListener onFrameProcessedListener;
     private File frameFile;
     private LoadedFrame loadedFrame;
 
@@ -46,8 +48,9 @@ public class VisibleImageMask implements FrameProcessor.Delegate {
         return mask;
     }
 
-    public void processFrame(final Context context, BitmapUpdateListener bitmapUpdateListener) {
-        this.bitmapUpdateListener = bitmapUpdateListener;
+    @NewThread
+    public void processFrame(final Context context, OnFrameProcessedListener onFrameProcessedListener) {
+        this.onFrameProcessedListener = onFrameProcessedListener;
         this.proceedTypes = 0;
 
         new Thread(new Runnable() {
@@ -79,7 +82,7 @@ public class VisibleImageMask implements FrameProcessor.Delegate {
 
         if (++proceedTypes == IMAGE_TYPES.size()) {
             // Map<RenderedImage.ImageType, RenderedImage> renderedImageMap = frameProcessor.getProcessedFrames(loadedFrame);
-            bitmapUpdateListener.onBitmapUpdate(this);
+            onFrameProcessedListener.onFrameProcessed(this);
         }
     }
 
@@ -91,7 +94,7 @@ public class VisibleImageMask implements FrameProcessor.Delegate {
 //        return blendedMSXBitmap;
 //    }
 
-    public interface BitmapUpdateListener {
-        void onBitmapUpdate(VisibleImageMask maskInstance);
+    public interface OnFrameProcessedListener {
+        void onFrameProcessed(VisibleImageMask maskInstance);
     }
 }

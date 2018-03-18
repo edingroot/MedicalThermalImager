@@ -8,6 +8,9 @@ import dagger.Provides;
 import io.reactivex.disposables.CompositeDisposable;
 import tw.cchi.flironedemo1.di.ActivityContext;
 import tw.cchi.flironedemo1.ui.base.BaseActivity;
+import tw.cchi.flironedemo1.ui.dumpviewer.DumpViewerMvpPresenter;
+import tw.cchi.flironedemo1.ui.dumpviewer.DumpViewerMvpView;
+import tw.cchi.flironedemo1.ui.dumpviewer.DumpViewerPresenter;
 
 @Module
 public class ActivityModule {
@@ -32,6 +35,11 @@ public class ActivityModule {
     @Provides
     CompositeDisposable provideCompositeDisposable() {
         return new CompositeDisposable();
+    }
+
+    @Provides
+    DumpViewerMvpPresenter<DumpViewerMvpView> provideDumpViewerMvpPresenter(DumpViewerPresenter<DumpViewerMvpView> presenter) {
+        return presenter;
     }
 
 }

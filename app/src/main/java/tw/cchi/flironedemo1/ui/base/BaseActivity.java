@@ -3,6 +3,7 @@ package tw.cchi.flironedemo1.ui.base;
 import android.annotation.TargetApi;
 import android.app.ProgressDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
@@ -10,6 +11,7 @@ import android.support.annotation.Nullable;
 import android.support.annotation.StringRes;
 import android.support.design.widget.Snackbar;
 import android.support.v4.content.ContextCompat;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
@@ -72,6 +74,16 @@ public abstract class BaseActivity extends AppCompatActivity implements MvpView 
         if (mProgressDialog != null && mProgressDialog.isShowing()) {
             mProgressDialog.cancel();
         }
+    }
+
+    @Override
+    public AlertDialog showAlertDialog(String title, String message,
+                                DialogInterface.OnClickListener onYesClicked, DialogInterface.OnClickListener onNoClicked) {
+        return new AlertDialog.Builder(this, R.style.MyAlertDialog)
+                .setTitle(title).setMessage(message)
+                .setPositiveButton("Yes", onYesClicked)
+                .setNegativeButton("No", onNoClicked)
+                .show();
     }
 
     @Override

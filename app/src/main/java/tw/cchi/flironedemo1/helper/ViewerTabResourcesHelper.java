@@ -80,7 +80,11 @@ public class ViewerTabResourcesHelper {
         }
     }
 
+    @Nullable
     public Bitmap getThermalBitmap(int contrastRatio, boolean colored) {
+        if (currentIndex == -1)
+            return null;
+
         synchronized (listsLock) {
             Bitmap bitmap = colored ? coloredBitmaps.get(currentIndex) : grayBitmaps.get(currentIndex);
 
@@ -107,7 +111,7 @@ public class ViewerTabResourcesHelper {
      */
     public ThermalSpotsHelper getThermalSpotHelper() {
         synchronized (listsLock) {
-            if (thermalSpotHelperIds.size() > currentIndex) {
+            if (currentIndex != -1 && thermalSpotHelperIds.size() > currentIndex) {
                 return thermalSpotsHelpers.get(thermalSpotHelperIds.get(currentIndex));
             } else {
                 return null;
