@@ -140,6 +140,16 @@
             android:layout_toEndOf="@+id/btnToggleColoredMode"
             android:src="@android:drawable/ic_menu_sort_by_size"/>
 
+        <ImageButton
+            android:id="@+id/btnToggleSpots"
+            style="?metaButtonBarButtonStyle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentTop="true"
+            android:layout_marginEnd="10dp"
+            android:layout_toLeftOf="@+id/fabAddSpot"
+            android:src="@android:drawable/ic_menu_mylocation"/>
+
         <android.support.design.widget.FloatingActionButton
             android:id="@+id/fabAddSpot"
             android:layout_width="wrap_content"

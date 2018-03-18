@@ -40,7 +40,8 @@ public class DumpViewerPresenter<V extends DumpViewerMvpView> extends BasePresen
     private int contrastRatio = 1;
     private boolean coloredMode = true;
     private boolean showingVisibleImage = false;
-    private volatile boolean visibleImageAlignMode = false;
+    private boolean visibleImageAlignMode = false;
+    private boolean showingThermalSpots = true;
     private boolean showingChart = false;
     private int horizontalLineY = -1; // pY (on the thermal dump) of horizontal indicator on showingChart mode
 
@@ -233,7 +234,18 @@ public class DumpViewerPresenter<V extends DumpViewerMvpView> extends BasePresen
     }
 
     @Override
+    public void toggleThermalSpots() {
+        showingThermalSpots = !showingThermalSpots;
+        tabResources.getThermalSpotHelper().setSpotsVisible(showingThermalSpots);
+    }
+
+    @Override
     public void addThermalSpot() {
+        if (!showingThermalSpots) {
+            getMvpView().showSnackBar(R.string.spots_hidden);
+            return;
+        }
+
         ThermalSpotsHelper thermalSpotsHelper = tabResources.getThermalSpotHelper();
         int lastSpotId = thermalSpotsHelper.getLastSpotId();
         thermalSpotsHelper.addThermalSpot(lastSpotId == -1 ? 1 : lastSpotId + 1);
@@ -241,6 +253,11 @@ public class DumpViewerPresenter<V extends DumpViewerMvpView> extends BasePresen
 
     @Override
     public void removeLastThermalSpot() {
+        if (!showingThermalSpots) {
+            getMvpView().showSnackBar(R.string.spots_hidden);
+            return;
+        }
+
         tabResources.getThermalSpotHelper().removeLastThermalSpot();
     }
 

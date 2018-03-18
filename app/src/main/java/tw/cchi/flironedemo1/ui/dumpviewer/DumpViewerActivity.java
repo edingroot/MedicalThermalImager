@@ -229,6 +229,11 @@ public class DumpViewerActivity extends BaseActivity implements DumpViewerMvpVie
         presenter.toggleHorizonChart();
     }
 
+    @OnClick(R.id.btnToggleSpots)
+    public void onToggleSpotsClick(View v) {
+        presenter.toggleThermalSpots();
+    }
+
     @OnClick(R.id.fabAddSpot)
     public void onFabAddSpotClick(View v) {
         presenter.addThermalSpot();

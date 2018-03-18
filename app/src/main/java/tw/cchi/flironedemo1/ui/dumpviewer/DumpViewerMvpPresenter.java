@@ -23,6 +23,8 @@ public interface DumpViewerMvpPresenter<V extends DumpViewerMvpView> extends Mvp
     void updateVisibleImageOffset(int offsetX, int offsetY);
 
 
+    void toggleThermalSpots();
+
     void addThermalSpot();
 
     void removeLastThermalSpot();
