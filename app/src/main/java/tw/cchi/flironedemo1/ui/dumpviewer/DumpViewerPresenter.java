@@ -166,10 +166,6 @@ public class DumpViewerPresenter<V extends DumpViewerMvpView> extends BasePresen
             thermalSpotsHelper.setSpotsVisible(false);
         tabResources.setCurrentIndex(position);
 
-        thermalSpotsHelper = tabResources.getThermalSpotHelper();
-        if (thermalSpotsHelper != null)
-            thermalSpotsHelper.setSpotsVisible(true);
-
         if (showingVisibleImage) {
             visibleImageAlignMode = false;
             loadAndShowVisibleImage(tabResources.getRawThermalDump());
@@ -178,19 +174,22 @@ public class DumpViewerPresenter<V extends DumpViewerMvpView> extends BasePresen
         Bitmap frame = tabResources.getThermalBitmap(contrastRatio, coloredMode);
         getMvpView().updateThermalImageView(frame);
 
-        // Create new thermalSpotsHelper if not existed after view measured
-        // TODO: Lazy approach: need to make a short delay (at least 20ms) to wait ui thread for correct thermalImageView.getTop() value?
-        getMvpView().getThermalImageViewGlobalLayouts().take(1).subscribe(new Consumer<Object>() {
-            @Override
-            public void accept(Object o) throws Exception {
-                System.out.printf("On thermalImageView globalLayout: tabResources.getCount=%d, tabResources.currIndex=%d\n",
-                        tabResources.getCount(),
-                        tabResources.getCurrentIndex()
-                );
-
-                tabResources.addThermalSpotsHelper(getMvpView().createThermalSpotsHelper(tabResources.getRawThermalDump()));
-            }
-        });
+        thermalSpotsHelper = tabResources.getThermalSpotHelper();
+        if (thermalSpotsHelper != null) {
+            thermalSpotsHelper.setSpotsVisible(true);
+        } else {
+            // Create new thermalSpotsHelper if not existed after view measured
+            getMvpView().getThermalImageViewGlobalLayouts().take(1).subscribe(new Consumer<Object>() {
+                @Override
+                public void accept(Object o) throws Exception {
+                    System.out.printf("On thermalImageView globalLayout: tabResources.getCount=%d, tabResources.currIndex=%d\n",
+                            tabResources.getCount(),
+                            tabResources.getCurrentIndex()
+                    );
+                    tabResources.addThermalSpotsHelper(getMvpView().createThermalSpotsHelper(tabResources.getRawThermalDump()));
+                }
+            });
+        }
     }
 
     /**
@@ -205,18 +204,14 @@ public class DumpViewerPresenter<V extends DumpViewerMvpView> extends BasePresen
         removeDataFromChartParameter(thermalChartParameter, index);
         getMvpView().updateThermalChart(thermalChartParameter);
 
-        if (tabResources.getCount() == 0) {
+        if (tabResources.getCount() != 0) {
+            switchDumpTab(newIndex);
+        } else {
             getMvpView().updateThermalImageView(null);
 
-            // Hide visible image and chart
+            // Hide visibleImage and chart
             if (showingVisibleImage) toggleVisibleImage();
             if (showingChart) toggleHorizonChart();
-
-        } else {
-            if (showingVisibleImage) {
-                visibleImageAlignMode = false;
-                getMvpView().updateVisibleImageView(tabResources.getRawThermalDump().getVisibleImageMask(), visibleImageAlignMode);
-            }
         }
         System.gc();
 
