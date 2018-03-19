@@ -111,7 +111,7 @@ public class DumpViewerPresenter<V extends DumpViewerMvpView> extends BasePresen
             // Show thermal spots
             ThermalSpotsHelper thermalSpotsHelper = tabResources.getThermalSpotHelper();
             if (thermalSpotsHelper != null)
-                thermalSpotsHelper.setSpotsVisible(true);
+                thermalSpotsHelper.setSpotsVisible(true && showingThermalSpots);
         }
 
         if (addPaths.size() > 0) {
@@ -177,7 +177,7 @@ public class DumpViewerPresenter<V extends DumpViewerMvpView> extends BasePresen
 
         thermalSpotsHelper = tabResources.getThermalSpotHelper();
         if (thermalSpotsHelper != null) {
-            thermalSpotsHelper.setSpotsVisible(true);
+            thermalSpotsHelper.setSpotsVisible(true && showingThermalSpots);
         } else {
             // Create new thermalSpotsHelper if not existed after view measured
             getMvpView().getThermalImageViewGlobalLayouts().take(1).subscribe(new Consumer<Object>() {
@@ -234,7 +234,7 @@ public class DumpViewerPresenter<V extends DumpViewerMvpView> extends BasePresen
     }
 
     @Override
-    public void toggleThermalSpots() {
+    public void toggleThermalSpotsVisible() {
         showingThermalSpots = !showingThermalSpots;
         tabResources.getThermalSpotHelper().setSpotsVisible(showingThermalSpots);
     }

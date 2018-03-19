@@ -231,7 +231,7 @@ public class DumpViewerActivity extends BaseActivity implements DumpViewerMvpVie
 
     @OnClick(R.id.btnToggleSpots)
     public void onToggleSpotsClick(View v) {
-        presenter.toggleThermalSpots();
+        presenter.toggleThermalSpotsVisible();
     }
 
     @OnClick(R.id.fabAddSpot)

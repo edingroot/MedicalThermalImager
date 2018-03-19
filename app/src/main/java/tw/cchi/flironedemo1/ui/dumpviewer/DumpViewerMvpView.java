@@ -1,6 +1,5 @@
 package tw.cchi.flironedemo1.ui.dumpviewer;
 
-
 import android.graphics.Bitmap;
 import android.support.annotation.Nullable;
 

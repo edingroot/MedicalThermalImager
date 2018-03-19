@@ -1,6 +1,5 @@
 package tw.cchi.flironedemo1.ui.dumpviewer;
 
-
 import java.util.ArrayList;
 
 import tw.cchi.flironedemo1.di.BgThreadAvail;
@@ -23,7 +22,7 @@ public interface DumpViewerMvpPresenter<V extends DumpViewerMvpView> extends Mvp
     void updateVisibleImageOffset(int offsetX, int offsetY);
 
 
-    void toggleThermalSpots();
+    void toggleThermalSpotsVisible();
 
     void addThermalSpot();
 
