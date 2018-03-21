@@ -19,7 +19,7 @@ import org.opencv.highgui.Highgui;
 
 import java.util.List;
 
-import tw.cchi.flironedemo1.R;
+import tw.cchi.medthimager.R;
 
 /**
  * This is a basic class, implementing the interaction with Camera and OpenCV library.

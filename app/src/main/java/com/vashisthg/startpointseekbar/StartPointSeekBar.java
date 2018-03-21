@@ -15,7 +15,7 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewConfiguration;
 
-import tw.cchi.flironedemo1.R;
+import tw.cchi.medthimager.R;
 
 /**
  * Created by vashisthg on 01/04/14.

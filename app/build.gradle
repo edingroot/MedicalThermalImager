@@ -1,10 +1,10 @@
 apply plugin: 'com.android.application'
 android {
     compileSdkVersion 26
-    buildToolsVersion '26.0.2'
+    buildToolsVersion '26.0.3'
 
     defaultConfig {
-        applicationId "tw.cchi.flirdemo1"
+        applicationId "tw.cchi.medthimager"
         minSdkVersion 18
         targetSdkVersion 26
         versionCode 18

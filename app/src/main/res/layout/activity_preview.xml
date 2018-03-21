@@ -184,7 +184,7 @@
 
     </RelativeLayout>
 
-    <tw.cchi.flironedemo1.component.ThermalSpotView
+    <tw.cchi.medthimager.component.ThermalSpotView
         android:id="@+id/thermalSpotView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"

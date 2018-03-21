@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <string name="app_name">FLIR ONE Demo1</string>
+    <string name="app_name">Medical Thermal Imager</string>
     <string name="toggle_more_info">More Info \u21EA</string>
     <string name="toggle_less_info">Less Info \u21B2</string>
     <string name="connectSim">Toggle Sim</string>

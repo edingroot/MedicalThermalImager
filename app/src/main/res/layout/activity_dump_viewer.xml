@@ -48,7 +48,7 @@
                 android:layout_weight="1"
                 android:visibility="invisible"/>
 
-            <tw.cchi.flironedemo1.component.MultiChartView
+            <tw.cchi.medthimager.component.MultiChartView
                 android:id="@+id/thermalChartView"
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
