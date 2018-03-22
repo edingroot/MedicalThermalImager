@@ -263,6 +263,9 @@ public class DumpViewerPresenter<V extends DumpViewerMvpView> extends BasePresen
 
     @Override
     public void addThermalSpot() {
+        if (tabResources.getCount() == 0)
+            return;
+
         if (!showingThermalSpots) {
             getMvpView().showSnackBar(R.string.spots_hidden);
             return;
@@ -312,7 +315,7 @@ public class DumpViewerPresenter<V extends DumpViewerMvpView> extends BasePresen
 
     @Override
     public void toggleVisibleImage() {
-        if (tabResources.getCount() == 0)
+        if (tabResources.getCount() == 0 && !showingVisibleImage)
             return;
 
         if (showingVisibleImage) {
@@ -354,7 +357,7 @@ public class DumpViewerPresenter<V extends DumpViewerMvpView> extends BasePresen
 
     @Override
     public void toggleHorizonChart() {
-        if (tabResources.getCount() == 0 || horizontalLineY == -1)
+        if (horizontalLineY == -1 || tabResources.getCount() == 0 && !showingChart)
             return;
 
         if (showingChart) {
@@ -378,11 +381,6 @@ public class DumpViewerPresenter<V extends DumpViewerMvpView> extends BasePresen
     @Override
     public String getDumpTitle() {
         return tabResources.getRawThermalDump().getTitle();
-    }
-
-    @Override
-    public ThermalSpotsHelper getThermalSpotsHelper() {
-        return tabResources.getThermalSpotHelper();
     }
 
 
@@ -432,65 +430,56 @@ public class DumpViewerPresenter<V extends DumpViewerMvpView> extends BasePresen
                         emitter.onComplete();
                     }
                 }).subscribeOn(Schedulers.newThread())
-                        .observeOn(AndroidSchedulers.mainThread())
-                        .subscribe(new Observer<Bitmap>() {
-                            @Override
-                            public void onSubscribe(Disposable d) {}
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .subscribe(new Observer<Bitmap>() {
+                        @Override
+                        public void onSubscribe(Disposable d) {}
 
-                            @Override
-                            public void onNext(Bitmap bitmap) {
-                                getMvpView().updateThermalImageView(bitmap);
+                        @Override
+                        public void onNext(Bitmap bitmap) {
+                            getMvpView().updateThermalImageView(bitmap);
+                        }
+
+                        @Override
+                        public void onError(Throwable e) {
+                            emitter.onError(e);
+                        }
+
+                        @Override
+                        public void onComplete() {
+                            // Create new thermalSpotsHelper if not existed
+                            ThermalSpotsHelper thermalSpotsHelper = tabResources.getThermalSpotHelper();
+                            if (thermalSpotsHelper != null) {
+                                thermalSpotsHelper.setSpotsVisible(true && showingThermalSpots);
+                                emitter.onNext(true);
+                                emitter.onComplete();
+                                return;
                             }
 
-                            @Override
-                            public void onError(Throwable e) {
-                                emitter.onError(e);
+                            if (getMvpView().getThermalImageViewHeight() == 0) {
+                                // This should be called after updateThermalImageView(), which was called in onNext() above
+                                getMvpView().getThermalImageViewGlobalLayouts().take(1).subscribe(new Consumer<Object>() {
+                                    @Override
+                                    public void accept(Object o) throws Exception {
+                                        tabResources.addThermalSpotsHelper(
+                                                getMvpView().createThermalSpotsHelper(tabResources.getRawThermalDump())
+                                        );
+                                        emitter.onNext(true);
+                                        emitter.onComplete();
+                                    }
+                                });
+                            } else {
+                                tabResources.addThermalSpotsHelper(
+                                        getMvpView().createThermalSpotsHelper(tabResources.getRawThermalDump())
+                                );
+                                emitter.onNext(true);
+                                emitter.onComplete();
                             }
-
-                            @Override
-                            public void onComplete() {
-                                // Create new thermalSpotsHelper if not existed
-                                ThermalSpotsHelper thermalSpotsHelper = tabResources.getThermalSpotHelper();
-                                if (thermalSpotsHelper != null) {
-                                    thermalSpotsHelper.setSpotsVisible(true && showingThermalSpots);
-                                    emitter.onNext(true);
-                                    emitter.onComplete();
-                                    return;
-                                }
-
-                                if (getMvpView().getThermalImageViewHeight() == 0) {
-                                    // This should be called after updateThermalImageView(), which was called in onNext() above
-                                    getMvpView().getThermalImageViewGlobalLayouts().take(1).subscribe(new Consumer<Object>() {
-                                        @Override
-                                        public void accept(Object o) throws Exception {
-                                            tabResources.addThermalSpotsHelper(
-                                                    getMvpView().createThermalSpotsHelper(tabResources.getRawThermalDump())
-                                            );
-                                            emitter.onNext(true);
-                                            emitter.onComplete();
-                                        }
-                                    });
-                                } else {
-                                    tabResources.addThermalSpotsHelper(
-                                            getMvpView().createThermalSpotsHelper(tabResources.getRawThermalDump())
-                                    );
-                                    emitter.onNext(true);
-                                    emitter.onComplete();
-                                }
-                            }
-                        });
+                        }
+                    });
 
             }
         });
-    }
-
-    private boolean displayVisibleImage(RawThermalDump rawThermalDump) {
-        if (rawThermalDump.isVisibleImageAttached()) {
-            getMvpView().updateVisibleImageView(rawThermalDump.getVisibleImageMask(), visibleImageAlignMode);
-            return true;
-        } else {
-            return false;
-        }
     }
 
     /**
@@ -529,6 +518,15 @@ public class DumpViewerPresenter<V extends DumpViewerMvpView> extends BasePresen
                 });
             }
         });
+    }
+
+    private boolean displayVisibleImage(RawThermalDump rawThermalDump) {
+        if (rawThermalDump.isVisibleImageAttached()) {
+            getMvpView().updateVisibleImageView(rawThermalDump.getVisibleImageMask(), visibleImageAlignMode);
+            return true;
+        } else {
+            return false;
+        }
     }
 
     /**

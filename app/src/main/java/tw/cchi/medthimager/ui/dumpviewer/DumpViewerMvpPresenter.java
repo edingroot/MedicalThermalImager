@@ -47,6 +47,4 @@ public interface DumpViewerMvpPresenter<V extends DumpViewerMvpView> extends Mvp
 
     String getDumpTitle();
 
-    ThermalSpotsHelper getThermalSpotsHelper();
-
 }
