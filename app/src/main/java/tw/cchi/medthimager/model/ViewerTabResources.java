@@ -3,6 +3,7 @@ package tw.cchi.medthimager.model;
 import android.graphics.Bitmap;
 import android.support.annotation.Nullable;
 import android.util.SparseArray;
+import android.util.SparseBooleanArray;
 
 import java.util.ArrayList;
 
@@ -16,6 +17,7 @@ public class ViewerTabResources {
     private final Object listsLock = new Object();
     private int currentIndex = -1;
 
+    private ArrayList<Boolean> hasLoaded = new ArrayList(); // <whether the tab had been loaded before>
     private ArrayList<String> thermalDumpPaths = new ArrayList<>(); // manage opened dumps by path because filepicker returns selected paths
     private ArrayList<RawThermalDump> rawThermalDumps = new ArrayList<>();
     private ArrayList<ThermalDumpProcessor> thermalDumpProcessors = new ArrayList<>();
@@ -139,7 +141,6 @@ public class ViewerTabResources {
         }
     }
 
-
     /**
      * Add resources of the new tab except ThermalSpotsHelper.
      *
@@ -156,6 +157,7 @@ public class ViewerTabResources {
             thermalDumpProcessors.add(thermalDumpProcessor);
             grayBitmaps.add(null);
             coloredBitmaps.add(null);
+            hasLoaded.add(false);
         }
         return getCount();
     }
@@ -167,6 +169,7 @@ public class ViewerTabResources {
             thermalDumpProcessors.remove(removeIndex);
             grayBitmaps.remove(removeIndex);
             coloredBitmaps.remove(removeIndex);
+            hasLoaded.remove(removeIndex);
 
             if (getThermalSpotHelper() != null) {
                 getThermalSpotHelper().dispose();
@@ -176,4 +179,18 @@ public class ViewerTabResources {
         currentIndex = newIndex;
     }
 
+    public boolean hasLoaded() {
+        if (currentIndex == -1)
+            return false;
+
+        synchronized (listsLock) {
+            return hasLoaded.get(currentIndex);
+        }
+    }
+
+    public void setHasLoaded(boolean hasLoaded) {
+        synchronized (listsLock) {
+            this.hasLoaded.set(currentIndex, hasLoaded);
+        }
+    }
 }
