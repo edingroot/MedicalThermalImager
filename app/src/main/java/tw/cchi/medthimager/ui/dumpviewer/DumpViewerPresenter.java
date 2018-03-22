@@ -297,6 +297,9 @@ public class DumpViewerPresenter<V extends DumpViewerMvpView> extends BasePresen
 
     @Override
     public void toggleThermalSpotsVisible() {
+        if (tabResources.getCount() == 0)
+            return;
+
         showingThermalSpots = !showingThermalSpots;
         tabResources.getThermalSpotHelper().setSpotsVisible(showingThermalSpots);
     }
