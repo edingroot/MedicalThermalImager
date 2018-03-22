@@ -2,6 +2,8 @@ package tw.cchi.medthimager.helper;
 
 import android.content.Context;
 import android.graphics.Point;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.SparseArray;
 import android.view.MotionEvent;
 import android.view.View;
@@ -12,8 +14,8 @@ import java.util.LinkedList;
 import java.util.Queue;
 
 import tw.cchi.medthimager.AppUtils;
-import tw.cchi.medthimager.thermalproc.RawThermalDump;
 import tw.cchi.medthimager.component.ThermalSpotView;
+import tw.cchi.medthimager.thermalproc.RawThermalDump;
 
 public class ThermalSpotsHelper {
     private Context context;
@@ -147,12 +149,7 @@ public class ThermalSpotsHelper {
             }
         });
 
-        thermalSpotView.setOnPlacedListener(new ThermalSpotView.OnPlacedListener() {
-            @Override
-            public void onPlaced() {
-                updateThermalValue(thermalSpotView);
-            }
-        });
+        updateThermalValue(thermalSpotView);
 
         if (x != -1 && y != -1) {
             thermalSpotView.setCenterPosition(x, y);
@@ -232,7 +229,7 @@ public class ThermalSpotsHelper {
     }
 
     private void restoreThermalSpot(final int spotId, final double rawX, final double rawY) {
-        runIfViewMetricsSet(new Runnable() {
+        proceedViewMetricsRunnable(new Runnable() {
             @Override
             public void run() {
                 System.out.printf("RestoreThermalSpot@BfConv: spotId=%s, x=%.0f, y=%.0f\n", spotId, rawX, rawY);
@@ -255,21 +252,24 @@ public class ThermalSpotsHelper {
      * @param spotView
      */
     private void updateThermalValue(final ThermalSpotView spotView) {
-        runIfViewMetricsSet(new Runnable() {
+        proceedViewMetricsRunnable(new Runnable() {
             @Override
             public void run() {
                 double ratio = (double) rawThermalDump.getWidth() / imageViewWidth;
                 Point viewPosition = spotView.getCenterPosition();
                 viewPosition.y -= imageViewRawY;
-                Point thermalPosition = new Point(
+                final Point thermalPosition = new Point(
                         thermalViewPositionConversion(viewPosition.x, viewPosition.y, ratio)
                 );
 
-                final double averageC = rawThermalDump.getTemperature9Average(thermalPosition.x, thermalPosition.y);
-                spotView.post(new Runnable() {
+                System.out.printf("updateThermalValue, %d - viewPos=(%d, %d)\n", spotView.getSpotId(), viewPosition.x, viewPosition.y);
+                System.out.printf("updateThermalValue, %d - dumpPos=(%d, %d)\n", spotView.getSpotId(), thermalPosition.x, thermalPosition.y);
+
+                // Run on UI thread
+                new Handler(Looper.getMainLooper()).post(new Runnable() {
                     @Override
                     public void run() {
-                        spotView.setTemperature(averageC);
+                        spotView.setTemperature(rawThermalDump.getTemperature9Average(thermalPosition.x, thermalPosition.y));
                     }
                 });
             }
@@ -285,7 +285,7 @@ public class ThermalSpotsHelper {
         return new Point(x, y);
     }
 
-    private void runIfViewMetricsSet(Runnable runnable) {
+    private void proceedViewMetricsRunnable(Runnable runnable) {
         if (viewMetricsSet) {
             new Thread(runnable).start();
         } else {

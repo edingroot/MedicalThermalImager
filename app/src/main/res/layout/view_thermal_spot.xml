@@ -2,22 +2,23 @@
 <RelativeLayout
     android:id="@+id/layoutRoot"
     xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="wrap_content"
-    android:layout_height="wrap_content">
+    android:layout_width="@dimen/thermal_spot_width"
+    android:layout_height="@dimen/thermal_spot_height">
 
     <TextView
         android:id="@+id/txtSpotId"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignEnd="@id/txtSpotValue"
         android:layout_alignParentTop="true"
-        android:layout_marginBottom="-6dp"
+        android:layout_alignParentEnd="true"
+        android:layout_marginTop="2dp"
         android:layout_marginEnd="5dp"
         android:alpha="0.9"
         android:shadowColor="#000000"
         android:shadowDx="0"
         android:shadowDy="0"
         android:shadowRadius="3"
+        android:text="0"
         android:textAppearance="?android:attr/textAppearanceSmall"
         android:textSize="12sp"/>
 
@@ -25,8 +26,8 @@
         android:id="@+id/spotMeterIcon"
         android:layout_width="24dp"
         android:layout_height="24dp"
-        android:layout_below="@id/txtSpotId"
         android:layout_centerHorizontal="true"
+        android:layout_centerVertical="true"
         android:alpha="0.9"
         android:src="@android:drawable/ic_menu_mylocation"/>
 
@@ -34,16 +35,15 @@
         android:id="@+id/txtSpotValue"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_below="@id/spotMeterIcon"
+        android:layout_alignParentBottom="true"
         android:layout_centerHorizontal="true"
-        android:layout_marginTop="-2dp"
         android:alpha="0.9"
         android:shadowColor="#000000"
         android:shadowDx="0"
         android:shadowDy="0"
         android:shadowRadius="3"
-        android:text="000.00ºC"
+        android:text="00.00ºC"
         android:textAppearance="?android:attr/textAppearanceSmall"
-        android:textSize="12sp"/>
+        android:textSize="11sp"/>
 
 </RelativeLayout>

@@ -23,8 +23,8 @@ import tw.cchi.medthimager.di.BgThreadAvail;
 import tw.cchi.medthimager.di.NewThread;
 import tw.cchi.medthimager.di.UiThread;
 import tw.cchi.medthimager.helper.ThermalSpotsHelper;
-import tw.cchi.medthimager.model.ViewerTabResources;
 import tw.cchi.medthimager.model.ChartParameter;
+import tw.cchi.medthimager.model.ViewerTabResources;
 import tw.cchi.medthimager.thermalproc.RawThermalDump;
 import tw.cchi.medthimager.thermalproc.ThermalDumpProcessor;
 import tw.cchi.medthimager.thermalproc.VisibleImageMask;
@@ -95,9 +95,12 @@ public class DumpViewerPresenter<V extends DumpViewerMvpView> extends BasePresen
             }
         }
 
-        for (String removePath : removePaths) {
-            removeThermalDump(tabResources.indexOf(removePath));
+        // Only switch tab (update imageViews) when removing the last dump
+        for (int i = 0; i < removePaths.size() - 1; i++) {
+            removeThermalDump(tabResources.indexOf(removePaths.get(i)), false);
         }
+        if (removePaths.size() > 0)
+            removeThermalDump(tabResources.indexOf(removePaths.get(removePaths.size() - 1)), true);
 
         if (addPaths.size() > 0) {
             // Add thermal dumps "sequentially" on a background thread and update chart axis on complete
@@ -171,6 +174,7 @@ public class DumpViewerPresenter<V extends DumpViewerMvpView> extends BasePresen
 
         // Load thermal bitmap and thermalSpotsHelper
         // Run on a background compute thread and update on the UI thread
+        System.out.printf("switchDumpTab@beforeCreateSpotsHelper, tabCount=%d, index=%d\n", tabResources.getCount(), tabResources.getCurrentIndex());
         Observable.create(new ObservableOnSubscribe<Bitmap>() {
             @Override
             public void subscribe(ObservableEmitter<Bitmap> emitter) throws Exception {
@@ -192,6 +196,8 @@ public class DumpViewerPresenter<V extends DumpViewerMvpView> extends BasePresen
                 @Override
                 public void onError(Throwable e) {
                     e.printStackTrace();
+                    getMvpView().hideLoading();
+                    getMvpView().showSnackBar("Error occurred while switching dump tab.");
                 }
 
                 @Override
@@ -209,7 +215,7 @@ public class DumpViewerPresenter<V extends DumpViewerMvpView> extends BasePresen
                         getMvpView().getThermalImageViewGlobalLayouts()
                             .take(1).subscribe(new Consumer<Object>() {
                                 @Override
-                                public void accept(Object o) throws Exception {
+                                public void accept(Object o) {
                                     tabResources.addThermalSpotsHelper(
                                             getMvpView().createThermalSpotsHelper(tabResources.getRawThermalDump())
                                     );
@@ -227,11 +233,12 @@ public class DumpViewerPresenter<V extends DumpViewerMvpView> extends BasePresen
     }
 
     /**
-     * @param index Index of the new active dump or -1 for no tab after removing
-     * @return
+     * @param index
+     * @param switchTab set to true while removing multiple dumps except the last dump
+     * @return Index of the new active dump or -1 for no tab after removing
      */
     @Override
-    public int removeThermalDump(int index) {
+    public int removeThermalDump(int index, boolean switchTab) {
         int newIndex = getMvpView().removeDumpTab(index);
 
         tabResources.removeResources(index, newIndex);
@@ -239,7 +246,10 @@ public class DumpViewerPresenter<V extends DumpViewerMvpView> extends BasePresen
         getMvpView().updateThermalChart(thermalChartParameter);
 
         if (tabResources.getCount() != 0) {
-            switchDumpTab(newIndex);
+            if (switchTab) {
+                System.out.printf("removeThermalDump(%d), remainingCount=%d, newIndex=%d\n", index, tabResources.getCount(), newIndex);
+                switchDumpTab(newIndex);
+            }
         } else {
             getMvpView().updateThermalImageView(null);
 

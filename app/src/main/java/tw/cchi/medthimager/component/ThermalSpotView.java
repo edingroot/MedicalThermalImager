@@ -4,8 +4,6 @@ import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.res.TypedArray;
 import android.graphics.Point;
-import android.os.Handler;
-import android.os.Looper;
 import android.support.annotation.Nullable;
 import android.util.AttributeSet;
 import android.view.View;
@@ -14,8 +12,6 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import java.text.NumberFormat;
-import java.util.LinkedList;
-import java.util.Queue;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -24,9 +20,10 @@ import tw.cchi.medthimager.R;
 public class ThermalSpotView extends RelativeLayout {
     private int spotId;
     private boolean showId;
-    private boolean moved;
-    private Queue<Runnable> beforeMeasureQueue = new LinkedList<>();
-    private OnPlacedListener onPlacedListener;
+
+    private final int width;
+    private final int height;
+    private boolean moved = false;
 
     @BindView(R.id.txtSpotId) TextView txtSpotId;
     @BindView(R.id.txtSpotValue) TextView txtSpotValue;
@@ -46,6 +43,9 @@ public class ThermalSpotView extends RelativeLayout {
             typedArray.recycle();
         }
 
+        this.width = (int) getResources().getDimension(R.dimen.thermal_spot_width);
+        this.height = (int) getResources().getDimension(R.dimen.thermal_spot_height);
+
         initLayoutParams();
         onAttrsUpdate();
     }
@@ -57,27 +57,15 @@ public class ThermalSpotView extends RelativeLayout {
 
         this.spotId = spotId;
         this.showId = showId;
+        this.width = (int) getResources().getDimension(R.dimen.thermal_spot_width);
+        this.height = (int) getResources().getDimension(R.dimen.thermal_spot_height);
 
         initLayoutParams();
         onAttrsUpdate();
     }
 
-    @Override
-    protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-        super.onMeasure(widthMeasureSpec, heightMeasureSpec);
-
-        while (!beforeMeasureQueue.isEmpty()) {
-            new Thread(beforeMeasureQueue.poll()).start();
-        }
-
-        if (moved && onPlacedListener != null) {
-            moved = false;
-            onPlacedListener.onPlaced();
-        }
-    }
-
     /**
-     * By default, the position is centered vertical & horizontally
+     * By default, the centerPosition is centered vertical & horizontally
      */
     private void initLayoutParams() {
         LayoutParams params = new LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
@@ -86,7 +74,6 @@ public class ThermalSpotView extends RelativeLayout {
         params.addRule(RelativeLayout.CENTER_VERTICAL, TRUE);
 
         setLayoutParams(params);
-        moved = false;
     }
 
     private void onAttrsUpdate() {
@@ -102,10 +89,6 @@ public class ThermalSpotView extends RelativeLayout {
         this.spotId = spotId;
     }
 
-    public void setOnPlacedListener(OnPlacedListener onPlacedListener) {
-        this.onPlacedListener = onPlacedListener;
-    }
-
     @SuppressLint("SetTextI18n")
     public void setTemperature(double spotValue) {
         NumberFormat numberFormat = NumberFormat.getInstance();
@@ -115,67 +98,41 @@ public class ThermalSpotView extends RelativeLayout {
     }
 
     /**
-     * Set the position on the screen, use the center point of this view as reference.
+     * Set the centerPosition on the screen, use the center point of this view as reference.
      */
     public synchronized void setCenterPosition(final int x, final int y) {
-        Runnable runnable = new Runnable() {
-            @Override
-            public void run() {
-                final LayoutParams params = (RelativeLayout.LayoutParams) getLayoutParams();
-                params.leftMargin = x - getMeasuredWidth() / 2;
-                params.topMargin = y - getMeasuredHeight() / 2;
+        final LayoutParams params = (RelativeLayout.LayoutParams) getLayoutParams();
+        params.leftMargin = x - width / 2;
+        params.topMargin = y - height / 2;
 
-                if (!moved) {
-                    params.addRule(RelativeLayout.CENTER_VERTICAL, 0);
-                    params.addRule(RelativeLayout.CENTER_HORIZONTAL, 0);
+        if (!moved) {
+            params.addRule(RelativeLayout.CENTER_VERTICAL, 0);
+            params.addRule(RelativeLayout.CENTER_HORIZONTAL, 0);
 
-                    // Prevent the view from being compressed when moving right or down
-                    params.rightMargin = -getMeasuredWidth();
-                    params.bottomMargin = -getMeasuredHeight();
+            // Prevent the view from being compressed when moving right or down
+            params.rightMargin = -width;
+            params.bottomMargin = -height;
 
-                    moved = true;
-                }
-
-                // Run on UI thread
-                new Handler(Looper.getMainLooper()).post(new Runnable() {
-                    @Override
-                    public void run() {
-                        setLayoutParams(params);
-                        invalidate();
-                    }
-                });
-            }
-        };
-
-        // Queue runnable if view not measured
-        if (getMeasuredWidth() == 0 || getMeasuredHeight() == 0) {
-            beforeMeasureQueue.add(runnable);
-        } else {
-            new Thread(runnable).start();
+            moved = true;
         }
+
+        setLayoutParams(params);
+        invalidate();
     }
 
     public Point getCenterPosition() {
-        LayoutParams params = (RelativeLayout.LayoutParams) getLayoutParams();
-        Point point;
         if (!moved) {
-            point = new Point(
-                    getLeft() + getMeasuredWidth() / 2,
-                    getTop() + getMeasuredHeight() / 2
+            return new Point(
+                    getLeft() + width / 2,
+                    getTop() + height / 2
             );
         } else {
-            point = new Point(
-                    params.leftMargin + this.getMeasuredWidth() / 2,
-                    params.topMargin + this.getMeasuredHeight() / 2
+            LayoutParams params = (RelativeLayout.LayoutParams) getLayoutParams();
+            return new Point(
+                    params.leftMargin + width / 2,
+                    params.topMargin + height / 2
             );
         }
-
-        return point;
-    }
-
-    public interface OnPlacedListener {
-        // Called after view is measured and spot is placed to the correct position
-        void onPlaced();
     }
 
 }

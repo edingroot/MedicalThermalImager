@@ -101,7 +101,7 @@ public class DumpViewerActivity extends BaseActivity implements DumpViewerMvpVie
                         new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
-                                presenter.removeThermalDump(position);
+                                presenter.removeThermalDump(position, true);
                             }
                         }, new DialogInterface.OnClickListener() {
                             @Override

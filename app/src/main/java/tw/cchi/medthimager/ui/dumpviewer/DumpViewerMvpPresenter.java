@@ -18,7 +18,7 @@ public interface DumpViewerMvpPresenter<V extends DumpViewerMvpView> extends Mvp
     @UiThread
     void switchDumpTab(int position);
 
-    int removeThermalDump(int index);
+    int removeThermalDump(int index, boolean switchTab);
 
     @NewThread
     void updateVisibleImageOffset(int offsetX, int offsetY);
