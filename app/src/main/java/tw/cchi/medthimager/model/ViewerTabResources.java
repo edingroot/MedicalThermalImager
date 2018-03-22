@@ -1,4 +1,4 @@
-package tw.cchi.medthimager.helper;
+package tw.cchi.medthimager.model;
 
 import android.graphics.Bitmap;
 import android.support.annotation.Nullable;
@@ -8,10 +8,11 @@ import java.util.ArrayList;
 
 import javax.inject.Inject;
 
+import tw.cchi.medthimager.helper.ThermalSpotsHelper;
 import tw.cchi.medthimager.thermalproc.RawThermalDump;
 import tw.cchi.medthimager.thermalproc.ThermalDumpProcessor;
 
-public class ViewerTabResourcesHelper {
+public class ViewerTabResources {
     private final Object listsLock = new Object();
     private int currentIndex = -1;
 
@@ -23,7 +24,7 @@ public class ViewerTabResourcesHelper {
     private SparseArray<ThermalSpotsHelper> thermalSpotsHelpers = new SparseArray<>(); // <tabIndex, ThermalSpotHelper>
 
     @Inject
-    public ViewerTabResourcesHelper() {
+    public ViewerTabResources() {
     }
 
     public int getCurrentIndex() {
@@ -31,7 +32,7 @@ public class ViewerTabResourcesHelper {
     }
 
     public void setCurrentIndex(int index) {
-        System.out.println("ViewerTabResourcesHelper: setCurrentIndex=" + index);
+        System.out.println("ViewerTabResources: setCurrentIndex=" + index);
         this.currentIndex = index;
     }
 

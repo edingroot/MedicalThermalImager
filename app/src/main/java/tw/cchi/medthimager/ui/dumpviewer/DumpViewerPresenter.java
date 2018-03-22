@@ -23,7 +23,7 @@ import tw.cchi.medthimager.di.BgThreadAvail;
 import tw.cchi.medthimager.di.NewThread;
 import tw.cchi.medthimager.di.UiThread;
 import tw.cchi.medthimager.helper.ThermalSpotsHelper;
-import tw.cchi.medthimager.helper.ViewerTabResourcesHelper;
+import tw.cchi.medthimager.model.ViewerTabResources;
 import tw.cchi.medthimager.model.ChartParameter;
 import tw.cchi.medthimager.thermalproc.RawThermalDump;
 import tw.cchi.medthimager.thermalproc.ThermalDumpProcessor;
@@ -35,7 +35,7 @@ public class DumpViewerPresenter<V extends DumpViewerMvpView> extends BasePresen
     @Inject AppCompatActivity activity;
 
     // Data models & helpers
-    @Inject volatile ViewerTabResourcesHelper tabResources;
+    @Inject volatile ViewerTabResources tabResources;
     private volatile ChartParameter thermalChartParameter;
 
     // States
