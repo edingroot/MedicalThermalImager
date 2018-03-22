@@ -14,15 +14,13 @@ import tw.cchi.medthimager.thermalproc.ThermalDumpProcessor;
 public class ViewerTabResourcesHelper {
     private final Object listsLock = new Object();
     private int currentIndex = -1;
-    private int thermalSpotHelperId = 0;
 
     private ArrayList<String> thermalDumpPaths = new ArrayList<>(); // manage opened dumps by path because filepicker returns selected paths
     private ArrayList<RawThermalDump> rawThermalDumps = new ArrayList<>();
     private ArrayList<ThermalDumpProcessor> thermalDumpProcessors = new ArrayList<>();
     private ArrayList<Bitmap> grayBitmaps = new ArrayList<>();
     private ArrayList<Bitmap> coloredBitmaps = new ArrayList<>();
-    private ArrayList<Integer> thermalSpotHelperIds = new ArrayList<>(); // <index, thermalSpotHelperId>
-    private SparseArray<ThermalSpotsHelper> thermalSpotsHelpers = new SparseArray<>(); // <thermalSpotHelperId, ThermalSpotHelper>
+    private SparseArray<ThermalSpotsHelper> thermalSpotsHelpers = new SparseArray<>(); // <tabIndex, ThermalSpotHelper>
 
     @Inject
     public ViewerTabResourcesHelper() {
@@ -61,20 +59,31 @@ public class ViewerTabResourcesHelper {
         }
     }
 
+    @Nullable
     public String getThermlDumpPath() {
+        if (currentIndex != -1)
+            return null;
+
         synchronized (listsLock) {
             return thermalDumpPaths.get(currentIndex);
         }
     }
 
+    @Nullable
     public RawThermalDump getRawThermalDump() {
+        if (currentIndex == -1)
+            return null;
+
         synchronized (listsLock) {
-            if (currentIndex == -1) return null;
             return rawThermalDumps.get(currentIndex);
         }
     }
 
+    @Nullable
     public ThermalDumpProcessor getThermalDumpProcessor() {
+        if (currentIndex == -1)
+            return null;
+
         synchronized (listsLock) {
             return thermalDumpProcessors.get(currentIndex);
         }
@@ -112,13 +121,11 @@ public class ViewerTabResourcesHelper {
         }
     }
 
-    /**
-     * @return null if not existed
-     */
+    @Nullable
     public ThermalSpotsHelper getThermalSpotHelper() {
         synchronized (listsLock) {
-            if (currentIndex != -1 && thermalSpotHelperIds.size() > currentIndex) {
-                return thermalSpotsHelpers.get(thermalSpotHelperIds.get(currentIndex));
+            if (currentIndex != -1 && thermalSpotsHelpers.size() > currentIndex) {
+                return thermalSpotsHelpers.get(currentIndex);
             } else {
                 return null;
             }
@@ -127,9 +134,7 @@ public class ViewerTabResourcesHelper {
 
     public void addThermalSpotsHelper(ThermalSpotsHelper thermalSpotsHelper) {
         synchronized (listsLock) {
-            thermalSpotHelperIds.add(thermalSpotHelperId);
-            thermalSpotsHelpers.append(thermalSpotHelperId, thermalSpotsHelper);
-            thermalSpotHelperId++;
+            thermalSpotsHelpers.append(currentIndex, thermalSpotsHelper);
         }
     }
 
@@ -164,17 +169,10 @@ public class ViewerTabResourcesHelper {
 
             if (getThermalSpotHelper() != null) {
                 getThermalSpotHelper().dispose();
-                removeThermalSpotsHelper(removeIndex);
+                thermalSpotsHelpers.remove(removeIndex);
             }
         }
         currentIndex = newIndex;
-    }
-
-    private void removeThermalSpotsHelper(int index) {
-        if (thermalSpotHelperIds.size() > index) {
-            thermalSpotsHelpers.remove(thermalSpotHelperIds.get(index));
-            thermalSpotHelperIds.remove(index);
-        }
     }
 
 }

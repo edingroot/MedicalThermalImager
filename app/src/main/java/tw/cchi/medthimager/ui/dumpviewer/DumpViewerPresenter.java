@@ -166,9 +166,10 @@ public class DumpViewerPresenter<V extends DumpViewerMvpView> extends BasePresen
                 });
         }
 
-        System.out.println("switchDumpTab@BeforeLoadBitmap");
-        // TODO: hide the thermal image, spots and show loading before completely loaded
-        // Load thermal bitmap and show on UI
+        // Show loading (block UI) before resources completely loaded
+        getMvpView().showLoading();
+
+        // Load thermal bitmap and thermalSpotsHelper
         // Run on a background compute thread and update on the UI thread
         Observable.create(new ObservableOnSubscribe<Bitmap>() {
             @Override
@@ -195,31 +196,32 @@ public class DumpViewerPresenter<V extends DumpViewerMvpView> extends BasePresen
 
                 @Override
                 public void onComplete() {
-                    System.out.println("switchDumpTab@BeforeGetSpotsHelper");
-
                     ThermalSpotsHelper thermalSpotsHelper = tabResources.getThermalSpotHelper();
                     if (thermalSpotsHelper != null) {
                         thermalSpotsHelper.setSpotsVisible(true && showingThermalSpots);
-                    } else {
-                        // Create new thermalSpotsHelper if not existed
-                        // This should be called after after updateThermalImageView()
-                        if (getMvpView().getThermalImageViewHeight() == 0) {
-                            getMvpView().getThermalImageViewGlobalLayouts().take(1).subscribe(new Consumer<Object>() {
+                        getMvpView().hideLoading();
+                        return;
+                    }
+
+                    // Create new thermalSpotsHelper if not existed
+                    if (getMvpView().getThermalImageViewHeight() == 0) {
+                        // This should be called after updateThermalImageView(), which was called in onNext() above
+                        getMvpView().getThermalImageViewGlobalLayouts()
+                            .take(1).subscribe(new Consumer<Object>() {
                                 @Override
                                 public void accept(Object o) throws Exception {
                                     tabResources.addThermalSpotsHelper(
                                             getMvpView().createThermalSpotsHelper(tabResources.getRawThermalDump())
                                     );
+                                    getMvpView().hideLoading();
                                 }
                             });
-                        } else {
-                            tabResources.addThermalSpotsHelper(
-                                    getMvpView().createThermalSpotsHelper(tabResources.getRawThermalDump())
-                            );
-                        }
+                    } else {
+                        tabResources.addThermalSpotsHelper(
+                                getMvpView().createThermalSpotsHelper(tabResources.getRawThermalDump())
+                        );
+                        getMvpView().hideLoading();
                     }
-
-                    System.out.println("switchDumpTab@done");
                 }
             });
     }
