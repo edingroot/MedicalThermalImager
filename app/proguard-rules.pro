@@ -15,3 +15,17 @@
 #-keepclassmembers class fqcn.of.javascript.interface.for.webview {
 #   public *;
 #}
+
+
+# Remove logger statements
+-assumenosideeffects class android.util.Log {
+    public static *** d(...);
+}
+
+# Remove System.out statements
+-assumenosideeffects class java.io.PrintStream {
+    public void println(%);
+    public void println(**);
+    public void printf(%);
+    public void printf(**);
+}
