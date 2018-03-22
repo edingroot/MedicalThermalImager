@@ -80,21 +80,27 @@ public class ViewerTabResourcesHelper {
         }
     }
 
+    /**
+     * This may be time consuming if bitmap of this tab hasn't cached (bitmap == null).
+     */
     @Nullable
     public Bitmap getThermalBitmap(int contrastRatio, boolean colored) {
         if (currentIndex == -1)
             return null;
 
+        System.out.println("getThermalBitmap@start");
+
+        Bitmap bitmap;
         synchronized (listsLock) {
-            Bitmap bitmap = colored ? coloredBitmaps.get(currentIndex) : grayBitmaps.get(currentIndex);
-
-            if (bitmap == null) {
-                bitmap = getThermalDumpProcessor().getBitmap(contrastRatio, colored);
-                setThermalBitmap(colored, bitmap);
-            }
-
-            return bitmap;
+            bitmap = colored ? coloredBitmaps.get(currentIndex) : grayBitmaps.get(currentIndex);
         }
+        if (bitmap == null) {
+            bitmap = getThermalDumpProcessor().getBitmap(contrastRatio, colored);
+            setThermalBitmap(colored, bitmap);
+        }
+
+        System.out.println("getThermalBitmap@done");
+        return bitmap;
     }
 
     private void setThermalBitmap(boolean colored, Bitmap thermalBitmap) {

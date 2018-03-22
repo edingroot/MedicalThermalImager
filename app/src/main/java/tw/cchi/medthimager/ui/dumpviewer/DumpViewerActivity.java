@@ -256,6 +256,9 @@ public class DumpViewerActivity extends BaseActivity implements DumpViewerMvpVie
         return RxView.globalLayouts(visibleImageView);
     }
 
+    /**
+     * This should be called after thermalImageView measured (global layouted).
+     */
     @Override
     public ThermalSpotsHelper createThermalSpotsHelper(RawThermalDump rawThermalDump) {
         final ThermalSpotsHelper thermalSpotsHelper = new ThermalSpotsHelper(this, topView, rawThermalDump);

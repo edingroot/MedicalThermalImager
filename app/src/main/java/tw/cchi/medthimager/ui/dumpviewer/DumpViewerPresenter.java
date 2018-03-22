@@ -11,6 +11,7 @@ import io.reactivex.Observable;
 import io.reactivex.ObservableEmitter;
 import io.reactivex.ObservableOnSubscribe;
 import io.reactivex.Observer;
+import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.functions.Consumer;
@@ -20,6 +21,7 @@ import tw.cchi.medthimager.Config;
 import tw.cchi.medthimager.R;
 import tw.cchi.medthimager.di.BgThreadAvail;
 import tw.cchi.medthimager.di.NewThread;
+import tw.cchi.medthimager.di.UiThread;
 import tw.cchi.medthimager.helper.ThermalSpotsHelper;
 import tw.cchi.medthimager.helper.ViewerTabResourcesHelper;
 import tw.cchi.medthimager.model.ChartParameter;
@@ -93,33 +95,12 @@ public class DumpViewerPresenter<V extends DumpViewerMvpView> extends BasePresen
             }
         }
 
-        boolean needUpdateImageView = false;
-        int currentIndex = tabResources.getCurrentIndex();
         for (String removePath : removePaths) {
-            int removeIndex = tabResources.indexOf(removePath);
-            int newIndex = removeThermalDump(currentIndex);
-
-            // If the dump removing is the one that currently displaying & still have some other dumps opened,
-            // then update thermal image display.
-            if (currentIndex == removeIndex && newIndex != -1)
-                needUpdateImageView = true;
-        }
-
-        if (needUpdateImageView) {
-            getMvpView().updateThermalImageView(tabResources.getThermalBitmap(contrastRatio, coloredMode));
-
-            // Show thermal spots
-            ThermalSpotsHelper thermalSpotsHelper = tabResources.getThermalSpotHelper();
-            if (thermalSpotsHelper != null)
-                thermalSpotsHelper.setSpotsVisible(true && showingThermalSpots);
+            removeThermalDump(tabResources.indexOf(removePath));
         }
 
         if (addPaths.size() > 0) {
-            // TODO: Fix
-            // Make a short delay to avoid various async problems :P
-            // and also make dumps added sequentially
-
-            // Add thermal dumps sequentially and update chart axis on complete
+            // Add thermal dumps "sequentially" on a background thread and update chart axis on complete
             Observable.create(new ObservableOnSubscribe<String>() {
                 @Override
                 public void subscribe(ObservableEmitter<String> emitter) throws Exception {
@@ -128,14 +109,83 @@ public class DumpViewerPresenter<V extends DumpViewerMvpView> extends BasePresen
                     }
                     emitter.onComplete();
                 }
-            }).subscribeOn(Schedulers.computation()).subscribe(new Observer<String>() {
+            }).observeOn(Schedulers.computation())
+                .subscribe(new Observer<String>() {
+                    @Override
+                    public void onSubscribe(Disposable d) {}
+
+                    @Override
+                    public void onNext(String path) {
+                        addThermalDump(path);
+                    }
+
+                    @Override
+                    public void onError(Throwable e) {
+                        e.printStackTrace();
+                    }
+
+                    @Override
+                    public void onComplete() {
+                        if (isViewAttached()) {
+                            updateThermalChartAxis();
+                        }
+                    }
+                });
+        } else {
+            if (tabResources.getCount() == 0)
+                getMvpView().updateThermalImageView(null);
+        }
+    }
+
+    /**
+     * This may be time consuming due to tabResources.getThermalBitmap.
+     *
+     * This method should also be called after the first dump added (see addThermalDump()).
+     */
+    @UiThread
+    @Override
+    public synchronized void switchDumpTab(int position) {
+        // Hide all spots of the last dump, switch to new tab resources, show spots of the new dump
+        ThermalSpotsHelper thermalSpotsHelper = tabResources.getThermalSpotHelper();
+        if (thermalSpotsHelper != null)
+            thermalSpotsHelper.setSpotsVisible(false);
+        tabResources.setCurrentIndex(position);
+
+        if (showingVisibleImage) {
+            visibleImageAlignMode = false;
+
+            // Run loadAndShowVisibleImage() on a background compute thread
+            Observable.just(tabResources.getRawThermalDump())
+                .observeOn(Schedulers.computation())
+                .subscribe(new Consumer<RawThermalDump>() {
+                    @Override
+                    public void accept(RawThermalDump rawThermalDump) throws Exception {
+                        if (isViewAttached())
+                            loadAndShowVisibleImage(tabResources.getRawThermalDump());
+                    }
+                });
+        }
+
+        System.out.println("switchDumpTab@BeforeLoadBitmap");
+        // TODO: hide the thermal image, spots and show loading before completely loaded
+        // Load thermal bitmap and show on UI
+        // Run on a background compute thread and update on the UI thread
+        Observable.create(new ObservableOnSubscribe<Bitmap>() {
+            @Override
+            public void subscribe(ObservableEmitter<Bitmap> emitter) throws Exception {
+                emitter.onNext(tabResources.getThermalBitmap(contrastRatio, coloredMode));
+                emitter.onComplete();
+            }
+        }).subscribeOn(Schedulers.computation())
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe(new Observer<Bitmap>() {
                 @Override
-                public void onSubscribe(Disposable d) {
-                }
+                public void onSubscribe(Disposable d) {}
 
                 @Override
-                public void onNext(String path) {
-                    addThermalDump(path);
+                public void onNext(Bitmap frame) {
+                    if (isViewAttached())
+                        getMvpView().updateThermalImageView(frame);
                 }
 
                 @Override
@@ -145,52 +195,33 @@ public class DumpViewerPresenter<V extends DumpViewerMvpView> extends BasePresen
 
                 @Override
                 public void onComplete() {
-                    if (isViewAttached()) {
-                        updateThermalChartAxis();
+                    System.out.println("switchDumpTab@BeforeGetSpotsHelper");
+
+                    ThermalSpotsHelper thermalSpotsHelper = tabResources.getThermalSpotHelper();
+                    if (thermalSpotsHelper != null) {
+                        thermalSpotsHelper.setSpotsVisible(true && showingThermalSpots);
+                    } else {
+                        // Create new thermalSpotsHelper if not existed
+                        // This should be called after after updateThermalImageView()
+                        if (getMvpView().getThermalImageViewHeight() == 0) {
+                            getMvpView().getThermalImageViewGlobalLayouts().take(1).subscribe(new Consumer<Object>() {
+                                @Override
+                                public void accept(Object o) throws Exception {
+                                    tabResources.addThermalSpotsHelper(
+                                            getMvpView().createThermalSpotsHelper(tabResources.getRawThermalDump())
+                                    );
+                                }
+                            });
+                        } else {
+                            tabResources.addThermalSpotsHelper(
+                                    getMvpView().createThermalSpotsHelper(tabResources.getRawThermalDump())
+                            );
+                        }
                     }
+
+                    System.out.println("switchDumpTab@done");
                 }
             });
-        } else {
-            if (tabResources.getCount() == 0)
-                getMvpView().updateThermalImageView(null);
-        }
-    }
-
-    /**
-     * This method should also be called after the first dump added.
-     */
-    @Override
-    public void switchDumpTab(int position) {
-        // Hide all spots of the last dump, switch to new tab resources, show spots of the new dump
-        ThermalSpotsHelper thermalSpotsHelper = tabResources.getThermalSpotHelper();
-        if (thermalSpotsHelper != null)
-            thermalSpotsHelper.setSpotsVisible(false);
-        tabResources.setCurrentIndex(position);
-
-        if (showingVisibleImage) {
-            visibleImageAlignMode = false;
-            loadAndShowVisibleImage(tabResources.getRawThermalDump());
-        }
-
-        Bitmap frame = tabResources.getThermalBitmap(contrastRatio, coloredMode);
-        getMvpView().updateThermalImageView(frame);
-
-        thermalSpotsHelper = tabResources.getThermalSpotHelper();
-        if (thermalSpotsHelper != null) {
-            thermalSpotsHelper.setSpotsVisible(true && showingThermalSpots);
-        } else {
-            // Create new thermalSpotsHelper if not existed after view measured
-            getMvpView().getThermalImageViewGlobalLayouts().take(1).subscribe(new Consumer<Object>() {
-                @Override
-                public void accept(Object o) throws Exception {
-                    System.out.printf("On thermalImageView globalLayout: tabResources.getCount=%d, tabResources.currIndex=%d\n",
-                            tabResources.getCount(),
-                            tabResources.getCurrentIndex()
-                    );
-                    tabResources.addThermalSpotsHelper(getMvpView().createThermalSpotsHelper(tabResources.getRawThermalDump()));
-                }
-            });
-        }
     }
 
     /**
@@ -276,13 +307,15 @@ public class DumpViewerPresenter<V extends DumpViewerMvpView> extends BasePresen
         });
 
         // Calculate the correspondent point on the thermal image
-        int thermalDumpHeight = tabResources.getRawThermalDump().getHeight();
-        double ratio = (double) thermalDumpHeight / getMvpView().getThermalImageViewHeight();
-        horizontalLineY = AppUtils.trimByRange((int) (y * ratio), 1, thermalDumpHeight - 1);
+        if (tabResources.getRawThermalDump() != null) {
+            int thermalDumpHeight = tabResources.getRawThermalDump().getHeight();
+            double ratio = (double) thermalDumpHeight / getMvpView().getThermalImageViewHeight();
+            horizontalLineY = AppUtils.trimByRange((int) (y * ratio), 1, thermalDumpHeight - 1);
 
-        if (showingChart) {
-            modifyChartParameter(thermalChartParameter, horizontalLineY);
-            getMvpView().updateThermalChart(thermalChartParameter);
+            if (showingChart) {
+                modifyChartParameter(thermalChartParameter, horizontalLineY);
+                getMvpView().updateThermalChart(thermalChartParameter);
+            }
         }
     }
 
@@ -361,6 +394,7 @@ public class DumpViewerPresenter<V extends DumpViewerMvpView> extends BasePresen
     }
 
 
+    // TODO: preload visible image
     @BgThreadAvail
     private void addThermalDump(final String filepath) {
         RawThermalDump thermalDump = RawThermalDump.readFromDumpFile(filepath);
@@ -392,7 +426,11 @@ public class DumpViewerPresenter<V extends DumpViewerMvpView> extends BasePresen
         }
     }
 
+    // TODO: time consuming, separate load task
     private boolean loadAndShowVisibleImage(RawThermalDump rawThermalDump) {
+        System.out.println("loadAndShowVisibleImage of dump: " + rawThermalDump.getTitle());
+
+        // Clear last visible image before (during) loading
         getMvpView().updateVisibleImageView(null, visibleImageAlignMode);
 
         if (!rawThermalDump.isVisibleImageAttached()) {
@@ -418,6 +456,7 @@ public class DumpViewerPresenter<V extends DumpViewerMvpView> extends BasePresen
             getMvpView().updateVisibleImageView(rawThermalDump.getVisibleImageMask(), visibleImageAlignMode);
         }
 
+        System.out.println("loadAndShowVisibleImage@done of dump: " + rawThermalDump.getTitle());
         return true;
     }
 

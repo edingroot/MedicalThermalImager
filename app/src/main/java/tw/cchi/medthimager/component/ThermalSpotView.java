@@ -121,11 +121,9 @@ public class ThermalSpotView extends RelativeLayout {
         Runnable runnable = new Runnable() {
             @Override
             public void run() {
-                System.out.printf("setCenterPosition: (%d,%d)\n", x, y);
                 final LayoutParams params = (RelativeLayout.LayoutParams) getLayoutParams();
                 params.leftMargin = x - getMeasuredWidth() / 2;
                 params.topMargin = y - getMeasuredHeight() / 2;
-                System.out.printf("setCenterPosition: margins=(%d,%d)\n", params.leftMargin, params.topMargin);
 
                 if (!moved) {
                     params.addRule(RelativeLayout.CENTER_VERTICAL, 0);
@@ -171,8 +169,6 @@ public class ThermalSpotView extends RelativeLayout {
                     params.topMargin + this.getMeasuredHeight() / 2
             );
         }
-
-        System.out.printf("getCenterPosition: (%d,%d)\n", point.x, point.y);
 
         return point;
     }

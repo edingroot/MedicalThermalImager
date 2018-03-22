@@ -56,9 +56,10 @@ public class ThermalDumpsRecyclerAdapter extends RecyclerView.Adapter<ThermalDum
 
         if (titles.size() == 0) {
             setSelectedPosition(-1);
-        } else if (position == selectedPosition) {
-            setSelectedPosition(0);
+        } else if (position <= selectedPosition) {
+            setSelectedPosition(position > 0 ? position - 1 : 0);
         }
+
         notifyDataSetChanged();
 
         return selectedPosition;
