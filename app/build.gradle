@@ -2,14 +2,12 @@ apply plugin: 'com.android.application'
 android {
     compileSdkVersion 26
     buildToolsVersion '26.0.3'
-
     defaultConfig {
         applicationId "tw.cchi.medthimager"
         minSdkVersion 18
         targetSdkVersion 26
         versionCode 3
         versionName "1.1.1"
-
         // used by Room, to test migrations
         javaCompileOptions {
             annotationProcessorOptions {
@@ -17,14 +15,12 @@ android {
             }
         }
     }
-
     buildTypes {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
-
     sourceSets {
         // used by Room, to test migrations
         androidTest.assets.srcDirs += files("$projectDir/schemas".toString())
@@ -60,11 +56,11 @@ android {
         }
     }
     clean.dependsOn 'ndkClean'
-    productFlavors {
-    }
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
+    }
+    productFlavors {
     }
 }
 

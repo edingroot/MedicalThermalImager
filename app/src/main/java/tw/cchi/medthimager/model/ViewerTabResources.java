@@ -127,7 +127,7 @@ public class ViewerTabResources {
     @Nullable
     public ThermalSpotsHelper getThermalSpotHelper() {
         synchronized (listsLock) {
-            if (currentIndex != -1 && thermalSpotsHelpers.size() > currentIndex) {
+            if (currentIndex != -1) {
                 return thermalSpotsHelpers.get(currentIndex);
             } else {
                 return null;
