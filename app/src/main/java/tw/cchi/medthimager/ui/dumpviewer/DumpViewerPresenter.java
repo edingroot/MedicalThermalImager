@@ -292,7 +292,7 @@ public class DumpViewerPresenter<V extends DumpViewerMvpView> extends BasePresen
     @Override
     @BgThreadAvail
     public void updateHorizontalLine(final int y) {
-        if (tabResources.getCount() == 0)
+        if (tabResources.getCount() == 0 || !showingChart)
             return;
 
         // Set horizontal line location
