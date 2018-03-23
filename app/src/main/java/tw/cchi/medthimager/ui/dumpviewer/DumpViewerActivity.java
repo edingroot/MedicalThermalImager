@@ -96,17 +96,11 @@ public class DumpViewerActivity extends BaseActivity implements DumpViewerMvpVie
             public void onLongClick(View v, final int position) {
                 // Show confirm dialog for closing this thermal dump
                 showAlertDialog(
-                        "Confirm",
-                        "Confirm to remove " + presenter.getDumpTitle() + " from display?",
-                        new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                                presenter.removeThermalDump(position, true);
-                            }
-                        }, new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {}
-                        });
+                    "Confirm",
+                    "Confirm to remove " + presenter.getDumpTitle() + " from display?",
+                    (dialog, which) -> presenter.removeThermalDump(position, true),
+                    (dialog, which) -> {}
+                );
             }
         });
         recyclerDumpSwitcher.setAdapter(thermalDumpsRecyclerAdapter);

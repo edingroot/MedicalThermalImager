@@ -14,7 +14,6 @@ import io.reactivex.Observer;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.disposables.Disposable;
-import io.reactivex.functions.BiFunction;
 import io.reactivex.functions.Consumer;
 import io.reactivex.schedulers.Schedulers;
 import tw.cchi.medthimager.AppUtils;
@@ -84,6 +83,8 @@ public class DumpViewerPresenter<V extends DumpViewerMvpView> extends BasePresen
 
     @Override
     public void updateDumpsAfterPick(ArrayList<String> selectedPaths) {
+        getMvpView().showLoading();
+
         final ArrayList<String> addPaths = selectedPaths;
         ArrayList<String> removePaths = new ArrayList<>(tabResources.getThermalDumpPaths());
         ArrayList<String> currentPaths = new ArrayList<>(tabResources.getThermalDumpPaths());
@@ -105,36 +106,20 @@ public class DumpViewerPresenter<V extends DumpViewerMvpView> extends BasePresen
 
         if (addPaths.size() > 0) {
             // Add thermal dumps "sequentially" on a background thread and update chart axis on complete
-            Observable.create(new ObservableOnSubscribe<String>() {
-                @Override
-                public void subscribe(ObservableEmitter<String> emitter) throws Exception {
-                    for (String path : addPaths) {
-                        emitter.onNext(path);
+            Observable.<String>create(emitter -> {
+                for (String path : addPaths)
+                    emitter.onNext(path);
+                emitter.onComplete();
+            }).subscribe(
+                this::addThermalDump, // onNext
+                e -> e.printStackTrace(), // onError
+                () -> { // onComplete
+                    if (isViewAttached()) {
+                        updateThermalChartAxis();
+                        getMvpView().hideLoading();
                     }
-                    emitter.onComplete();
                 }
-            }).observeOn(Schedulers.computation())
-                .subscribe(new Observer<String>() {
-                    @Override
-                    public void onSubscribe(Disposable d) {}
-
-                    @Override
-                    public void onNext(String path) {
-                        addThermalDump(path);
-                    }
-
-                    @Override
-                    public void onError(Throwable e) {
-                        e.printStackTrace();
-                    }
-
-                    @Override
-                    public void onComplete() {
-                        if (isViewAttached()) {
-                            updateThermalChartAxis();
-                        }
-                    }
-                });
+            );
         } else {
             if (tabResources.getCount() == 0)
                 getMvpView().updateThermalImageView(null);
@@ -166,11 +151,9 @@ public class DumpViewerPresenter<V extends DumpViewerMvpView> extends BasePresen
         // Ref - about thread management of zip chain:
         //  https://stackoverflow.com/questions/44586663/why-is-rxjava-zip-operator-working-on-the-thread-which-last-emitted-value
         Observable.zip(
-                loadThermalImageBitmap().subscribeOn(Schedulers.computation()),
-                loadVisibleImage(tabResources.getRawThermalDump()).subscribeOn(Schedulers.computation()),
-                new BiFunction<Boolean, Boolean, Boolean>() {
-            @Override
-            public Boolean apply(Boolean b, Boolean loadVisibleImageResult) throws Exception {
+            loadThermalImageBitmap().subscribeOn(Schedulers.computation()),
+            loadVisibleImage(tabResources.getRawThermalDump()).subscribeOn(Schedulers.computation()),
+            (b, loadVisibleImageResult) -> {
                 if (showingVisibleImage) {
                     if (loadVisibleImageResult) {
                         visibleImageAlignMode = false;
@@ -183,29 +166,21 @@ public class DumpViewerPresenter<V extends DumpViewerMvpView> extends BasePresen
 
                 return true;
             }
-        }).observeOn(AndroidSchedulers.mainThread())
-            .subscribe(new Observer<Boolean>() {
-                @Override
-                public void onSubscribe(Disposable d) {}
-
-                @Override
-                public void onNext(Boolean result) {}
-
-                @Override
-                public void onError(Throwable e) {
+        ).observeOn(AndroidSchedulers.mainThread())
+            .subscribe(
+                (b) -> {},
+                e -> {
                     e.printStackTrace();
                     getMvpView().hideLoading();
                     getMvpView().showSnackBar("Error occurred while switching dump tab.");
-                }
-
-                @Override
-                public void onComplete() {
+                },
+                () -> {
                     tabResources.setHasLoaded(true);
 
                     if (isViewAttached())
                         getMvpView().hideLoading();
                 }
-            });
+            );
     }
 
     /**
@@ -241,14 +216,11 @@ public class DumpViewerPresenter<V extends DumpViewerMvpView> extends BasePresen
     @Override
     @NewThread
     public void updateVisibleImageOffset(final int offsetX, final int offsetY) {
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                RawThermalDump rawThermalDump = tabResources.getRawThermalDump();
-                rawThermalDump.setVisibleOffsetX(offsetX);
-                rawThermalDump.setVisibleOffsetY(offsetY);
-                rawThermalDump.save();
-            }
+        new Thread(() -> {
+            RawThermalDump rawThermalDump = tabResources.getRawThermalDump();
+            rawThermalDump.setVisibleOffsetX(offsetX);
+            rawThermalDump.setVisibleOffsetY(offsetY);
+            rawThermalDump.save();
         }).start();
     }
 
@@ -296,12 +268,7 @@ public class DumpViewerPresenter<V extends DumpViewerMvpView> extends BasePresen
             return;
 
         // Set horizontal line location
-        activity.runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                getMvpView().setHorizontalLineY(y);
-            }
-        });
+        activity.runOnUiThread(() -> getMvpView().setHorizontalLineY(y));
 
         // Calculate the correspondent point on the thermal image
         if (tabResources.getRawThermalDump() != null) {
@@ -406,12 +373,7 @@ public class DumpViewerPresenter<V extends DumpViewerMvpView> extends BasePresen
             final int newIndex = getMvpView().addDumpTab(thermalDump.getTitle());
             System.out.printf("addThermalDump: currIndex=%d, newIndex=%d\n", tabResources.getCurrentIndex(), newIndex);
             if (tabResources.getCurrentIndex() != newIndex) {
-                activity.runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        switchDumpTab(newIndex);
-                    }
-                });
+                activity.runOnUiThread(() -> switchDumpTab(newIndex));
             }
         } else {
             getMvpView().showSnackBar("Failed reading thermal dump");
@@ -422,66 +384,45 @@ public class DumpViewerPresenter<V extends DumpViewerMvpView> extends BasePresen
      * Load thermal bitmap and create thermalSpotsHelper
      */
     private Observable<Boolean> loadThermalImageBitmap() {
-        return Observable.create(new ObservableOnSubscribe<Boolean>() {
-            @Override
-            public void subscribe(final ObservableEmitter<Boolean> emitter) throws Exception {
+        return Observable.create(emitter -> {
 
-                Observable.create(new ObservableOnSubscribe<Bitmap>() {
-                    @Override
-                    public void subscribe(ObservableEmitter<Bitmap> emitter) throws Exception {
-                        emitter.onNext(tabResources.getThermalBitmap(contrastRatio, coloredMode));
-                        emitter.onComplete();
-                    }
-                }).subscribeOn(Schedulers.newThread())
-                    .observeOn(AndroidSchedulers.mainThread())
-                    .subscribe(new Observer<Bitmap>() {
-                        @Override
-                        public void onSubscribe(Disposable d) {}
-
-                        @Override
-                        public void onNext(Bitmap bitmap) {
-                            getMvpView().updateThermalImageView(bitmap);
+            Observable.<Bitmap>create(emitter1 -> {
+                emitter1.onNext(tabResources.getThermalBitmap(contrastRatio, coloredMode));
+                emitter1.onComplete();
+            }).subscribeOn(Schedulers.newThread())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(
+                    getMvpView()::updateThermalImageView,
+                    emitter::onError,
+                    () -> {
+                        // Create new thermalSpotsHelper if not existed
+                        ThermalSpotsHelper thermalSpotsHelper = tabResources.getThermalSpotHelper();
+                        if (thermalSpotsHelper != null) {
+                            thermalSpotsHelper.setSpotsVisible(true && showingThermalSpots);
+                            emitter.onNext(true);
+                            emitter.onComplete();
+                            return;
                         }
 
-                        @Override
-                        public void onError(Throwable e) {
-                            emitter.onError(e);
-                        }
-
-                        @Override
-                        public void onComplete() {
-                            // Create new thermalSpotsHelper if not existed
-                            ThermalSpotsHelper thermalSpotsHelper = tabResources.getThermalSpotHelper();
-                            if (thermalSpotsHelper != null) {
-                                thermalSpotsHelper.setSpotsVisible(true && showingThermalSpots);
-                                emitter.onNext(true);
-                                emitter.onComplete();
-                                return;
-                            }
-
-                            if (getMvpView().getThermalImageViewHeight() == 0) {
-                                // This should be called after updateThermalImageView(), which was called in onNext() above
-                                getMvpView().getThermalImageViewGlobalLayouts().take(1).subscribe(new Consumer<Object>() {
-                                    @Override
-                                    public void accept(Object o) throws Exception {
-                                        tabResources.addThermalSpotsHelper(
-                                                getMvpView().createThermalSpotsHelper(tabResources.getRawThermalDump())
-                                        );
-                                        emitter.onNext(true);
-                                        emitter.onComplete();
-                                    }
-                                });
-                            } else {
+                        if (getMvpView().getThermalImageViewHeight() == 0) {
+                            // This should be called after updateThermalImageView(), which was called in onNext() above
+                            getMvpView().getThermalImageViewGlobalLayouts().take(1).subscribe(o -> {
                                 tabResources.addThermalSpotsHelper(
-                                        getMvpView().createThermalSpotsHelper(tabResources.getRawThermalDump())
+                                    getMvpView().createThermalSpotsHelper(tabResources.getRawThermalDump())
                                 );
                                 emitter.onNext(true);
                                 emitter.onComplete();
-                            }
+                            });
+                        } else {
+                            tabResources.addThermalSpotsHelper(
+                                getMvpView().createThermalSpotsHelper(tabResources.getRawThermalDump())
+                            );
+                            emitter.onNext(true);
+                            emitter.onComplete();
                         }
-                    });
+                    }
+                );
 
-            }
         });
     }
 
@@ -494,32 +435,26 @@ public class DumpViewerPresenter<V extends DumpViewerMvpView> extends BasePresen
      * @return boolean: succeed or not
      */
     private Observable<Boolean> loadVisibleImage(final RawThermalDump rawThermalDump) {
-        return Observable.create(new ObservableOnSubscribe<Boolean>() {
-            @Override
-            public void subscribe(final ObservableEmitter<Boolean> emitter) throws Exception {
-                if (rawThermalDump.isVisibleImageAttached()) {
-                    emitter.onNext(true);
-                    emitter.onComplete();
-                    return;
-                }
-
-                if (!rawThermalDump.attachVisibleImageMask()) {
-                    getMvpView().showSnackBar("Failed to read visible image. Does the jpg file with same name exist?");
-                    emitter.onNext(false);
-                    emitter.onComplete();
-                    return;
-                }
-
-                System.out.println("loadVisibleImage@start of dump: " + rawThermalDump.getTitle());
-                rawThermalDump.getVisibleImageMask().processFrame(activity, new VisibleImageMask.OnFrameProcessedListener() {
-                    @Override
-                    public void onFrameProcessed(final VisibleImageMask maskInstance) {
-                        System.out.println("loadAndShowVisibleImage@done of dump: " + rawThermalDump.getTitle());
-                        emitter.onNext(true);
-                        emitter.onComplete();
-                    }
-                });
+        return Observable.create(emitter -> {
+            if (rawThermalDump.isVisibleImageAttached()) {
+                emitter.onNext(true);
+                emitter.onComplete();
+                return;
             }
+
+            if (!rawThermalDump.attachVisibleImageMask()) {
+                getMvpView().showSnackBar("Failed to read visible image. Does the jpg file with same name exist?");
+                emitter.onNext(false);
+                emitter.onComplete();
+                return;
+            }
+
+            System.out.println("loadVisibleImage@start of dump: " + rawThermalDump.getTitle());
+            rawThermalDump.getVisibleImageMask().processFrame(activity, maskInstance -> {
+                System.out.println("loadAndShowVisibleImage@done of dump: " + rawThermalDump.getTitle());
+                emitter.onNext(true);
+                emitter.onComplete();
+            });
         });
     }
 
