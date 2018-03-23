@@ -278,6 +278,9 @@ public class DumpViewerPresenter<V extends DumpViewerMvpView> extends BasePresen
 
     @Override
     public void removeLastThermalSpot() {
+        if (tabResources.getCount() <= 1)
+            return;
+
         if (!showingThermalSpots) {
             getMvpView().showSnackBar(R.string.spots_hidden);
             return;
