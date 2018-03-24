@@ -6,8 +6,8 @@ android {
         applicationId "tw.cchi.medthimager"
         minSdkVersion 18
         targetSdkVersion 26
-        versionCode 5
-        versionName "1.1.3"
+        versionCode 7
+        versionName "1.1.5"
         // used by Room, to test migrations
         javaCompileOptions {
             annotationProcessorOptions {
