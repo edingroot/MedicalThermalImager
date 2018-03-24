@@ -34,7 +34,7 @@ public class ViewerTabResources {
     }
 
     public void setCurrentIndex(int index) {
-        System.out.println("ViewerTabResources: setCurrentIndex=" + index);
+        System.out.println("ViewerTabResources@setCurrentIndex=" + index);
         this.currentIndex = index;
     }
 
@@ -126,12 +126,23 @@ public class ViewerTabResources {
 
     @Nullable
     public ThermalSpotsHelper getThermalSpotHelper() {
+        System.out.print("ViewerTabResources@getThermalSpotHelper, keys: ");
+        for (int i = 0; i < thermalSpotsHelpers.size(); i++)
+            System.out.printf("%d ", thermalSpotsHelpers.keyAt(i));
+        System.out.println();
+
+        if (currentIndex == -1) {
+            System.out.printf("ViewerTabResources@getThermalSpotHelper, tabCount=%d, currentIndex=%d, helpersCount=%d, returnNull=true\n",
+                getCount(), currentIndex, thermalSpotsHelpers.size());
+            return null;
+        }
+
         synchronized (listsLock) {
-            if (currentIndex != -1) {
-                return thermalSpotsHelpers.get(currentIndex);
-            } else {
-                return null;
-            }
+            ThermalSpotsHelper helper = thermalSpotsHelpers.get(currentIndex);
+            System.out.printf("ViewerTabResources@getThermalSpotHelper, tabCount=%d, currentIndex=%d, helpersCount=%d, returnNull=%b\n",
+                getCount(), currentIndex, thermalSpotsHelpers.size(), helper == null);
+
+            return helper;
         }
     }
 

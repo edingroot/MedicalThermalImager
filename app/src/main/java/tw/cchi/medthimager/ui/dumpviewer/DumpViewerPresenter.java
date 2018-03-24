@@ -1,6 +1,8 @@
 package tw.cchi.medthimager.ui.dumpviewer;
 
 import android.graphics.Bitmap;
+import android.os.Handler;
+import android.os.Looper;
 import android.support.v7.app.AppCompatActivity;
 
 import java.util.ArrayList;
@@ -8,9 +10,6 @@ import java.util.ArrayList;
 import javax.inject.Inject;
 
 import io.reactivex.Observable;
-import io.reactivex.ObservableEmitter;
-import io.reactivex.ObservableOnSubscribe;
-import io.reactivex.Observer;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.disposables.Disposable;
@@ -27,7 +26,6 @@ import tw.cchi.medthimager.model.ChartParameter;
 import tw.cchi.medthimager.model.ViewerTabResources;
 import tw.cchi.medthimager.thermalproc.RawThermalDump;
 import tw.cchi.medthimager.thermalproc.ThermalDumpProcessor;
-import tw.cchi.medthimager.thermalproc.VisibleImageMask;
 import tw.cchi.medthimager.ui.base.BasePresenter;
 
 public class DumpViewerPresenter<V extends DumpViewerMvpView> extends BasePresenter<V> implements DumpViewerMvpPresenter<V> {
@@ -46,6 +44,8 @@ public class DumpViewerPresenter<V extends DumpViewerMvpView> extends BasePresen
     private boolean showingThermalSpots = true;
     private boolean showingChart = false;
     private int horizontalLineY = -1; // pY (on the thermal dump) of horizontal indicator on showingChart mode
+
+    private Disposable switchDumpTabTask;
 
     @Inject
     public DumpViewerPresenter(CompositeDisposable compositeDisposable) {
@@ -116,6 +116,8 @@ public class DumpViewerPresenter<V extends DumpViewerMvpView> extends BasePresen
                 () -> { // onComplete
                     if (isViewAttached()) {
                         updateThermalChartAxis();
+
+                        // Loading may have been hidden in switchDumpTab() in addThermalDump()
                         getMvpView().hideLoading();
                     }
                 }
@@ -123,6 +125,9 @@ public class DumpViewerPresenter<V extends DumpViewerMvpView> extends BasePresen
         } else {
             if (tabResources.getCount() == 0)
                 getMvpView().updateThermalImageView(null);
+
+            // Loading may have been hidden in switchDumpTab() in removeThermalDump()
+            getMvpView().hideLoading();
         }
     }
 
@@ -134,6 +139,14 @@ public class DumpViewerPresenter<V extends DumpViewerMvpView> extends BasePresen
     @UiThread
     @Override
     public synchronized void switchDumpTab(int position) {
+        if (switchDumpTabTask != null && !switchDumpTabTask.isDisposed()) {
+            new Handler(Looper.getMainLooper()).postDelayed(
+                () -> switchDumpTab(position), 50
+            );
+            System.out.printf("switchDumpTab(%d)@delayed\n", position);
+        }
+        System.out.printf("switchDumpTab(%d)@locked\n", position);
+
         // Hide all spots of the last dump, switch to new tab resources, show spots of the new dump
         ThermalSpotsHelper thermalSpotsHelper = tabResources.getThermalSpotHelper();
         if (thermalSpotsHelper != null)
@@ -150,7 +163,7 @@ public class DumpViewerPresenter<V extends DumpViewerMvpView> extends BasePresen
         // Hide loading after two tasks completed
         // Ref - about thread management of zip chain:
         //  https://stackoverflow.com/questions/44586663/why-is-rxjava-zip-operator-working-on-the-thread-which-last-emitted-value
-        Observable.zip(
+        switchDumpTabTask = Observable.zip(
             loadThermalImageBitmap().subscribeOn(Schedulers.computation()),
             loadVisibleImage(tabResources.getRawThermalDump()).subscribeOn(Schedulers.computation()),
             (b, loadVisibleImageResult) -> {
@@ -179,6 +192,8 @@ public class DumpViewerPresenter<V extends DumpViewerMvpView> extends BasePresen
 
                     if (isViewAttached())
                         getMvpView().hideLoading();
+
+                    System.out.printf("switchDumpTab(%d)@unlocked\n", position);
                 }
             );
     }
@@ -198,7 +213,6 @@ public class DumpViewerPresenter<V extends DumpViewerMvpView> extends BasePresen
 
         if (tabResources.getCount() != 0) {
             if (switchTab) {
-                System.out.printf("removeThermalDump(%d), remainingCount=%d, newIndex=%d\n", index, tabResources.getCount(), newIndex);
                 switchDumpTab(newIndex);
             }
         } else {
@@ -250,7 +264,7 @@ public class DumpViewerPresenter<V extends DumpViewerMvpView> extends BasePresen
 
     @Override
     public void removeLastThermalSpot() {
-        if (tabResources.getCount() <= 1)
+        if (tabResources.getCount() == 0)
             return;
 
         if (!showingThermalSpots) {
@@ -355,7 +369,7 @@ public class DumpViewerPresenter<V extends DumpViewerMvpView> extends BasePresen
 
 
     @BgThreadAvail
-    private void addThermalDump(final String filepath) {
+    private synchronized void addThermalDump(final String filepath) {
         RawThermalDump thermalDump = RawThermalDump.readFromDumpFile(filepath);
 
         if (thermalDump != null) {

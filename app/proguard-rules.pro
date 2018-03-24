@@ -16,6 +16,8 @@
 #   public *;
 #}
 
+# Specify the decode mapping file
+-printmapping mapping.txt
 
 # Remove logger statements
 -assumenosideeffects class android.util.Log {
