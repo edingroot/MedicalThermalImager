@@ -5,7 +5,6 @@ import java.util.ArrayList;
 import tw.cchi.medthimager.di.BgThreadAvail;
 import tw.cchi.medthimager.di.NewThread;
 import tw.cchi.medthimager.di.UiThread;
-import tw.cchi.medthimager.helper.ThermalSpotsHelper;
 import tw.cchi.medthimager.ui.base.MvpPresenter;
 
 public interface DumpViewerMvpPresenter<V extends DumpViewerMvpView> extends MvpPresenter<V> {
@@ -30,6 +29,10 @@ public interface DumpViewerMvpPresenter<V extends DumpViewerMvpView> extends Mvp
 
     void removeLastThermalSpot();
 
+    void copyThermalSpots();
+
+    void pasteThermalSpots();
+
     @BgThreadAvail
     void updateHorizontalLine(int y);
 
@@ -43,8 +46,14 @@ public interface DumpViewerMvpPresenter<V extends DumpViewerMvpView> extends Mvp
     void toggleHorizonChart();
 
 
-    boolean isVisibleImageAlignMode();
+    int getTabsCount();
 
     String getDumpTitle();
+
+    boolean isVisibleImageAlignMode();
+
+    boolean isSpotsVisible();
+
+    boolean existCopiedSpots();
 
 }

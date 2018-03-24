@@ -1,7 +1,6 @@
 package tw.cchi.medthimager.ui.dumpviewer;
 
 import android.Manifest;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.os.Bundle;
@@ -9,10 +8,12 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.view.Menu;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
+import android.widget.PopupMenu;
 import android.widget.RelativeLayout;
 
 import com.jakewharton.rxbinding2.view.RxView;
@@ -223,9 +224,42 @@ public class DumpViewerActivity extends BaseActivity implements DumpViewerMvpVie
         presenter.toggleHorizonChart();
     }
 
-    @OnClick(R.id.btnToggleSpots)
-    public void onToggleSpotsClick(View v) {
-        presenter.toggleThermalSpotsVisible();
+    @OnClick(R.id.btnSpotActions)
+    public void onSpotAcitonsClick(View v) {
+        if (presenter.getTabsCount() == 0)
+            return;
+
+        PopupMenu popupMenu = new PopupMenu(this, v);
+        popupMenu.getMenu().add(Menu.NONE, 0, Menu.NONE, "Remove last spot");
+        popupMenu.getMenu().add(Menu.NONE, 1, Menu.NONE,
+            presenter.isSpotsVisible() ? "Hide all spots" : "Show spots"
+        );
+        popupMenu.getMenu().add(Menu.NONE, 2, Menu.NONE, "Copy spots");
+        if (presenter.existCopiedSpots())
+            popupMenu.getMenu().add(Menu.NONE, 3, Menu.NONE, "Paste spots");
+
+        popupMenu.setOnMenuItemClickListener(clickedItem -> {
+            switch (clickedItem.getItemId()) {
+                case 0:
+                    presenter.removeLastThermalSpot();
+                    break;
+
+                case 1:
+                    presenter.toggleThermalSpotsVisible();
+                    break;
+
+                case 2:
+                    presenter.copyThermalSpots();
+                    break;
+
+                case 3:
+                    presenter.pasteThermalSpots();
+                    break;
+            }
+            return true;
+        });
+
+        popupMenu.show();
     }
 
     @OnClick(R.id.fabAddSpot)
@@ -235,6 +269,9 @@ public class DumpViewerActivity extends BaseActivity implements DumpViewerMvpVie
 
     @OnLongClick(R.id.fabAddSpot)
     public boolean onFabAddSpotLongClick(View v) {
+        if (presenter.getTabsCount() == 0)
+            return true;
+
         presenter.removeLastThermalSpot();
         return true;
     }

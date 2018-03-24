@@ -27,6 +27,7 @@ import tw.cchi.medthimager.model.ViewerTabResources;
 import tw.cchi.medthimager.thermalproc.RawThermalDump;
 import tw.cchi.medthimager.thermalproc.ThermalDumpProcessor;
 import tw.cchi.medthimager.ui.base.BasePresenter;
+import tw.cchi.medthimager.utils.CommonUtils;
 
 public class DumpViewerPresenter<V extends DumpViewerMvpView> extends BasePresenter<V> implements DumpViewerMvpPresenter<V> {
 
@@ -35,6 +36,7 @@ public class DumpViewerPresenter<V extends DumpViewerMvpView> extends BasePresen
     // Data models & helpers
     @Inject volatile ViewerTabResources tabResources;
     private volatile ChartParameter thermalChartParameter;
+    private ArrayList<org.opencv.core.Point> copiedSpotMarkers;
 
     // States
     private int contrastRatio = 1;
@@ -276,6 +278,39 @@ public class DumpViewerPresenter<V extends DumpViewerMvpView> extends BasePresen
     }
 
     @Override
+    public void copyThermalSpots() {
+        if (tabResources.getCount() == 0)
+            return;
+
+        copiedSpotMarkers = CommonUtils.cloneArrayList(tabResources.getRawThermalDump().getSpotMarkers());
+    }
+
+    @Override
+    public synchronized void pasteThermalSpots() {
+        if (tabResources.getCount() == 0)
+            return;
+
+        // ThermalSpotsHelper should have been created while switching to this tab
+        ThermalSpotsHelper thermalSpotsHelper = tabResources.getThermalSpotHelper();
+        if (thermalSpotsHelper != null) {
+            thermalSpotsHelper.setSpotsVisible(false);
+        }
+
+        Observable.create(emitter -> {
+            RawThermalDump rawThermalDump = tabResources.getRawThermalDump();
+            rawThermalDump.setSpotMarkers(CommonUtils.cloneArrayList(copiedSpotMarkers));
+            rawThermalDump.save();
+
+            tabResources.setThermalSpotsHelper(
+                getMvpView().createThermalSpotsHelper(rawThermalDump)
+            );
+
+            System.gc();
+        }).subscribeOn(Schedulers.computation())
+            .subscribe();
+    }
+
+    @Override
     @BgThreadAvail
     public void updateHorizontalLine(final int y) {
         if (tabResources.getCount() == 0 || !showingChart)
@@ -358,13 +393,28 @@ public class DumpViewerPresenter<V extends DumpViewerMvpView> extends BasePresen
     }
 
     @Override
-    public boolean isVisibleImageAlignMode() {
-        return visibleImageAlignMode;
+    public int getTabsCount() {
+        return tabResources.getCount();
     }
 
     @Override
     public String getDumpTitle() {
         return tabResources.getRawThermalDump().getTitle();
+    }
+
+    @Override
+    public boolean isVisibleImageAlignMode() {
+        return visibleImageAlignMode;
+    }
+
+    @Override
+    public boolean isSpotsVisible() {
+        return showingThermalSpots;
+    }
+
+    @Override
+    public boolean existCopiedSpots() {
+        return copiedSpotMarkers != null;
     }
 
 
@@ -421,14 +471,14 @@ public class DumpViewerPresenter<V extends DumpViewerMvpView> extends BasePresen
                         if (getMvpView().getThermalImageViewHeight() == 0) {
                             // This should be called after updateThermalImageView(), which was called in onNext() above
                             getMvpView().getThermalImageViewGlobalLayouts().take(1).subscribe(o -> {
-                                tabResources.addThermalSpotsHelper(
+                                tabResources.setThermalSpotsHelper(
                                     getMvpView().createThermalSpotsHelper(tabResources.getRawThermalDump())
                                 );
                                 emitter.onNext(true);
                                 emitter.onComplete();
                             });
                         } else {
-                            tabResources.addThermalSpotsHelper(
+                            tabResources.setThermalSpotsHelper(
                                 getMvpView().createThermalSpotsHelper(tabResources.getRawThermalDump())
                             );
                             emitter.onNext(true);

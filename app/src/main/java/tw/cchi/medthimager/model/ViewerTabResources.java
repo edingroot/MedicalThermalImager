@@ -146,9 +146,9 @@ public class ViewerTabResources {
         }
     }
 
-    public void addThermalSpotsHelper(ThermalSpotsHelper thermalSpotsHelper) {
+    public void setThermalSpotsHelper(ThermalSpotsHelper thermalSpotsHelper) {
         synchronized (listsLock) {
-            thermalSpotsHelpers.append(currentIndex, thermalSpotsHelper);
+            thermalSpotsHelpers.put(currentIndex, thermalSpotsHelper);
         }
     }
 

@@ -14,6 +14,8 @@ import java.nio.charset.CharsetEncoder;
 import java.util.ArrayList;
 import java.util.Arrays;
 
+import io.reactivex.Observable;
+import io.reactivex.schedulers.Schedulers;
 import tw.cchi.medthimager.AppUtils;
 import tw.cchi.medthimager.Config;
 
@@ -149,12 +151,8 @@ public class RawThermalDump {
     }
 
     public synchronized void saveAsync() {
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                save();
-            }
-        }).start();
+        Observable.create(emitter -> this.save())
+            .subscribeOn(Schedulers.computation()).subscribe();
     }
 
     public synchronized boolean save() {

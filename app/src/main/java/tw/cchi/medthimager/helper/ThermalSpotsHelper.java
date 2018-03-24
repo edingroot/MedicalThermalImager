@@ -13,6 +13,8 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.Queue;
 
+import io.reactivex.Completable;
+import io.reactivex.schedulers.Schedulers;
 import tw.cchi.medthimager.AppUtils;
 import tw.cchi.medthimager.component.ThermalSpotView;
 import tw.cchi.medthimager.di.BgThreadAvail;
@@ -22,7 +24,7 @@ public class ThermalSpotsHelper {
     private Context context;
     private ViewGroup parentView;
     private RawThermalDump rawThermalDump;
-    private int lastSpotId = -1;
+    private volatile int lastSpotId = -1;
     private boolean viewMetricsSet = false;
     private int imageViewWidth = -1;
     private int imageViewHeight = -1;
@@ -94,7 +96,8 @@ public class ThermalSpotsHelper {
 
         // Execute runnables
         while (!onSetViewMetricsRunnables.isEmpty()) {
-            new Thread(onSetViewMetricsRunnables.poll()).start();
+            Completable.fromRunnable(onSetViewMetricsRunnables.poll())
+                .subscribeOn(Schedulers.io()).subscribe();
         }
     }
 
@@ -110,6 +113,7 @@ public class ThermalSpotsHelper {
      * @param y
      * @param appendToDump
      */
+    @BgThreadAvail
     public synchronized void addThermalSpot(final int spotId, int x, int y, boolean appendToDump) {
         final ThermalSpotView thermalSpotView = new ThermalSpotView(context, spotId, true);
 
@@ -140,6 +144,7 @@ public class ThermalSpotsHelper {
                 case MotionEvent.ACTION_POINTER_UP:
                     break;
             }
+
             return true;
         });
 
@@ -152,7 +157,8 @@ public class ThermalSpotsHelper {
         }
 
         thermalSpotViews.append(spotId, thermalSpotView);
-        lastSpotId = spotId;
+        if (spotId > lastSpotId)
+            lastSpotId = spotId;
 
         // Add and save to thermal dump file
         if (appendToDump) {
@@ -163,7 +169,8 @@ public class ThermalSpotsHelper {
             rawThermalDump.saveAsync();
         }
 
-        parentView.addView(thermalSpotView);
+        // After view is rendered, run on UI thread
+        parentView.post(() -> parentView.addView(thermalSpotView));
     }
 
     public int getLastSpotId() {
@@ -216,17 +223,22 @@ public class ThermalSpotsHelper {
         rawThermalDump.saveAsync();
     }
 
+    /**
+     * Spots may not restored in order due to each runnable will parallel run on different thread.
+     */
     @BgThreadAvail
-    private void restoreThermalSpot(final int spotId, final double rawX, final double rawY) {
+    private void restoreThermalSpot(final int spotId, final double dumpX, final double dumpY) {
         proceedViewMetricsRunnable(() -> {
-            System.out.printf("RestoreThermalSpot@BfConv: spotId=%s, x=%.0f, y=%.0f\n", spotId, rawX, rawY);
+            System.out.printf("RestoreThermalSpot@BfConv: spotId=%s, x=%.0f, y=%.0f\n", spotId, dumpX, dumpY);
 
             // Convert position on rawThermalImage to position on the imageView
             double ratio = (double) imageViewWidth / rawThermalDump.getWidth();
-            Point viewPosition = thermalViewPositionConversion((int) rawX, (int) rawY, ratio);
+            Point viewPosition = thermalViewPositionConversion((int) dumpX, (int) dumpY, ratio);
             viewPosition.y += imageViewRawY;
 
-            System.out.printf("RestoreThermalSpot@AfConv: spotId=%s, x=%d, y=%d\n", spotId, viewPosition.x, viewPosition.y);
+            System.out.printf("RestoreThermalSpot@AfConv: spotId=%s, x=%d, y=%d, lastSpotId=%d\n",
+                spotId, viewPosition.x, viewPosition.y, lastSpotId
+            );
 
             addThermalSpot(spotId, viewPosition.x, viewPosition.y, false);
         });
@@ -247,8 +259,8 @@ public class ThermalSpotsHelper {
                     thermalViewPositionConversion(viewPosition.x, viewPosition.y, ratio)
             );
 
-            System.out.printf("updateThermalValue, %d - viewPos=(%d, %d)\n", spotView.getSpotId(), viewPosition.x, viewPosition.y);
-            System.out.printf("updateThermalValue, %d - dumpPos=(%d, %d)\n", spotView.getSpotId(), thermalPosition.x, thermalPosition.y);
+            // System.out.printf("updateThermalValue, %d - viewPos=(%d, %d)\n", spotView.getSpotId(), viewPosition.x, viewPosition.y);
+            // System.out.printf("updateThermalValue, %d - dumpPos=(%d, %d)\n", spotView.getSpotId(), thermalPosition.x, thermalPosition.y);
 
             // Run on UI thread
             new Handler(Looper.getMainLooper()).post(() -> spotView.setTemperature(rawThermalDump.getTemperature9Average(thermalPosition.x, thermalPosition.y)));
@@ -266,7 +278,7 @@ public class ThermalSpotsHelper {
 
     private void proceedViewMetricsRunnable(Runnable runnable) {
         if (viewMetricsSet) {
-            new Thread(runnable).start();
+            Completable.fromRunnable(runnable).subscribeOn(Schedulers.io()).subscribe();
         } else {
             onSetViewMetricsRunnables.add(runnable);
         }

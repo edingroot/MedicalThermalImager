@@ -141,7 +141,7 @@
             android:src="@android:drawable/ic_menu_sort_by_size"/>
 
         <ImageButton
-            android:id="@+id/btnToggleSpots"
+            android:id="@+id/btnSpotActions"
             style="?metaButtonBarButtonStyle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"

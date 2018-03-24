@@ -33,6 +33,6 @@
     <string name="noContourSelected">No contour selected</string>
     <string name="processingContour">Processing on selected contour</string>
     <string name="pick_thermal_images">Pick thermal dump files(*.dat) to visualize</string>
-    <string name="spots_hidden">Thermal spots are now hidden, click "toggle spots" button to show.</string>
+    <string name="spots_hidden">Thermal spots are now hidden, click "show spots" to show.</string>
 
 </resources>

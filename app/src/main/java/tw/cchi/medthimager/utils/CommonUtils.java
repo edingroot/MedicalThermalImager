@@ -2,10 +2,10 @@ package tw.cchi.medthimager.utils;
 
 import android.app.Activity;
 import android.app.ProgressDialog;
-import android.content.Context;
-import android.content.DialogInterface;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
+
+import java.util.ArrayList;
 
 import tw.cchi.medthimager.R;
 
@@ -26,14 +26,15 @@ public final class CommonUtils {
 
         progressDialog.setCancelable(true);
         progressDialog.setCanceledOnTouchOutside(false);
-        progressDialog.setOnCancelListener(new DialogInterface.OnCancelListener() {
-            @Override
-            public void onCancel(DialogInterface dialog) {
-                activity.finish();
-            }
-        });
+        progressDialog.setOnCancelListener(dialog -> activity.finish());
 
         return progressDialog;
+    }
+
+    public static <T> ArrayList<T> cloneArrayList(ArrayList<T> list) {
+        ArrayList<T> clonedList = new ArrayList<>(list.size());
+        clonedList.addAll(list);
+        return clonedList;
     }
 
 }
