@@ -17,17 +17,18 @@ android {
     }
     buildTypes {
         release {
-            minifyEnabled false
-            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            minifyEnabled true
+            // Ref: https://stackoverflow.com/questions/13218772/removing-log-call-using-proguard
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
     sourceSets {
-        // used by Room, to test migrations
+        // Used by Room, to test migrations
         androidTest.assets.srcDirs += files("$projectDir/schemas".toString())
 
-        // 禁止自带的ndk功能
+        // Disable the built in ndk
         main.jni.srcDirs = []
-        // 重定向so目录为src/main/libs和src/main/jniLibs，原来为src/main/jniLibs
+        // Add .so directory src/main/libs to jni srcDirs
         main.jniLibs.srcDirs = ['src/main/libs', 'src/main/jniLibs']
     }
     task ndkBuild(type: Exec, description: 'Compile JNI source with NDK') {
