@@ -18,15 +18,20 @@
 
 # Remove logger statements
 -assumenosideeffects class android.util.Log {
-    public static *** d(...);
+    public static boolean isLoggable(java.lang.String, int);
+#    public static int v(...);
+#    public static int i(...);
+    public static int w(...);
+#    public static int d(...);
+    public static int e(...);
 }
 
 # Remove System.out statements
 -assumenosideeffects class java.io.PrintStream {
     public void println(%);
     public void println(**);
-    public void printf(%);
-    public void printf(**);
+    public PrintStream printf(%);
+    public PrintStream printf(**);
 }
 
 # DroidNinja/Android-FilePicker
