@@ -26,12 +26,13 @@
     public static int e(...);
 }
 
-# Remove System.out statements
+# This gets rid of outputs from System.out
+# WARNING: if you're using this functions for other PrintStreams in your app, this can break things!
+# Ref: https://xrubio.com/2015/10/disabling-logs-on-android-using-proguard/
 -assumenosideeffects class java.io.PrintStream {
-    public void println(%);
-    public void println(**);
-    public PrintStream printf(%);
-    public PrintStream printf(**);
+    public void println(...);
+    public void printf(...);
+    public void print(...);
 }
 
 # DroidNinja/Android-FilePicker
