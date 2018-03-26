@@ -43,7 +43,7 @@ import java.util.Locale;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
-import tw.cchi.medthimager.AppUtils;
+import tw.cchi.medthimager.utils.AppUtils;
 import tw.cchi.medthimager.Config;
 import tw.cchi.medthimager.R;
 import tw.cchi.medthimager.db.AppDatabase;

@@ -12,7 +12,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
-import tw.cchi.medthimager.AppUtils;
+import tw.cchi.medthimager.utils.AppUtils;
 import tw.cchi.medthimager.Config;
 import tw.cchi.medthimager.db.AppDatabase;
 import tw.cchi.medthimager.db.CaptureRecord;

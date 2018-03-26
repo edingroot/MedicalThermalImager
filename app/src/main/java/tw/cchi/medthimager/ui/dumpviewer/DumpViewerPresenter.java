@@ -15,7 +15,7 @@ import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.functions.Consumer;
 import io.reactivex.schedulers.Schedulers;
-import tw.cchi.medthimager.AppUtils;
+import tw.cchi.medthimager.utils.AppUtils;
 import tw.cchi.medthimager.Config;
 import tw.cchi.medthimager.R;
 import tw.cchi.medthimager.di.BgThreadAvail;

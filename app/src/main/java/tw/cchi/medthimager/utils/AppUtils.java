@@ -1,4 +1,4 @@
-package tw.cchi.medthimager;
+package tw.cchi.medthimager.utils;
 
 import android.os.Environment;
 

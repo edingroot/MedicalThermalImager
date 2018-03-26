@@ -15,7 +15,7 @@ import java.util.Queue;
 
 import io.reactivex.Completable;
 import io.reactivex.schedulers.Schedulers;
-import tw.cchi.medthimager.AppUtils;
+import tw.cchi.medthimager.utils.AppUtils;
 import tw.cchi.medthimager.component.ThermalSpotView;
 import tw.cchi.medthimager.di.BgThreadAvail;
 import tw.cchi.medthimager.thermalproc.RawThermalDump;

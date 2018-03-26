@@ -9,7 +9,7 @@ import org.opencv.contrib.Contrib;
 import org.opencv.core.*;
 import org.opencv.imgproc.Imgproc;
 
-import tw.cchi.medthimager.AppUtils;
+import tw.cchi.medthimager.utils.AppUtils;
 import tw.cchi.medthimager.Config;
 
 public class ThermalDumpProcessor {
