@@ -6,7 +6,7 @@ import android.support.annotation.Nullable;
 import java.util.ArrayList;
 
 import io.reactivex.Observable;
-import tw.cchi.medthimager.di.BgThreadAvail;
+import tw.cchi.medthimager.di.BgThreadCapable;
 import tw.cchi.medthimager.helper.ThermalSpotsHelper;
 import tw.cchi.medthimager.model.ChartParameter;
 import tw.cchi.medthimager.thermalproc.RawThermalDump;
@@ -44,7 +44,7 @@ public interface DumpViewerMvpView extends MvpView {
 
     void setThermalChartVisible(boolean visible);
 
-    @BgThreadAvail
+    @BgThreadCapable
     void updateThermalChart(ChartParameter thermalChartParameter);
 
 

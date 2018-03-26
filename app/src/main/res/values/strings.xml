@@ -36,5 +36,6 @@
     <string name="spots_hidden">Thermal spots are now hidden, click "show spots" to show.</string>
     <string name="colored_image_dumped">Colored image exported: $1$s</string>
     <string name="dump_failed">Dumped failed.</string>
+    <string name="no_spot_to_copied">No spot to be copied.</string>
 
 </resources>

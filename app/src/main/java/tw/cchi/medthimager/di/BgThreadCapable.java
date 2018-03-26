@@ -6,9 +6,9 @@ import java.lang.annotation.RetentionPolicy;
 import javax.inject.Scope;
 
 /**
- * Identifies the target can be called on a background thread.
+ * Identifies the target is capable of executing on a background thread.
  */
 @Scope
 @Retention(RetentionPolicy.RUNTIME)
-public @interface BgThreadAvail {
+public @interface BgThreadCapable {
 }

@@ -5,6 +5,8 @@ import android.os.Handler;
 import android.os.Looper;
 import android.support.v7.app.AppCompatActivity;
 
+import org.opencv.core.Point;
+
 import java.io.File;
 import java.util.ArrayList;
 
@@ -18,7 +20,7 @@ import io.reactivex.functions.Consumer;
 import io.reactivex.schedulers.Schedulers;
 import tw.cchi.medthimager.Config;
 import tw.cchi.medthimager.R;
-import tw.cchi.medthimager.di.BgThreadAvail;
+import tw.cchi.medthimager.di.BgThreadCapable;
 import tw.cchi.medthimager.di.NewThread;
 import tw.cchi.medthimager.di.UiThread;
 import tw.cchi.medthimager.helper.ThermalSpotsHelper;
@@ -27,7 +29,6 @@ import tw.cchi.medthimager.model.ViewerTabResources;
 import tw.cchi.medthimager.thermalproc.RawThermalDump;
 import tw.cchi.medthimager.thermalproc.ThermalDumpProcessor;
 import tw.cchi.medthimager.ui.base.BasePresenter;
-import tw.cchi.medthimager.utils.AppUtils;
 import tw.cchi.medthimager.utils.CommonUtils;
 import tw.cchi.medthimager.utils.ImageUtils;
 
@@ -226,7 +227,6 @@ public class DumpViewerPresenter<V extends DumpViewerMvpView> extends BasePresen
             if (showingVisibleImage) toggleVisibleImage();
             if (showingChart) toggleHorizonChart();
         }
-        System.gc();
 
         return newIndex;
     }
@@ -274,7 +274,7 @@ public class DumpViewerPresenter<V extends DumpViewerMvpView> extends BasePresen
 
     @Override
     public void toggleThermalSpotsVisible() {
-        if (tabResources.getCount() == 0)
+        if (tabResources.getThermalSpotHelper() == null)
             return;
 
         showingThermalSpots = !showingThermalSpots;
@@ -293,7 +293,7 @@ public class DumpViewerPresenter<V extends DumpViewerMvpView> extends BasePresen
 
         ThermalSpotsHelper thermalSpotsHelper = tabResources.getThermalSpotHelper();
         int lastSpotId = thermalSpotsHelper.getLastSpotId();
-        thermalSpotsHelper.addThermalSpot(lastSpotId == -1 ? 1 : lastSpotId + 1);
+        thermalSpotsHelper.addSpot(lastSpotId == -1 ? 1 : lastSpotId + 1);
     }
 
     @Override
@@ -306,7 +306,7 @@ public class DumpViewerPresenter<V extends DumpViewerMvpView> extends BasePresen
             return;
         }
 
-        tabResources.getThermalSpotHelper().removeLastThermalSpot();
+        tabResources.getThermalSpotHelper().removeLastSpot();
     }
 
     @Override
@@ -314,7 +314,12 @@ public class DumpViewerPresenter<V extends DumpViewerMvpView> extends BasePresen
         if (tabResources.getCount() == 0)
             return;
 
-        copiedSpotMarkers = CommonUtils.cloneArrayList(tabResources.getRawThermalDump().getSpotMarkers());
+        ArrayList<Point> spotMarkers = tabResources.getRawThermalDump().getSpotMarkers();
+        if (spotMarkers.size() == 0) {
+            getMvpView().showToast(R.string.no_spot_to_copied);
+        } else {
+            copiedSpotMarkers = CommonUtils.cloneArrayList(spotMarkers);
+        }
     }
 
     @Override
@@ -325,7 +330,7 @@ public class DumpViewerPresenter<V extends DumpViewerMvpView> extends BasePresen
         // ThermalSpotsHelper should have been created while switching to this tab
         ThermalSpotsHelper thermalSpotsHelper = tabResources.getThermalSpotHelper();
         if (thermalSpotsHelper != null) {
-            thermalSpotsHelper.setSpotsVisible(false);
+            thermalSpotsHelper.dispose();
         }
 
         Observable.create(emitter -> {
@@ -336,14 +341,20 @@ public class DumpViewerPresenter<V extends DumpViewerMvpView> extends BasePresen
             tabResources.setThermalSpotsHelper(
                 getMvpView().createThermalSpotsHelper(rawThermalDump)
             );
-
-            System.gc();
         }).subscribeOn(Schedulers.computation())
             .subscribe();
     }
 
     @Override
-    @BgThreadAvail
+    public void clearThermalSpots() {
+        if (tabResources.getThermalSpotHelper() == null)
+            return;
+
+        tabResources.getThermalSpotHelper().clearAllSpots();
+    }
+
+    @Override
+    @BgThreadCapable
     public void updateHorizontalLine(final int y) {
         if (tabResources.getCount() == 0 || !showingChart)
             return;
@@ -453,7 +464,7 @@ public class DumpViewerPresenter<V extends DumpViewerMvpView> extends BasePresen
     }
 
 
-    @BgThreadAvail
+    @BgThreadCapable
     private synchronized void addThermalDump(final String filepath) {
         RawThermalDump thermalDump = RawThermalDump.readFromDumpFile(filepath);
 

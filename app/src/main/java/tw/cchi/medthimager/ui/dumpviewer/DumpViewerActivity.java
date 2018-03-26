@@ -38,7 +38,7 @@ import tw.cchi.medthimager.Config;
 import tw.cchi.medthimager.R;
 import tw.cchi.medthimager.adapter.ThermalDumpsRecyclerAdapter;
 import tw.cchi.medthimager.component.MultiChartView;
-import tw.cchi.medthimager.di.BgThreadAvail;
+import tw.cchi.medthimager.di.BgThreadCapable;
 import tw.cchi.medthimager.helper.ThermalSpotsHelper;
 import tw.cchi.medthimager.model.ChartParameter;
 import tw.cchi.medthimager.thermalproc.RawThermalDump;
@@ -236,9 +236,9 @@ public class DumpViewerActivity extends BaseActivity implements DumpViewerMvpVie
 
         // Spot actions
         popupMenu.getMenu().add(Menu.NONE, 20, Menu.NONE, "Remove last spot");
-        popupMenu.getMenu().add(Menu.NONE, 21, Menu.NONE, "Reset spots");
+        popupMenu.getMenu().add(Menu.NONE, 21, Menu.NONE, "Clear spots");
         popupMenu.getMenu().add(Menu.NONE, 22, Menu.NONE,
-            presenter.isSpotsVisible() ? "Hide all spots" : "Show spots"
+            presenter.isSpotsVisible() ? "Hide spots" : "Show spots"
         );
         popupMenu.getMenu().add(Menu.NONE, 23, Menu.NONE, "Copy spots");
         if (presenter.existCopiedSpots())
@@ -256,7 +256,7 @@ public class DumpViewerActivity extends BaseActivity implements DumpViewerMvpVie
                     break;
 
                 case 21:
-                    // TODO
+                    presenter.clearThermalSpots();
                     break;
 
                 case 22:
@@ -392,7 +392,7 @@ public class DumpViewerActivity extends BaseActivity implements DumpViewerMvpVie
     }
 
     @Override
-    @BgThreadAvail
+    @BgThreadCapable
     public void updateThermalChart(ChartParameter thermalChartParameter) {
         thermalChartView.updateChart(thermalChartParameter);
     }

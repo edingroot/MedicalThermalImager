@@ -1,5 +1,7 @@
 package tw.cchi.medthimager.thermalproc;
 
+import android.support.annotation.NonNull;
+
 import com.flir.flironesdk.RenderedImage;
 
 import org.apache.commons.io.FileUtils;
@@ -319,7 +321,7 @@ public class RawThermalDump {
         return spotMarkers;
     }
 
-    public boolean setSpotMarkers(ArrayList<Point> spotMarkers) {
+    public boolean setSpotMarkers(@NonNull ArrayList<Point> spotMarkers) {
         if (spotMarkers.size() > 20)
             return false;
 

@@ -20,7 +20,7 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.Unbinder;
 import tw.cchi.medthimager.R;
-import tw.cchi.medthimager.di.BgThreadAvail;
+import tw.cchi.medthimager.di.BgThreadCapable;
 import tw.cchi.medthimager.model.ChartParameter;
 
 public class MultiChartView extends RelativeLayout {
@@ -40,7 +40,7 @@ public class MultiChartView extends RelativeLayout {
         initLineChart();
     }
 
-    @BgThreadAvail
+    @BgThreadCapable
     public synchronized void updateChart(ChartParameter chartParameter) {
         this.chartParameter = chartParameter;
 
