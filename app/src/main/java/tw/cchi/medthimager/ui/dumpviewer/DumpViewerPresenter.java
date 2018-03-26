@@ -355,7 +355,7 @@ public class DumpViewerPresenter<V extends DumpViewerMvpView> extends BasePresen
         if (tabResources.getRawThermalDump() != null) {
             int thermalDumpHeight = tabResources.getRawThermalDump().getHeight();
             double ratio = (double) thermalDumpHeight / getMvpView().getThermalImageViewHeight();
-            horizontalLineY = AppUtils.trimByRange((int) (y * ratio), 1, thermalDumpHeight - 1);
+            horizontalLineY = CommonUtils.trimByRange((int) (y * ratio), 1, thermalDumpHeight - 1);
 
             if (showingChart) {
                 modifyChartParameter(thermalChartParameter, horizontalLineY);

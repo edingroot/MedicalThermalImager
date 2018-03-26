@@ -43,17 +43,18 @@ import java.util.Locale;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
-import tw.cchi.medthimager.utils.AppUtils;
 import tw.cchi.medthimager.Config;
 import tw.cchi.medthimager.R;
+import tw.cchi.medthimager.component.ThermalSpotView;
 import tw.cchi.medthimager.db.AppDatabase;
 import tw.cchi.medthimager.db.helper.PatientThermalDumpsHelper;
-import tw.cchi.medthimager.ui.dialog.SelectPatientDialog;
 import tw.cchi.medthimager.helper.CSVExportHelper;
 import tw.cchi.medthimager.thermalproc.RawThermalDump;
-import tw.cchi.medthimager.component.ThermalSpotView;
 import tw.cchi.medthimager.ui.base.BaseActivity;
+import tw.cchi.medthimager.ui.dialog.SelectPatientDialog;
 import tw.cchi.medthimager.ui.dumpviewer.DumpViewerActivity;
+import tw.cchi.medthimager.utils.AppUtils;
+import tw.cchi.medthimager.utils.CommonUtils;
 
 public class PreviewActivity extends BaseActivity implements Device.Delegate, FrameProcessor.Delegate, Device.StreamDelegate, Device.PowerUpdateDelegate {
     public static final int ACTION_PICK_FROM_GALLERY = 100;
@@ -595,8 +596,8 @@ public class PreviewActivity extends BaseActivity implements Device.Delegate, Fr
         double ratio = (double) lastRenderedImage.width() / thermalImageView.getMeasuredWidth();
         int imgX = (int) (x * ratio);
         int imgY = (int) (y * ratio);
-        thermalSpotX = AppUtils.trimByRange(imgX, 1, lastRenderedImage.width() - 1);
-        thermalSpotY = AppUtils.trimByRange(imgY, 1, lastRenderedImage.height() - 1);
+        thermalSpotX = CommonUtils.trimByRange(imgX, 1, lastRenderedImage.width() - 1);
+        thermalSpotY = CommonUtils.trimByRange(imgY, 1, lastRenderedImage.height() - 1);
 
         thermalSpotView.setCenterPosition(
                 x + thermalImageView.getLeft(),

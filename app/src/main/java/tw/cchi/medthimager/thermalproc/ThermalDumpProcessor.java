@@ -6,11 +6,15 @@ import android.util.Log;
 import org.opencv.android.OpenCVLoader;
 import org.opencv.android.Utils;
 import org.opencv.contrib.Contrib;
-import org.opencv.core.*;
+import org.opencv.core.Core;
+import org.opencv.core.CvType;
+import org.opencv.core.Mat;
+import org.opencv.core.MatOfPoint;
+import org.opencv.core.Point;
 import org.opencv.imgproc.Imgproc;
 
-import tw.cchi.medthimager.utils.AppUtils;
 import tw.cchi.medthimager.Config;
+import tw.cchi.medthimager.utils.ImageUtils;
 
 public class ThermalDumpProcessor {
     private final static int MAX_ALLOWED = 2731 + 1200; // 120 deg Celsius
@@ -147,7 +151,7 @@ public class ThermalDumpProcessor {
     }
 
     public void filterFromContour(MatOfPoint contour) {
-        for (Point point : AppUtils.getPointsOutsideContour(contour, generatedImage.size())) {
+        for (Point point : ImageUtils.getPointsOutsideContour(contour, generatedImage.size())) {
             thermalValues10[(int) (point.x + point.y * width)] = 0;
         }
         updateThermalHist();

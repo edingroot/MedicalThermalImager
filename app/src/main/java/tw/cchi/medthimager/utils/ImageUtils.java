@@ -2,8 +2,20 @@ package tw.cchi.medthimager.utils;
 
 import android.graphics.Bitmap;
 
+import org.opencv.core.Core;
+import org.opencv.core.CvType;
+import org.opencv.core.Mat;
+import org.opencv.core.MatOfPoint;
+import org.opencv.core.Point;
+import org.opencv.core.Scalar;
+import org.opencv.core.Size;
+
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.ArrayList;
+
+import static org.opencv.core.Core.FILLED;
+import static org.opencv.imgproc.Imgproc.drawContours;
 
 public class ImageUtils {
 
@@ -33,6 +45,33 @@ public class ImageUtils {
         }
 
         return true;
+    }
+
+    public static Point[] getPointsInsideContour(MatOfPoint contour, Size imageSize) {
+        Mat mask = Mat.zeros(imageSize, CvType.CV_8UC1);
+        ArrayList<MatOfPoint> contours = new ArrayList<>();
+
+        contours.add(contour);
+        drawContours(mask, contours, 0, new Scalar(255), FILLED);
+
+        Mat insidePointsMat = new Mat(contour.size(), contour.type());
+        Core.findNonZero(mask, insidePointsMat);
+
+        return new MatOfPoint(insidePointsMat).toArray();
+    }
+
+    public static Point[] getPointsOutsideContour(MatOfPoint contour, Size imageSize) {
+        Mat mask = new Mat(imageSize, CvType.CV_8UC1);
+        ArrayList<MatOfPoint> contours = new ArrayList<>();
+
+        contours.add(contour);
+        mask.setTo(new Scalar(255));
+        drawContours(mask, contours, 0, new Scalar(0), FILLED);
+
+        Mat insidePointsMat = new Mat(contour.size(), contour.type());
+        Core.findNonZero(mask, insidePointsMat);
+
+        return new MatOfPoint(insidePointsMat).toArray();
     }
 
 }

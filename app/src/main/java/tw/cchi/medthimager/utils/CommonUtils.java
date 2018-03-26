@@ -6,6 +6,7 @@ import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import tw.cchi.medthimager.R;
 
@@ -35,6 +36,31 @@ public final class CommonUtils {
         ArrayList<T> clonedList = new ArrayList<>(list.size());
         clonedList.addAll(list);
         return clonedList;
+    }
+
+    /**
+     * Effective range: min <= val < max
+     *
+     * @param val
+     * @param min
+     * @param max
+     * @return
+     */
+    public static int trimByRange(int val, int min, int max) {
+        if (val < min)
+            return min;
+        else if (val >= max)
+            return max - 1;
+        else
+            return val;
+    }
+
+    public static void removeListDuplication(List<String> list, List<String> compareTarget) {
+        for (String str : list) {
+            if (compareTarget.contains(str)) {
+                list.remove(str);
+            }
+        }
     }
 
 }

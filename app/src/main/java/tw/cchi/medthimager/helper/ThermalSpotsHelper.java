@@ -15,10 +15,10 @@ import java.util.Queue;
 
 import io.reactivex.Completable;
 import io.reactivex.schedulers.Schedulers;
-import tw.cchi.medthimager.utils.AppUtils;
 import tw.cchi.medthimager.component.ThermalSpotView;
 import tw.cchi.medthimager.di.BgThreadAvail;
 import tw.cchi.medthimager.thermalproc.RawThermalDump;
+import tw.cchi.medthimager.utils.CommonUtils;
 
 public class ThermalSpotsHelper {
     private Context context;
@@ -129,8 +129,8 @@ public class ThermalSpotsHelper {
                     spotDraggingDeltaY = y1 - centerPoint.y;
 
                 case MotionEvent.ACTION_MOVE:
-                    int centerX = AppUtils.trimByRange(x1 - spotDraggingDeltaX, 0, imageViewWidth);
-                    int centerY = AppUtils.trimByRange(y1 - spotDraggingDeltaY, imageViewRawY, imageViewRawY + imageViewHeight);
+                    int centerX = CommonUtils.trimByRange(x1 - spotDraggingDeltaX, 0, imageViewWidth);
+                    int centerY = CommonUtils.trimByRange(y1 - spotDraggingDeltaY, imageViewRawY, imageViewRawY + imageViewHeight);
                     thermalSpotView.setCenterPosition(centerX, centerY);
                     view.invalidate();
                     updateThermalValue(spotView);
