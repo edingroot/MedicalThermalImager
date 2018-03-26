@@ -116,6 +116,11 @@ public abstract class BaseActivity extends AppCompatActivity implements MvpView 
         showToast(getString(resId));
     }
 
+    @Override
+    public void showToast(@StringRes int resId, Object... formatArgs) {
+        showToast(getString(resId, formatArgs));
+    }
+
     public void hideKeyboard() {
         View view = this.getCurrentFocus();
         if (view != null) {

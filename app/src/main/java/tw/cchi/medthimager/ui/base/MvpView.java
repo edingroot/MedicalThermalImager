@@ -26,6 +26,8 @@ public interface MvpView {
 
     void showToast(@StringRes int resId);
 
+    void showToast(@StringRes int resId, Object... formatArgs);
+
     void hideKeyboard();
 
 }
