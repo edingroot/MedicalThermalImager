@@ -60,7 +60,7 @@ public class ThermalSpotsHelper {
         } else {
             // If there is no spot position information in dump file, add one default spot.
             // run on the UI thread
-            parentView.post(() -> addSpot(1));
+            // parentView.post(() -> addSpot(1));
         }
     }
 
