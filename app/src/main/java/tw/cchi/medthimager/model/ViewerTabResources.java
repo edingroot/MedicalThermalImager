@@ -2,8 +2,6 @@ package tw.cchi.medthimager.model;
 
 import android.graphics.Bitmap;
 import android.support.annotation.Nullable;
-import android.util.SparseArray;
-import android.util.SparseBooleanArray;
 
 import java.util.ArrayList;
 
@@ -17,16 +15,54 @@ public class ViewerTabResources {
     private final Object listsLock = new Object();
     private int currentIndex = -1;
 
-    private ArrayList<Boolean> hasLoaded = new ArrayList(); // <whether the tab had been loaded before>
+    private ArrayList<Boolean> hasLoaded = new ArrayList<>(); // <whether the tab had been loaded before>
     private ArrayList<String> thermalDumpPaths = new ArrayList<>(); // manage opened dumps by path because filepicker returns selected paths
     private ArrayList<RawThermalDump> rawThermalDumps = new ArrayList<>();
     private ArrayList<ThermalDumpProcessor> thermalDumpProcessors = new ArrayList<>();
     private ArrayList<Bitmap> grayBitmaps = new ArrayList<>();
     private ArrayList<Bitmap> coloredBitmaps = new ArrayList<>();
-    private SparseArray<ThermalSpotsHelper> thermalSpotsHelpers = new SparseArray<>(); // <tabIndex, ThermalSpotHelper>
+    private ArrayList<ThermalSpotsHelper> thermalSpotsHelpers = new ArrayList<>();
 
     @Inject
     public ViewerTabResources() {
+    }
+
+    /**
+     * Add resources of the new tab except ThermalSpotsHelper.
+     *
+     * @param thermalDumpPath
+     * @param rawThermalDump
+     * @param thermalDumpProcessor
+     * @return
+     */
+    public int addResources(String thermalDumpPath, RawThermalDump rawThermalDump,
+                            ThermalDumpProcessor thermalDumpProcessor) {
+        synchronized (listsLock) {
+            hasLoaded.add(false);
+            thermalDumpPaths.add(thermalDumpPath);
+            rawThermalDumps.add(rawThermalDump);
+            thermalDumpProcessors.add(thermalDumpProcessor);
+            grayBitmaps.add(null);
+            coloredBitmaps.add(null);
+            thermalSpotsHelpers.add(null);
+        }
+        return getCount();
+    }
+
+    public void removeResources(int removeIndex, int newIndex) {
+        synchronized (listsLock) {
+            hasLoaded.remove(removeIndex);
+            thermalDumpPaths.remove(removeIndex);
+            rawThermalDumps.remove(removeIndex);
+            thermalDumpProcessors.remove(removeIndex);
+            grayBitmaps.remove(removeIndex);
+            coloredBitmaps.remove(removeIndex);
+
+            if (thermalSpotsHelpers.get(removeIndex) != null)
+                thermalSpotsHelpers.get(removeIndex).dispose();
+            thermalSpotsHelpers.remove(removeIndex);
+        }
+        currentIndex = newIndex;
     }
 
     public int getCurrentIndex() {
@@ -116,68 +152,18 @@ public class ViewerTabResources {
 
     @Nullable
     public ThermalSpotsHelper getThermalSpotHelper() {
-        System.out.print("ViewerTabResources@getThermalSpotHelper, keys: ");
-        for (int i = 0; i < thermalSpotsHelpers.size(); i++)
-            System.out.printf("%d ", thermalSpotsHelpers.keyAt(i));
-        System.out.println();
-
-        if (currentIndex == -1) {
-            System.out.printf("ViewerTabResources@getThermalSpotHelper, tabCount=%d, currentIndex=%d, helpersCount=%d, returnNull=true\n",
-                getCount(), currentIndex, thermalSpotsHelpers.size());
+        if (currentIndex == -1)
             return null;
-        }
 
         synchronized (listsLock) {
-            ThermalSpotsHelper helper = thermalSpotsHelpers.get(currentIndex);
-            System.out.printf("ViewerTabResources@getThermalSpotHelper, tabCount=%d, currentIndex=%d, helpersCount=%d, returnNull=%b\n",
-                getCount(), currentIndex, thermalSpotsHelpers.size(), helper == null);
-
-            return helper;
+            return thermalSpotsHelpers.get(currentIndex);
         }
     }
 
     public void setThermalSpotsHelper(ThermalSpotsHelper thermalSpotsHelper) {
         synchronized (listsLock) {
-            thermalSpotsHelpers.put(currentIndex, thermalSpotsHelper);
+            thermalSpotsHelpers.set(currentIndex, thermalSpotsHelper);
         }
-    }
-
-    /**
-     * Add resources of the new tab except ThermalSpotsHelper.
-     *
-     * @param thermalDumpPath
-     * @param rawThermalDump
-     * @param thermalDumpProcessor
-     * @return
-     */
-    public int addResources(String thermalDumpPath, RawThermalDump rawThermalDump,
-                            ThermalDumpProcessor thermalDumpProcessor) {
-        synchronized (listsLock) {
-            thermalDumpPaths.add(thermalDumpPath);
-            rawThermalDumps.add(rawThermalDump);
-            thermalDumpProcessors.add(thermalDumpProcessor);
-            grayBitmaps.add(null);
-            coloredBitmaps.add(null);
-            hasLoaded.add(false);
-        }
-        return getCount();
-    }
-
-    public void removeResources(int removeIndex, int newIndex) {
-        synchronized (listsLock) {
-            thermalDumpPaths.remove(removeIndex);
-            rawThermalDumps.remove(removeIndex);
-            thermalDumpProcessors.remove(removeIndex);
-            grayBitmaps.remove(removeIndex);
-            coloredBitmaps.remove(removeIndex);
-            hasLoaded.remove(removeIndex);
-
-            if (getThermalSpotHelper() != null) {
-                getThermalSpotHelper().dispose();
-                thermalSpotsHelpers.remove(removeIndex);
-            }
-        }
-        currentIndex = newIndex;
     }
 
     public boolean hasLoaded() {
