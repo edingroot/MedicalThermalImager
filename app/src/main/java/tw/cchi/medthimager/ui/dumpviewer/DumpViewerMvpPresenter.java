@@ -22,6 +22,8 @@ public interface DumpViewerMvpPresenter<V extends DumpViewerMvpView> extends Mvp
     @NewThread
     void updateVisibleImageOffset(int offsetX, int offsetY);
 
+    void saveColoredThermalImage();
+
 
     void toggleThermalSpotsVisible();
 

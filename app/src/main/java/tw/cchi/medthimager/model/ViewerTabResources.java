@@ -63,16 +63,6 @@ public class ViewerTabResources {
     }
 
     @Nullable
-    public String getThermlDumpPath() {
-        if (currentIndex != -1)
-            return null;
-
-        synchronized (listsLock) {
-            return thermalDumpPaths.get(currentIndex);
-        }
-    }
-
-    @Nullable
     public RawThermalDump getRawThermalDump() {
         if (currentIndex == -1)
             return null;

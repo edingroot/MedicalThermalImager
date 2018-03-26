@@ -629,7 +629,7 @@ public class PreviewActivity extends BaseActivity implements Device.Delegate, Fr
                     showToastMessage("Dumped: " + filename);
                     scanMediaStorage(filename, false);
                 } else {
-                    showToastMessage("Dumped filed.");
+                    showToastMessage(getString(R.string.dump_failed));
                 }
             }
         }).start();

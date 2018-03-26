@@ -8,6 +8,6 @@ public class Config {
 
     public static final String POSTFIX_FLIR_IMAGE = "_flir";
     public static final String POSTFIX_THERMAL_DUMP = "_raw";
-    public static final String POSTFIX_PROCEED_IMAGE = "_proc";
+    public static final String POSTFIX_COLORED_IMAGE = "_color";
 
 }

@@ -224,35 +224,50 @@ public class DumpViewerActivity extends BaseActivity implements DumpViewerMvpVie
         presenter.toggleHorizonChart();
     }
 
-    @OnClick(R.id.btnSpotActions)
-    public void onSpotAcitonsClick(View v) {
+    @OnClick(R.id.btnEdit)
+    public void onEditClick(View v) {
         if (presenter.getTabsCount() == 0)
             return;
 
         PopupMenu popupMenu = new PopupMenu(this, v);
-        popupMenu.getMenu().add(Menu.NONE, 0, Menu.NONE, "Remove last spot");
-        popupMenu.getMenu().add(Menu.NONE, 1, Menu.NONE,
+
+        // Thermal image actions
+        popupMenu.getMenu().add(Menu.NONE, 10, Menu.NONE, "Export colored thermal image");
+
+        // Spot actions
+        popupMenu.getMenu().add(Menu.NONE, 20, Menu.NONE, "Remove last spot");
+        popupMenu.getMenu().add(Menu.NONE, 21, Menu.NONE, "Reset spots");
+        popupMenu.getMenu().add(Menu.NONE, 22, Menu.NONE,
             presenter.isSpotsVisible() ? "Hide all spots" : "Show spots"
         );
-        popupMenu.getMenu().add(Menu.NONE, 2, Menu.NONE, "Copy spots");
+        popupMenu.getMenu().add(Menu.NONE, 23, Menu.NONE, "Copy spots");
         if (presenter.existCopiedSpots())
-            popupMenu.getMenu().add(Menu.NONE, 3, Menu.NONE, "Paste spots");
+            popupMenu.getMenu().add(Menu.NONE, 24, Menu.NONE, "Paste spots");
+
 
         popupMenu.setOnMenuItemClickListener(clickedItem -> {
             switch (clickedItem.getItemId()) {
-                case 0:
+                case 10:
+                    presenter.saveColoredThermalImage();
+                    break;
+
+                case 20:
                     presenter.removeLastThermalSpot();
                     break;
 
-                case 1:
+                case 21:
+                    // TODO
+                    break;
+
+                case 22:
                     presenter.toggleThermalSpotsVisible();
                     break;
 
-                case 2:
+                case 23:
                     presenter.copyThermalSpots();
                     break;
 
-                case 3:
+                case 24:
                     presenter.pasteThermalSpots();
                     break;
             }

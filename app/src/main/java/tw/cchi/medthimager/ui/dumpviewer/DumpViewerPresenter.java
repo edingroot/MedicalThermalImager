@@ -5,6 +5,7 @@ import android.os.Handler;
 import android.os.Looper;
 import android.support.v7.app.AppCompatActivity;
 
+import java.io.File;
 import java.util.ArrayList;
 
 import javax.inject.Inject;
@@ -15,7 +16,6 @@ import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.functions.Consumer;
 import io.reactivex.schedulers.Schedulers;
-import tw.cchi.medthimager.utils.AppUtils;
 import tw.cchi.medthimager.Config;
 import tw.cchi.medthimager.R;
 import tw.cchi.medthimager.di.BgThreadAvail;
@@ -27,7 +27,9 @@ import tw.cchi.medthimager.model.ViewerTabResources;
 import tw.cchi.medthimager.thermalproc.RawThermalDump;
 import tw.cchi.medthimager.thermalproc.ThermalDumpProcessor;
 import tw.cchi.medthimager.ui.base.BasePresenter;
+import tw.cchi.medthimager.utils.AppUtils;
 import tw.cchi.medthimager.utils.CommonUtils;
+import tw.cchi.medthimager.utils.ImageUtils;
 
 public class DumpViewerPresenter<V extends DumpViewerMvpView> extends BasePresenter<V> implements DumpViewerMvpPresenter<V> {
 
@@ -240,6 +242,36 @@ public class DumpViewerPresenter<V extends DumpViewerMvpView> extends BasePresen
         }).start();
     }
 
+    @NewThread
+    @Override
+    public void saveColoredThermalImage() {
+        if (tabResources.getCount() == 0)
+            return;
+
+        String dumpPath = tabResources.getRawThermalDump().getFilepath();
+        String filePath = dumpPath.substring(0, dumpPath.lastIndexOf("_")) + Config.POSTFIX_COLORED_IMAGE + ".png";
+
+        Observable.create(emitter -> {
+            if (ImageUtils.saveBitmap(tabResources.getThermalBitmap(contrastRatio, coloredMode), filePath)) {
+                emitter.onComplete();
+            } else {
+                emitter.onError(new Error());
+            }
+        }).subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe(
+                o -> {},
+                e -> {
+                    if (isViewAttached())
+                        getMvpView().showToast(R.string.dump_failed);
+                },
+                () -> {
+                    if (isViewAttached())
+                        getMvpView().showToast(R.string.colored_image_dumped, new File(filePath).getName());
+                }
+        );
+    }
+
     @Override
     public void toggleThermalSpotsVisible() {
         if (tabResources.getCount() == 0)
@@ -399,6 +431,9 @@ public class DumpViewerPresenter<V extends DumpViewerMvpView> extends BasePresen
 
     @Override
     public String getDumpTitle() {
+        if (tabResources.getCount() == 0)
+            return "";
+
         return tabResources.getRawThermalDump().getTitle();
     }
 
@@ -456,9 +491,14 @@ public class DumpViewerPresenter<V extends DumpViewerMvpView> extends BasePresen
             }).subscribeOn(Schedulers.newThread())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(
-                    getMvpView()::updateThermalImageView,
+                    bitmap -> {
+                        if (isViewAttached())
+                            getMvpView().updateThermalImageView(bitmap);
+                    },
                     emitter::onError,
                     () -> {
+                        if (!isViewAttached()) return;
+
                         // Create new thermalSpotsHelper if not existed
                         ThermalSpotsHelper thermalSpotsHelper = tabResources.getThermalSpotHelper();
                         if (thermalSpotsHelper != null) {
