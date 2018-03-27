@@ -143,12 +143,10 @@ public class DumpViewerPresenter<V extends DumpViewerMvpView> extends BasePresen
      */
     @UiThread
     @Override
-    public synchronized void switchDumpTab(int position) {
+    public synchronized boolean switchDumpTab(int position) {
         if (switchDumpTabTask != null && !switchDumpTabTask.isDisposed()) {
-            new Handler(Looper.getMainLooper()).postDelayed(
-                () -> switchDumpTab(position), 50
-            );
-            System.out.printf("switchDumpTab(%d)@delayed\n", position);
+            System.out.printf("switchDumpTab(%d)@ignored\n", position);
+            return false;
         }
         System.out.printf("switchDumpTab(%d)@locked\n", position);
 
@@ -201,6 +199,8 @@ public class DumpViewerPresenter<V extends DumpViewerMvpView> extends BasePresen
                     System.out.printf("switchDumpTab(%d)@unlocked\n", position);
                 }
             );
+
+        return true;
     }
 
     /**

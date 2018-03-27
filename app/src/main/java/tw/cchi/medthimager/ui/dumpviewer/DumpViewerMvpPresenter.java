@@ -15,7 +15,7 @@ public interface DumpViewerMvpPresenter<V extends DumpViewerMvpView> extends Mvp
 
 
     @UiThread
-    void switchDumpTab(int position);
+    boolean switchDumpTab(int position);
 
     int removeThermalDump(int index, boolean switchTab);
 

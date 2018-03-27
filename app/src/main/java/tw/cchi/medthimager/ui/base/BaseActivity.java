@@ -65,15 +65,14 @@ public abstract class BaseActivity extends AppCompatActivity implements MvpView 
 
     @Override
     public void showLoading() {
-        hideLoading();
-        mProgressDialog = CommonUtils.showLoadingDialog(this);
+        if (mProgressDialog == null || !mProgressDialog.isShowing())
+            mProgressDialog = CommonUtils.showLoadingDialog(this);
     }
 
     @Override
     public void hideLoading() {
-        if (mProgressDialog != null && mProgressDialog.isShowing()) {
+        if (mProgressDialog != null && mProgressDialog.isShowing())
             mProgressDialog.dismiss();
-        }
     }
 
     @Override
