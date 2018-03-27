@@ -47,7 +47,7 @@ import tw.cchi.medthimager.ui.base.BaseActivity;
 
 @RuntimePermissions
 public class DumpViewerActivity extends BaseActivity implements DumpViewerMvpView {
-    private static final int MAX_OPEN_FILES = 8;
+    private static final int MAX_OPEN_FILES = 18;
 
     @Inject DumpViewerMvpPresenter<DumpViewerMvpView> presenter;
 
