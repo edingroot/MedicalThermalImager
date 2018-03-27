@@ -89,8 +89,8 @@ public class DumpViewerActivity extends BaseActivity implements DumpViewerMvpVie
                 new ThermalDumpsRecyclerAdapter.OnInteractionListener() {
 
             @Override
-            public void onClick(View v, int position) {
-                presenter.switchDumpTab(position);
+            public boolean onClick(View v, int position) {
+                return presenter.switchDumpTab(position);
             }
 
             @Override

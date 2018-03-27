@@ -27,7 +27,6 @@ public class ThermalDumpsRecyclerAdapter extends RecyclerView.Adapter<ThermalDum
     }
 
     /**
-     *
      * @param title
      * @return selected position
      */
@@ -36,12 +35,7 @@ public class ThermalDumpsRecyclerAdapter extends RecyclerView.Adapter<ThermalDum
         if (titles.size() == 1) {
             selectedPosition = 0;
         }
-        activity.runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                notifyDataSetChanged();
-            }
-        });
+        this.notifyDataSetChanged();
 
         return selectedPosition;
     }
@@ -95,22 +89,17 @@ public class ThermalDumpsRecyclerAdapter extends RecyclerView.Adapter<ThermalDum
             );
         }
 
-        holder.button.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (holderPosition != selectedPosition) {
+        holder.button.setOnClickListener(v -> {
+            if (holderPosition != selectedPosition) {
+                if (onInteractionListener.onClick(v, holderPosition)) {
                     setSelectedPosition(holderPosition);
-                    onInteractionListener.onClick(v, holderPosition);
                 }
             }
         });
 
-        holder.button.setOnLongClickListener(new View.OnLongClickListener() {
-            @Override
-            public boolean onLongClick(View v) {
-                onInteractionListener.onLongClick(v, holderPosition);
-                return true;
-            }
+        holder.button.setOnLongClickListener(v -> {
+            onInteractionListener.onLongClick(v, holderPosition);
+            return true;
         });
     }
 
@@ -139,7 +128,12 @@ public class ThermalDumpsRecyclerAdapter extends RecyclerView.Adapter<ThermalDum
     }
 
     public interface OnInteractionListener {
-        void onClick(View v, int position);
+
+        /**
+         * @return false if reject tab switching
+         */
+        boolean onClick(View v, int position);
+
         void onLongClick(View v, int position);
     }
 

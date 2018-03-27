@@ -1,8 +1,6 @@
 package tw.cchi.medthimager.ui.dumpviewer;
 
 import android.graphics.Bitmap;
-import android.os.Handler;
-import android.os.Looper;
 import android.support.v7.app.AppCompatActivity;
 
 import org.opencv.core.Point;
@@ -115,9 +113,9 @@ public class DumpViewerPresenter<V extends DumpViewerMvpView> extends BasePresen
                 for (String path : addPaths)
                     emitter.onNext(path);
                 emitter.onComplete();
-            }).subscribe(
+            }).observeOn(Schedulers.computation()).subscribe(
                 this::addThermalDump, // onNext
-                e -> e.printStackTrace(), // onError
+                Throwable::printStackTrace, // onError
                 () -> { // onComplete
                     if (isViewAttached()) {
                         updateThermalChartAxis();
@@ -140,12 +138,15 @@ public class DumpViewerPresenter<V extends DumpViewerMvpView> extends BasePresen
      * This may be time consuming due to tabResources.getThermalBitmap.
      *
      * This method should also be called after the first dump added (see addThermalDump()).
+     *
+     * @param position
+     * @return false to reject tab switching
      */
     @UiThread
     @Override
     public synchronized boolean switchDumpTab(int position) {
         if (switchDumpTabTask != null && !switchDumpTabTask.isDisposed()) {
-            System.out.printf("switchDumpTab(%d)@ignored\n", position);
+            System.out.printf("switchDumpTab(%d)@rejected\n", position);
             return false;
         }
         System.out.printf("switchDumpTab(%d)@locked\n", position);
@@ -182,23 +183,22 @@ public class DumpViewerPresenter<V extends DumpViewerMvpView> extends BasePresen
 
                 return true;
             }
-        ).observeOn(AndroidSchedulers.mainThread())
-            .subscribe(
-                (b) -> {},
-                e -> {
-                    e.printStackTrace();
+        ).observeOn(AndroidSchedulers.mainThread()).subscribe(
+            (b) -> {},
+            e -> {
+                e.printStackTrace();
+                getMvpView().hideLoading();
+                getMvpView().showSnackBar("Error occurred while switching dump tab.");
+            },
+            () -> {
+                tabResources.setHasLoaded(true);
+
+                if (isViewAttached())
                     getMvpView().hideLoading();
-                    getMvpView().showSnackBar("Error occurred while switching dump tab.");
-                },
-                () -> {
-                    tabResources.setHasLoaded(true);
 
-                    if (isViewAttached())
-                        getMvpView().hideLoading();
-
-                    System.out.printf("switchDumpTab(%d)@unlocked\n", position);
-                }
-            );
+                System.out.printf("switchDumpTab(%d)@unlocked\n", position);
+            }
+        );
 
         return true;
     }
@@ -480,11 +480,12 @@ public class DumpViewerPresenter<V extends DumpViewerMvpView> extends BasePresen
             addDumpDataToChartParameter(thermalChartParameter, thermalDump, horizontalLineY);
             getMvpView().updateThermalChart(thermalChartParameter);
 
-            final int newIndex = getMvpView().addDumpTab(thermalDump.getTitle());
-            System.out.printf("addThermalDump: currIndex=%d, newIndex=%d\n", tabResources.getCurrentIndex(), newIndex);
-            if (tabResources.getCurrentIndex() != newIndex) {
-                activity.runOnUiThread(() -> switchDumpTab(newIndex));
-            }
+            activity.runOnUiThread(() -> {
+                final int newIndex = getMvpView().addDumpTab(thermalDump.getTitle());
+                if (tabResources.getCurrentIndex() != newIndex) {
+                    switchDumpTab(newIndex);
+                }
+            });
         } else {
             getMvpView().showSnackBar("Failed reading thermal dump");
         }
