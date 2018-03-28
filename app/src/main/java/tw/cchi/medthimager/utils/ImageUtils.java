@@ -47,6 +47,27 @@ public class ImageUtils {
         return true;
     }
 
+    /**
+     * Get geometric transform matrix of shift operation. (can be applied in Imgproc.warpAffine())
+     *
+     * Ref: https://docs.opencv.org/3.0-beta/doc/py_tutorials/py_imgproc/py_geometric_transformations/py_geometric_transformations.html
+     */
+    public static Mat getShiftTransFormMatrix(int dX, int dY) {
+        Mat mat = new Mat(2, 3, CvType.CV_32F);
+        int[][] M = new int[][]{
+            {1, 0, dX},
+            {0, 1, dY}
+        };
+
+        for (int i = 0; i < M.length; i++) {
+            for (int j = 0; j < M[i].length; j++) {
+                mat.put(i, j, M[i][j]);
+            }
+        }
+
+        return mat;
+    }
+
     public static Point[] getPointsInsideContour(MatOfPoint contour, Size imageSize) {
         Mat mask = Mat.zeros(imageSize, CvType.CV_8UC1);
         ArrayList<MatOfPoint> contours = new ArrayList<>();

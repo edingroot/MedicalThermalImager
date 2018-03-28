@@ -7,11 +7,16 @@ import com.flir.flironesdk.FrameProcessor;
 import com.flir.flironesdk.LoadedFrame;
 import com.flir.flironesdk.RenderedImage;
 
+import org.opencv.android.Utils;
+import org.opencv.core.Mat;
+import org.opencv.imgproc.Imgproc;
+
 import java.io.File;
 import java.nio.ByteBuffer;
 import java.util.EnumSet;
 
 import tw.cchi.medthimager.di.NewThread;
+import tw.cchi.medthimager.utils.ImageUtils;
 
 public class VisibleImageMask implements FrameProcessor.Delegate {
     private static final EnumSet<RenderedImage.ImageType> IMAGE_TYPES = EnumSet.of(
@@ -83,8 +88,47 @@ public class VisibleImageMask implements FrameProcessor.Delegate {
         }
     }
 
+    /**
+     * Warning: the resulted visible light image size(340*454) is not same as flir jpg image(480*640)
+     */
     public Bitmap getVisibleBitmap() {
         return visibleBitmap;
+    }
+
+    /**
+     * Generate zoomed & aligned (with black background) visible light image.
+     *
+//     * @return image which size is same as flir jpg image
+     */
+    public Bitmap getAlignedVisibleBitmap() {
+        if (visibleBitmap == null)
+            return null;
+
+        Mat source = new Mat();
+        Utils.bitmapToMat(visibleBitmap, source);
+
+        // Convert offsets from number of thermal pixels to image bitmap pixels
+//        double ratio = (double) source.cols() / rawThermalDump.getWidth();
+        // TODO: remove hard coded ratio after rawThermalDump file format renewed for offset based on thermal dump pixels
+        double ratio = (double) source.cols() / 720;
+        int imageOffsetX = (int) (rawThermalDump.getVisibleOffsetX() * ratio);
+        int imageOffsetY = (int) (rawThermalDump.getVisibleOffsetY() * ratio);
+
+        // Transform (shift)
+        Mat shiftedMat = new Mat(source.size(), source.type());
+        Imgproc.warpAffine(source, shiftedMat,
+            ImageUtils.getShiftTransFormMatrix(imageOffsetX, imageOffsetY), source.size());
+
+        // Resize (zoom)
+//        Mat zoomedMat = new Mat(rawThermalDump.get)
+//        Imgproc.resize();
+
+        // Create output bitmap
+        Bitmap resultBitmap = Bitmap.createBitmap(
+            visibleBitmap.getWidth(), visibleBitmap.getHeight(), Bitmap.Config.RGB_565);
+        Utils.matToBitmap(shiftedMat, resultBitmap);
+
+        return resultBitmap;
     }
 
 //    public Bitmap getBlendedMSXBitmap() {

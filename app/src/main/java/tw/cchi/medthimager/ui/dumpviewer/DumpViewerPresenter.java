@@ -245,10 +245,10 @@ public class DumpViewerPresenter<V extends DumpViewerMvpView> extends BasePresen
             return;
 
         String dumpPath = tabResources.getRawThermalDump().getFilepath();
-        String filePath = dumpPath.substring(0, dumpPath.lastIndexOf("_")) + Config.POSTFIX_COLORED_IMAGE + ".png";
+        String exportPath = dumpPath.substring(0, dumpPath.lastIndexOf("_")) + Config.POSTFIX_COLORED_IMAGE + ".png";
 
         Observable.create(emitter -> {
-            if (ImageUtils.saveBitmap(tabResources.getThermalBitmap(contrastRatio, coloredMode), filePath)) {
+            if (ImageUtils.saveBitmap(tabResources.getThermalBitmap(contrastRatio, coloredMode), exportPath)) {
                 emitter.onComplete();
             } else {
                 emitter.onError(new Error());
@@ -263,9 +263,50 @@ public class DumpViewerPresenter<V extends DumpViewerMvpView> extends BasePresen
                 },
                 () -> {
                     if (isViewAttached())
-                        getMvpView().showToast(R.string.colored_image_dumped, new File(filePath).getName());
+                        getMvpView().showToast(R.string.colored_image_dumped, new File(exportPath).getName());
                 }
         );
+    }
+
+    @Override
+    public void saveVisibleLightImage() {
+        if (tabResources.getCount() == 0)
+            return;
+
+        if (!tabResources.getRawThermalDump().isVisibleImageAttached()) {
+            getMvpView().showToast(R.string.error_occurred);
+        }
+
+        String dumpPath = tabResources.getRawThermalDump().getFilepath();
+        String exportPath = dumpPath.substring(0, dumpPath.lastIndexOf("_")) + Config.POSTFIX_VISIBLE_IMAGE + ".png";
+
+        Observable.create(emitter -> {
+            Bitmap alignedVisibleImage = tabResources.getRawThermalDump()
+                .getVisibleImageMask().getAlignedVisibleBitmap();
+
+            if (alignedVisibleImage == null) {
+                emitter.onError(new Error());
+                return;
+            }
+
+            if (ImageUtils.saveBitmap(alignedVisibleImage, exportPath)) {
+                emitter.onComplete();
+            } else {
+                emitter.onError(new Error());
+            }
+        }).subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe(
+                o -> {},
+                e -> {
+                    if (isViewAttached())
+                        getMvpView().showToast(R.string.dump_failed);
+                },
+                () -> {
+                    if (isViewAttached())
+                        getMvpView().showToast(R.string.colored_image_dumped, new File(exportPath).getName());
+                }
+            );
     }
 
     @Override
@@ -563,7 +604,7 @@ public class DumpViewerPresenter<V extends DumpViewerMvpView> extends BasePresen
 
             System.out.println("loadVisibleImage@start of dump: " + rawThermalDump.getTitle());
             rawThermalDump.getVisibleImageMask().processFrame(activity, maskInstance -> {
-                System.out.println("loadAndShowVisibleImage@done of dump: " + rawThermalDump.getTitle());
+                System.out.println("loadVisibleImage@done of dump: " + rawThermalDump.getTitle());
                 emitter.onNext(true);
                 emitter.onComplete();
             });

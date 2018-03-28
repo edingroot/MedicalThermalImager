@@ -188,6 +188,7 @@ public class DumpViewerActivity extends BaseActivity implements DumpViewerMvpVie
             case MotionEvent.ACTION_UP:
                 int diffX = (int) (visibleImageView.getX() - thermalImageView.getX());
                 int diffY = (int) (visibleImageView.getY() - thermalImageView.getY());
+                // TODO: convert offset from imageView offset to thermalDump offset on the new thermal dump file format
                 presenter.updateVisibleImageOffset(diffX, diffY);
                 break;
 
@@ -233,6 +234,7 @@ public class DumpViewerActivity extends BaseActivity implements DumpViewerMvpVie
 
         // Thermal image actions
         popupMenu.getMenu().add(Menu.NONE, 10, Menu.NONE, "Export colored thermal image");
+        popupMenu.getMenu().add(Menu.NONE, 11, Menu.NONE, "Export visible light image");
 
         // Spot actions
         popupMenu.getMenu().add(Menu.NONE, 20, Menu.NONE, "Remove last spot");
@@ -249,6 +251,10 @@ public class DumpViewerActivity extends BaseActivity implements DumpViewerMvpVie
             switch (clickedItem.getItemId()) {
                 case 10:
                     presenter.saveColoredThermalImage();
+                    break;
+
+                case 11:
+                    presenter.saveVisibleLightImage();
                     break;
 
                 case 20:
@@ -363,8 +369,13 @@ public class DumpViewerActivity extends BaseActivity implements DumpViewerMvpVie
 
         // Set initial params
         FrameLayout.LayoutParams layoutParams = (FrameLayout.LayoutParams) visibleImageView.getLayoutParams();
-        layoutParams.leftMargin = mask.getLinkedRawThermalDump().getVisibleOffsetX() + (int) thermalImageView.getX();
-        layoutParams.topMargin = mask.getLinkedRawThermalDump().getVisibleOffsetY() + (int) thermalImageView.getY();
+        // TODO: use thermalDump offset on the new thermal dump file format
+        // TODO: remove hard coded ratio after rawThermalDump file format renewed for offset based on thermal dump pixels
+        // width of visibleImageView will be set to same as thermalImageView after layouted
+//        double ratio = (double) thermalImageView.getMeasuredWidth() / mask.getLinkedRawThermalDump().getWidth();
+        double ratio = (double) thermalImageView.getMeasuredWidth() / 720; // to avoid bug on other phone with different screen size
+        layoutParams.leftMargin = (int) (mask.getLinkedRawThermalDump().getVisibleOffsetX() * ratio + thermalImageView.getX());
+        layoutParams.topMargin = (int) (mask.getLinkedRawThermalDump().getVisibleOffsetY() * ratio + thermalImageView.getY());
 
         // Prevent the view from being compressed when moving right or down
         layoutParams.rightMargin = -500;
