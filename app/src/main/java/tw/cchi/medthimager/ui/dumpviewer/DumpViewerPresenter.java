@@ -64,12 +64,9 @@ public class DumpViewerPresenter<V extends DumpViewerMvpView> extends BasePresen
 
         // Wait until the view have been measured (visibility state considered)
         // Ref: https://stackoverflow.com/questions/36586146/ongloballayoutlistener-vs-postrunnable
-        getMvpView().getVisibleImageViewLayoutObservable().subscribe(new Consumer<Object>() {
-            @Override
-            public void accept(Object o) throws Exception {
-                if (showingVisibleImage) {
-                    getMvpView().resizeVisibleImageViewToThermalImage();
-                }
+        getMvpView().getVisibleImageViewLayoutObservable().subscribe(o -> {
+            if (showingVisibleImage) {
+                getMvpView().resizeVisibleImageViewToThermalImage();
             }
         });
 
@@ -139,7 +136,6 @@ public class DumpViewerPresenter<V extends DumpViewerMvpView> extends BasePresen
      *
      * This method should also be called after the first dump added (see addThermalDump()).
      *
-     * @param position
      * @return false to reject tab switching
      */
     @UiThread
@@ -184,7 +180,7 @@ public class DumpViewerPresenter<V extends DumpViewerMvpView> extends BasePresen
                 return true;
             }
         ).observeOn(AndroidSchedulers.mainThread()).subscribe(
-            (b) -> {},
+            b -> {},
             e -> {
                 e.printStackTrace();
                 getMvpView().hideLoading();

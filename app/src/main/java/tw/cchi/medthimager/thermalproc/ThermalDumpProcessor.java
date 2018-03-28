@@ -1,7 +1,6 @@
 package tw.cchi.medthimager.thermalproc;
 
 import android.graphics.Bitmap;
-import android.util.Log;
 
 import org.opencv.android.OpenCVLoader;
 import org.opencv.android.Utils;
@@ -13,7 +12,6 @@ import org.opencv.core.MatOfPoint;
 import org.opencv.core.Point;
 import org.opencv.imgproc.Imgproc;
 
-import tw.cchi.medthimager.Config;
 import tw.cchi.medthimager.utils.ImageUtils;
 
 public class ThermalDumpProcessor {
@@ -32,8 +30,8 @@ public class ThermalDumpProcessor {
     private volatile Mat generatedImage = null;
 
     static {
-        OpenCVLoader.initDebug(); // [For Android]
-        // System.loadLibrary(Core.NATIVE_LIBRARY_NAME); // [For native java]
+        OpenCVLoader.initDebug(); // [Android]
+//        System.loadLibrary(Core.NATIVE_LIBRARY_NAME); // [Native Java]
     }
 
     public ThermalDumpProcessor(RawThermalDump thermalDump) {
@@ -71,8 +69,6 @@ public class ThermalDumpProcessor {
     public void autoFilter() {
         int minPixelThreshold;
 
-        Log.i(Config.TAG, String.format("autoFilter - before: min=%d, max=%d\n", minThermalValue, maxThermalValue));
-
         minPixelThreshold = (int) (pixelCount * FILTER_RATIO_LOW);
         for (int i = minThermalValue; i <= maxThermalValue; i++) {
             if (thermalHist[i] < minPixelThreshold) {
@@ -93,8 +89,6 @@ public class ThermalDumpProcessor {
             }
         }
 
-        Log.i(Config.TAG, String.format("autoFilter - after: min=%d, max=%d\n", minThermalValue, maxThermalValue));
-
         // Filter thermalValues10
         for (int i = 0; i < pixelCount; i++) {
             if (thermalValues10[i] < minThermalValue) {
@@ -110,10 +104,8 @@ public class ThermalDumpProcessor {
     }
 
     public void filterBelow(int thermalThreshold10K) {
-        if (thermalThreshold10K <= minThermalValue) {
-            Log.i(Config.TAG, String.format("filterBelow: minThermalValue=%d, newThreshold=%d, ignore.\n", minThermalValue, thermalThreshold10K));
+        if (thermalThreshold10K <= minThermalValue)
             return;
-        }
 
         // Filter thermalValues10
         minThermalValue = thermalThreshold10K;
@@ -131,9 +123,8 @@ public class ThermalDumpProcessor {
     }
 
     public void filterAbove(int thermalThreshold10K) {
-        if (thermalThreshold10K >= maxThermalValue) {
+        if (thermalThreshold10K >= maxThermalValue)
             return;
-        }
 
         // Filter thermalValues10
         maxThermalValue = thermalThreshold10K;

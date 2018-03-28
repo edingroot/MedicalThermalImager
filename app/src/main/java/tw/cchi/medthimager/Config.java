@@ -1,6 +1,6 @@
 package tw.cchi.medthimager;
 
-public class Config {
+public final class Config {
     public static final String TAG = "appdebug";
 
     public static final int PREVIEW_MASK_ALPHA = 55; // 0 ~ 255

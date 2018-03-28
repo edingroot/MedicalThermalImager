@@ -68,7 +68,9 @@ public class RawThermalDump {
     private String filepath;
     private VisibleImageMask visibleImageMask; // [Android Only]
 
-    // [Android Only]
+    /**
+     * [Android]
+     */
     public RawThermalDump(RenderedImage renderedImage) {
         this.width = renderedImage.width();
         this.height = renderedImage.height();
@@ -485,7 +487,8 @@ public class RawThermalDump {
         }
     }
 
-    // ---------------------- [Android Only] ---------------------- //
+
+    // ---------------------- [Android] ---------------------- //
 
     public boolean attachVisibleImageMask() {
         if (visibleImageMask != null) {

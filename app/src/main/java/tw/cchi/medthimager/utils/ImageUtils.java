@@ -20,7 +20,7 @@ import static org.opencv.imgproc.Imgproc.drawContours;
 public class ImageUtils {
 
     /**
-     * Save bitmap to PNG file.
+     * [Android] Save bitmap to PNG file.
      */
     public static boolean saveBitmap(Bitmap bitmap, String filename) {
         FileOutputStream out = null;
