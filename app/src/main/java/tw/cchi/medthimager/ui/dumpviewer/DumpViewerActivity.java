@@ -76,15 +76,6 @@ public class DumpViewerActivity extends BaseActivity implements DumpViewerMvpVie
         setUnBinder(ButterKnife.bind(this));
         presenter.onAttach(this);
 
-        // TODO: remove after checking
-        // Pass touch event to the underlying layout
-//        thermalChartView.setOnTouchListener(new View.OnTouchListener() {
-//            @Override
-//            public boolean onTouch(View v, MotionEvent event) {
-//                return false;
-//            }
-//        });
-
         thermalDumpsRecyclerAdapter = new ThermalDumpsRecyclerAdapter(this,
                 new ThermalDumpsRecyclerAdapter.OnInteractionListener() {
 
