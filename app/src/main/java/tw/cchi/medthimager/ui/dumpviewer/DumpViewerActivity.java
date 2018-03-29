@@ -188,7 +188,6 @@ public class DumpViewerActivity extends BaseActivity implements DumpViewerMvpVie
             case MotionEvent.ACTION_UP:
                 int diffX = (int) (visibleImageView.getX() - thermalImageView.getX());
                 int diffY = (int) (visibleImageView.getY() - thermalImageView.getY());
-                // TODO: convert offset from imageView offset to thermalDump offset on the new thermal dump file format
                 presenter.updateVisibleImageOffset(diffX, diffY);
                 break;
 
@@ -369,11 +368,8 @@ public class DumpViewerActivity extends BaseActivity implements DumpViewerMvpVie
 
         // Set initial params
         FrameLayout.LayoutParams layoutParams = (FrameLayout.LayoutParams) visibleImageView.getLayoutParams();
-        // TODO: use thermalDump offset on the new thermal dump file format
-        // TODO: remove hard coded ratio after rawThermalDump file format renewed for offset based on thermal dump pixels
-        // width of visibleImageView will be set to same as thermalImageView after layouted
-//        double ratio = (double) thermalImageView.getMeasuredWidth() / mask.getLinkedRawThermalDump().getWidth();
-        double ratio = (double) thermalImageView.getMeasuredWidth() / 720; // to avoid bug on other phone with different screen size
+        // height of visibleImageView will be set to same as thermalImageView after layouted
+        double ratio = 0.1 * thermalImageView.getMeasuredHeight() / mask.getLinkedRawThermalDump().getHeight();
         layoutParams.leftMargin = (int) (mask.getLinkedRawThermalDump().getVisibleOffsetX() * ratio + thermalImageView.getX());
         layoutParams.topMargin = (int) (mask.getLinkedRawThermalDump().getVisibleOffsetY() * ratio + thermalImageView.getY());
 

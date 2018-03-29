@@ -33,8 +33,8 @@ import tw.cchi.medthimager.utils.CommonUtils;
  *  0 ~ 1		     width (number of columns)
  *  2 ~ 3		     height (number of rows)
  *  4 ~ M			 each thermal pixel is stored by 2 bytes (M=2*width*height + 4 - 1)
- *  (M+1) ~ (M+2)	 visible image alignment X offset (app image view 720*960)
- *  (M+3) ~ (M+4)	 visible image alignment Y offset (app image view 720*960)
+ *  (M+1) ~ (M+2)	 visible image alignment X offset (dump pixel offset * 10)
+ *  (M+3) ~ (M+4)	 visible image alignment Y offset (dump pixel offset * 10)
  *  (M+5)			 EOF
  *
  * File format v3:
@@ -42,8 +42,8 @@ import tw.cchi.medthimager.utils.CommonUtils;
  *  2 ~ 3            height (number of rows)
  *  4                file format version (=3)
  *  5 ~ M            each thermal pixel is stored by 2 bytes (M=2*width*height + 5 - 1)
- *  (M+1) ~ (M+2)    visible image alignment X offset (app image view 720*960)
- *  (M+3) ~ (M+4)    visible image alignment Y offset (app image view 720*960)
+ *  (M+1) ~ (M+2)    visible image alignment X offset (dump pixel offset * 10)
+ *  (M+3) ~ (M+4)    visible image alignment Y offset (dump pixel offset * 10)
  *  (M+5) ~ (M+10)   -
  *  (M+11) ~ (M+50)  title tag (up to 40 ascii chars)
  *  (M+51) ~ (M+82)  patient UUID (32 ascii chars, no '-')
@@ -53,7 +53,7 @@ import tw.cchi.medthimager.utils.CommonUtils;
  *  (M+172)          EOF
  */
 public class RawThermalDump {
-    private int formatVersion = 1;
+    private int formatVersion = 3;
     private String title = null;
     private String patientUUID = null;
     private int width;

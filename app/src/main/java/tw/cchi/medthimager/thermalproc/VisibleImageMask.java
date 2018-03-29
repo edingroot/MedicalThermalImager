@@ -97,8 +97,6 @@ public class VisibleImageMask implements FrameProcessor.Delegate {
 
     /**
      * Generate zoomed & aligned (with black background) visible light image.
-     *
-//     * @return image which size is same as flir jpg image
      */
     public Bitmap getAlignedVisibleBitmap() {
         if (visibleBitmap == null)
@@ -108,9 +106,7 @@ public class VisibleImageMask implements FrameProcessor.Delegate {
         Utils.bitmapToMat(visibleBitmap, source);
 
         // Convert offsets from number of thermal pixels to image bitmap pixels
-//        double ratio = (double) source.cols() / rawThermalDump.getWidth();
-        // TODO: remove hard coded ratio after rawThermalDump file format renewed for offset based on thermal dump pixels
-        double ratio = (double) source.cols() / 720;
+        double ratio = 0.1 * source.rows() / rawThermalDump.getHeight();
         int imageOffsetX = (int) (rawThermalDump.getVisibleOffsetX() * ratio);
         int imageOffsetY = (int) (rawThermalDump.getVisibleOffsetY() * ratio);
 

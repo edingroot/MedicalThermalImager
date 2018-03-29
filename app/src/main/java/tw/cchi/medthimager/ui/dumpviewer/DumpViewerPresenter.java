@@ -11,10 +11,10 @@ import java.util.ArrayList;
 import javax.inject.Inject;
 
 import io.reactivex.Observable;
+import io.reactivex.Scheduler;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.disposables.Disposable;
-import io.reactivex.functions.Consumer;
 import io.reactivex.schedulers.Schedulers;
 import tw.cchi.medthimager.Config;
 import tw.cchi.medthimager.R;
@@ -229,13 +229,21 @@ public class DumpViewerPresenter<V extends DumpViewerMvpView> extends BasePresen
 
     @Override
     @NewThread
-    public void updateVisibleImageOffset(final int offsetX, final int offsetY) {
-        new Thread(() -> {
+    public void updateVisibleImageOffset(final int imageViewOffsetX, final int imageViewOffsetY) {
+        if (tabResources.getCount() == 0)
+            return;
+
+        Observable.create(emitter -> {
+            double ratio = 10 * tabResources.getRawThermalDump().getHeight() / getMvpView().getThermalImageViewHeight();
+            int dumpPixelOffsetX = (int) (imageViewOffsetX * ratio);
+            int dumpPixelOffsetY = (int) (imageViewOffsetY * ratio);
+
             RawThermalDump rawThermalDump = tabResources.getRawThermalDump();
-            rawThermalDump.setVisibleOffsetX(offsetX);
-            rawThermalDump.setVisibleOffsetY(offsetY);
+            rawThermalDump.setVisibleOffsetX(dumpPixelOffsetX);
+            rawThermalDump.setVisibleOffsetY(dumpPixelOffsetY);
             rawThermalDump.save();
-        }).start();
+
+        }).subscribeOn(Schedulers.io()).subscribe();
     }
 
     @NewThread
@@ -304,7 +312,7 @@ public class DumpViewerPresenter<V extends DumpViewerMvpView> extends BasePresen
                 },
                 () -> {
                     if (isViewAttached())
-                        getMvpView().showToast(R.string.colored_image_dumped, new File(exportPath).getName());
+                        getMvpView().showToast(R.string.visible_image_dumped, new File(exportPath).getName());
                 }
             );
     }
