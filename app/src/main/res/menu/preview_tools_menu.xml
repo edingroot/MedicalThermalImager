@@ -22,4 +22,9 @@
         android:title="@string/rotate_view"
         app:showAsAction="never"/>
 
+    <item
+        android:id="@+id/action_toggle_sim"
+        android:title="@string/toggle_sim"
+        app:showAsAction="never"/>
+
 </menu>

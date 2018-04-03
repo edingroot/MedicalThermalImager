@@ -3,9 +3,13 @@ package tw.cchi.medthimager.di.module;
 import android.app.Application;
 import android.content.Context;
 
+import javax.inject.Singleton;
+
 import dagger.Module;
 import dagger.Provides;
 import tw.cchi.medthimager.MvpApplication;
+import tw.cchi.medthimager.db.AppDatabase;
+import tw.cchi.medthimager.db.helper.PatientThermalDumpsHelper;
 
 @Module
 public class ApplicationModule {
@@ -29,6 +33,12 @@ public class ApplicationModule {
     @Provides
     MvpApplication provideMvpApplication() {
         return mvpApplication;
+    }
+
+    @Provides
+    @Singleton
+    AppDatabase provideAppDatabase() {
+        return AppDatabase.getInstance(mvpApplication);
     }
 
 }

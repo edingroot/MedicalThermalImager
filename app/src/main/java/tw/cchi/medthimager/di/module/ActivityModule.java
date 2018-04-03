@@ -1,5 +1,6 @@
 package tw.cchi.medthimager.di.module;
 
+import android.app.Activity;
 import android.content.Context;
 import android.support.v7.app.AppCompatActivity;
 
@@ -8,6 +9,9 @@ import dagger.Provides;
 import io.reactivex.disposables.CompositeDisposable;
 import tw.cchi.medthimager.di.ActivityContext;
 import tw.cchi.medthimager.ui.base.BaseActivity;
+import tw.cchi.medthimager.ui.camera.CameraMvpPresenter;
+import tw.cchi.medthimager.ui.camera.CameraMvpView;
+import tw.cchi.medthimager.ui.camera.CameraPresenter;
 import tw.cchi.medthimager.ui.dumpviewer.DumpViewerMvpPresenter;
 import tw.cchi.medthimager.ui.dumpviewer.DumpViewerMvpView;
 import tw.cchi.medthimager.ui.dumpviewer.DumpViewerPresenter;
@@ -22,7 +26,12 @@ public class ActivityModule {
     }
 
     @Provides
-    AppCompatActivity provideActivity() {
+    Activity provideActivity() {
+        return mActivity;
+    }
+
+    @Provides
+    AppCompatActivity provideAppCompatActivity() {
         return mActivity;
     }
 
@@ -35,6 +44,11 @@ public class ActivityModule {
     @Provides
     CompositeDisposable provideCompositeDisposable() {
         return new CompositeDisposable();
+    }
+
+    @Provides
+    CameraMvpPresenter<CameraMvpView> provideCameraMvpPresenter(CameraPresenter<CameraMvpView> presenter) {
+        return presenter;
     }
 
     @Provides

@@ -4,7 +4,6 @@
     <string name="app_name">Medical Thermal Imager</string>
     <string name="toggle_more_info">More Info \u21EA</string>
     <string name="toggle_less_info">Less Info \u21B2</string>
-    <string name="connectSim">Toggle Sim</string>
     <string name="performTuning">Tune</string>
     <string name="rotate_on">\u21BA</string>
     <string name="rotate_off">\u21BB</string>
@@ -24,14 +23,19 @@
     <string name="export_csv">Export to CSV</string>
     <string name="unset_mask">Unset Mask Image</string>
     <string name="rotate_view">Rotate View</string>
+    <string name="toggle_sim">Toggle SimulatedCam</string>
 
     <!-- SelectPatientDialog -->
     <string name="select_patient">Select Patient</string>
 
     <!-- Messages -->
     <string name="error_occurred">Error occurred</string>
-    <string name="noContourSelected">No contour selected</string>
-    <string name="processingContour">Processing on selected contour</string>
+
+    <string name="insert_flirone">Please insert FLIR One and select %1$s</string>
+    <string name="flirone_disconnected">FLIR One disconnected.</string>
+    <string name="connecting_sim">Connecting simulatedCam</string>
+    <string name="dumped_">Dumped: %1$s</string>
+
     <string name="pick_thermal_images">Pick thermal dump files(*.dat) to visualize</string>
     <string name="spots_hidden">Thermal spots are now hidden, click "show spots" to show.</string>
     <string name="colored_image_dumped">Colored image exported: %1$s</string>

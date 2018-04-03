@@ -29,11 +29,6 @@ public class ViewerTabResources {
 
     /**
      * Add resources of the new tab except ThermalSpotsHelper.
-     *
-     * @param thermalDumpPath
-     * @param rawThermalDump
-     * @param thermalDumpProcessor
-     * @return
      */
     public int addResources(String thermalDumpPath, RawThermalDump rawThermalDump,
                             ThermalDumpProcessor thermalDumpProcessor) {
@@ -98,7 +93,6 @@ public class ViewerTabResources {
         }
     }
 
-    @Nullable
     public RawThermalDump getRawThermalDump() {
         if (currentIndex == -1)
             return null;
@@ -108,7 +102,6 @@ public class ViewerTabResources {
         }
     }
 
-    @Nullable
     public ThermalDumpProcessor getThermalDumpProcessor() {
         if (currentIndex == -1)
             return null;
@@ -121,7 +114,6 @@ public class ViewerTabResources {
     /**
      * This may be time consuming if bitmap of this tab hasn't cached (bitmap == null).
      */
-    @Nullable
     public Bitmap getThermalBitmap(int contrastRatio, boolean colored) {
         if (currentIndex == -1)
             return null;
@@ -150,7 +142,6 @@ public class ViewerTabResources {
         }
     }
 
-    @Nullable
     public ThermalSpotsHelper getThermalSpotHelper() {
         if (currentIndex == -1)
             return null;

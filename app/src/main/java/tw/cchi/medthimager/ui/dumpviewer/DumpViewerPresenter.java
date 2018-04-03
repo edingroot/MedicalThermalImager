@@ -199,7 +199,6 @@ public class DumpViewerPresenter<V extends DumpViewerMvpView> extends BasePresen
     }
 
     /**
-     * @param index
      * @param switchTab set to true while removing multiple dumps except the last dump
      * @return Index of the new active dump or -1 for no tab after removing
      */
@@ -565,7 +564,7 @@ public class DumpViewerPresenter<V extends DumpViewerMvpView> extends BasePresen
                         }
 
                         if (getMvpView().getThermalImageViewHeight() == 0) {
-                            // This should be called after updateThermalImageView(), which was called in onNext() above
+                            // This should be called after setThermalImageViewBitmap(), which was called in onNext() above
                             getMvpView().getThermalImageViewGlobalLayouts().take(1).subscribe(o -> {
                                 tabResources.setThermalSpotsHelper(
                                     getMvpView().createThermalSpotsHelper(tabResources.getRawThermalDump())
@@ -591,7 +590,6 @@ public class DumpViewerPresenter<V extends DumpViewerMvpView> extends BasePresen
      *
      * PS. The proceed mask can be retrieved by rawThermalDump.getVisibleImageMask()
      *
-     * @param rawThermalDump
      * @return boolean: succeed or not
      */
     private Observable<Boolean> loadVisibleImage(final RawThermalDump rawThermalDump) {
@@ -629,11 +627,9 @@ public class DumpViewerPresenter<V extends DumpViewerMvpView> extends BasePresen
 
     /**
      * Add thermal values on specific horizontal line on the thermal dump to the chart parameter.
+     *
      * [Note] Not calling updateChartAxis() here because it will be called when all thermalDumps are added
      *
-     * @param chartParameter
-     * @param rawThermalDump
-     * @param y
      */
     private synchronized void addDumpDataToChartParameter(ChartParameter chartParameter, RawThermalDump rawThermalDump, int y) {
         int width = rawThermalDump.getWidth();
@@ -647,10 +643,9 @@ public class DumpViewerPresenter<V extends DumpViewerMvpView> extends BasePresen
 
     /**
      * Remove data (float array) from chart parameter by index.
-     *  Note: Not calling updateChartAxis() here
      *
-     * @param chartParameter
-     * @param index
+     * Note: Not calling updateChartAxis() here
+     *
      */
     private synchronized void removeDataFromChartParameter(ChartParameter chartParameter, int index) {
         chartParameter.removeFloatArray(index);

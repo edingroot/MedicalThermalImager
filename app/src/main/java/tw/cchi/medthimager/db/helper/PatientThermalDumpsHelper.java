@@ -1,12 +1,15 @@
 package tw.cchi.medthimager.db.helper;
 
 
+import javax.inject.Inject;
+
 import tw.cchi.medthimager.db.AppDatabase;
 import tw.cchi.medthimager.db.CaptureRecord;
 
 public class PatientThermalDumpsHelper {
     private AppDatabase database;
 
+    @Inject
     public PatientThermalDumpsHelper(AppDatabase database) {
         this.database = database;
     }

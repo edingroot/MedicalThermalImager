@@ -1,7 +1,7 @@
 apply plugin: 'com.android.application'
 android {
     compileSdkVersion 26
-    buildToolsVersion '26.0.3'
+    buildToolsVersion '27.0.3'
     defaultConfig {
         applicationId "tw.cchi.medthimager"
         minSdkVersion 18
@@ -66,32 +66,38 @@ android {
 }
 
 dependencies {
-    compile fileTree(include: ['*.jar'], dir: 'libs')
+    implementation fileTree(include: ['*.jar'], dir: 'libs')
     compile(name: 'flironesdk', ext: 'aar')
+
     // https://mvnrepository.com/artifact/commons-io/commons-io
-    compile 'commons-io:commons-io:2.5'
-    compile 'com.android.support:appcompat-v7:26.1.0'
-    compile 'com.android.support:support-v4:26.1.0'
+    implementation 'commons-io:commons-io:2.5'
+    implementation 'com.android.support:appcompat-v7:26.1.0'
+    implementation 'com.android.support:support-v4:26.1.0'
     implementation 'com.android.support:design:26.1.0'
-    compile 'com.android.support.constraint:constraint-layout:1.0.2'
-    compile 'com.github.PhilJay:MPAndroidChart:v3.0.2'
-    compile 'com.droidninja:filepicker:2.1.2'
-    compile 'com.jakewharton:butterknife:8.8.1'
+    implementation 'com.android.support.constraint:constraint-layout:1.0.2'
+    implementation 'com.github.PhilJay:MPAndroidChart:v3.0.2'
+    implementation 'com.droidninja:filepicker:2.1.2'
+    implementation 'com.jakewharton:butterknife:8.8.1'
     annotationProcessor 'com.jakewharton:butterknife-compiler:8.8.1'
+
     // Dagger2
-    compile 'com.google.dagger:dagger:2.8'
+    implementation 'com.google.dagger:dagger:2.8'
     annotationProcessor 'com.google.dagger:dagger-compiler:2.8'
+
     // RxAndroid
     implementation 'io.reactivex.rxjava2:rxandroid:2.0.2'
     implementation 'io.reactivex.rxjava2:rxjava:2.1.9'
+
     // RxBinding
-    compile 'com.jakewharton.rxbinding2:rxbinding:2.1.1'
-    compile 'com.jakewharton.rxbinding2:rxbinding-appcompat-v7:2.1.1'
-    compile 'com.jakewharton.rxbinding2:rxbinding-design:2.1.1'
-    compile 'com.jakewharton.rxbinding2:rxbinding-recyclerview-v7:2.1.1'
+    implementation 'com.jakewharton.rxbinding2:rxbinding:2.1.1'
+    implementation 'com.jakewharton.rxbinding2:rxbinding-appcompat-v7:2.1.1'
+    implementation 'com.jakewharton.rxbinding2:rxbinding-design:2.1.1'
+    implementation 'com.jakewharton.rxbinding2:rxbinding-recyclerview-v7:2.1.1'
+
     // PermissionsDispatcher
-    compile 'com.github.hotchemi:permissionsdispatcher:3.0.1'
+    implementation 'com.github.hotchemi:permissionsdispatcher:3.0.1'
     annotationProcessor "com.github.hotchemi:permissionsdispatcher-processor:3.0.1"
+
     // Room Database Library
     implementation "android.arch.persistence.room:runtime:$rootProject.roomVersion"
     annotationProcessor "android.arch.persistence.room:compiler:$rootProject.roomVersion"

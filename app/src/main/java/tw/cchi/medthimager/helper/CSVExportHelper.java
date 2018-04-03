@@ -12,92 +12,114 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
-import tw.cchi.medthimager.utils.AppUtils;
+import javax.inject.Inject;
+
+import io.reactivex.Observable;
+import io.reactivex.schedulers.Schedulers;
 import tw.cchi.medthimager.Config;
 import tw.cchi.medthimager.db.AppDatabase;
 import tw.cchi.medthimager.db.CaptureRecord;
 import tw.cchi.medthimager.db.Patient;
+import tw.cchi.medthimager.di.NewThread;
 import tw.cchi.medthimager.thermalproc.RawThermalDump;
+import tw.cchi.medthimager.utils.AppUtils;
 
 public class CSVExportHelper {
     private Activity activity;
     private AppDatabase database;
 
+    @Inject
     public CSVExportHelper(Activity activity, AppDatabase database) {
         this.activity = activity;
         this.database = database;
     }
 
+    @NewThread
     public void exportAllCaptureRecords(final String filepath) {
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                StringBuilder outputBuilder = new StringBuilder();
-                int maxSpotCount = 0;
+        Observable.create(emitter -> {
+            StringBuilder outputBuilder = new StringBuilder();
+            int maxSpotCount = 0;
 
-                Map<String, Patient> patientMap = getPatientMap();
-                for (CaptureRecord captureRecord : database.captureRecordDAO().getAll()) {
-                    StringBuilder rowBuilder = new StringBuilder();
+            Map<String, Patient> patientMap = getPatientMap();
+            for (CaptureRecord captureRecord : database.captureRecordDAO().getAll()) {
+                StringBuilder rowBuilder = new StringBuilder();
 
-                    Patient patient = patientMap.get(captureRecord.getPatientUuid());
-                    if (patient == null) {
-                        rowBuilder.append(String.format("%s,%s,%s,%s,%s",
-                                "-", "-", captureRecord.getFilenamePrefix(),
-                                captureRecord.getCreatedAt(), captureRecord.getTitle()
-                        ));
-                    } else {
-                        rowBuilder.append(String.format("%s,%s,%s,%s,%s",
-                                patient.getUuid(), patient.getName(), captureRecord.getFilenamePrefix(),
-                                captureRecord.getCreatedAt(), captureRecord.getTitle()
-                        ));
-                    }
-
-                    ArrayList<Double> spotValues = readSpotValues(captureRecord.getFilenamePrefix());
-                    if (spotValues != null) {
-                        if (spotValues.size() > maxSpotCount)
-                            maxSpotCount = spotValues.size();
-
-                        for (double temp : spotValues)
-                            rowBuilder.append(String.format(",%.2f", temp));
-                    } else {
-                        System.out.println("Dump not found, skip reading spotValues of: " + captureRecord.getFilenamePrefix());
-                        // TODO: remove this record from database
-                        continue;
-                    }
-
-                    outputBuilder.append(rowBuilder).append("\n");
+                Patient patient = patientMap.get(captureRecord.getPatientUuid());
+                if (patient == null) {
+                    rowBuilder.append(String.format("%s,%s,%s,%s,%s",
+                        "-", "-", captureRecord.getFilenamePrefix(),
+                        captureRecord.getCreatedAt(), captureRecord.getTitle()
+                    ));
+                } else {
+                    rowBuilder.append(String.format("%s,%s,%s,%s,%s",
+                        patient.getUuid(), patient.getName(), captureRecord.getFilenamePrefix(),
+                        captureRecord.getCreatedAt(), captureRecord.getTitle()
+                    ));
                 }
 
-                if (outputBuilder.length() == 0) {
-                    showToastMessage("No data exported.");
-                    return;
+                ArrayList<Double> spotValues = readSpotValues(captureRecord.getFilenamePrefix());
+                if (spotValues != null) {
+                    if (spotValues.size() > maxSpotCount)
+                        maxSpotCount = spotValues.size();
+
+                    for (double temp : spotValues)
+                        rowBuilder.append(String.format(",%.2f", temp));
+                } else {
+                    System.out.println("Dump not found, skip reading spotValues of: " + captureRecord.getFilenamePrefix());
+                    // TODO: remove this record from database
+                    continue;
                 }
 
-                // Title row
-                StringBuilder titleRowBuilder = new StringBuilder("patientUUID,patientName,filenamePrefix,takenAt,title");
-                for (int i = 1; i <= maxSpotCount; i++) {
-                    titleRowBuilder.append(",spot").append(i);
-                }
-                titleRowBuilder.append("\n");
-                outputBuilder.insert(0, titleRowBuilder);
+                outputBuilder.append(rowBuilder).append("\n");
+            }
 
-                // Write to file
-                BufferedWriter outputWriter = null;
-                File outputFile = new File(filepath);
+            if (outputBuilder.length() == 0) {
+                showToastMessage("No data exported.");
+                return;
+            }
+
+            // Title row
+            StringBuilder titleRowBuilder = new StringBuilder("patientUUID,patientName,filenamePrefix,takenAt,title");
+            for (int i = 1; i <= maxSpotCount; i++) {
+                titleRowBuilder.append(",spot").append(i);
+            }
+            titleRowBuilder.append("\n");
+            outputBuilder.insert(0, titleRowBuilder);
+
+            // Write to file
+            BufferedWriter outputWriter = null;
+            File outputFile = new File(filepath);
+            try {
+                outputWriter = new BufferedWriter(new FileWriter(outputFile));
+                outputWriter.write(outputBuilder.toString());
+            } catch (Exception e) {
+                emitter.onError(e);
+            } finally {
                 try {
-                    outputWriter = new BufferedWriter(new FileWriter(outputFile));
-                    outputWriter.write(outputBuilder.toString());
-                    showToastMessage("Exported to file: " + filepath);
-                } catch (Exception e) {
-                    showToastMessage("Error exporting to file: " + filepath);
-                    e.printStackTrace();
-                } finally {
-                    try {
-                        // Close the writer regardless of what happens...
+                    // Close the writer regardless of what happens...
+                    if (outputWriter != null)
                         outputWriter.close();
-                    } catch (Exception e) {}
+                } catch (Exception e) {
+                    e.printStackTrace();
                 }
             }
+
+        }).observeOn(Schedulers.computation())
+            .subscribeOn(Schedulers.computation()).subscribe(
+                o -> {},
+                e -> {
+                    showToastMessage("Error exporting to file: " + filepath);
+                    e.printStackTrace();
+                },
+                () -> {
+                    showToastMessage("Exported to file: " + filepath);
+                }
+        );
+
+
+
+        new Thread(() -> {
+
         }).start();
     }
 

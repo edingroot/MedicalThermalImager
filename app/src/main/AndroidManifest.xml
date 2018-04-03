@@ -16,7 +16,7 @@
         android:versionCode="3"
         android:versionName="0.3">
         <activity
-            android:name="tw.cchi.medthimager.ui.PreviewActivity"
+            android:name="tw.cchi.medthimager.ui.camera.CameraActivity"
             android:configChanges="orientation|keyboardHidden|screenSize"
             android:label="@string/app_name"
             android:launchMode="singleTask"

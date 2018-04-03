@@ -5,7 +5,7 @@
     android:layout_height="match_parent"
     android:background="@android:color/background_dark"
     android:orientation="vertical"
-    tools:context=".ui.PreviewActivity"
+    tools:context=".ui.camera.CameraActivity"
     android:keepScreenOn="true"
     android:id="@+id/topView"
     android:touchscreenBlocksFocus="false">
