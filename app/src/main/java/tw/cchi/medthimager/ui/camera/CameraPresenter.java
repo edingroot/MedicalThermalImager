@@ -310,6 +310,7 @@ public class CameraPresenter<V extends CameraMvpView> extends BasePresenter<V>
             return;
 
         Observable.<Double>create(emitter -> {
+            int x = thermalSpotX, y = thermalSpotY;
             RawThermalDump rawThermalDump = new RawThermalDump(
                 1, lastRenderedImage.width(), lastRenderedImage.height(), lastRenderedImage.thermalPixelValues());
 
@@ -317,7 +318,7 @@ public class CameraPresenter<V extends CameraMvpView> extends BasePresenter<V>
             if (thermalSpotX == -1) {
                 averageC = rawThermalDump.getTemperature9Average(rawThermalDump.getWidth() / 2, rawThermalDump.getHeight() / 2);
             } else {
-                averageC = rawThermalDump.getTemperature9Average(thermalSpotX, thermalSpotY);
+                averageC = rawThermalDump.getTemperature9Average(x, y);
             }
             emitter.onNext(averageC);
 

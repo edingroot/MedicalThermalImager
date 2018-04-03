@@ -354,7 +354,7 @@ public class DumpViewerActivity extends BaseActivity implements DumpViewerMvpVie
         }
 
         visibleImageView.setImageBitmap(mask.getVisibleBitmap());
-        visibleImageView.setAlpha(visibleImageAlignMode ? Config.DUMP_VISUAL_MASK_ALPHA / 255f : 1f);
+        visibleImageView.setAlpha(visibleImageAlignMode ? Config.VISIBLE_ALIGN_ALPHA / 255f : 1f);
         visibleImageView.setVisibility(View.VISIBLE);
 
         // Set initial params

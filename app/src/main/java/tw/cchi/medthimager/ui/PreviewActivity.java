@@ -92,7 +92,7 @@
 //    protected void onCreate(Bundle savedInstanceState) {
 //        super.onCreate(savedInstanceState);
 //        OpenCVLoader.initDebug();
-//        setContentView(R.layout.activity_preview);
+//        setContentView(R.layout.activity_camera);
 //        ButterKnife.bind(this);
 //
 //        dbPatientDumpsHelper = new PatientThermalDumpsHelper(AppDatabase.getInstance(this));

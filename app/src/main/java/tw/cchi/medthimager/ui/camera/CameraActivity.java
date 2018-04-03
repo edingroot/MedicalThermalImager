@@ -28,6 +28,7 @@ import javax.inject.Inject;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
+import butterknife.OnLongClick;
 import butterknife.OnTouch;
 import tw.cchi.medthimager.Config;
 import tw.cchi.medthimager.R;
@@ -41,10 +42,10 @@ public class CameraActivity extends BaseActivity implements CameraMvpView {
 
     @Inject CameraMvpPresenter<CameraMvpView> presenter;
 
-    private ColorFilter originalChargingIndicatorColor;
-
     private SelectPatientDialog selectPatientDialog;
     private ScaleGestureDetector mScaleDetector;
+    private ColorFilter originalChargingIndicatorColor;
+    private int thermalViewOnTouchMoves = 0;
 
     @BindView(R.id.thermalImageView) ImageView thermalImageView;
     @BindView(R.id.pleaseConnect) TextView pleaseConnect;
@@ -58,7 +59,7 @@ public class CameraActivity extends BaseActivity implements CameraMvpView {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_preview);
+        setContentView(R.layout.activity_camera);
 
         getActivityComponent().inject(this);
         setUnBinder(ButterKnife.bind(this));
@@ -232,6 +233,16 @@ public class CameraActivity extends BaseActivity implements CameraMvpView {
 
     @OnTouch(R.id.thermalImageView)
     public boolean onThermalImageViewTouch(View v, MotionEvent event) {
+        switch (event.getAction()) {
+            case MotionEvent.ACTION_DOWN:
+                thermalViewOnTouchMoves = 0;
+                break;
+
+            case MotionEvent.ACTION_MOVE:
+                thermalViewOnTouchMoves++;
+                break;
+        }
+
         if (thermalImageView.getMeasuredHeight() > 0) {
             int x = (int) event.getX();
             int y = (int) event.getY();
@@ -239,10 +250,20 @@ public class CameraActivity extends BaseActivity implements CameraMvpView {
                 presenter.updateThermalSpotTemp(x, y);
                 thermalSpotView.setCenterPosition(x, y + thermalImageView.getTop());
             }
+            thermalViewOnTouchMoves++;
         }
+
         mScaleDetector.onTouchEvent(event);
 
-        // Consume the event, which onSelected event will not triggered
+        return false;
+    }
+
+    @OnLongClick(R.id.thermalImageView)
+    public boolean onThermalImageViewLongClick(View v) {
+        if (thermalViewOnTouchMoves >= 5)
+            return false;
+
+        presenter.performTune();
         return true;
     }
 

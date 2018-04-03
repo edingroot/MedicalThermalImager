@@ -450,7 +450,7 @@ public class DumpViewerPresenter<V extends DumpViewerMvpView> extends BasePresen
             }
         }
 
-        float opacity = visibleImageAlignMode ? Config.DUMP_VISUAL_MASK_ALPHA / 255f : 1f;
+        float opacity = visibleImageAlignMode ? Config.VISIBLE_ALIGN_ALPHA / 255f : 1f;
         getMvpView().setVisibleImageViewVisible(true, opacity);
     }
 
