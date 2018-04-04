@@ -1,6 +1,7 @@
 package tw.cchi.medthimager.ui.camera.contishot;
 
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.v4.app.FragmentManager;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -37,7 +38,7 @@ public class ContiShotDialog extends BaseDialog implements ContiShotMvpView {
     }
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.dialog_conti_shot, container, false);
 
         ActivityComponent component = getActivityComponent();
@@ -46,6 +47,8 @@ public class ContiShotDialog extends BaseDialog implements ContiShotMvpView {
             setUnBinder(ButterKnife.bind(this, view));
             presenter.onAttach(this);
         }
+
+        getDialog().setCanceledOnTouchOutside(true);
 
         return view;
     }
