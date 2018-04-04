@@ -173,8 +173,11 @@ public class CameraPresenter<V extends CameraMvpView> extends BasePresenter<V>
     public void onDeviceDisconnected(Device device) {
         streamingFrame = false;
         flirOneDevice = null;
-        getMvpView().showSnackBar(R.string.flirone_disconnected);
-        activity.runOnUiThread(() -> getMvpView().updateForDeviceDisconnected());
+
+        if (!activity.isDestroyed()) {
+            getMvpView().showSnackBar(R.string.flirone_disconnected);
+            activity.runOnUiThread(() -> getMvpView().updateForDeviceDisconnected());
+        }
     }
 
     /**
@@ -264,7 +267,7 @@ public class CameraPresenter<V extends CameraMvpView> extends BasePresenter<V>
 
     @Override
     public boolean isOpacityMaskAttached() {
-        return opacityMask == null;
+        return opacityMask != null;
     }
 
     @NewThread
