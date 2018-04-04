@@ -53,6 +53,9 @@ import tw.cchi.medthimager.utils.CommonUtils;
  *  (M+172)          EOF
  */
 public class RawThermalDump {
+    private static final int DEFAULT_VISIBLE_OFFSET_X = 133;
+    private static final int DEFAULT_VISIBLE_OFFSET_Y = -8;
+
     private int formatVersion = 3;
     private String title = null;
     private String patientUUID = null;
@@ -495,7 +498,18 @@ public class RawThermalDump {
         } else {
             String visualImagePath = filepath.substring(0, filepath.lastIndexOf("_"))
                     + Config.POSTFIX_FLIR_IMAGE + ".jpg";
+
             visibleImageMask = VisibleImageMask.openVisibleImage(this, visualImagePath);
+
+            System.out.printf("[attachVisibleImageMask] offset=(%d, %d)\n", visibleOffsetX, visibleOffsetY);
+
+            // If visible image offset wasn't set, set from the default value
+            if (visibleOffsetX == 0 && visibleOffsetY == 0) {
+                visibleOffsetX = DEFAULT_VISIBLE_OFFSET_X;
+                visibleOffsetY = DEFAULT_VISIBLE_OFFSET_Y;
+                saveAsync();
+            }
+
             return visibleImageMask != null;
         }
     }
