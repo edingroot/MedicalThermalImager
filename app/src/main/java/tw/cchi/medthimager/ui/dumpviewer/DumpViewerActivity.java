@@ -47,7 +47,7 @@ import tw.cchi.medthimager.ui.base.BaseActivity;
 
 @RuntimePermissions
 public class DumpViewerActivity extends BaseActivity implements DumpViewerMvpView {
-    private static final int MAX_OPEN_FILES = 18;
+    private static final int MAX_OPEN_FILES = 32;
 
     @Inject DumpViewerMvpPresenter<DumpViewerMvpView> presenter;
 
@@ -224,7 +224,8 @@ public class DumpViewerActivity extends BaseActivity implements DumpViewerMvpVie
 
         // Thermal image actions
         popupMenu.getMenu().add(Menu.NONE, 10, Menu.NONE, "Export colored thermal image");
-        popupMenu.getMenu().add(Menu.NONE, 11, Menu.NONE, "Export visible light image");
+        popupMenu.getMenu().add(Menu.NONE, 11, Menu.NONE, "Export visible light (VL) image");
+        popupMenu.getMenu().add(Menu.NONE, 12, Menu.NONE, "Batch export opened (VL) images");
 
         // Spot actions
         popupMenu.getMenu().add(Menu.NONE, 20, Menu.NONE, "Remove last spot");
@@ -245,6 +246,10 @@ public class DumpViewerActivity extends BaseActivity implements DumpViewerMvpVie
 
                 case 11:
                     presenter.saveVisibleLightImage();
+                    break;
+
+                case 12:
+                    presenter.saveVisibleLightImageFromOpened();
                     break;
 
                 case 20:

@@ -26,6 +26,8 @@ public interface DumpViewerMvpPresenter<V extends DumpViewerMvpView> extends Mvp
 
     void saveVisibleLightImage();
 
+    void saveVisibleLightImageFromOpened();
+
 
     void toggleThermalSpotsVisible();
 

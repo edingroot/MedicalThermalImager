@@ -1,6 +1,7 @@
 package tw.cchi.medthimager.ui.dumpviewer;
 
 import android.graphics.Bitmap;
+import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
 
 import org.opencv.core.Point;
@@ -46,6 +47,7 @@ public class DumpViewerPresenter<V extends DumpViewerMvpView> extends BasePresen
     private boolean showingThermalSpots = true;
     private boolean showingChart = false;
     private int horizontalLineY = -1; // pY (on the thermal dump) of horizontal indicator on showingChart mode
+    private boolean savingAllVisibleImages = false;
 
     private Disposable switchDumpTabTask;
 
@@ -192,6 +194,19 @@ public class DumpViewerPresenter<V extends DumpViewerMvpView> extends BasePresen
                     getMvpView().hideLoading();
 
                 System.out.printf("switchDumpTab(%d)@unlocked\n", position);
+
+                if (savingAllVisibleImages) {
+                    saveVisibleLightImage();
+
+                    new Handler().postDelayed(() -> {
+                        if (tabResources.getCurrentIndex() + 1 < tabResources.getCount()) {
+                            switchDumpTab(tabResources.getCurrentIndex() + 1);
+                        } else {
+                            savingAllVisibleImages = false;
+                            switchDumpTab(0);
+                        }
+                    }, Config.DUMP_ALL_VISIBLE_INTERVAL);
+                }
             }
         );
 
@@ -281,7 +296,12 @@ public class DumpViewerPresenter<V extends DumpViewerMvpView> extends BasePresen
 
         if (!tabResources.getRawThermalDump().isVisibleImageAttached()) {
             getMvpView().showToast(R.string.error_occurred);
+            return;
         }
+
+        final boolean saveAllMode = savingAllVisibleImages;
+        final int currentIndex = tabResources.getCurrentIndex();
+        final int tabCount = tabResources.getCount();
 
         String dumpPath = tabResources.getRawThermalDump().getFilepath();
         String exportPath = dumpPath.substring(0, dumpPath.lastIndexOf("_")) + Config.POSTFIX_VISIBLE_IMAGE + ".png";
@@ -300,7 +320,7 @@ public class DumpViewerPresenter<V extends DumpViewerMvpView> extends BasePresen
             } else {
                 emitter.onError(new Error());
             }
-        }).subscribeOn(Schedulers.io())
+        }).subscribeOn(Schedulers.computation())
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe(
                 o -> {},
@@ -309,10 +329,21 @@ public class DumpViewerPresenter<V extends DumpViewerMvpView> extends BasePresen
                         getMvpView().showToast(R.string.dump_failed);
                 },
                 () -> {
-                    if (isViewAttached())
-                        getMvpView().showToast(R.string.visible_image_dumped, new File(exportPath).getName());
+                    if (isViewAttached()) {
+                        String prefix = saveAllMode ? "(" + (currentIndex + 1) + "/" + tabCount + ")" : "";
+                        getMvpView().showToast(R.string.visible_image_dumped, prefix, new File(exportPath).getName());
+                    }
                 }
             );
+    }
+
+    @Override
+    public void saveVisibleLightImageFromOpened() {
+        if (tabResources.getCount() == 0)
+            return;
+
+        savingAllVisibleImages = true;
+        switchDumpTab(0);
     }
 
     @Override

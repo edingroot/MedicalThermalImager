@@ -11,4 +11,6 @@ public final class Config {
     public static final String POSTFIX_COLORED_IMAGE = "_color";
     public static final String POSTFIX_VISIBLE_IMAGE = "_vis";
 
+    public static final int DUMP_ALL_VISIBLE_INTERVAL = 500; // ms
+
 }
