@@ -5,7 +5,7 @@
     <string name="toggle_more_info">More Info \u21EA</string>
     <string name="toggle_less_info">Less Info \u21B2</string>
     <string name="performTuning">Tune</string>
-    <string name="conti_shot">ContiShot</string>
+    <string name="conti_shot">ContiShoot</string>
     <string name="rotate_on">\u21BA</string>
     <string name="rotate_off">\u21BB</string>
     <string name="battery_label">Batt:</string>
@@ -13,7 +13,7 @@
     <string name="tools">Tools</string>
 
     <!-- Dialogs -->
-    <string name="conti_shot_setting">Continuous Shot Settings</string>
+    <string name="conti_shot_setting">Continuous Shooting Settings</string>
     <string name="name">Name</string>
     <string name="add">Add</string>
     <string name="remove">Remove</string>

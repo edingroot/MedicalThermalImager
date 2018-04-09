@@ -1,15 +1,15 @@
-package tw.cchi.medthimager.ui.camera.contishot;
+package tw.cchi.medthimager.ui.camera.contishoot;
 
 import javax.inject.Inject;
 
 import io.reactivex.disposables.CompositeDisposable;
 import tw.cchi.medthimager.ui.base.BasePresenter;
 
-public class ContiShotPresenter<V extends ContiShotMvpView> extends BasePresenter<V> implements ContiShotMvpPresenter<V> {
+public class ContiShootPresenter<V extends ContiShootMvpView> extends BasePresenter<V> implements ContiShootMvpPresenter<V> {
 
 
     @Inject
-    public ContiShotPresenter(CompositeDisposable compositeDisposable) {
+    public ContiShootPresenter(CompositeDisposable compositeDisposable) {
         super(compositeDisposable);
     }
 
@@ -30,7 +30,7 @@ public class ContiShotPresenter<V extends ContiShotMvpView> extends BasePresente
             return false;
         }
 
-        getMvpView().getListener().onStart((ContiShotDialog) getMvpView(), intervalVal, timesVal);
+        getMvpView().getListener().onStart((ContiShootDialog) getMvpView(), intervalVal, timesVal);
         getMvpView().dismissDialog();
 
         return true;

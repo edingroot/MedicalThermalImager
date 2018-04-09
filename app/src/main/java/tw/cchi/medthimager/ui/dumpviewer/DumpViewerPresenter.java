@@ -2,6 +2,7 @@ package tw.cchi.medthimager.ui.dumpviewer;
 
 import android.graphics.Bitmap;
 import android.os.Handler;
+import android.os.Looper;
 import android.support.v7.app.AppCompatActivity;
 
 import org.opencv.core.Point;
@@ -415,8 +416,8 @@ public class DumpViewerPresenter<V extends DumpViewerMvpView> extends BasePresen
             tabResources.setThermalSpotsHelper(
                 getMvpView().createThermalSpotsHelper(rawThermalDump)
             );
-        }).subscribeOn(Schedulers.computation())
-            .subscribe();
+
+        }).subscribeOn(Schedulers.computation()).subscribe();
     }
 
     @Override
@@ -571,12 +572,13 @@ public class DumpViewerPresenter<V extends DumpViewerMvpView> extends BasePresen
             Observable.<Bitmap>create(emitter1 -> {
                 emitter1.onNext(tabResources.getThermalBitmap(contrastRatio, coloredMode));
                 emitter1.onComplete();
-            }).subscribeOn(Schedulers.newThread())
+            }).subscribeOn(Schedulers.computation())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(
                     bitmap -> {
-                        if (isViewAttached())
+                        if (isViewAttached()) {
                             getMvpView().updateThermalImageView(bitmap);
+                        }
                     },
                     emitter::onError,
                     () -> {
@@ -591,22 +593,26 @@ public class DumpViewerPresenter<V extends DumpViewerMvpView> extends BasePresen
                             return;
                         }
 
-                        if (getMvpView().getThermalImageViewHeight() == 0) {
-                            // This should be called after setThermalImageViewBitmap(), which was called in onNext() above
-                            getMvpView().getThermalImageViewGlobalLayouts().take(1).subscribe(o -> {
+                        // Wait measured width and height to be correct (while picking new dumps after the first time)
+                        // TODO: better approach?
+                        new Handler(Looper.getMainLooper()).postDelayed(() -> {
+                            if (getMvpView().getThermalImageViewHeight() == 0) {
+                                // This should be called after setThermalImageViewBitmap(), which was called in onNext() above
+                                getMvpView().getThermalImageViewGlobalLayouts().take(1).subscribe(o -> {
+                                    tabResources.setThermalSpotsHelper(
+                                        getMvpView().createThermalSpotsHelper(tabResources.getRawThermalDump())
+                                    );
+                                    emitter.onNext(true);
+                                    emitter.onComplete();
+                                });
+                            } else {
                                 tabResources.setThermalSpotsHelper(
                                     getMvpView().createThermalSpotsHelper(tabResources.getRawThermalDump())
                                 );
                                 emitter.onNext(true);
                                 emitter.onComplete();
-                            });
-                        } else {
-                            tabResources.setThermalSpotsHelper(
-                                getMvpView().createThermalSpotsHelper(tabResources.getRawThermalDump())
-                            );
-                            emitter.onNext(true);
-                            emitter.onComplete();
-                        }
+                            }
+                        }, 150);
                     }
                 );
 

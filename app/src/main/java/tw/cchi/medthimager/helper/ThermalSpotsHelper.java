@@ -1,5 +1,6 @@
 package tw.cchi.medthimager.helper;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.graphics.Point;
 import android.os.Handler;
@@ -38,11 +39,7 @@ public class ThermalSpotsHelper {
     private int spotDraggingDeltaY;
 
     /**
-     * Constructor: auto add thermal spots specified in thermal dump file
-     *
-     * @param context
-     * @param parentView
-     * @param rawThermalDump
+     * Constructor: auto add thermal spots specified in thermal dump file.
      */
     @BgThreadCapable
     public ThermalSpotsHelper(Context context, ViewGroup parentView, RawThermalDump rawThermalDump) {
@@ -113,6 +110,7 @@ public class ThermalSpotsHelper {
      * @param viewY set to -1 to place in center
      * @param appendToDump
      */
+    @SuppressLint("ClickableViewAccessibility")
     @BgThreadCapable
     public synchronized void addSpot(final int spotId, int viewX, int viewY, boolean appendToDump) {
         final ThermalSpotView thermalSpotView = new ThermalSpotView(context, spotId, true);
@@ -148,8 +146,6 @@ public class ThermalSpotsHelper {
             return true;
         });
 
-        updateThermalValue(thermalSpotView);
-
         if (viewX != -1 || viewY != -1) {
             thermalSpotView.setCenterPosition(viewX, viewY);
         } else {
@@ -160,16 +156,20 @@ public class ThermalSpotsHelper {
         if (spotId > lastSpotId)
             lastSpotId = spotId;
 
-        // Adding view on UI thread after view rendered
-        parentView.post(() -> parentView.addView(thermalSpotView));
+        // Adding view on UI thread after view render
+        parentView.post(() -> {
+            parentView.addView(thermalSpotView);
 
-        // Add and save to thermal dump file
-        if (appendToDump) {
-            Point viewPosition = thermalSpotView.getCenterPosition();
-            Point thermalPosition = view2thermalPosition(viewPosition.x, viewPosition.y);
-            rawThermalDump.getSpotMarkers().add(new org.opencv.core.Point(thermalPosition.x, thermalPosition.y));
-            rawThermalDump.saveAsync();
-        }
+            updateThermalValue(thermalSpotView);
+
+            // Add and save to thermal dump file
+            if (appendToDump) {
+                Point viewPosition = thermalSpotView.getCenterPosition();
+                Point thermalPosition = view2thermalPosition(viewPosition.x, viewPosition.y);
+                rawThermalDump.getSpotMarkers().add(new org.opencv.core.Point(thermalPosition.x, thermalPosition.y));
+                rawThermalDump.saveAsync();
+            }
+        });
     }
 
     public int getLastSpotId() {
@@ -257,9 +257,10 @@ public class ThermalSpotsHelper {
     }
 
     /**
-     * Note: This method should be called after {@link #setImageViewMetrics(int, int, int)} called
+     * Update thermal value based on view position of the spotView.
      *
-     * @param spotView
+     * Note: This method should be called after {@link #setImageViewMetrics(int, int, int)} called.
+     *
      */
     @BgThreadCapable
     private void updateThermalValue(final ThermalSpotView spotView) {
@@ -267,8 +268,8 @@ public class ThermalSpotsHelper {
             Point viewPosition = spotView.getCenterPosition();
             final Point thermalPosition = view2thermalPosition(viewPosition.x, viewPosition.y);
 
-            // System.out.printf("updateThermalValue, %d - viewPos=(%d, %d)\n", spotView.getSpotId(), viewPosition.x, viewPosition.y);
-            // System.out.printf("updateThermalValue, %d - dumpPos=(%d, %d)\n", spotView.getSpotId(), thermalPosition.x, thermalPosition.y);
+            System.out.printf("updateThermalValue, %d - viewPos=(%d, %d)\n", spotView.getSpotId(), viewPosition.x, viewPosition.y);
+            System.out.printf("updateThermalValue, %d - dumpPos=(%d, %d)\n", spotView.getSpotId(), thermalPosition.x, thermalPosition.y);
 
             // Run on UI thread
             new Handler(Looper.getMainLooper()).post(() -> spotView.setTemperature(rawThermalDump.getTemperature9Average(thermalPosition.x, thermalPosition.y)));

@@ -1,4 +1,4 @@
-package tw.cchi.medthimager.ui.camera.contishot;
+package tw.cchi.medthimager.ui.camera.contishoot;
 
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -17,21 +17,21 @@ import tw.cchi.medthimager.R;
 import tw.cchi.medthimager.di.component.ActivityComponent;
 import tw.cchi.medthimager.ui.base.BaseDialog;
 
-public class ContiShotDialog extends BaseDialog implements ContiShotMvpView {
-    private static final String TAG = "ContiShotDialog";
+public class ContiShootDialog extends BaseDialog implements ContiShootMvpView {
+    private static final String TAG = "ContiShootDialog";
 
     public interface OnResultListener {
-        void onStart(ContiShotDialog dialog, int interval, int times);
+        void onStart(ContiShootDialog dialog, int interval, int times);
     }
     private OnResultListener onResultListener;
 
-    @Inject ContiShotMvpPresenter<ContiShotMvpView> presenter;
+    @Inject ContiShootMvpPresenter<ContiShootMvpView> presenter;
 
     @BindView(R.id.editInterval) EditText editInterval;
     @BindView(R.id.editTimes) EditText editTimes;
 
-    public static ContiShotDialog newInstance() {
-        ContiShotDialog fragment = new ContiShotDialog();
+    public static ContiShootDialog newInstance() {
+        ContiShootDialog fragment = new ContiShootDialog();
         Bundle bundle = new Bundle();
         fragment.setArguments(bundle);
         return fragment;

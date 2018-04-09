@@ -313,6 +313,10 @@ public class DumpViewerActivity extends BaseActivity implements DumpViewerMvpVie
      */
     @Override
     public ThermalSpotsHelper createThermalSpotsHelper(RawThermalDump rawThermalDump) {
+        System.out.printf("[createThermalSpotsHelper] thermalImageView.getMeasuredHeight()=%d, thermalImageView.getTop()=%d, layoutThermalViews.getTop()=%d\n",
+            thermalImageView.getMeasuredHeight(), thermalImageView.getTop(), layoutThermalViews.getTop()
+        );
+
         final ThermalSpotsHelper thermalSpotsHelper = new ThermalSpotsHelper(this, topView, rawThermalDump);
         thermalSpotsHelper.setImageViewMetrics(
                 thermalImageView.getMeasuredWidth(),
