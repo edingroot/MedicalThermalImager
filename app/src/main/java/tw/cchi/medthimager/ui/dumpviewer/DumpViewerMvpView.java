@@ -19,8 +19,15 @@ public interface DumpViewerMvpView extends MvpView {
 
     Observable<Object> getVisibleImageViewLayoutObservable();
 
-
     ThermalSpotsHelper createThermalSpotsHelper(RawThermalDump rawThermalDump);
+
+
+    void setToggleVisibleChecked(boolean checked);
+
+    void setToggleColoredModeChecked(boolean checked);
+
+    void setToggleHorizonChartChecked(boolean checked);
+
 
     void resizeVisibleImageViewToThermalImage();
 

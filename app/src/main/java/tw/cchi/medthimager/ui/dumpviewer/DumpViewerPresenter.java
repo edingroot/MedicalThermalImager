@@ -41,12 +41,12 @@ public class DumpViewerPresenter<V extends DumpViewerMvpView> extends BasePresen
 
     // States
     private int contrastRatio = 1;
-    private boolean coloredMode = true;
     private boolean showingVisibleImage = false;
     private boolean visibleImageAlignMode = false;
-    private boolean showingThermalSpots = true;
+    private boolean coloredMode = true;
     private boolean showingChart = false;
     private int horizontalLineY = -1; // pY (on the thermal dump) of horizontal indicator on showingChart mode
+    private boolean showingThermalSpots = true;
     private boolean savingAllVisibleImages = false;
 
     private Disposable switchDumpTabTask;
@@ -174,7 +174,7 @@ public class DumpViewerPresenter<V extends DumpViewerMvpView> extends BasePresen
                         displayVisibleImage(tabResources.getRawThermalDump());
                     } else {
                         // Hide visibleImageView
-                        toggleVisibleImage();
+                        toggleVisibleImage(false);
                     }
                 }
 
@@ -233,8 +233,8 @@ public class DumpViewerPresenter<V extends DumpViewerMvpView> extends BasePresen
             getMvpView().updateThermalImageView(null);
 
             // Hide visibleImage and chart
-            if (showingVisibleImage) toggleVisibleImage();
-            if (showingChart) toggleHorizonChart();
+            if (showingVisibleImage) toggleVisibleImage(false);
+            if (showingChart) toggleHorizonChart(false);
         }
 
         return newIndex;
@@ -450,19 +450,16 @@ public class DumpViewerPresenter<V extends DumpViewerMvpView> extends BasePresen
     }
 
     @Override
-    public void toggleVisibleImage() {
+    public void toggleVisibleImage(boolean show) {
         if (tabResources.getCount() == 0 && !showingVisibleImage)
             return;
 
-        if (showingVisibleImage) {
-            getMvpView().setVisibleImageViewVisible(false, 0);
-            showingVisibleImage = visibleImageAlignMode = false;
+        if (show && displayVisibleImage(tabResources.getRawThermalDump())) {
+            getMvpView().setToggleVisibleChecked(showingVisibleImage = true);
         } else {
-            if (displayVisibleImage(tabResources.getRawThermalDump())) {
-                showingVisibleImage = true;
-            } else {
-                showingVisibleImage = visibleImageAlignMode = false;
-            }
+            getMvpView().setVisibleImageViewVisible(false, 0);
+            getMvpView().setToggleVisibleChecked(showingVisibleImage = false);
+            visibleImageAlignMode = false;
         }
     }
 
@@ -477,7 +474,7 @@ public class DumpViewerPresenter<V extends DumpViewerMvpView> extends BasePresen
             visibleImageAlignMode = true;
             if (!showingVisibleImage) {
                 // Show visible image first
-                toggleVisibleImage();
+                toggleVisibleImage(true);
             }
         }
 
@@ -486,26 +483,26 @@ public class DumpViewerPresenter<V extends DumpViewerMvpView> extends BasePresen
     }
 
     @Override
-    public void toggleColoredMode() {
-        coloredMode = !coloredMode;
+    public void toggleColoredMode(boolean colored) {
+        getMvpView().setToggleColoredModeChecked(coloredMode = colored);
         getMvpView().updateThermalImageView(tabResources.getThermalBitmap(contrastRatio, coloredMode));
     }
 
     @Override
-    public void toggleHorizonChart() {
+    public void toggleHorizonChart(boolean show) {
         if (horizontalLineY == -1 || tabResources.getCount() == 0 && !showingChart)
             return;
 
-        if (showingChart) {
-            getMvpView().setThermalChartVisible(false);
-            getMvpView().setHorizontalLineVisible(false);
-            showingChart = false;
-        } else {
+        if (show) {
             modifyChartParameter(thermalChartParameter, horizontalLineY);
             getMvpView().updateThermalChart(thermalChartParameter);
             getMvpView().setThermalChartVisible(true);
             getMvpView().setHorizontalLineVisible(true);
-            showingChart = true;
+            getMvpView().setToggleHorizonChartChecked(showingChart = true);
+        } else {
+            getMvpView().setThermalChartVisible(false);
+            getMvpView().setHorizontalLineVisible(false);
+            getMvpView().setToggleHorizonChartChecked(showingChart = false);
         }
     }
 

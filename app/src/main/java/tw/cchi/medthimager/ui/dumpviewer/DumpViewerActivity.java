@@ -15,6 +15,7 @@ import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.PopupMenu;
 import android.widget.RelativeLayout;
+import android.widget.ToggleButton;
 
 import com.jakewharton.rxbinding2.view.RxView;
 
@@ -24,6 +25,7 @@ import javax.inject.Inject;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import butterknife.OnCheckedChanged;
 import butterknife.OnClick;
 import butterknife.OnLongClick;
 import butterknife.OnTouch;
@@ -64,8 +66,11 @@ public class DumpViewerActivity extends BaseActivity implements DumpViewerMvpVie
     @BindView(R.id.thermalImageView) ImageView thermalImageView;
     @BindView(R.id.visibleImageView) ImageView visibleImageView;
     @BindView(R.id.thermalChartView) MultiChartView thermalChartView;
-
     @BindView(R.id.horizontalLine) View horizontalLine;
+    
+    @BindView(R.id.toggleVisible) ToggleButton toggleVisible;
+    @BindView(R.id.toggleColoredMode) ToggleButton toggleColoredMode;
+    @BindView(R.id.toggleHorizonChart) ToggleButton toggleHorizonChart;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -190,32 +195,32 @@ public class DumpViewerActivity extends BaseActivity implements DumpViewerMvpVie
     }
 
     @OnClick(R.id.btnPick)
-    public void onImagePickClick(View v) {
+    public void onImagePickClick() {
         presenter.pickImages();
     }
 
-    @OnClick(R.id.btnToggleVisible)
-    public void onToggleVisibleImageClick(View v) {
-        presenter.toggleVisibleImage();
+    @OnClick(R.id.toggleVisible)
+    public void onToggleVisibleImageClick(ToggleButton b) {
+        presenter.toggleVisibleImage(b.isChecked());
     }
 
-    @OnLongClick(R.id.btnToggleVisible)
-    public boolean onToggleVisibleImageLongClick(View v) {
+    @OnLongClick(R.id.toggleVisible)
+    public boolean onToggleVisibleImageLongClick() {
         presenter.toggleVisibleImageAlignMode();
         return true;
     }
 
-    @OnClick(R.id.btnToggleColoredMode)
-    public void onToggleColoredModeClick(@Nullable View v) {
-        presenter.toggleColoredMode();
+    @OnClick(R.id.toggleColoredMode)
+    public void onToggleColoredModeClick(ToggleButton b) {
+        presenter.toggleColoredMode(b.isChecked());
     }
 
-    @OnClick(R.id.btnToggleHorizonChart)
-    public void onToggleHorizonChartClick(@Nullable View v) {
-        presenter.toggleHorizonChart();
+    @OnClick(R.id.toggleHorizonChart)
+    public void onToggleHorizonChartClick(ToggleButton b) {
+        presenter.toggleHorizonChart(b.isChecked());
     }
 
-    @OnClick(R.id.btnEdit)
+    @OnClick(R.id.btnMenu)
     public void onEditClick(View v) {
         if (presenter.getTabsCount() == 0)
             return;
@@ -279,12 +284,12 @@ public class DumpViewerActivity extends BaseActivity implements DumpViewerMvpVie
     }
 
     @OnClick(R.id.fabAddSpot)
-    public void onFabAddSpotClick(View v) {
+    public void onFabAddSpotClick() {
         presenter.addThermalSpot();
     }
 
     @OnLongClick(R.id.fabAddSpot)
-    public boolean onFabAddSpotLongClick(View v) {
+    public boolean onFabAddSpotLongClick() {
         if (presenter.getTabsCount() == 0)
             return true;
 
@@ -315,6 +320,21 @@ public class DumpViewerActivity extends BaseActivity implements DumpViewerMvpVie
                 thermalImageView.getTop() + layoutThermalViews.getTop()
         );
         return thermalSpotsHelper;
+    }
+
+    @Override
+    public void setToggleVisibleChecked(boolean checked) {
+        toggleVisible.setChecked(checked);
+    }
+
+    @Override
+    public void setToggleColoredModeChecked(boolean checked) {
+        toggleColoredMode.setChecked(checked);
+    }
+
+    @Override
+    public void setToggleHorizonChartChecked(boolean checked) {
+        toggleHorizonChart.setChecked(checked);
     }
 
     @Override

@@ -31,9 +31,6 @@
     <string name="rotate_view">Rotate View</string>
     <string name="toggle_sim">Toggle SimulatedCam</string>
 
-    <!-- SelectPatientDialog -->
-    <string name="select_patient">Select Patient</string>
-
     <!-- Messages -->
     <string name="error_occurred">Error occurred</string>
     <string name="invalid_input">Invalid input</string>
@@ -49,5 +46,14 @@
     <string name="visible_image_dumped">%1$s Visible light image exported: %2$s</string>
     <string name="dump_failed">Dumped failed.</string>
     <string name="no_spot_to_copied">No spot to be copied.</string>
+
+    <!-- SelectPatientDialog -->
+    <string name="select_patient">Select Patient</string>
+
+    <!-- DumpViewer -->
+    <string name="visible">visible</string>
+    <string name="color_image">color</string>
+    <string name="thermal_chart">chart</string>
+    <string name="menu">menu</string>
 
 </resources>

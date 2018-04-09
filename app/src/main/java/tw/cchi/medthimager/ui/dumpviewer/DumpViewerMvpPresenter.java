@@ -45,13 +45,13 @@ public interface DumpViewerMvpPresenter<V extends DumpViewerMvpView> extends Mvp
     void updateHorizontalLine(int y);
 
 
-    void toggleVisibleImage();
+    void toggleVisibleImage(boolean show);
 
     void toggleVisibleImageAlignMode();
 
-    void toggleColoredMode();
+    void toggleColoredMode(boolean colored);
 
-    void toggleHorizonChart();
+    void toggleHorizonChart(boolean show);
 
 
     int getTabsCount();

@@ -29,7 +29,7 @@
         android:layout_centerHorizontal="true"
         android:layout_centerVertical="true"
         android:alpha="0.9"
-        android:src="@android:drawable/ic_menu_mylocation"/>
+        android:src="@drawable/ic_menu_mylocation"/>
 
     <TextView
         android:id="@+id/txtSpotValue"

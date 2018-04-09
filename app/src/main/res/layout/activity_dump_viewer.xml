@@ -83,9 +83,10 @@
 
         <ImageButton
             android:id="@+id/btnPick"
-            style="?metaButtonBarButtonStyle"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            style="@style/metaButton"
+            android:layout_width="52dp"
+            android:layout_height="52dp"
+            android:layout_margin="0dp"
             android:src="@android:drawable/ic_input_add"/>
 
         <HorizontalScrollView
@@ -111,54 +112,63 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
-        android:layout_alignParentStart="true">
+        android:layout_alignParentStart="true"
+        android:layout_marginBottom="1dp">
 
-        <ImageButton
-            android:id="@+id/btnToggleVisible"
-            style="?metaButtonBarButtonStyle"
+        <ToggleButton
+            android:id="@+id/toggleVisible"
+            style="@style/metaToggleButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_alignParentStart="true"
             android:layout_alignParentTop="true"
-            android:src="@android:drawable/ic_menu_view"/>
+            android:drawableTop="@android:drawable/ic_menu_view"
+            android:textOff="@string/visible"
+            android:textOn="@string/visible"/>
 
-        <ImageButton
-            android:id="@+id/btnToggleColoredMode"
-            style="?metaButtonBarButtonStyle"
+        <ToggleButton
+            android:id="@+id/toggleColoredMode"
+            style="@style/metaToggleButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_alignParentTop="true"
-            android:layout_toEndOf="@+id/btnToggleVisible"
-            android:src="@android:drawable/ic_menu_compass"/>
+            android:layout_toEndOf="@+id/toggleVisible"
+            android:checked="true"
+            android:drawableTop="@drawable/ic_palette"
+            android:textOff="@string/color_image"
+            android:textOn="@string/color_image"/>
 
-        <ImageButton
-            android:id="@+id/btnToggleHorizonChart"
-            style="?metaButtonBarButtonStyle"
+        <ToggleButton
+            android:id="@+id/toggleHorizonChart"
+            style="@style/metaToggleButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_alignParentTop="true"
-            android:layout_toEndOf="@+id/btnToggleColoredMode"
-            android:src="@android:drawable/ic_menu_sort_by_size"/>
+            android:layout_toEndOf="@+id/toggleColoredMode"
+            android:drawableTop="@drawable/ic_line_chart"
+            android:textOff="@string/thermal_chart"
+            android:textOn="@string/thermal_chart"/>
 
-        <ImageButton
-            android:id="@+id/btnEdit"
-            style="?metaButtonBarButtonStyle"
+        <ToggleButton
+            android:id="@+id/btnMenu"
+            style="@style/metaToggleButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_alignParentTop="true"
             android:layout_marginEnd="10dp"
             android:layout_toStartOf="@+id/fabAddSpot"
-            android:src="@android:drawable/ic_menu_edit"/>
+            android:drawableTop="@drawable/ic_top_menu"
+            android:textColor="#fff"
+            android:textOff="@string/menu"
+            android:textOn="@string/menu"/>
 
         <android.support.design.widget.FloatingActionButton
             android:id="@+id/fabAddSpot"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_alignParentEnd="true"
-            android:layout_centerVertical="true"
             android:layout_marginEnd="5dp"
-            android:clickable="true"
-            android:focusable="true"
+            android:layout_marginTop="3dp"
             android:src="@android:drawable/ic_menu_add"/>
 
     </RelativeLayout>
