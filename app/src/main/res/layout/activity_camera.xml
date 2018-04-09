@@ -177,7 +177,6 @@
             android:layout_below="@+id/controls_top"
             android:layout_marginTop="-5dp"
             android:ems="10"
-            android:inputType="textPersonName"
             android:paddingEnd="12dp"
             android:text="Tuning State"
             android:textAlignment="textEnd"

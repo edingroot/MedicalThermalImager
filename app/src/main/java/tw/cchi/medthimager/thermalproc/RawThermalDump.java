@@ -240,6 +240,21 @@ public class RawThermalDump {
         return true;
     }
 
+    public String getFlirImagePath() {
+        return filepath.substring(0, filepath.lastIndexOf("_"))
+            + Config.POSTFIX_FLIR_IMAGE + ".jpg";
+    }
+
+    public String getColoredImagePath() {
+        return filepath.substring(0, filepath.lastIndexOf("_"))
+            + Config.POSTFIX_COLORED_IMAGE + ".png";
+    }
+
+    public String getVisibleImagePath() {
+        return filepath.substring(0, filepath.lastIndexOf("_"))
+            + Config.POSTFIX_VISIBLE_IMAGE + ".png";
+    }
+
     public static String generateTitleFromFilepath(String filepath) {
         String title;
 
@@ -260,6 +275,7 @@ public class RawThermalDump {
 
         return title;
     }
+
 
     public int getWidth() {
         return width;
@@ -496,10 +512,9 @@ public class RawThermalDump {
         if (visibleImageMask != null) {
             return true;
         } else {
-            String visualImagePath = filepath.substring(0, filepath.lastIndexOf("_"))
-                    + Config.POSTFIX_FLIR_IMAGE + ".jpg";
-
-            visibleImageMask = VisibleImageMask.openVisibleImage(this, visualImagePath);
+            visibleImageMask = VisibleImageMask.openVisibleImage(
+                this, getFlirImagePath()
+            );
 
             System.out.printf("[attachVisibleImageMask] offset=(%d, %d)\n", visibleOffsetX, visibleOffsetY);
 

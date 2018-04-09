@@ -17,16 +17,18 @@ public interface DumpViewerMvpPresenter<V extends DumpViewerMvpView> extends Mvp
     @UiThread
     boolean switchDumpTab(int position);
 
-    int removeThermalDump(int index, boolean switchTab);
+    int closeThermalDump(int index, boolean switchTab);
 
-    @NewThread
-    void updateVisibleImageOffset(int offsetX, int offsetY);
+    void deleteThermalDump();
 
     void saveColoredThermalImage();
 
     void saveVisibleLightImage();
 
-    void saveVisibleLightImageFromOpened();
+    @NewThread
+    void updateVisibleLightImageOffset(int offsetX, int offsetY);
+
+    void saveAllVisibleLightImageFromOpened();
 
 
     void toggleThermalSpotsVisible();

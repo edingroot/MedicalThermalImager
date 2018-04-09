@@ -46,6 +46,11 @@
     <string name="visible_image_dumped">%1$s Visible light image exported: %2$s</string>
     <string name="dump_failed">Dumped failed.</string>
     <string name="no_spot_to_copied">No spot to be copied.</string>
+    <string name="error_delete_flir">Error deleting thermal image file of dump.</string>
+    <string name="error_delete_color">Error deleting color image file of dump.</string>
+    <string name="error_delete_visible">Error deleting visible light image file of dump.</string>
+    <string name="error_delete_dump">Error deleting dump file.</string>
+    <string name="dump_deleted">Dump deleted</string>
 
     <!-- SelectPatientDialog -->
     <string name="select_patient">Select Patient</string>
@@ -54,6 +59,7 @@
     <string name="visible">visible</string>
     <string name="color_image">color</string>
     <string name="thermal_chart">chart</string>
+    <string name="delete">delete</string>
     <string name="menu">menu</string>
 
 </resources>

@@ -2,6 +2,7 @@ package tw.cchi.medthimager.thermalproc;
 
 import android.content.Context;
 import android.graphics.Bitmap;
+import android.support.annotation.Nullable;
 
 import com.flir.flironesdk.FrameProcessor;
 import com.flir.flironesdk.LoadedFrame;
@@ -40,6 +41,7 @@ public class VisibleImageMask implements FrameProcessor.Delegate {
         this.rawThermalDump = rawThermalDump;
     }
 
+    @Nullable
     public static VisibleImageMask openVisibleImage(RawThermalDump rawThermalDump, String imagePath) {
         VisibleImageMask mask = new VisibleImageMask(rawThermalDump);
 

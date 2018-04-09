@@ -25,7 +25,6 @@ import javax.inject.Inject;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
-import butterknife.OnCheckedChanged;
 import butterknife.OnClick;
 import butterknife.OnLongClick;
 import butterknife.OnTouch;
@@ -94,8 +93,8 @@ public class DumpViewerActivity extends BaseActivity implements DumpViewerMvpVie
                 // Show confirm dialog for closing this thermal dump
                 showAlertDialog(
                     "Confirm",
-                    "Confirm to remove " + presenter.getDumpTitle() + " from display?",
-                    (dialog, which) -> presenter.removeThermalDump(position, true),
+                    "Confirm to close " + presenter.getDumpTitle() + " tab?",
+                    (dialog, which) -> presenter.closeThermalDump(position, true),
                     (dialog, which) -> {}
                 );
             }
@@ -184,7 +183,7 @@ public class DumpViewerActivity extends BaseActivity implements DumpViewerMvpVie
             case MotionEvent.ACTION_UP:
                 int diffX = (int) (visibleImageView.getX() - thermalImageView.getX());
                 int diffY = (int) (visibleImageView.getY() - thermalImageView.getY());
-                presenter.updateVisibleImageOffset(diffX, diffY);
+                presenter.updateVisibleLightImageOffset(diffX, diffY);
                 break;
 
             case MotionEvent.ACTION_POINTER_DOWN:
@@ -218,6 +217,17 @@ public class DumpViewerActivity extends BaseActivity implements DumpViewerMvpVie
     @OnClick(R.id.toggleHorizonChart)
     public void onToggleHorizonChartClick(ToggleButton b) {
         presenter.toggleHorizonChart(b.isChecked());
+    }
+
+    @OnClick(R.id.btnDelete)
+    public void onDeleteClick(ToggleButton b) {
+        // Show confirm dialog for deleting thermal dump and related files
+        showAlertDialog(
+            "Confirm",
+            "Confirm to delete " + presenter.getDumpTitle() + " and related files?",
+            (dialog, which) -> presenter.deleteThermalDump(),
+            (dialog, which) -> {}
+        );
     }
 
     @OnClick(R.id.btnMenu)
@@ -254,7 +264,7 @@ public class DumpViewerActivity extends BaseActivity implements DumpViewerMvpVie
                     break;
 
                 case 12:
-                    presenter.saveVisibleLightImageFromOpened();
+                    presenter.saveAllVisibleLightImageFromOpened();
                     break;
 
                 case 20:

@@ -150,6 +150,18 @@
             android:textOn="@string/thermal_chart"/>
 
         <ToggleButton
+            android:id="@+id/btnDelete"
+            style="@style/metaToggleButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentTop="true"
+            android:layout_toEndOf="@+id/toggleHorizonChart"
+            android:drawableTop="@drawable/ic_trash"
+            android:textColor="#fff"
+            android:textOff="@string/delete"
+            android:textOn="@string/delete"/>
+
+        <ToggleButton
             android:id="@+id/btnMenu"
             style="@style/metaToggleButton"
             android:layout_width="wrap_content"

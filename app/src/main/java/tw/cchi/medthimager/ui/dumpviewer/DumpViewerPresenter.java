@@ -29,6 +29,7 @@ import tw.cchi.medthimager.thermalproc.RawThermalDump;
 import tw.cchi.medthimager.thermalproc.ThermalDumpProcessor;
 import tw.cchi.medthimager.ui.base.BasePresenter;
 import tw.cchi.medthimager.utils.CommonUtils;
+import tw.cchi.medthimager.utils.ThermalDumpUtils;
 import tw.cchi.medthimager.utils.ImageUtils;
 
 public class DumpViewerPresenter<V extends DumpViewerMvpView> extends BasePresenter<V> implements DumpViewerMvpPresenter<V> {
@@ -101,10 +102,10 @@ public class DumpViewerPresenter<V extends DumpViewerMvpView> extends BasePresen
 
         // Only switch tab (update imageViews) when removing the last dump
         for (int i = 0; i < removePaths.size() - 1; i++) {
-            removeThermalDump(tabResources.indexOf(removePaths.get(i)), false);
+            closeThermalDump(tabResources.indexOf(removePaths.get(i)), false);
         }
         if (removePaths.size() > 0)
-            removeThermalDump(tabResources.indexOf(removePaths.get(removePaths.size() - 1)), true);
+            closeThermalDump(tabResources.indexOf(removePaths.get(removePaths.size() - 1)), true);
 
         if (addPaths.size() > 0) {
             // Add thermal dumps "sequentially" on a background thread and update chart axis on complete
@@ -128,7 +129,7 @@ public class DumpViewerPresenter<V extends DumpViewerMvpView> extends BasePresen
             if (tabResources.getCount() == 0)
                 getMvpView().updateThermalImageView(null);
 
-            // Loading may have been hidden in switchDumpTab() in removeThermalDump()
+            // Loading may have been hidden in switchDumpTab() in closeThermalDump()
             getMvpView().hideLoading();
         }
     }
@@ -219,7 +220,7 @@ public class DumpViewerPresenter<V extends DumpViewerMvpView> extends BasePresen
      * @return Index of the new active dump or -1 for no tab after removing
      */
     @Override
-    public int removeThermalDump(int index, boolean switchTab) {
+    public int closeThermalDump(int index, boolean switchTab) {
         int newIndex = getMvpView().removeDumpTab(index);
 
         tabResources.removeResources(index, newIndex);
@@ -242,22 +243,21 @@ public class DumpViewerPresenter<V extends DumpViewerMvpView> extends BasePresen
     }
 
     @Override
-    @NewThread
-    public void updateVisibleImageOffset(final int imageViewOffsetX, final int imageViewOffsetY) {
+    public void deleteThermalDump() {
         if (tabResources.getCount() == 0)
             return;
 
-        Observable.create(emitter -> {
-            double ratio = 10 * tabResources.getRawThermalDump().getHeight() / getMvpView().getThermalImageViewHeight();
-            int dumpPixelOffsetX = (int) (imageViewOffsetX * ratio);
-            int dumpPixelOffsetY = (int) (imageViewOffsetY * ratio);
-
-            RawThermalDump rawThermalDump = tabResources.getRawThermalDump();
-            rawThermalDump.setVisibleOffsetX(dumpPixelOffsetX);
-            rawThermalDump.setVisibleOffsetY(dumpPixelOffsetY);
-            rawThermalDump.save();
-
-        }).subscribeOn(Schedulers.io()).subscribe();
+        int currentIndex = tabResources.getCurrentIndex();
+        ThermalDumpUtils.deleteThermalDumpBundle(activity, tabResources.getRawThermalDump())
+            .observeOn(Schedulers.io())
+            .subscribeOn(AndroidSchedulers.mainThread()).subscribe(
+                o -> {},
+                e -> getMvpView().showSnackBar(e.getMessage()),
+                () -> {
+                    getMvpView().showToast(R.string.dump_deleted);
+                    closeThermalDump(currentIndex, true);
+                }
+        );
     }
 
     @NewThread
@@ -339,7 +339,26 @@ public class DumpViewerPresenter<V extends DumpViewerMvpView> extends BasePresen
     }
 
     @Override
-    public void saveVisibleLightImageFromOpened() {
+    @NewThread
+    public void updateVisibleLightImageOffset(final int imageViewOffsetX, final int imageViewOffsetY) {
+        if (tabResources.getCount() == 0)
+            return;
+
+        Observable.create(emitter -> {
+            double ratio = 10 * tabResources.getRawThermalDump().getHeight() / getMvpView().getThermalImageViewHeight();
+            int dumpPixelOffsetX = (int) (imageViewOffsetX * ratio);
+            int dumpPixelOffsetY = (int) (imageViewOffsetY * ratio);
+
+            RawThermalDump rawThermalDump = tabResources.getRawThermalDump();
+            rawThermalDump.setVisibleOffsetX(dumpPixelOffsetX);
+            rawThermalDump.setVisibleOffsetY(dumpPixelOffsetY);
+            rawThermalDump.save();
+
+        }).subscribeOn(Schedulers.io()).subscribe();
+    }
+
+    @Override
+    public void saveAllVisibleLightImageFromOpened() {
         if (tabResources.getCount() == 0)
             return;
 
