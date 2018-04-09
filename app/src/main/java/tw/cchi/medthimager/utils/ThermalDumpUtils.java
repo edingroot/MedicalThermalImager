@@ -10,7 +10,7 @@ import tw.cchi.medthimager.thermalproc.RawThermalDump;
 
 public class ThermalDumpUtils {
 
-    public static Observable<Object> deleteThermalDumpBundle(Context context, RawThermalDump rawThermalDump) {
+    public static Observable<String> deleteThermalDumpBundle(Context context, RawThermalDump rawThermalDump) {
         String dumpPath = rawThermalDump.getFilepath();
         String flirImagePath = rawThermalDump.getFlirImagePath();
         String coloredImagePath = rawThermalDump.getColoredImagePath();
@@ -25,6 +25,8 @@ public class ThermalDumpUtils {
                 emitter.onError(new Error(context.getString(R.string.error_delete_flir)));
                 emitter.onComplete();
                 return;
+            } else {
+                emitter.onNext(flirImagePath);
             }
 
             // Delete exported color image file (if exists)
@@ -33,6 +35,8 @@ public class ThermalDumpUtils {
                 emitter.onError(new Error(context.getString(R.string.error_delete_color)));
                 emitter.onComplete();
                 return;
+            } else {
+                emitter.onNext(coloredImagePath);
             }
 
             // Delete exported visible light image file (if exists)
@@ -41,6 +45,8 @@ public class ThermalDumpUtils {
                 emitter.onError(new Error(context.getString(R.string.error_delete_visible)));
                 emitter.onComplete();
                 return;
+            } else {
+                emitter.onNext(visibleImagePath);
             }
 
             // Delete thermal dump file (.dat)
@@ -48,6 +54,8 @@ public class ThermalDumpUtils {
                 emitter.onError(new Error(context.getString(R.string.error_delete_dump)));
                 emitter.onComplete();
                 return;
+            } else {
+                emitter.onNext(dumpPath);
             }
 
             // TODO: remove related records from database as well?

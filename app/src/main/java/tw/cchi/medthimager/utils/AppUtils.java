@@ -1,5 +1,8 @@
 package tw.cchi.medthimager.utils;
 
+import android.content.Context;
+import android.content.Intent;
+import android.net.Uri;
 import android.os.Environment;
 
 import java.io.File;
@@ -26,4 +29,10 @@ public final class AppUtils {
         return dateString.substring(0, dateString.length() - 2);
     }
 
+    public static void sendBroadcastToMedia(Context context, String filePath) {
+        Intent intent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
+        Uri uri = Uri.fromFile(new File(filePath));
+        intent.setData(uri);
+        context.sendBroadcast(intent);
+    }
 }

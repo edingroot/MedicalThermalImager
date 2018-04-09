@@ -28,9 +28,10 @@ import tw.cchi.medthimager.model.ViewerTabResources;
 import tw.cchi.medthimager.thermalproc.RawThermalDump;
 import tw.cchi.medthimager.thermalproc.ThermalDumpProcessor;
 import tw.cchi.medthimager.ui.base.BasePresenter;
+import tw.cchi.medthimager.utils.AppUtils;
 import tw.cchi.medthimager.utils.CommonUtils;
-import tw.cchi.medthimager.utils.ThermalDumpUtils;
 import tw.cchi.medthimager.utils.ImageUtils;
+import tw.cchi.medthimager.utils.ThermalDumpUtils;
 
 public class DumpViewerPresenter<V extends DumpViewerMvpView> extends BasePresenter<V> implements DumpViewerMvpPresenter<V> {
 
@@ -249,9 +250,9 @@ public class DumpViewerPresenter<V extends DumpViewerMvpView> extends BasePresen
 
         int currentIndex = tabResources.getCurrentIndex();
         ThermalDumpUtils.deleteThermalDumpBundle(activity, tabResources.getRawThermalDump())
-            .observeOn(Schedulers.io())
-            .subscribeOn(AndroidSchedulers.mainThread()).subscribe(
-                o -> {},
+            .subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread()).subscribe(
+                deletedPath -> AppUtils.sendBroadcastToMedia(activity, deletedPath),
                 e -> getMvpView().showSnackBar(e.getMessage()),
                 () -> {
                     getMvpView().showToast(R.string.dump_deleted);
