@@ -4,6 +4,7 @@ apply plugin: 'com.android.application'
 android {
     compileSdkVersion 27
     buildToolsVersion '27.0.3'
+
     defaultConfig {
         applicationId "tw.cchi.medthimager"
         minSdkVersion 18
@@ -18,6 +19,7 @@ android {
         }
     }
     signingConfigs { release }
+
     buildTypes {
         release {
             minifyEnabled true
@@ -55,6 +57,7 @@ android {
         // Add .so directory src/main/libs to jni srcDirs
         main.jniLibs.srcDirs = ['src/main/libs', 'src/main/jniLibs']
     }
+
     task ndkBuild(type: Exec, description: 'Compile JNI source with NDK') {
         Properties properties = new Properties()
         properties.load(project.rootProject.file('local.properties').newDataInputStream())
@@ -69,6 +72,7 @@ android {
     tasks.withType(JavaCompile) {
         compileTask -> compileTask.dependsOn ndkBuild
     }
+
     task ndkClean(type: Exec, description: 'Clean NDK Binaries') {
         Properties properties = new Properties()
         properties.load(project.rootProject.file('local.properties').newDataInputStream())
@@ -81,9 +85,14 @@ android {
         }
     }
     clean.dependsOn 'ndkClean'
+
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
+    }
+    lintOptions {
+        abortOnError false
+        disable 'LongLogTag' // mitigate log tag too long error caused by OpenCV loader
     }
     productFlavors {
     }
