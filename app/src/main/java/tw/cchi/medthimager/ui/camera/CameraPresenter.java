@@ -56,6 +56,7 @@ public class CameraPresenter<V extends CameraMvpView> extends BasePresenter<V>
 
     private volatile boolean simConnected = false; // simulated device connected
     private volatile boolean streamingFrame = false;
+    private volatile boolean contiShoting = false; // TODO: volatile?
     private volatile boolean imageCaptureRequested = false;
     private int thermalSpotX = -1; // movable spot thermal indicator pX
     private int thermalSpotY = -1; // movable spot thermal indicator pY
@@ -250,6 +251,15 @@ public class CameraPresenter<V extends CameraMvpView> extends BasePresenter<V>
     @Override
     public void setCurrentPatient(String patientUUID) {
         this.patientUUID = patientUUID;
+    }
+
+    @Override
+    public boolean isContiShotting() {
+        return contiShoting;
+    }
+
+    public void setContiShoting(boolean contiShoting) {
+        this.contiShoting = contiShoting;
     }
 
     @Override

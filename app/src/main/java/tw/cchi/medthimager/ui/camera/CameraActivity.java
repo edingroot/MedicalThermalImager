@@ -34,7 +34,8 @@ import tw.cchi.medthimager.Config;
 import tw.cchi.medthimager.R;
 import tw.cchi.medthimager.component.ThermalSpotView;
 import tw.cchi.medthimager.ui.base.BaseActivity;
-import tw.cchi.medthimager.ui.dialog.SelectPatientDialog;
+import tw.cchi.medthimager.ui.camera.contishot.ContiShotDialog;
+import tw.cchi.medthimager.ui.camera.selectpatient.SelectPatientDialog;
 import tw.cchi.medthimager.ui.dumpviewer.DumpViewerActivity;
 
 public class CameraActivity extends BaseActivity implements CameraMvpView {
@@ -221,9 +222,11 @@ public class CameraActivity extends BaseActivity implements CameraMvpView {
         popup.show();
     }
 
-    @OnClick(R.id.btnTune)
-    public void onTuneClick(View v) {
-        presenter.performTune();
+    @OnClick(R.id.btnContiShot)
+    public void onContiShotClick(View v) {
+        ContiShotDialog.newInstance().show(getSupportFragmentManager(), (dialog, interval, times) -> {
+            dialog.dismissDialog();
+        });
     }
 
     @OnClick(R.id.imgBtnCapture)

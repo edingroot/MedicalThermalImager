@@ -31,14 +31,19 @@
         <!--<item name="android:background">@android:drawable/bottom_bar</item>-->
     <!--</style>-->
 
-    <!--<style name="ButtonBarButton" />-->
-
     <style name="MyPopupMenu" parent="@android:style/Widget.Holo.ListPopupWindow">
         <item name="android:popupBackground">@color/menuBackground</item>
     </style>
 
     <style name="MyAlertDialog" parent="Theme.AppCompat.Dialog.Alert">
         <item name="android:popupBackground">@color/menuBackground</item>
+    </style>
+
+    <style name="DialogCardView" parent="CardView">
+        <item name="cardCornerRadius">4dp</item>
+        <item name="cardElevation">4dp</item>
+        <item name="android:layout_margin">10dp</item>
+        <item name="cardBackgroundColor">@color/colorBackground</item>
     </style>
 
     <style name="FilePickerTheme" parent="LibAppTheme">

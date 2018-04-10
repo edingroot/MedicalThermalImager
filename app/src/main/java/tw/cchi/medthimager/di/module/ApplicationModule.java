@@ -1,6 +1,7 @@
 package tw.cchi.medthimager.di.module;
 
 import android.app.Application;
+import android.app.Dialog;
 import android.content.Context;
 
 import javax.inject.Singleton;

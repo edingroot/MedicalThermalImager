@@ -30,6 +30,8 @@ public interface CameraMvpPresenter<V extends CameraMvpView> extends MvpPresente
 
     void setCurrentPatient(String patientUUID);
 
+    boolean isContiShotting();
+
     boolean isOpacityMaskAttached();
 
     @NewThread

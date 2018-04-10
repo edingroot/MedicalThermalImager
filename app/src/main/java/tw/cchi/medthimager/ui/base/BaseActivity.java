@@ -28,7 +28,8 @@ import tw.cchi.medthimager.di.component.DaggerActivityComponent;
 import tw.cchi.medthimager.di.module.ActivityModule;
 import tw.cchi.medthimager.utils.CommonUtils;
 
-public abstract class BaseActivity extends AppCompatActivity implements MvpView {
+public abstract class BaseActivity extends AppCompatActivity
+    implements MvpView, BaseFragment.Callback {
 
     @Inject public MvpApplication application;
 
@@ -118,6 +119,16 @@ public abstract class BaseActivity extends AppCompatActivity implements MvpView 
     @Override
     public void showToast(@StringRes int resId, Object... formatArgs) {
         showToast(getString(resId, formatArgs));
+    }
+
+    @Override
+    public void onFragmentAttached() {
+
+    }
+
+    @Override
+    public void onFragmentDetached(String tag) {
+
     }
 
     public void hideKeyboard() {

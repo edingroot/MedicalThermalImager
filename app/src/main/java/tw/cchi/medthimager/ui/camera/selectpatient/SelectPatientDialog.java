@@ -1,21 +1,18 @@
-package tw.cchi.medthimager.ui.dialog;
+package tw.cchi.medthimager.ui.camera.selectpatient;
 
 import android.app.Dialog;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.view.KeyEvent;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ProgressBar;
-import android.widget.TextView;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -86,12 +83,9 @@ public class SelectPatientDialog {
 
         // Load data from database
         setUILoading();
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                patients = database.patientDAO().getAll();
-                handler.sendEmptyMessage(UPDATE_PATIENT);
-            }
+        new Thread(() -> {
+            patients = database.patientDAO().getAll();
+            handler.sendEmptyMessage(UPDATE_PATIENT);
         }).start();
 
         dialog.show();
@@ -99,32 +93,21 @@ public class SelectPatientDialog {
     }
 
     private void initComponents() {
-        editPatientName.setOnEditorActionListener(new TextView.OnEditorActionListener() {
-            @Override
-            public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
-                handleAddPatient();
+        editPatientName.setOnEditorActionListener((v, actionId, event) -> {
+            handleAddPatient();
 
-                // Hide virtual keyboard
-                InputMethodManager imm = (InputMethodManager) context.getSystemService(Context.INPUT_METHOD_SERVICE);
-                if (imm != null)
-                    imm.hideSoftInputFromWindow(editPatientName.getWindowToken(), 0);
-                return true;
-            }
+            // Hide virtual keyboard
+            InputMethodManager imm = (InputMethodManager) context.getSystemService(Context.INPUT_METHOD_SERVICE);
+            if (imm != null)
+                imm.hideSoftInputFromWindow(editPatientName.getWindowToken(), 0);
+            return true;
         });
 
-        btnAddPatient.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                handleAddPatient();
-            }
-        });
+        btnAddPatient.setOnClickListener(v -> handleAddPatient());
 
-        btnOk.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                onInteractionListener.onOkClicked(selectedPatientUUID);
-                dismiss();
-            }
+        btnOk.setOnClickListener(v -> {
+            onInteractionListener.onOkClicked(selectedPatientUUID);
+            dismiss();
         });
 
         patientRecyclerAdapter = new PatientSelectsRecyclerAdapter(context, new PatientSelectsRecyclerAdapter.OnInteractionListener() {
@@ -142,28 +125,19 @@ public class SelectPatientDialog {
                         .setMessage(
                                 "Confirm to remove " + patientRemoving.getName() +
                                         " and all related capture record (list for exporting CSV, not thermal data) from database?")
-                        .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                                // Remove patient data from database
-                                setUILoading();
-                                new Thread(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        if (selectedPatientUUID != null && selectedPatientUUID.equals(patientRemoving.getUuid()))
-                                            patientRecyclerAdapter.setSelectedPosition(-1);
+                        .setPositiveButton("Yes", (dialog, which) -> {
+                            // Remove patient data from database
+                            setUILoading();
+                            new Thread(() -> {
+                                if (selectedPatientUUID != null && selectedPatientUUID.equals(patientRemoving.getUuid()))
+                                    patientRecyclerAdapter.setSelectedPosition(-1);
 
-                                        database.patientDAO().delete(patientRemoving);
-                                        patients = database.patientDAO().getAll();
-                                        handler.sendEmptyMessage(UPDATE_PATIENT);
-                                    }
-                                }).start();
-                            }
+                                database.patientDAO().delete(patientRemoving);
+                                patients = database.patientDAO().getAll();
+                                handler.sendEmptyMessage(UPDATE_PATIENT);
+                            }).start();
                         })
-                        .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                            }
+                        .setNegativeButton("Cancel", (dialog, which) -> {
                         }).show();
             }
         });
@@ -194,13 +168,10 @@ public class SelectPatientDialog {
         editPatientName.setText("");
 
         setUILoading();
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                database.patientDAO().insertAll(new Patient(patientName));
-                patients = database.patientDAO().getAll();
-                handler.sendEmptyMessage(UPDATE_PATIENT);
-            }
+        new Thread(() -> {
+            database.patientDAO().insertAll(new Patient(patientName));
+            patients = database.patientDAO().getAll();
+            handler.sendEmptyMessage(UPDATE_PATIENT);
         }).start();
     }
 

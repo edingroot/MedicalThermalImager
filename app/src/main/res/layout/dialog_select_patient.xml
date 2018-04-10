@@ -8,7 +8,7 @@
     android:theme="@style/DialogTheme">
 
     <RelativeLayout
-        android:id="@+id/layoutAddPatient"
+        android:id="@+id/layoutParams2"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentTop="true"
@@ -45,7 +45,7 @@
         android:id="@+id/layout1"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_below="@id/layoutAddPatient">
+        android:layout_below="@id/layoutParams2">
 
         <ScrollView
             android:id="@+id/scrollPatientList"

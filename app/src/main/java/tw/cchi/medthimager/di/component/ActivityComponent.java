@@ -4,6 +4,7 @@ import dagger.Component;
 import tw.cchi.medthimager.di.PerActivity;
 import tw.cchi.medthimager.di.module.ActivityModule;
 import tw.cchi.medthimager.ui.camera.CameraActivity;
+import tw.cchi.medthimager.ui.camera.contishot.ContiShotDialog;
 import tw.cchi.medthimager.ui.dumpviewer.DumpViewerActivity;
 
 @PerActivity
@@ -11,6 +12,8 @@ import tw.cchi.medthimager.ui.dumpviewer.DumpViewerActivity;
 public interface ActivityComponent {
 
     void inject(CameraActivity activity);
+
+    void inject(ContiShotDialog dialog);
 
     void inject(DumpViewerActivity activity);
 

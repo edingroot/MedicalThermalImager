@@ -51,7 +51,7 @@
 //import tw.cchi.medthimager.helper.CSVExportHelper;
 //import tw.cchi.medthimager.thermalproc.RawThermalDump;
 //import tw.cchi.medthimager.ui.base.BaseActivity;
-//import tw.cchi.medthimager.ui.dialog.SelectPatientDialog;
+//import tw.cchi.medthimager.ui.camera.dialog.SelectPatientDialog;
 //import tw.cchi.medthimager.ui.dumpviewer.DumpViewerActivity;
 //import tw.cchi.medthimager.utils.AppUtils;
 //import tw.cchi.medthimager.utils.CommonUtils;
