@@ -9,6 +9,6 @@ import javax.inject.Scope;
  * Identifies the target will start a new thread when called.
  */
 @Scope
-@Retention(RetentionPolicy.RUNTIME)
+@Retention(RetentionPolicy.SOURCE)
 public @interface NewThread {
 }

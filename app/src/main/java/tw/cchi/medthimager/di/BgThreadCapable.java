@@ -9,6 +9,6 @@ import javax.inject.Scope;
  * Identifies the target is capable of executing on a background thread.
  */
 @Scope
-@Retention(RetentionPolicy.RUNTIME)
+@Retention(RetentionPolicy.SOURCE)
 public @interface BgThreadCapable {
 }

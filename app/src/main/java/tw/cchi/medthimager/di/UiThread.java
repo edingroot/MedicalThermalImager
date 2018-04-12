@@ -9,6 +9,6 @@ import javax.inject.Scope;
  * Identifies the target should be called on the ui thread.
  */
 @Scope
-@Retention(RetentionPolicy.RUNTIME)
+@Retention(RetentionPolicy.SOURCE)
 public @interface UiThread {
 }
