@@ -1,5 +1,9 @@
 import org.apache.tools.ant.taskdefs.condition.Os
 
+def versionMajor = 1
+def versionMinor = 2
+def versionPatch = 4
+
 apply plugin: 'com.android.application'
 android {
     compileSdkVersion 27
@@ -9,8 +13,10 @@ android {
         applicationId "tw.cchi.medthimager"
         minSdkVersion 18
         targetSdkVersion 27
-        versionCode 12
-        versionName "1.2.3"
+
+        versionCode versionMajor * 10000 + versionMinor * 100 + versionPatch
+        versionName "${versionMajor}.${versionMinor}.${versionPatch}"
+
         // used by Room, to test migrations
         javaCompileOptions {
             annotationProcessorOptions {
@@ -21,11 +27,17 @@ android {
     signingConfigs { release }
 
     buildTypes {
+        debug {
+            versionNameSuffix ".debug"
+            resValue "string", "app_version", "${defaultConfig.versionName}${versionNameSuffix}"
+        }
+
         release {
             minifyEnabled true
+            signingConfig signingConfigs.release
             // Ref: https://stackoverflow.com/questions/13218772/removing-log-call-using-proguard
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
-            signingConfig signingConfigs.release
+            resValue "string", "app_version", "${defaultConfig.versionName}"
         }
     }
 
