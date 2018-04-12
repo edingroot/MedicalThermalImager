@@ -11,9 +11,11 @@ import java.util.UUID;
 
 @Entity(tableName = "patients")
 public class Patient {
+    public static final String DEFAULT_PATIENT_UUID = "AAAAAAAA-BBBB-CCCC-DDDD-123456789012";
+
     @PrimaryKey
     @ColumnInfo(name = "uuid")
-    @NonNull private String uuid = "";
+    @NonNull private String uuid;
 
     @ColumnInfo(name = "name")
     private String name;
@@ -22,13 +24,20 @@ public class Patient {
     private Date createdAt;
 
     @Ignore
+    public Patient(@NonNull String uuid, String name) {
+        this.uuid = uuid;
+        this.name = name;
+        this.createdAt = new Date();
+    }
+
+    @Ignore
     public Patient(String name) {
         this.uuid = UUID.randomUUID().toString();
         this.name = name;
-        this.createdAt = new Date(System.currentTimeMillis());
+        this.createdAt = new Date();
     }
 
-    public Patient(String uuid, String name, Date createdAt) {
+    public Patient(@NonNull String uuid, String name, Date createdAt) {
         this.uuid = uuid;
         this.name = name;
         this.createdAt = createdAt;
@@ -38,7 +47,7 @@ public class Patient {
         return uuid;
     }
 
-    public void setUuid(String uuid) {
+    public void setUuid(@NonNull String uuid) {
         this.uuid = uuid;
     }
 

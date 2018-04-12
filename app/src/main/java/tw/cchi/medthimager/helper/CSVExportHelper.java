@@ -8,21 +8,33 @@ import org.opencv.core.Point;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
+import java.io.IOException;
+import java.nio.file.FileVisitResult;
+import java.nio.file.FileVisitor;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.SimpleFileVisitor;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.stream.Stream;
 
 import javax.inject.Inject;
 
 import io.reactivex.Observable;
 import io.reactivex.schedulers.Schedulers;
 import tw.cchi.medthimager.Config;
+import tw.cchi.medthimager.R;
 import tw.cchi.medthimager.db.AppDatabase;
 import tw.cchi.medthimager.db.CaptureRecord;
 import tw.cchi.medthimager.db.Patient;
 import tw.cchi.medthimager.di.NewThread;
 import tw.cchi.medthimager.thermalproc.RawThermalDump;
+import tw.cchi.medthimager.ui.base.MvpView;
 import tw.cchi.medthimager.utils.AppUtils;
+import tw.cchi.medthimager.utils.FileUtils;
 
 public class CSVExportHelper {
     private Activity activity;
@@ -35,8 +47,8 @@ public class CSVExportHelper {
     }
 
     @NewThread
-    public void exportAllCaptureRecords(final String filepath) {
-        Observable.create(emitter -> {
+    public Observable<Object> exportAllCaptureRecords(final String filepath) {
+        return Observable.create(emitter -> {
             StringBuilder outputBuilder = new StringBuilder();
             int maxSpotCount = 0;
 
@@ -66,7 +78,7 @@ public class CSVExportHelper {
                         rowBuilder.append(String.format(",%.2f", temp));
                 } else {
                     System.out.println("Dump not found, skip reading spotValues of: " + captureRecord.getFilenamePrefix());
-                    // TODO: remove this record from database
+                    // TODO: remove this record from database?
                     continue;
                 }
 
@@ -74,7 +86,7 @@ public class CSVExportHelper {
             }
 
             if (outputBuilder.length() == 0) {
-                showToastMessage("No data exported.");
+                emitter.onError(new Error("No data exported."));
                 return;
             }
 
@@ -104,23 +116,43 @@ public class CSVExportHelper {
                 }
             }
 
-        }).observeOn(Schedulers.computation())
-            .subscribeOn(Schedulers.computation()).subscribe(
-                o -> {},
-                e -> {
-                    showToastMessage("Error exporting to file: " + filepath);
-                    e.printStackTrace();
-                },
-                () -> {
-                    showToastMessage("Exported to file: " + filepath);
+        }).subscribeOn(Schedulers.computation());
+    }
+
+    public Observable updateRecordsFromDumpFiles(String rootDir) {
+        return Observable.create(methodEmitter -> {
+
+            Observable.<File>create(emitter -> {
+                for (File file : FileUtils.getAllFiles(rootDir)) {
+                    if (FileUtils.getExtension(file.getName()).equals("dat"))
+                        emitter.onNext(file);
                 }
-        );
+            }).subscribeOn(Schedulers.io())
+                .observeOn(Schedulers.computation())
+                .subscribe(
+                    file -> {
+                        RawThermalDump rawThermalDump = RawThermalDump.readFromDumpFile(file.getAbsolutePath());
+                        if (rawThermalDump == null) {
+                            methodEmitter.onError(new Error("Error reading dump file: " + file.getAbsolutePath()));
+                            return;
+                        }
 
+                        CaptureRecord captureRecord = new CaptureRecord(
+                            rawThermalDump.getPatientUUID(), rawThermalDump.getTitle(),
+                            FileUtils.removeExtension(file.getName())
+                        );
 
+                        database.captureRecordDAO()
+                            .insertAndAutoCreatePatient(database.patientDAO(), captureRecord);
+                    },
+                    e -> {
+                        e.printStackTrace();
+                        methodEmitter.onError(e);
+                    },
+                    methodEmitter::onComplete
+                );
 
-        new Thread(() -> {
-
-        }).start();
+        });
     }
 
     private Map<String, Patient> getPatientMap() {
@@ -148,16 +180,6 @@ public class CSVExportHelper {
         }
 
         return spotValues;
-    }
-
-    private void showToastMessage(final String message) {
-        if (activity.isDestroyed()) return;
-        activity.runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                Toast.makeText(activity, message, Toast.LENGTH_SHORT).show();
-            }
-        });
     }
 
 }

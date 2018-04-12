@@ -45,10 +45,10 @@ public class CaptureRecord {
         this.patientUuid = patientUuid;
         this.title = title;
         this.filenamePrefix = filenamePrefix;
-        this.createdAt = new Date(System.currentTimeMillis());
+        this.createdAt = new Date();
     }
 
-    public CaptureRecord(String uuid, String patientUuid, String title, String filenamePrefix, Date createdAt) {
+    public CaptureRecord(@NonNull String uuid, String patientUuid, String title, String filenamePrefix, Date createdAt) {
         this.uuid = uuid;
         this.patientUuid = patientUuid;
         this.title = title;
@@ -60,7 +60,7 @@ public class CaptureRecord {
         return uuid;
     }
 
-    public void setUuid(String uuid) {
+    public void setUuid(@NonNull String uuid) {
         this.uuid = uuid;
     }
 

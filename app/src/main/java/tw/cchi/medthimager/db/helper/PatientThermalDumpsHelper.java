@@ -3,6 +3,8 @@ package tw.cchi.medthimager.db.helper;
 
 import javax.inject.Inject;
 
+import io.reactivex.Observable;
+import io.reactivex.schedulers.Schedulers;
 import tw.cchi.medthimager.db.AppDatabase;
 import tw.cchi.medthimager.db.CaptureRecord;
 
@@ -16,16 +18,11 @@ public class PatientThermalDumpsHelper {
 
     /**
      * @param patientUUID null if no patient selected
-     * @param filenamePrefix
-     * @return
      */
-    public void addCaptureRecord(final String patientUUID, final String title, final String filenamePrefix) {
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                database.captureRecordDAO().insertAll(new CaptureRecord(patientUUID, title, filenamePrefix));
-            }
-        }).start();
+    public Observable addCaptureRecord(final String patientUUID, final String title, final String filenamePrefix) {
+        return Observable.create(emitter ->
+            database.captureRecordDAO().insertAll(new CaptureRecord(patientUUID, title, filenamePrefix)))
+            .subscribeOn(Schedulers.io());
     }
 
 }

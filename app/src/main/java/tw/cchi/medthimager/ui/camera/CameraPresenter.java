@@ -246,7 +246,18 @@ public class CameraPresenter<V extends CameraMvpView> extends BasePresenter<V>
     public void exportAllRecordsToCSV() {
         SimpleDateFormat sdf = new SimpleDateFormat("MMdd-HHmmss", Locale.getDefault());
         String csvFilepath = AppUtils.getExportsDir() + "/" + "RecordsExport_" + sdf.format(new Date()) + ".csv";
-        csvExportHelper.exportAllCaptureRecords(csvFilepath);
+
+        csvExportHelper.exportAllCaptureRecords(csvFilepath)
+            .observeOn(AndroidSchedulers.mainThread()).subscribe(
+                o -> {},
+                e -> {
+                    getMvpView().showSnackBar("Error exporting to file: " + csvFilepath);
+                    e.printStackTrace();
+                },
+                () -> {
+                    getMvpView().showToast("Exported to file: " + csvFilepath);
+                }
+        );
     }
 
     // -------------------------------------- Delegate Methods ----------------------------------- //
@@ -310,7 +321,7 @@ public class CameraPresenter<V extends CameraMvpView> extends BasePresenter<V>
                 captureRawThermalDump(renderedImage, dumpFilepath);
 
                 String title = RawThermalDump.generateTitleFromFilepath(dumpFilepath);
-                dbPatientDumpsHelper.addCaptureRecord(patientUUID, title, filenamePrefix);
+                dbPatientDumpsHelper.addCaptureRecord(patientUUID, title, filenamePrefix).subscribe();
             }
 
             // (DEBUG) Show image types

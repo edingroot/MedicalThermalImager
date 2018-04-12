@@ -25,6 +25,7 @@
     <string name="confirm">Confirm</string>
     <string name="message">Message</string>
     <string name="error">Error</string>
+    <string name="completed">Completed</string>
 
     <!-- Menu Items: preview_tools_menu -->
     <string name="dump_viewer">Thermal Dump Viewer</string>
