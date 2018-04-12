@@ -25,6 +25,8 @@ public interface MvpView {
 
     void showSnackBar(@StringRes int resId);
 
+    void showSnackBar(@StringRes int resId, Object... formatArgs);
+
     void showToast(String message);
 
     void showToast(@StringRes int resId);

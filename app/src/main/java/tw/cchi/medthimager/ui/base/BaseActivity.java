@@ -111,6 +111,11 @@ public abstract class BaseActivity extends AppCompatActivity
     }
 
     @Override
+    public void showSnackBar(int resId, Object... formatArgs) {
+        showSnackBar(getString(resId, formatArgs));
+    }
+
+    @Override
     public void showToast(String message) {
         if (message != null) {
             Toast.makeText(this, message, Toast.LENGTH_SHORT).show();

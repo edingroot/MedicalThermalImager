@@ -171,6 +171,15 @@ public class CameraPresenter<V extends CameraMvpView> extends BasePresenter<V>
         TimerTask timerTask = new TimerTask() {
             @Override
             public void run() {
+                if (tuningState == Device.TuningState.InProgress) {
+                    activity.runOnUiThread(() -> getMvpView().showSnackBar(
+                        R.string.conti_shoot_tuning_skip,
+                        contiShootParameters.capturedCount,
+                        contiShootParameters.totalCaptures
+                    ));
+                    return;
+                }
+
                 if (!triggerImageCapture()) {
                     contiShooting = false;
                     contiShootTimer.cancel();

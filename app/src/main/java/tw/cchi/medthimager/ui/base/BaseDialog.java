@@ -84,6 +84,13 @@ public abstract class BaseDialog extends DialogFragment implements DialogMvpView
     }
 
     @Override
+    public void showSnackBar(int resId, Object... formatArgs) {
+        if (mActivity != null) {
+            showSnackBar(resId, formatArgs);
+        }
+    }
+
+    @Override
     public void showToast(String message) {
         if (mActivity != null) {
             showToast(message);
