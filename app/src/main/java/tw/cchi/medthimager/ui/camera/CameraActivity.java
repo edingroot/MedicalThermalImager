@@ -257,6 +257,11 @@ public class CameraActivity extends BaseActivity implements CameraMvpView {
         }
     }
 
+    @OnClick(R.id.btnTune)
+    public void onTuneClick(View v) {
+        presenter.performTune();
+    }
+
     @OnClick(R.id.btnContiShot)
     public void onContiShotClick(View v) {
         if (!presenter.isDeviceAttached())
@@ -299,8 +304,8 @@ public class CameraActivity extends BaseActivity implements CameraMvpView {
 
     @OnLongClick(R.id.thermalImageView)
     public boolean onThermalImageViewLongClick(View v) {
-        if (thermalViewOnTouchMoves >= 5)
-            return false;
+        // if (thermalViewOnTouchMoves >= 10)
+            // return false;
 
         if (checkContiShootBlocking())
             return true;
