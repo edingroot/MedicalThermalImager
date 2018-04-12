@@ -1,48 +1,32 @@
 package tw.cchi.medthimager.helper;
 
-import android.app.Activity;
-import android.widget.Toast;
-
 import org.opencv.core.Point;
 
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
-import java.io.IOException;
-import java.nio.file.FileVisitResult;
-import java.nio.file.FileVisitor;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.SimpleFileVisitor;
-import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.stream.Stream;
 
 import javax.inject.Inject;
 
 import io.reactivex.Observable;
 import io.reactivex.schedulers.Schedulers;
 import tw.cchi.medthimager.Config;
-import tw.cchi.medthimager.R;
 import tw.cchi.medthimager.db.AppDatabase;
 import tw.cchi.medthimager.db.CaptureRecord;
 import tw.cchi.medthimager.db.Patient;
 import tw.cchi.medthimager.di.NewThread;
 import tw.cchi.medthimager.thermalproc.RawThermalDump;
-import tw.cchi.medthimager.ui.base.MvpView;
 import tw.cchi.medthimager.utils.AppUtils;
 import tw.cchi.medthimager.utils.FileUtils;
 
 public class CSVExportHelper {
-    private Activity activity;
     private AppDatabase database;
 
     @Inject
-    public CSVExportHelper(Activity activity, AppDatabase database) {
-        this.activity = activity;
+    public CSVExportHelper(AppDatabase database) {
         this.database = database;
     }
 
