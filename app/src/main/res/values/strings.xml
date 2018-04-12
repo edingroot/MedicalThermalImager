@@ -46,7 +46,7 @@
     <string name="conti_shoot_blocking">Please abort continuous shooting before performing any other actions.</string>
     <string name="conti_shoot_confirm_abort">Abort continuous shooting?</string>
     <string name="conti_shoot_failed_report">Failed to trigger image capture, aborting continuous shooting.\nNumber of shoots: %1$d / %2$d</string>
-    <string name="conti_shoot_finished_report">Continuous shooting finished.\nNumber of shoots: %1$d / %2$d</string>
+    <string name="conti_shoot_finished_report">Continuous shooting finished.\nNumber of shots: %1$d / %2$d</string>
     <string name="conti_shoot_tuning_skip">Skip taking shot: %1$d / %2$d due to device is tuning.</string>
 
     <string name="pick_thermal_images">Pick thermal dump files(*.dat) to visualize</string>

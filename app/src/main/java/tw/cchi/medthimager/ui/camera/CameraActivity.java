@@ -262,6 +262,9 @@ public class CameraActivity extends BaseActivity implements CameraMvpView {
         if (!presenter.isDeviceAttached())
             return;
 
+        if (checkContiShootBlocking())
+            return;
+
         ContiShootDialog.newInstance().show(getSupportFragmentManager(), (dialog, params) -> {
             presenter.startContiShooting(params);
         });
