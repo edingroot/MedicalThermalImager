@@ -92,8 +92,8 @@ public class DumpViewerActivity extends BaseActivity implements DumpViewerMvpVie
             public void onLongClick(View v, final int position) {
                 // Show confirm dialog for closing this thermal dump
                 showAlertDialog(
-                    "Confirm",
-                    "Confirm to close " + presenter.getDumpTitle() + " tab?",
+                    getString(R.string.confirm),
+                    getString(R.string.confirm_close_dump, presenter.getDumpTitle()),
                     (dialog, which) -> presenter.closeThermalDump(position, true),
                     (dialog, which) -> {}
                 );
@@ -223,8 +223,8 @@ public class DumpViewerActivity extends BaseActivity implements DumpViewerMvpVie
     public void onDeleteClick(ToggleButton b) {
         // Show confirm dialog for deleting thermal dump and related files
         showAlertDialog(
-            "Confirm",
-            "Confirm to delete " + presenter.getDumpTitle() + " and related files?",
+            getString(R.string.confirm),
+            getString(R.string.confirm_delete_dump, presenter.getDumpTitle()),
             (dialog, which) -> presenter.deleteThermalDump(),
             (dialog, which) -> {}
         );

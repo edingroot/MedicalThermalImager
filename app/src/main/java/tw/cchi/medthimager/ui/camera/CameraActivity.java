@@ -15,6 +15,7 @@ import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
 import android.view.View;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.PopupMenu;
 import android.widget.ProgressBar;
@@ -52,8 +53,10 @@ public class CameraActivity extends BaseActivity implements CameraMvpView {
     @BindView(R.id.pleaseConnect) TextView pleaseConnect;
     @BindView(R.id.batteryLevelTextView) TextView batteryLevelTextView;
     @BindView(R.id.batteryChargeIndicator) ImageView batteryChargeIndicator;
+    @BindView(R.id.imgBtnCapture) ImageButton imgBtnCapture;
+
     @BindView(R.id.thermalSpotView) ThermalSpotView thermalSpotView;
-    @BindView(R.id.txtTuningState) TextView editTuningState;
+    @BindView(R.id.txtTuningState) TextView txtTuningState;
     @BindView(R.id.tuningProgressBar) ProgressBar tuningProgressBar;
     @BindView(R.id.tuningTextView) TextView tuningTextView;
 
@@ -109,6 +112,10 @@ public class CameraActivity extends BaseActivity implements CameraMvpView {
         if (selectPatientDialog != null)
             selectPatientDialog.dismiss();
 
+        if (presenter.isContiShootingMode()) {
+            presenter.finishContiShooting(true);
+        }
+
         presenter.frameStreamControl(false);
     }
 
@@ -156,6 +163,8 @@ public class CameraActivity extends BaseActivity implements CameraMvpView {
         switch (keyCode) {
             case KeyEvent.KEYCODE_VOLUME_UP:
             case KeyEvent.KEYCODE_VOLUME_DOWN:
+                if (checkContiShootBlocking())
+                    return true;
                 presenter.triggerImageCapture();
                 return true;
 
@@ -167,6 +176,9 @@ public class CameraActivity extends BaseActivity implements CameraMvpView {
 
     @OnClick(R.id.imgBtnSelectPatient)
     public void onSelectPatientClick(View v) {
+        if (checkContiShootBlocking())
+            return;
+
         if (selectPatientDialog == null) {
             selectPatientDialog = new SelectPatientDialog(this, presenter::setCurrentPatient);
         }
@@ -176,6 +188,9 @@ public class CameraActivity extends BaseActivity implements CameraMvpView {
 
     @OnClick(R.id.btnTools)
     public void onToolsClick(View v) {
+        if (checkContiShootBlocking())
+            return;
+
         PopupMenu popup = new PopupMenu(this, v);
         popup.inflate(R.menu.preview_tools_menu);
 
@@ -222,16 +237,34 @@ public class CameraActivity extends BaseActivity implements CameraMvpView {
         popup.show();
     }
 
-    @OnClick(R.id.btnContiShot)
-    public void onContiShotClick(View v) {
-        ContiShootDialog.newInstance().show(getSupportFragmentManager(), (dialog, interval, times) -> {
-            dialog.dismissDialog();
-        });
-    }
-
     @OnClick(R.id.imgBtnCapture)
     public void onCaptureImageClick(View v) {
-        presenter.triggerImageCapture();
+        if (!presenter.isDeviceAttached())
+            return;
+
+        if (presenter.isContiShootingMode()) {
+            showAlertDialog(
+                getString(R.string.confirm),
+                getString(R.string.conti_shoot_confirm_abort),
+                (dialog, which) -> {
+                    presenter.finishContiShooting(false);
+                    dialog.dismiss();
+                },
+                (dialog, which) -> dialog.dismiss()
+            );
+        } else {
+            presenter.triggerImageCapture();
+        }
+    }
+
+    @OnClick(R.id.btnContiShot)
+    public void onContiShotClick(View v) {
+        if (!presenter.isDeviceAttached())
+            return;
+
+        ContiShootDialog.newInstance().show(getSupportFragmentManager(), (dialog, params) -> {
+            presenter.startContiShooting(params);
+        });
     }
 
     @OnTouch(R.id.thermalImageView)
@@ -265,6 +298,9 @@ public class CameraActivity extends BaseActivity implements CameraMvpView {
     public boolean onThermalImageViewLongClick(View v) {
         if (thermalViewOnTouchMoves >= 5)
             return false;
+
+        if (checkContiShootBlocking())
+            return true;
 
         presenter.performTune();
         return true;
@@ -318,12 +354,12 @@ public class CameraActivity extends BaseActivity implements CameraMvpView {
     @Override
     public void updateForDeviceTuningState(Device.TuningState tuningState) {
         if (tuningState == Device.TuningState.InProgress) {
-            editTuningState.setText(tuningState.name());
+            txtTuningState.setText(tuningState.name());
             thermalImageView.setColorFilter(Color.DKGRAY, PorterDuff.Mode.DARKEN);
             tuningProgressBar.setVisibility(View.VISIBLE);
             tuningTextView.setVisibility(View.VISIBLE);
         } else {
-            editTuningState.setText(tuningState.name());
+            txtTuningState.setText(tuningState.name());
             thermalImageView.clearColorFilter();
             tuningProgressBar.setVisibility(View.GONE);
             tuningTextView.setVisibility(View.GONE);
@@ -353,8 +389,27 @@ public class CameraActivity extends BaseActivity implements CameraMvpView {
     }
 
     @Override
+    public void setCameraMode() {
+        imgBtnCapture.setImageResource(android.R.drawable.ic_menu_camera);
+    }
+
+    @Override
+    public void setContinuousShootMode() {
+        imgBtnCapture.setImageResource(R.drawable.ic_camera_automation);
+    }
+
+    @Override
     public int getThermalImageViewWidth() {
         return thermalImageView.getMeasuredWidth();
+    }
+
+    private boolean checkContiShootBlocking() {
+        if (presenter.isContiShootingMode()) {
+            showSnackBar(R.string.conti_shoot_blocking);
+            return true;
+        } else {
+            return false;
+        }
     }
 }
 

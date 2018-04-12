@@ -19,9 +19,12 @@
     <string name="remove">Remove</string>
     <string name="close">Close</string>
     <string name="ok">OK</string>
-    <string name="interval">Interval</string>
-    <string name="times">Times</string>
+    <string name="period">Period</string>
+    <string name="captures">Captures</string>
     <string name="start">Start</string>
+    <string name="confirm">Confirm</string>
+    <string name="message">Message</string>
+    <string name="error">Error</string>
 
     <!-- Menu Items: preview_tools_menu -->
     <string name="dump_viewer">Thermal Dump Viewer</string>
@@ -39,9 +42,14 @@
     <string name="flirone_disconnected">FLIR One disconnected.</string>
     <string name="connecting_sim">Connecting simulatedCam</string>
     <string name="dumped_">Dumped: %1$s</string>
+    <string name="conti_shoot_starting">The first shot will be taken in %1$d seconds.</string>
+    <string name="conti_shoot_blocking">Please abort continuous shooting before performing any other actions.</string>
+    <string name="conti_shoot_confirm_abort">Abort continuous shooting?</string>
+    <string name="conti_shoot_failed_report">Failed to trigger image capture, aborting continuous shooting.\nNumber of shoots: %1$d / %2$d</string>
+    <string name="conti_shoot_finished_report">Continuous shooting finished.\nNumber of shoots: %1$d / %2$d</string>
 
     <string name="pick_thermal_images">Pick thermal dump files(*.dat) to visualize</string>
-    <string name="spots_hidden">Thermal spots are now hidden, click "show spots" to show.</string>
+    <string name="spots_hidden">Thermal spots are now hidden, click "show spots" first.</string>
     <string name="colored_image_dumped">Colored image exported: %1$s</string>
     <string name="visible_image_dumped">%1$s Visible light image exported: %2$s</string>
     <string name="dump_failed">Dumped failed.</string>
@@ -51,6 +59,8 @@
     <string name="error_delete_visible">Error deleting visible light image file of dump.</string>
     <string name="error_delete_dump">Error deleting dump file.</string>
     <string name="dump_deleted">Dump deleted</string>
+    <string name="confirm_close_dump">Confirm to close %1$s tab?</string>
+    <string name="confirm_delete_dump">Confirm to delete %1$s and related files?</string>
 
     <!-- SelectPatientDialog -->
     <string name="select_patient">Select Patient</string>

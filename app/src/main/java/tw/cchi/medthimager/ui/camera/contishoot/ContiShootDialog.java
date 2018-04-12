@@ -15,20 +15,21 @@ import butterknife.ButterKnife;
 import butterknife.OnClick;
 import tw.cchi.medthimager.R;
 import tw.cchi.medthimager.di.component.ActivityComponent;
+import tw.cchi.medthimager.model.ContiShootParameters;
 import tw.cchi.medthimager.ui.base.BaseDialog;
 
 public class ContiShootDialog extends BaseDialog implements ContiShootMvpView {
     private static final String TAG = "ContiShootDialog";
 
     public interface OnResultListener {
-        void onStart(ContiShootDialog dialog, int interval, int times);
+        void onResult(ContiShootDialog dialog, ContiShootParameters parameters);
     }
     private OnResultListener onResultListener;
 
     @Inject ContiShootMvpPresenter<ContiShootMvpView> presenter;
 
-    @BindView(R.id.editInterval) EditText editInterval;
-    @BindView(R.id.editTimes) EditText editTimes;
+    @BindView(R.id.editPeriod) EditText editPeriod;
+    @BindView(R.id.editCaptures) EditText editCaptures;
 
     public static ContiShootDialog newInstance() {
         ContiShootDialog fragment = new ContiShootDialog();
@@ -58,10 +59,10 @@ public class ContiShootDialog extends BaseDialog implements ContiShootMvpView {
         super.show(fragmentManager, TAG);
     }
 
-    @OnClick(R.id.btnOk)
-    public void onOkClick(View v) {
+    @OnClick(R.id.btnStart)
+    public void onStartClick(View v) {
         boolean success = presenter.parseResult(
-            editInterval.getText().toString(), editTimes.getText().toString()
+            editPeriod.getText().toString(), editCaptures.getText().toString()
         );
 
         if (!success) {

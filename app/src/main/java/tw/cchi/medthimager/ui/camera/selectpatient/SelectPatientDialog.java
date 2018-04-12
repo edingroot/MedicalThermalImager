@@ -41,7 +41,7 @@ public class SelectPatientDialog {
     @BindView(R.id.btnAddPatient) Button btnAddPatient;
     @BindView(R.id.progressBarLoading) ProgressBar progressBarLoading;
     @BindView(R.id.recyclerPatientList) RecyclerView recyclerPatientList;
-    @BindView(R.id.btnOk) Button btnOk;
+    @BindView(R.id.btnStart) Button btnOk;
 
     public SelectPatientDialog(Context context, OnInteractionListener onInteractionListener) {
         this.context = context;

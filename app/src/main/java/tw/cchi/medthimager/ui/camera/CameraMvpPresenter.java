@@ -4,6 +4,7 @@ import android.graphics.Bitmap;
 
 import tw.cchi.medthimager.di.BgThreadCapable;
 import tw.cchi.medthimager.di.NewThread;
+import tw.cchi.medthimager.model.ContiShootParameters;
 import tw.cchi.medthimager.ui.base.MvpPresenter;
 
 public interface CameraMvpPresenter<V extends CameraMvpView> extends MvpPresenter<V> {
@@ -20,7 +21,11 @@ public interface CameraMvpPresenter<V extends CameraMvpView> extends MvpPresente
 
     void onActivityStop();
 
-    void triggerImageCapture();
+    boolean triggerImageCapture();
+
+    void startContiShooting(ContiShootParameters contiShootParameters);
+
+    void finishContiShooting(boolean showMessageByToast);
 
     void exportAllRecordsToCSV();
 
@@ -30,7 +35,9 @@ public interface CameraMvpPresenter<V extends CameraMvpView> extends MvpPresente
 
     void setCurrentPatient(String patientUUID);
 
-    boolean isContiShotting();
+    boolean isDeviceAttached();
+
+    boolean isContiShootingMode();
 
     boolean isOpacityMaskAttached();
 

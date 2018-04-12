@@ -24,6 +24,10 @@ public interface CameraMvpView extends MvpView {
 
     void animateFlash();
 
+    void setCameraMode();
+
+    void setContinuousShootMode();
+
 
     int getThermalImageViewWidth();
 

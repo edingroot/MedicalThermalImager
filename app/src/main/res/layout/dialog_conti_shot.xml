@@ -45,15 +45,15 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_centerVertical="true"
-                    android:text="@string/interval"
+                    android:text="@string/period"
                     />
 
                 <EditText
-                    android:id="@+id/editInterval"
+                    android:id="@+id/editPeriod"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_centerVertical="true"
-                    android:layout_marginStart="10dp"
+                    android:layout_marginStart="30dp"
                     android:layout_toEndOf="@id/text1"
                     android:layout_toStartOf="@id/btnAddPatient"
                     android:numeric="integer|signed"
@@ -72,15 +72,14 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_centerVertical="true"
-                    android:text="@string/times"
-                    />
+                    android:text="@string/captures"/>
 
                 <EditText
-                    android:id="@+id/editTimes"
+                    android:id="@+id/editCaptures"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_centerVertical="true"
-                    android:layout_marginStart="20dp"
+                    android:layout_marginStart="10dp"
                     android:layout_toEndOf="@id/text2"
                     android:layout_toStartOf="@id/btnAddPatient"
                     android:numeric="integer|signed"
@@ -89,7 +88,7 @@
             </RelativeLayout>
 
             <Button
-                android:id="@+id/btnOk"
+                android:id="@+id/btnStart"
                 android:layout_width="match_parent"
                 android:layout_height="38dp"
                 android:layout_marginTop="10dp"

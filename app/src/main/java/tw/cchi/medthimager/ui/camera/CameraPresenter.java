@@ -21,6 +21,8 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.EnumSet;
 import java.util.Locale;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import javax.inject.Inject;
 
@@ -34,6 +36,7 @@ import tw.cchi.medthimager.db.helper.PatientThermalDumpsHelper;
 import tw.cchi.medthimager.di.BgThreadCapable;
 import tw.cchi.medthimager.di.NewThread;
 import tw.cchi.medthimager.helper.CSVExportHelper;
+import tw.cchi.medthimager.model.ContiShootParameters;
 import tw.cchi.medthimager.thermalproc.RawThermalDump;
 import tw.cchi.medthimager.ui.base.BasePresenter;
 import tw.cchi.medthimager.utils.AppUtils;
@@ -50,13 +53,15 @@ public class CameraPresenter<V extends CameraMvpView> extends BasePresenter<V>
     private volatile Device flirOneDevice;
     private Device.TuningState tuningState = Device.TuningState.Unknown;
     private FrameProcessor frameProcessor;
+    private Timer contiShootTimer;
 
     private Bitmap opacityMask; // TODO: volatile?
     private volatile RenderedImage lastRenderedImage;
+    private volatile ContiShootParameters contiShootParameters;
 
     private volatile boolean simConnected = false; // simulated device connected
     private volatile boolean streamingFrame = false;
-    private volatile boolean contiShoting = false; // TODO: volatile?
+    private volatile boolean contiShooting = false; // TODO: volatile?
     private volatile boolean imageCaptureRequested = false;
     private int thermalSpotX = -1; // movable spot thermal indicator pX
     private int thermalSpotY = -1; // movable spot thermal indicator pY
@@ -140,14 +145,91 @@ public class CameraPresenter<V extends CameraMvpView> extends BasePresenter<V>
     }
 
     @Override
-    public void triggerImageCapture() {
-        if (flirOneDevice != null) {
-            if (streamingFrame) {
-                this.imageCaptureRequested = true;
-            } else {
-                String filepathPrefix = AppUtils.getExportsDir() + "/" + AppUtils.generateCaptureFilename();
-                captureRawThermalDump(lastRenderedImage, filepathPrefix + Config.POSTFIX_THERMAL_DUMP + ".dat");
+    public boolean triggerImageCapture() {
+        if (!isDeviceAttached())
+            return false;
+
+        if (streamingFrame) {
+            this.imageCaptureRequested = true;
+        } else {
+            String filepathPrefix = AppUtils.getExportsDir() + "/" + AppUtils.generateCaptureFilename();
+            captureRawThermalDump(lastRenderedImage, filepathPrefix + Config.POSTFIX_THERMAL_DUMP + ".dat");
+        }
+
+        return true;
+    }
+
+    @Override
+    public void startContiShooting(ContiShootParameters parameters) {
+        contiShooting = true;
+        getMvpView().setContinuousShootMode();
+
+        this.contiShootParameters = parameters;
+        this.contiShootParameters.timeStart = new Date();
+        this.contiShootParameters.capturedCount = 0;
+
+        TimerTask timerTask = new TimerTask() {
+            @Override
+            public void run() {
+                if (!triggerImageCapture()) {
+                    contiShooting = false;
+                    contiShootTimer.cancel();
+                    contiShootTimer = null;
+
+                    if (isViewAttached()) {
+                        activity.runOnUiThread(() -> {
+                            getMvpView().setCameraMode();
+                            getMvpView().showMessageAlertDialog(
+                                activity.getString(R.string.error),
+                                activity.getString(R.string.conti_shoot_failed_report,
+                                    contiShootParameters.capturedCount,
+                                    contiShootParameters.totalCaptures)
+                            );
+                        });
+                    }
+                } else if (++contiShootParameters.capturedCount >= contiShootParameters.totalCaptures) {
+                    activity.runOnUiThread(() -> finishContiShooting(false));
+                }
             }
+        };
+
+        getMvpView().showToast(R.string.conti_shoot_starting, Config.CONTI_SHOOT_START_DELAY);
+
+        contiShootTimer = new Timer();
+        contiShootTimer.schedule(
+            timerTask,
+            Config.CONTI_SHOOT_START_DELAY * 1000,
+            contiShootParameters.period * 1000
+        );
+    }
+
+    /**
+     * @param showMessageByToast would be useful while activity pausing
+     */
+    @Override
+    public void finishContiShooting(boolean showMessageByToast) {
+        contiShooting = false;
+        contiShootTimer.cancel();
+        contiShootTimer = null;
+
+        if (isViewAttached()) {
+            activity.runOnUiThread(() -> {
+                getMvpView().setCameraMode();
+                if (showMessageByToast) {
+                    getMvpView().showToast(
+                        activity.getString(R.string.conti_shoot_finished_report,
+                            contiShootParameters.capturedCount,
+                            contiShootParameters.totalCaptures)
+                    );
+                } else {
+                    getMvpView().showMessageAlertDialog(
+                        activity.getString(R.string.message),
+                        activity.getString(R.string.conti_shoot_finished_report,
+                            contiShootParameters.capturedCount,
+                            contiShootParameters.totalCaptures)
+                    );
+                }
+            });
         }
     }
 
@@ -257,12 +339,13 @@ public class CameraPresenter<V extends CameraMvpView> extends BasePresenter<V>
     }
 
     @Override
-    public boolean isContiShotting() {
-        return contiShoting;
+    public boolean isDeviceAttached() {
+        return flirOneDevice != null;
     }
 
-    public void setContiShoting(boolean contiShoting) {
-        this.contiShoting = contiShoting;
+    @Override
+    public boolean isContiShootingMode() {
+        return contiShooting;
     }
 
     @Override

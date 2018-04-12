@@ -12,5 +12,6 @@ public final class Config {
     public static final String POSTFIX_VISIBLE_IMAGE = "_vis";
 
     public static final int DUMP_ALL_VISIBLE_INTERVAL = 500; // ms
+    public static final int CONTI_SHOOT_START_DELAY = 5; // sec
 
 }

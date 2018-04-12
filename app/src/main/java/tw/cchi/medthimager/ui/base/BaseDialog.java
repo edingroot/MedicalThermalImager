@@ -52,6 +52,15 @@ public abstract class BaseDialog extends DialogFragment implements DialogMvpView
     }
 
     @Override
+    public AlertDialog showMessageAlertDialog(String title, String message) {
+        if (mActivity != null) {
+            return mActivity.showMessageAlertDialog(title, message);
+        } else {
+            return null;
+        }
+    }
+
+    @Override
     public AlertDialog showAlertDialog(String title, String message, DialogInterface.OnClickListener onYesClicked, DialogInterface.OnClickListener onNoClicked) {
         if (mActivity != null) {
             return mActivity.showAlertDialog(title, message, onYesClicked, onNoClicked);

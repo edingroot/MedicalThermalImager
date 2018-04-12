@@ -15,8 +15,11 @@ public interface MvpView {
 
     void hideLoading();
 
+    AlertDialog showMessageAlertDialog(String title, String message);
+
     AlertDialog showAlertDialog(String title, String message,
-                                DialogInterface.OnClickListener onYesClicked, DialogInterface.OnClickListener onNoClicked);
+                                DialogInterface.OnClickListener onYesClicked,
+                                DialogInterface.OnClickListener onNoClicked);
 
     void showSnackBar(String message);
 

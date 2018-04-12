@@ -77,6 +77,14 @@ public abstract class BaseActivity extends AppCompatActivity
     }
 
     @Override
+    public AlertDialog showMessageAlertDialog(String title, String message) {
+        return new AlertDialog.Builder(this, R.style.MyAlertDialog)
+            .setTitle(title).setMessage(message)
+            .setPositiveButton("OK", (dialog, which) -> dialog.dismiss())
+            .show();
+    }
+
+    @Override
     public AlertDialog showAlertDialog(String title, String message,
                                 DialogInterface.OnClickListener onYesClicked, DialogInterface.OnClickListener onNoClicked) {
         return new AlertDialog.Builder(this, R.style.MyAlertDialog)
