@@ -8,6 +8,7 @@ import javax.inject.Singleton;
 import dagger.Component;
 import tw.cchi.medthimager.MvpApplication;
 import tw.cchi.medthimager.db.AppDatabase;
+import tw.cchi.medthimager.di.ApplicationContext;
 import tw.cchi.medthimager.di.module.ApplicationModule;
 
 @Singleton
@@ -18,6 +19,7 @@ public interface ApplicationComponent {
 
     // ---------- Methods below are used by Dagger implementation of ActivityComponent ---------- //
 
+    @ApplicationContext
     Context context();
 
     Application application();

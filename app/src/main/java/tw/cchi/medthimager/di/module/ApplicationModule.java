@@ -11,6 +11,7 @@ import dagger.Provides;
 import tw.cchi.medthimager.MvpApplication;
 import tw.cchi.medthimager.db.AppDatabase;
 import tw.cchi.medthimager.db.helper.PatientThermalDumpsHelper;
+import tw.cchi.medthimager.di.ApplicationContext;
 
 @Module
 public class ApplicationModule {
@@ -22,6 +23,7 @@ public class ApplicationModule {
     }
 
     @Provides
+    @ApplicationContext
     Context provideContext() {
         return mvpApplication;
     }
