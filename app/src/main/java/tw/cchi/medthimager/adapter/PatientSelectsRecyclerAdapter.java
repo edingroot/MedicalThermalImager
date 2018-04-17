@@ -58,7 +58,8 @@ public class PatientSelectsRecyclerAdapter extends RecyclerView.Adapter<PatientS
         holder.txtPatientName.setText(patient.getName());
 
         holder.layoutRoot.setOnClickListener(v -> {
-            int positionToSet = holderPosition != selectedPosition ? holderPosition : -1;
+            // If no patient selected, auto select the default patient
+            int positionToSet = holderPosition != selectedPosition ? holderPosition : 0;
             setSelectedPosition(positionToSet);
             onInteractionListener.onSelected(v, positionToSet);
         });

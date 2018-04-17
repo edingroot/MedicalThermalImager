@@ -68,7 +68,10 @@ public class SelectPatientDialog {
      * @param patientUUID null if no patient selected
      */
     public void setSelectedPatientUUID(@Nullable String patientUUID) {
-        selectedPatientUUID = patientUUID == null ? Patient.DEFAULT_PATIENT_UUID : patientUUID;
+        if (patientUUID == null)
+            selectedPatientUUID = Patient.DEFAULT_PATIENT_UUID;
+        else
+            selectedPatientUUID = patientUUID;
 
         if (patientRecyclerAdapter != null)
             updateSelectedPatientByUUID(patientUUID);
@@ -113,7 +116,10 @@ public class SelectPatientDialog {
         patientRecyclerAdapter = new PatientSelectsRecyclerAdapter(context, new PatientSelectsRecyclerAdapter.OnInteractionListener() {
             @Override
             public void onSelected(View v, int position) {
-                selectedPatientUUID = position == -1 ? null : patients.get(position).getUuid();
+                // Check if there isn't only the default patient: "Not Specified"
+                if (patients.size() != 1) {
+                    selectedPatientUUID = patients.get(position).getUuid();
+                }
             }
 
             @Override
