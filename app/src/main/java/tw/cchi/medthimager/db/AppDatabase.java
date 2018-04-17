@@ -39,7 +39,7 @@ public abstract class AppDatabase extends RoomDatabase {
                 @Override
                 public void onCreate (@NonNull SupportSQLiteDatabase db){
                     String sql = String.format("insert into patients (`uuid`, `name`, `created_at`) values " +
-                        "('', 'No Specified', '2000-1-1 00:00:00')", Patient.DEFAULT_PATIENT_UUID);
+                        "('', 'Not Specified', '2000-1-1 00:00:00')", Patient.DEFAULT_PATIENT_UUID);
 
                     db.execSQL(sql);
                 }

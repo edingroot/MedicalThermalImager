@@ -19,6 +19,7 @@ import java.util.Arrays;
 import io.reactivex.Observable;
 import io.reactivex.schedulers.Schedulers;
 import tw.cchi.medthimager.Config;
+import tw.cchi.medthimager.Constants;
 import tw.cchi.medthimager.utils.CommonUtils;
 
 /**
@@ -242,17 +243,17 @@ public class RawThermalDump {
 
     public String getFlirImagePath() {
         return filepath.substring(0, filepath.lastIndexOf("_"))
-            + Config.POSTFIX_FLIR_IMAGE + ".jpg";
+            + Constants.POSTFIX_FLIR_IMAGE + ".jpg";
     }
 
     public String getColoredImagePath() {
         return filepath.substring(0, filepath.lastIndexOf("_"))
-            + Config.POSTFIX_COLORED_IMAGE + ".png";
+            + Constants.POSTFIX_COLORED_IMAGE + ".png";
     }
 
     public String getVisibleImagePath() {
         return filepath.substring(0, filepath.lastIndexOf("_"))
-            + Config.POSTFIX_VISIBLE_IMAGE + ".png";
+            + Constants.POSTFIX_VISIBLE_IMAGE + ".png";
     }
 
     public static String generateTitleFromFilepath(String filepath) {

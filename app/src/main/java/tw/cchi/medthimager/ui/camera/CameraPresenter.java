@@ -31,6 +31,7 @@ import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.schedulers.Schedulers;
 import tw.cchi.medthimager.Config;
+import tw.cchi.medthimager.Constants;
 import tw.cchi.medthimager.R;
 import tw.cchi.medthimager.db.helper.PatientThermalDumpsHelper;
 import tw.cchi.medthimager.di.BgThreadCapable;
@@ -153,7 +154,7 @@ public class CameraPresenter<V extends CameraMvpView> extends BasePresenter<V>
             this.imageCaptureRequested = true;
         } else {
             String filepathPrefix = AppUtils.getExportsDir() + "/" + AppUtils.generateCaptureFilename();
-            captureRawThermalDump(lastRenderedImage, filepathPrefix + Config.POSTFIX_THERMAL_DUMP + ".dat");
+            captureRawThermalDump(lastRenderedImage, filepathPrefix + Constants.POSTFIX_THERMAL_DUMP + ".dat");
         }
 
         return true;
@@ -316,8 +317,8 @@ public class CameraPresenter<V extends CameraMvpView> extends BasePresenter<V>
 
                 String filenamePrefix = AppUtils.generateCaptureFilename();
                 String filepathPrefix = AppUtils.getExportsDir() + "/" + filenamePrefix;
-                String dumpFilepath = filepathPrefix + Config.POSTFIX_THERMAL_DUMP + ".dat";
-                captureFLIRImage(renderedImage, filepathPrefix + Config.POSTFIX_FLIR_IMAGE + ".jpg");
+                String dumpFilepath = filepathPrefix + Constants.POSTFIX_THERMAL_DUMP + ".dat";
+                captureFLIRImage(renderedImage, filepathPrefix + Constants.POSTFIX_FLIR_IMAGE + ".jpg");
                 captureRawThermalDump(renderedImage, dumpFilepath);
 
                 String title = RawThermalDump.generateTitleFromFilepath(dumpFilepath);

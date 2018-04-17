@@ -14,6 +14,7 @@ import javax.inject.Inject;
 import io.reactivex.Observable;
 import io.reactivex.schedulers.Schedulers;
 import tw.cchi.medthimager.Config;
+import tw.cchi.medthimager.Constants;
 import tw.cchi.medthimager.db.AppDatabase;
 import tw.cchi.medthimager.db.CaptureRecord;
 import tw.cchi.medthimager.db.Patient;
@@ -149,7 +150,7 @@ public class CSVExportHelper {
 
     private ArrayList<Double> readSpotValues(String filenamePrefix) {
         String dumpFilepath =
-                AppUtils.getExportsDir() + "/" + filenamePrefix + Config.POSTFIX_THERMAL_DUMP + ".dat";
+                AppUtils.getExportsDir() + "/" + filenamePrefix + Constants.POSTFIX_THERMAL_DUMP + ".dat";
         RawThermalDump rawThermalDump = RawThermalDump.readFromDumpFile(dumpFilepath);
         if (rawThermalDump == null)
             return null;

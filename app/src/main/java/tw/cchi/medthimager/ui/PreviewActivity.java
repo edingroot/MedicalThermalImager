@@ -374,8 +374,8 @@
 //
 //                String filenamePrefix = AppUtils.generateCaptureFilename();
 //                String filepathPrefix = AppUtils.getExportsDir() + "/" + filenamePrefix;
-//                String dumpFilepath = filepathPrefix + Config.POSTFIX_THERMAL_DUMP + ".dat";
-//                captureFLIRImage(renderedImage, filepathPrefix + Config.POSTFIX_FLIR_IMAGE + ".jpg");
+//                String dumpFilepath = filepathPrefix + Constants.POSTFIX_THERMAL_DUMP + ".dat";
+//                captureFLIRImage(renderedImage, filepathPrefix + Constants.POSTFIX_FLIR_IMAGE + ".jpg");
 //                captureRawThermalDump(renderedImage, dumpFilepath);
 //
 //                String title = RawThermalDump.generateTitleFromFilepath(dumpFilepath);
@@ -535,7 +535,7 @@
 //                this.imageCaptureRequested = true;
 //            } else {
 //                String filepathPrefix = AppUtils.getExportsDir() + "/" + AppUtils.generateCaptureFilename();
-//                captureRawThermalDump(lastRenderedImage, filepathPrefix + Config.POSTFIX_THERMAL_DUMP + ".dat");
+//                captureRawThermalDump(lastRenderedImage, filepathPrefix + Constants.POSTFIX_THERMAL_DUMP + ".dat");
 //            }
 //        }
 //    }

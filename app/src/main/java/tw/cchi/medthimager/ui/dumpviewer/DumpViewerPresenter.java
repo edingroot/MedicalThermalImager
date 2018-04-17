@@ -18,6 +18,7 @@ import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
 import tw.cchi.medthimager.Config;
+import tw.cchi.medthimager.Constants;
 import tw.cchi.medthimager.R;
 import tw.cchi.medthimager.di.BgThreadCapable;
 import tw.cchi.medthimager.di.NewThread;
@@ -268,7 +269,7 @@ public class DumpViewerPresenter<V extends DumpViewerMvpView> extends BasePresen
             return;
 
         String dumpPath = tabResources.getRawThermalDump().getFilepath();
-        String exportPath = dumpPath.substring(0, dumpPath.lastIndexOf("_")) + Config.POSTFIX_COLORED_IMAGE + ".png";
+        String exportPath = dumpPath.substring(0, dumpPath.lastIndexOf("_")) + Constants.POSTFIX_COLORED_IMAGE + ".png";
 
         Observable.create(emitter -> {
             if (ImageUtils.saveBitmap(tabResources.getThermalBitmap(contrastRatio, coloredMode), exportPath)) {
@@ -306,7 +307,7 @@ public class DumpViewerPresenter<V extends DumpViewerMvpView> extends BasePresen
         final int tabCount = tabResources.getCount();
 
         String dumpPath = tabResources.getRawThermalDump().getFilepath();
-        String exportPath = dumpPath.substring(0, dumpPath.lastIndexOf("_")) + Config.POSTFIX_VISIBLE_IMAGE + ".png";
+        String exportPath = dumpPath.substring(0, dumpPath.lastIndexOf("_")) + Constants.POSTFIX_VISIBLE_IMAGE + ".png";
 
         Observable.create(emitter -> {
             Bitmap alignedVisibleImage = tabResources.getRawThermalDump()
