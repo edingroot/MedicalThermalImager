@@ -7,6 +7,7 @@ import android.arch.persistence.room.RoomDatabase;
 import android.arch.persistence.room.TypeConverters;
 import android.content.Context;
 import android.support.annotation.NonNull;
+import android.util.Log;
 
 import tw.cchi.medthimager.db.converter.DateConverter;
 
@@ -16,6 +17,7 @@ import tw.cchi.medthimager.db.converter.DateConverter;
 }, version = 1)
 @TypeConverters(DateConverter.class)
 public abstract class AppDatabase extends RoomDatabase {
+    private static final String TAG = AppDatabase.class.getSimpleName();
     private static final String DATABASE_NAME = "appdb.db";
     private static AppDatabase instance;
 
@@ -33,13 +35,15 @@ public abstract class AppDatabase extends RoomDatabase {
     }
 
     private static AppDatabase buildDatabase(Context context) {
+        Log.i(TAG, "Building database: " + context.getDatabasePath(DATABASE_NAME));
+
         return Room.databaseBuilder(context,
             AppDatabase.class, DATABASE_NAME)
             .addCallback(new RoomDatabase.Callback() {
                 @Override
                 public void onCreate (@NonNull SupportSQLiteDatabase db){
                     String sql = String.format("insert into patients (`uuid`, `name`, `created_at`) values " +
-                        "('', 'Not Specified', '2000-1-1 00:00:00')", Patient.DEFAULT_PATIENT_UUID);
+                        "('%s', 'Not Specified', '2000-1-1 00:00:00')", Patient.DEFAULT_PATIENT_UUID);
 
                     db.execSQL(sql);
                 }

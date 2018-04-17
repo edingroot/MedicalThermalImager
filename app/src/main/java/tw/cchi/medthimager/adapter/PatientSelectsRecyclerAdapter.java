@@ -14,11 +14,12 @@ import java.util.Locale;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import tw.cchi.medthimager.R;
+import tw.cchi.medthimager.db.Patient;
 
 public class PatientSelectsRecyclerAdapter extends RecyclerView.Adapter<PatientSelectsRecyclerAdapter.ViewHolder> {
     private final Context context;
     private final OnInteractionListener onInteractionListener;
-    private ArrayList<String> patientNames = new ArrayList<>();
+    private ArrayList<Patient> patients = new ArrayList<>();
     private int selectedPosition = -1;
 
     public PatientSelectsRecyclerAdapter(Context context, OnInteractionListener onInteractionListener) {
@@ -26,8 +27,8 @@ public class PatientSelectsRecyclerAdapter extends RecyclerView.Adapter<PatientS
         this.onInteractionListener = onInteractionListener;
     }
 
-    public void setPatientNames(ArrayList<String> patientNames) {
-        this.patientNames = patientNames;
+    public void setPatients(ArrayList<Patient> patients) {
+        this.patients = patients;
         notifyDataSetChanged();
     }
 
@@ -50,32 +51,28 @@ public class PatientSelectsRecyclerAdapter extends RecyclerView.Adapter<PatientS
     public void onBindViewHolder(ViewHolder holder, int position) {
         final int holderPosition = position;
         final boolean selected = position == selectedPosition;
-        final String holderTitle = patientNames.get(position);
+        final Patient patient = patients.get(position);
 
         holder.txtChecked.setVisibility(selected ? View.VISIBLE : View.INVISIBLE);
 
-        holder.txtPatientName.setText(holderTitle);
+        holder.txtPatientName.setText(patient.getName());
 
-        holder.layoutRoot.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                int positionToSet = holderPosition != selectedPosition ? holderPosition : -1;
-                setSelectedPosition(positionToSet);
-                onInteractionListener.onSelected(v, positionToSet);
-            }
+        holder.layoutRoot.setOnClickListener(v -> {
+            int positionToSet = holderPosition != selectedPosition ? holderPosition : -1;
+            setSelectedPosition(positionToSet);
+            onInteractionListener.onSelected(v, positionToSet);
         });
 
-        holder.txtRemove.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                onInteractionListener.onRemoveClicked(v, holderPosition);
-            }
-        });
+        if (!patient.getUuid().equals(Patient.DEFAULT_PATIENT_UUID)) {
+            holder.txtRemove.setOnClickListener(v -> onInteractionListener.onRemoveClicked(v, holderPosition));
+        } else {
+            holder.txtRemove.setVisibility(View.INVISIBLE);
+        }
     }
 
     @Override
     public int getItemCount() {
-        return patientNames.size();
+        return patients.size();
     }
 
     class ViewHolder extends RecyclerView.ViewHolder {

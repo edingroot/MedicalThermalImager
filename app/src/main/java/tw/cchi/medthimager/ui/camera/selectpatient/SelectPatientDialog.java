@@ -5,6 +5,7 @@ import android.content.Context;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
+import android.support.annotation.Nullable;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -25,7 +26,7 @@ import tw.cchi.medthimager.db.AppDatabase;
 import tw.cchi.medthimager.db.Patient;
 
 public class SelectPatientDialog {
-    private static final int UPDATE_PATIENT = 1;
+    private static final int UPDATE_PATIENTS = 1;
 
     private final Context context;
     private OnInteractionListener onInteractionListener;
@@ -35,7 +36,7 @@ public class SelectPatientDialog {
     private PatientSelectsRecyclerAdapter patientRecyclerAdapter;
 
     private List<Patient> patients;
-    private String selectedPatientUUID = null;
+    private String selectedPatientUUID;
 
     @BindView(R.id.editPatientName) EditText editPatientName;
     @BindView(R.id.btnAddPatient) Button btnAddPatient;
@@ -52,13 +53,11 @@ public class SelectPatientDialog {
             @Override
             public void handleMessage(Message message) {
                 switch (message.what) {
-                    case UPDATE_PATIENT:
-                        ArrayList<String> patientNames = new ArrayList<>();
-                        for (Patient patient : patients)
-                            patientNames.add(patient.getName());
-                        patientRecyclerAdapter.setPatientNames(patientNames);
+                    case UPDATE_PATIENTS:
+                        patientRecyclerAdapter.setPatients((ArrayList<Patient>) patients);
                         progressBarLoading.setVisibility(View.INVISIBLE);
                         recyclerPatientList.setVisibility(View.VISIBLE);
+                        updateSelectedPatientByUUID(selectedPatientUUID);
                         break;
                 }
             }
@@ -68,8 +67,9 @@ public class SelectPatientDialog {
     /**
      * @param patientUUID null if no patient selected
      */
-    public void setSelectedPatientUUID(String patientUUID) {
-        this.selectedPatientUUID = patientUUID;
+    public void setSelectedPatientUUID(@Nullable String patientUUID) {
+        selectedPatientUUID = patientUUID == null ? Patient.DEFAULT_PATIENT_UUID : patientUUID;
+
         if (patientRecyclerAdapter != null)
             updateSelectedPatientByUUID(patientUUID);
     }
@@ -85,7 +85,7 @@ public class SelectPatientDialog {
         setUILoading();
         new Thread(() -> {
             patients = database.patientDAO().getAll();
-            handler.sendEmptyMessage(UPDATE_PATIENT);
+            handler.sendEmptyMessage(UPDATE_PATIENTS);
         }).start();
 
         dialog.show();
@@ -134,7 +134,7 @@ public class SelectPatientDialog {
 
                                 database.patientDAO().delete(patientRemoving);
                                 patients = database.patientDAO().getAll();
-                                handler.sendEmptyMessage(UPDATE_PATIENT);
+                                handler.sendEmptyMessage(UPDATE_PATIENTS);
                             }).start();
                         })
                         .setNegativeButton("Cancel", (dialog, which) -> {
@@ -145,7 +145,6 @@ public class SelectPatientDialog {
         recyclerPatientList.setLayoutManager(
                 new LinearLayoutManager(context, LinearLayoutManager.VERTICAL, false)
         );
-        updateSelectedPatientByUUID(selectedPatientUUID);
     }
 
     private void updateSelectedPatientByUUID(String patientUUID) {
@@ -171,7 +170,7 @@ public class SelectPatientDialog {
         new Thread(() -> {
             database.patientDAO().insertAll(new Patient(patientName));
             patients = database.patientDAO().getAll();
-            handler.sendEmptyMessage(UPDATE_PATIENT);
+            handler.sendEmptyMessage(UPDATE_PATIENTS);
         }).start();
     }
 

@@ -5,6 +5,7 @@ import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.media.MediaScannerConnection;
+import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 
@@ -346,9 +347,7 @@ public class CameraPresenter<V extends CameraMvpView> extends BasePresenter<V>
 
     // --------------------------------- Getter / Setter / Updates ------------------------------- //
 
-    /**
-     * @return patient UUID
-     */
+    @Nullable
     @Override
     public String getCurrentPatient() {
         return patientUUID;
