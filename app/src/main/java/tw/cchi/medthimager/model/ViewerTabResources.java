@@ -12,7 +12,7 @@ import tw.cchi.medthimager.thermalproc.RawThermalDump;
 import tw.cchi.medthimager.thermalproc.ThermalDumpProcessor;
 
 public class ViewerTabResources {
-    private final Object listsLock = new Object();
+    private static final Object listsLock = new Object();
     private int currentIndex = -1;
 
     private ArrayList<Boolean> hasLoaded = new ArrayList<>(); // <whether the tab had been loaded before>
