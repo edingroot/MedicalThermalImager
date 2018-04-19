@@ -40,7 +40,7 @@ public class DumpViewerPresenter<V extends DumpViewerMvpView> extends BasePresen
 
     // Data models & helpers
     @Inject volatile ViewerTabResources tabResources;
-    private volatile ChartParameter thermalChartParameter;
+    private volatile ChartParameter<Float> thermalChartParameter;
     private ArrayList<org.opencv.core.Point> copiedSpotMarkers;
 
     // States
@@ -64,7 +64,7 @@ public class DumpViewerPresenter<V extends DumpViewerMvpView> extends BasePresen
     public void onAttach(V mvpView) {
         super.onAttach(mvpView);
 
-        thermalChartParameter = new ChartParameter(ChartParameter.ChartType.MULTI_LINE_CURVE);
+        thermalChartParameter = new ChartParameter<>(ChartParameter.ChartType.MULTI_LINE_CURVE);
         thermalChartParameter.setAlpha(0.6f);
 
         // Wait until the view have been measured (visibility state considered)
@@ -686,14 +686,14 @@ public class DumpViewerPresenter<V extends DumpViewerMvpView> extends BasePresen
      * [Note] Not calling updateChartAxis() here because it will be called when all thermalDumps are added
      *
      */
-    private synchronized void addDumpDataToChartParameter(ChartParameter chartParameter, RawThermalDump rawThermalDump, int y) {
+    private synchronized void addDumpDataToChartParameter(ChartParameter<Float> chartParameter, RawThermalDump rawThermalDump, int y) {
         int width = rawThermalDump.getWidth();
-        float[] temperaturePoints = new float[width];
+        Float[] temperaturePoints = new Float[width];
 
         for (int i = 0; i < width; i++) {
             temperaturePoints[i] = rawThermalDump.getTemperatureAt(i, y);
         }
-        chartParameter.addFloatArray(rawThermalDump.getTitle(), temperaturePoints);
+        chartParameter.addNumbersArray(rawThermalDump.getTitle(), temperaturePoints);
     }
 
     /**
@@ -706,17 +706,17 @@ public class DumpViewerPresenter<V extends DumpViewerMvpView> extends BasePresen
         chartParameter.removeFloatArray(index);
     }
 
-    private void modifyChartParameter(ChartParameter chartParameter, int y) {
+    private void modifyChartParameter(ChartParameter<Float> chartParameter, int y) {
         ArrayList<RawThermalDump> rawThermalDumps = tabResources.getRawThermalDumps();
         for (int i = 0; i < rawThermalDumps.size(); i++) {
             RawThermalDump rawThermalDump = rawThermalDumps.get(i);
-            float[] temperaturePoints = new float[rawThermalDump.getWidth()];
+            Float[] temperaturePoints = new Float[rawThermalDump.getWidth()];
 
             for (int j = 0; j < rawThermalDump.getWidth(); j++) {
                 temperaturePoints[j] = rawThermalDump.getTemperatureAt(j, y);
             }
 
-            chartParameter.updateFloatArray(i, temperaturePoints);
+            chartParameter.updateNumbersArray(i, temperaturePoints);
         }
     }
 

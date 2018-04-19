@@ -33,7 +33,7 @@ public class MultiChartView extends RelativeLayout {
 
     public MultiChartView(Context context, AttributeSet attrs) {
         super(context, attrs);
-        rootView = inflate(context, R.layout.view_multi_thermalcharts, this);
+        rootView = inflate(context, R.layout.view_multi_chart, this);
 
         unbinder = ButterKnife.bind(this, rootView);
 
@@ -41,28 +41,30 @@ public class MultiChartView extends RelativeLayout {
     }
 
     @BgThreadCapable
-    public synchronized void updateChart(ChartParameter chartParameter) {
+    public <T extends Number> void updateChart(ChartParameter<T> chartParameter) {
         this.chartParameter = chartParameter;
+        int[] colors = ColorTemplate.PASTEL_COLORS;
+
+        ArrayList<T[]> valueArrays = chartParameter.getNumbersArrays();
 
         ArrayList<ILineDataSet> dataSets = new ArrayList<>();
-        int[] colors = ColorTemplate.PASTEL_COLORS;
-        ArrayList<float[]> valueArrays = chartParameter.getFloatArrays();
-
         for (int i = 0; i < valueArrays.size(); i++) {
-            float[] valueArray = valueArrays.get(i);
+            T[] valueArray = valueArrays.get(i);
             ArrayList<Entry> values = new ArrayList<>();
 
             for (int j = 0; j < valueArray.length; j++) {
-                values.add(new Entry(j, valueArray[j]));
+                values.add(new Entry(j, valueArray[j].floatValue()));
             }
 
             LineDataSet lineDataSet = new LineDataSet(values, chartParameter.getTitle(i));
             lineDataSet.setLineWidth(2.5f);
-            lineDataSet.setCircleRadius(4f);
 
             int color = colors[i % colors.length];
             lineDataSet.setColor(color);
+            lineDataSet.setLineWidth(2.5f);
             lineDataSet.setDrawCircles(false);
+            // lineDataSet.setCircleRadius(4f);
+
             dataSets.add(lineDataSet);
         }
 
@@ -79,12 +81,7 @@ public class MultiChartView extends RelativeLayout {
         }
 
         // Run on the ui thread
-        this.post(new Runnable() {
-            @Override
-            public void run() {
-                lineChart.invalidate();
-            }
-        });
+        this.post(() -> lineChart.invalidate());
     }
 
     private void initLineChart() {

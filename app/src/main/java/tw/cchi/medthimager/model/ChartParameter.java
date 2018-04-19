@@ -5,21 +5,20 @@ import android.os.Parcelable;
 
 import java.util.ArrayList;
 
-public class ChartParameter implements Parcelable {
-    public enum ChartType {
-        MULTI_LINE_CURVE
-    }
+public class ChartParameter<T extends Number> implements Parcelable {
+    public enum ChartType {MULTI_LINE_CURVE}
+
     private ChartType chartType;
     private float alpha = 1.0f;
     private float axisMin = -1;
     private float axisMax = -1;
     private ArrayList<String> titles;
-    private ArrayList<float[]> floatArrays;
+    private ArrayList<T[]> numbersArrays;
 
     public ChartParameter(ChartType chartType) {
         this.chartType = chartType;
         this.titles = new ArrayList<>();
-        this.floatArrays = new ArrayList<>();
+        this.numbersArrays = new ArrayList<>();
     }
 
     public ChartType getChartType() {
@@ -54,41 +53,33 @@ public class ChartParameter implements Parcelable {
         return titles.get(index);
     }
 
-    public void addFloatArray(String title, float[] floatArray) {
+    public void addNumbersArray(String title, T[] numbersArray) {
         titles.add(title);
-        floatArrays.add(floatArray);
+        numbersArrays.add(numbersArray);
     }
 
-    public boolean updateFloatArray(int index, float[] floatArray) {
-        if (index >= floatArrays.size())
-            return false;
-
-        floatArrays.set(index, floatArray);
-        return true;
+    public void updateNumbersArray(int index, T[] numbers) {
+        numbersArrays.set(index, numbers);
     }
 
-    public boolean removeFloatArray(int index) {
-        if (index >= titles.size() || index >= floatArrays.size())
-            return false;
-
+    public void removeFloatArray(int index) {
         titles.remove(index);
-        floatArrays.remove(index);
-        return true;
+        numbersArrays.remove(index);
     }
 
-    public ArrayList<float[]> getFloatArrays() {
-        return floatArrays;
+    public ArrayList<T[]> getNumbersArrays() {
+        return numbersArrays;
     }
 
     protected ChartParameter(Parcel in) {
         chartType = ChartType.values()[in.readInt()];
-        in.readArrayList(float[].class.getClassLoader());
+        numbersArrays = in.readArrayList(numbersArrays.getClass().getClassLoader());
     }
 
     public static final Creator<ChartParameter> CREATOR = new Creator<ChartParameter>() {
         @Override
         public ChartParameter createFromParcel(Parcel in) {
-            return new ChartParameter(in);
+            return new ChartParameter<>(in);
         }
 
         @Override
@@ -105,6 +96,6 @@ public class ChartParameter implements Parcelable {
     @Override
     public void writeToParcel(Parcel dest, int flags) {
         dest.writeInt(chartType.ordinal());
-        dest.writeList(floatArrays);
+        dest.writeList(numbersArrays);
     }
 }

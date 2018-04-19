@@ -430,7 +430,7 @@ public class DumpViewerActivity extends BaseActivity implements DumpViewerMvpVie
 
     @Override
     @BgThreadCapable
-    public void updateThermalChart(ChartParameter thermalChartParameter) {
+    public void updateThermalChart(ChartParameter<? extends Number> thermalChartParameter) {
         thermalChartView.updateChart(thermalChartParameter);
     }
 

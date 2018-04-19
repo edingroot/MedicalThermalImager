@@ -52,7 +52,7 @@ public interface DumpViewerMvpView extends MvpView {
     void setThermalChartVisible(boolean visible);
 
     @BgThreadCapable
-    void updateThermalChart(ChartParameter thermalChartParameter);
+    void updateThermalChart(ChartParameter<? extends Number> thermalChartParameter);
 
 
     int addDumpTab(String title);

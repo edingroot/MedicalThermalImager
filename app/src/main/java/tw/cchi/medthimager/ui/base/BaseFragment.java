@@ -121,7 +121,6 @@ public abstract class BaseFragment extends Fragment implements MvpView {
     }
 
     public interface Callback {
-
         void onFragmentAttached();
 
         void onFragmentDetached(String tag);

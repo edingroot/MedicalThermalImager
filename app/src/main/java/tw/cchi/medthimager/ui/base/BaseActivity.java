@@ -136,12 +136,10 @@ public abstract class BaseActivity extends AppCompatActivity
 
     @Override
     public void onFragmentAttached() {
-
     }
 
     @Override
     public void onFragmentDetached(String tag) {
-
     }
 
     public void hideKeyboard() {
