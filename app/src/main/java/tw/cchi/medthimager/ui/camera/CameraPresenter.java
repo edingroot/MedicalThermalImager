@@ -464,7 +464,7 @@ public class CameraPresenter<V extends CameraMvpView> extends BasePresenter<V>
         Observable.create(emitter -> {
             try {
                 // Save the original thermal image
-                renderedImage.getFrame().save(new File(filename), RenderedImage.Palette.Gray, RenderedImage.ImageType.ThermalRGBA8888Image);
+                renderedImage.getFrame().save(new File(filename), frameProcessor);
                 emitter.onComplete();
             } catch (Exception e) {
                 emitter.onError(e);
