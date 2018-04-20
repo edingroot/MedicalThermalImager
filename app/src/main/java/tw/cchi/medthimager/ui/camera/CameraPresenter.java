@@ -278,7 +278,7 @@ public class CameraPresenter<V extends CameraMvpView> extends BasePresenter<V>
         streamingFrame = false;
         flirOneDevice = null;
 
-        if (!activity.isDestroyed()) {
+        if (!activity.isDestroyed() && !activity.isFinishing()) {
             getMvpView().showSnackBar(R.string.flirone_disconnected);
             activity.runOnUiThread(() -> getMvpView().updateForDeviceDisconnected());
         }
@@ -301,7 +301,7 @@ public class CameraPresenter<V extends CameraMvpView> extends BasePresenter<V>
     @Override
     public void onFrameReceived(Frame frame) {
         if (tuningState != Device.TuningState.InProgress && streamingFrame) {
-            frameProcessor.processFrame(frame);
+            frameProcessor.processFrame(frame, FrameProcessor.QueuingOption.CLEAR_QUEUED);
         }
     }
 
