@@ -4,6 +4,7 @@ import android.graphics.Bitmap;
 import android.os.Handler;
 import android.os.Looper;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 
 import org.opencv.core.Point;
 
@@ -35,6 +36,7 @@ import tw.cchi.medthimager.utils.ImageUtils;
 import tw.cchi.medthimager.utils.ThermalDumpUtils;
 
 public class DumpViewerPresenter<V extends DumpViewerMvpView> extends BasePresenter<V> implements DumpViewerMvpPresenter<V> {
+    private final String TAG = Config.TAGPRE + getClass().getSimpleName();
 
     @Inject AppCompatActivity activity;
 
@@ -117,7 +119,11 @@ public class DumpViewerPresenter<V extends DumpViewerMvpView> extends BasePresen
                 emitter.onComplete();
             }).observeOn(Schedulers.computation()).subscribe(
                 this::addThermalDump, // onNext
-                Throwable::printStackTrace, // onError
+                e -> { // onError
+                    e.printStackTrace();
+                    getMvpView().hideLoading();
+                    activity.runOnUiThread(() -> getMvpView().showSnackBar(R.string.error_occurred));
+                },
                 () -> { // onComplete
                     if (isViewAttached()) {
                         updateThermalChartAxis();
@@ -590,6 +596,7 @@ public class DumpViewerPresenter<V extends DumpViewerMvpView> extends BasePresen
     private Observable<Boolean> loadThermalImageBitmap() {
         return Observable.create(emitter -> {
 
+            Log.d(TAG, "loadThermalImageBitmap@start");
             Observable.<Bitmap>create(emitter1 -> {
                 emitter1.onNext(tabResources.getThermalBitmap(contrastRatio, coloredMode));
                 emitter1.onComplete();
@@ -611,6 +618,7 @@ public class DumpViewerPresenter<V extends DumpViewerMvpView> extends BasePresen
                             thermalSpotsHelper.setSpotsVisible(true && showingThermalSpots);
                             emitter.onNext(true);
                             emitter.onComplete();
+                            Log.d(TAG, "loadThermalImageBitmap@done1");
                             return;
                         }
 
@@ -633,6 +641,7 @@ public class DumpViewerPresenter<V extends DumpViewerMvpView> extends BasePresen
                                 emitter.onNext(true);
                                 emitter.onComplete();
                             }
+                            Log.d(TAG, "loadThermalImageBitmap@done2");
                         }, 150);
                     }
                 );
@@ -649,6 +658,8 @@ public class DumpViewerPresenter<V extends DumpViewerMvpView> extends BasePresen
      */
     private Observable<Boolean> loadVisibleImage(final RawThermalDump rawThermalDump) {
         return Observable.create(emitter -> {
+            Log.d(TAG, "loadVisibleImage@start");
+
             if (rawThermalDump.isVisibleImageAttached()) {
                 emitter.onNext(true);
                 emitter.onComplete();
@@ -667,6 +678,8 @@ public class DumpViewerPresenter<V extends DumpViewerMvpView> extends BasePresen
                 System.out.println("loadVisibleImage@done of dump: " + rawThermalDump.getTitle());
                 emitter.onNext(true);
                 emitter.onComplete();
+
+                Log.d(TAG, "loadVisibleImage@done");
             });
         });
     }

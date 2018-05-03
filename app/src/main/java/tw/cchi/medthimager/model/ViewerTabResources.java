@@ -1,18 +1,22 @@
 package tw.cchi.medthimager.model;
 
 import android.graphics.Bitmap;
-import android.support.annotation.Nullable;
+import android.util.Log;
 
 import java.util.ArrayList;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import javax.inject.Inject;
 
+import tw.cchi.medthimager.Config;
 import tw.cchi.medthimager.helper.ThermalSpotsHelper;
 import tw.cchi.medthimager.thermalproc.RawThermalDump;
 import tw.cchi.medthimager.thermalproc.ThermalDumpProcessor;
 
 public class ViewerTabResources {
-    private static final Object listsLock = new Object();
+    private final String TAG = Config.TAGPRE + getClass().getSimpleName();
+
+    private static final ReentrantReadWriteLock listsLock = new ReentrantReadWriteLock();
     private int currentIndex = -1;
 
     private ArrayList<Boolean> hasLoaded = new ArrayList<>(); // <whether the tab had been loaded before>
@@ -32,32 +36,37 @@ public class ViewerTabResources {
      */
     public int addResources(String thermalDumpPath, RawThermalDump rawThermalDump,
                             ThermalDumpProcessor thermalDumpProcessor) {
-        synchronized (listsLock) {
-            hasLoaded.add(false);
-            thermalDumpPaths.add(thermalDumpPath);
-            rawThermalDumps.add(rawThermalDump);
-            thermalDumpProcessors.add(thermalDumpProcessor);
-            grayBitmaps.add(null);
-            coloredBitmaps.add(null);
-            thermalSpotsHelpers.add(null);
-        }
+        listsLock.writeLock().lock();
+
+        hasLoaded.add(false);
+        thermalDumpPaths.add(thermalDumpPath);
+        rawThermalDumps.add(rawThermalDump);
+        thermalDumpProcessors.add(thermalDumpProcessor);
+        grayBitmaps.add(null);
+        coloredBitmaps.add(null);
+        thermalSpotsHelpers.add(null);
+
+        listsLock.writeLock().unlock();
         return getCount();
     }
 
     public void removeResources(int removeIndex, int newIndex) {
-        synchronized (listsLock) {
-            hasLoaded.remove(removeIndex);
-            thermalDumpPaths.remove(removeIndex);
-            rawThermalDumps.remove(removeIndex);
-            thermalDumpProcessors.remove(removeIndex);
-            grayBitmaps.remove(removeIndex);
-            coloredBitmaps.remove(removeIndex);
+        listsLock.writeLock().lock();
 
-            if (thermalSpotsHelpers.get(removeIndex) != null)
-                thermalSpotsHelpers.get(removeIndex).dispose();
-            thermalSpotsHelpers.remove(removeIndex);
-        }
+        hasLoaded.remove(removeIndex);
+        thermalDumpPaths.remove(removeIndex);
+        rawThermalDumps.remove(removeIndex);
+        thermalDumpProcessors.remove(removeIndex);
+        grayBitmaps.remove(removeIndex);
+        coloredBitmaps.remove(removeIndex);
+
+        if (thermalSpotsHelpers.get(removeIndex) != null)
+            thermalSpotsHelpers.get(removeIndex).dispose();
+        thermalSpotsHelpers.remove(removeIndex);
+
         currentIndex = newIndex;
+
+        listsLock.writeLock().unlock();
     }
 
     public int getCurrentIndex() {
@@ -65,50 +74,61 @@ public class ViewerTabResources {
     }
 
     public void setCurrentIndex(int index) {
-        System.out.println("ViewerTabResources@setCurrentIndex=" + index);
+        Log.i(TAG, "ViewerTabResources@setCurrentIndex=" + index);
         this.currentIndex = index;
     }
 
     public int getCount() {
-        synchronized (listsLock) {
-            return thermalDumpPaths.size();
-        }
+        listsLock.readLock().lock();
+        int val = thermalDumpPaths.size();
+        listsLock.readLock().unlock();
+
+        return val;
     }
 
     public int indexOf(String thermalDumpPath) {
-        synchronized (listsLock) {
-            return thermalDumpPaths.indexOf(thermalDumpPath);
-        }
+        listsLock.readLock().lock();
+        int val = thermalDumpPaths.indexOf(thermalDumpPath);
+        listsLock.readLock().unlock();
+
+        return val;
     }
 
     public ArrayList<String> getThermalDumpPaths() {
-        synchronized (listsLock) {
-            return thermalDumpPaths;
-        }
+        listsLock.readLock().lock();
+        ArrayList<String> val = new ArrayList<>(thermalDumpPaths);
+        listsLock.readLock().unlock();
+
+        return val;
     }
 
     public ArrayList<RawThermalDump> getRawThermalDumps() {
-        synchronized (listsLock) {
-            return rawThermalDumps;
-        }
+        listsLock.readLock().lock();
+        ArrayList<RawThermalDump> val = new ArrayList<>(rawThermalDumps);
+        listsLock.readLock().unlock();
+        return val;
     }
 
     public RawThermalDump getRawThermalDump() {
         if (currentIndex == -1)
             return null;
 
-        synchronized (listsLock) {
-            return rawThermalDumps.get(currentIndex);
-        }
+        listsLock.readLock().lock();
+        RawThermalDump val = rawThermalDumps.get(currentIndex);
+        listsLock.readLock().unlock();
+
+        return val;
     }
 
     public ThermalDumpProcessor getThermalDumpProcessor() {
         if (currentIndex == -1)
             return null;
 
-        synchronized (listsLock) {
-            return thermalDumpProcessors.get(currentIndex);
-        }
+        listsLock.readLock().lock();
+        ThermalDumpProcessor val = thermalDumpProcessors.get(currentIndex);
+        listsLock.readLock().unlock();
+
+        return val;
     }
 
     /**
@@ -118,57 +138,65 @@ public class ViewerTabResources {
         if (currentIndex == -1)
             return null;
 
-        System.out.println("getThermalBitmap@start");
+        Log.d(TAG, "getThermalBitmap@start");
 
-        Bitmap bitmap;
-        synchronized (listsLock) {
-            bitmap = colored ? coloredBitmaps.get(currentIndex) : grayBitmaps.get(currentIndex);
-        }
+        listsLock.readLock().lock();
+        Bitmap bitmap = colored ? coloredBitmaps.get(currentIndex) : grayBitmaps.get(currentIndex);
+
         if (bitmap == null) {
             bitmap = getThermalDumpProcessor().getBitmap(contrastRatio, colored);
+            listsLock.readLock().unlock();
             setThermalBitmap(colored, bitmap);
+        } else {
+            listsLock.readLock().unlock();
         }
 
-        System.out.println("getThermalBitmap@done");
+        Log.d(TAG, "getThermalBitmap@done");
         return bitmap;
     }
 
     private void setThermalBitmap(boolean colored, Bitmap thermalBitmap) {
-        synchronized (listsLock) {
-            if (colored)
-                coloredBitmaps.set(currentIndex, thermalBitmap);
-            else
-                grayBitmaps.add(currentIndex, thermalBitmap);
-        }
+         listsLock.writeLock().lock();
+
+        if (colored)
+            coloredBitmaps.set(currentIndex, thermalBitmap);
+        else
+            grayBitmaps.add(currentIndex, thermalBitmap);
+
+        listsLock.writeLock().unlock();
     }
 
     public ThermalSpotsHelper getThermalSpotHelper() {
         if (currentIndex == -1)
             return null;
 
-        synchronized (listsLock) {
-            return thermalSpotsHelpers.get(currentIndex);
-        }
+        listsLock.readLock().lock();
+        ThermalSpotsHelper val = thermalSpotsHelpers.get(currentIndex);
+        listsLock.readLock().unlock();
+
+        return val;
     }
 
     public void setThermalSpotsHelper(ThermalSpotsHelper thermalSpotsHelper) {
-        synchronized (listsLock) {
-            thermalSpotsHelpers.set(currentIndex, thermalSpotsHelper);
-        }
+        listsLock.writeLock().lock();
+        thermalSpotsHelpers.set(currentIndex, thermalSpotsHelper);
+        listsLock.writeLock().unlock();
     }
 
     public boolean hasLoaded() {
         if (currentIndex == -1)
             return false;
 
-        synchronized (listsLock) {
-            return hasLoaded.get(currentIndex);
-        }
+        listsLock.readLock().lock();
+        boolean val = hasLoaded.get(currentIndex);
+        listsLock.readLock().unlock();
+
+        return val;
     }
 
     public void setHasLoaded(boolean hasLoaded) {
-        synchronized (listsLock) {
-            this.hasLoaded.set(currentIndex, hasLoaded);
-        }
+        listsLock.writeLock().lock();
+        this.hasLoaded.set(currentIndex, hasLoaded);
+        listsLock.writeLock().unlock();
     }
 }

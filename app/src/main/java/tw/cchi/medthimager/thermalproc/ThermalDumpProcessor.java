@@ -1,6 +1,7 @@
 package tw.cchi.medthimager.thermalproc;
 
 import android.graphics.Bitmap;
+import android.util.Log;
 
 import org.opencv.android.OpenCVLoader;
 import org.opencv.android.Utils;
@@ -12,9 +13,12 @@ import org.opencv.core.MatOfPoint;
 import org.opencv.core.Point;
 import org.opencv.imgproc.Imgproc;
 
+import tw.cchi.medthimager.Config;
 import tw.cchi.medthimager.utils.ImageUtils;
 
 public class ThermalDumpProcessor {
+    private final String TAG = Config.TAGPRE + getClass().getSimpleName();
+
     private final static int MAX_ALLOWED = 2731 + 1200; // 120 deg Celsius
     private final static double FILTER_RATIO_LOW = 0.005; // Set to 0 to disable
     private final static double FILTER_RATIO_HIGH = 0.0005; // Set to 0 to disable
@@ -47,7 +51,7 @@ public class ThermalDumpProcessor {
         minThermalValue = Integer.MAX_VALUE;
         maxThermalValue = Integer.MIN_VALUE;
         for (int i = 0; i < pixelCount; i++) {
-            thermalValues10[i] = thermalValues[i] / 10;
+            thermalValues10[i] = thermalValues[i] < 0 ? 0 : thermalValues[i] / 10;
             thermalHist[thermalValues10[i]]++;
 
             if (thermalValues10[i] != 0 && thermalValues10[i] < minThermalValue)

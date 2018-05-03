@@ -47,6 +47,7 @@ import tw.cchi.medthimager.utils.CommonUtils;
 public class CameraPresenter<V extends CameraMvpView> extends BasePresenter<V>
     implements CameraMvpPresenter<V>, Device.Delegate, Device.StreamDelegate,
                 FrameProcessor.Delegate, Device.PowerUpdateDelegate {
+    private final String TAG = Config.TAGPRE + getClass().getSimpleName();
 
     @Inject AppCompatActivity activity;
     @Inject PatientThermalDumpsHelper dbPatientDumpsHelper;
@@ -328,7 +329,7 @@ public class CameraPresenter<V extends CameraMvpView> extends BasePresenter<V>
 
             // (DEBUG) Show image types
             // for (RenderedImage.ImageType type : frameProcessor.getImageTypes()) {
-            //     Log.i(Config.TAG, "ImageType=" + type);
+            //     Log.i(TAG, "ImageType=" + type);
             // }
         } else {
             updateThermalImageView(renderedImage.getBitmap());
@@ -502,12 +503,12 @@ public class CameraPresenter<V extends CameraMvpView> extends BasePresenter<V>
 
     private void scanMediaStorage(String filename) {
         // Call the system media scanner
-        Log.i(Config.TAG, "scanning media storage");
+        Log.i(TAG, "scanning media storage");
         MediaScannerConnection.scanFile(activity,
             new String[]{filename}, null,
             (path, uri) -> {
-                Log.i(Config.TAG, "ExternalStorage Scanned " + path + ":");
-                Log.i(Config.TAG, "ExternalStorage -> uri=" + uri);
+                Log.i(TAG, "ExternalStorage Scanned " + path + ":");
+                Log.i(TAG, "ExternalStorage -> uri=" + uri);
             });
     }
 

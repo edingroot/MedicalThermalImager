@@ -3,6 +3,7 @@ package tw.cchi.medthimager.thermalproc;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.support.annotation.Nullable;
+import android.util.Log;
 
 import com.flir.flironesdk.FrameProcessor;
 import com.flir.flironesdk.LoadedFrame;
@@ -16,10 +17,13 @@ import java.io.File;
 import java.nio.ByteBuffer;
 import java.util.EnumSet;
 
+import tw.cchi.medthimager.Config;
 import tw.cchi.medthimager.di.NewThread;
 import tw.cchi.medthimager.utils.ImageUtils;
 
 public class VisibleImageMask implements FrameProcessor.Delegate {
+    private final String TAG = Config.TAGPRE + getClass().getSimpleName();
+
     private static final EnumSet<RenderedImage.ImageType> IMAGE_TYPES = EnumSet.of(
             RenderedImage.ImageType.VisibleAlignedRGBA8888Image
 //            RenderedImage.ImageType.BlendedMSXRGBA8888Image
@@ -61,10 +65,14 @@ public class VisibleImageMask implements FrameProcessor.Delegate {
         this.proceedTypes = 0;
 
         new Thread(() -> {
+            Log.d(TAG, "processFrame");
+
             frameProcessor = new FrameProcessor(context, VisibleImageMask.this, IMAGE_TYPES);
             frameProcessor.setImagePalette(loadedFrame.getPreviewPalette());
 //                frameProcessor.setImagePalette(RenderedImage.Palette.Iron);
             frameProcessor.setEmissivity(0.98f); // human skin, water, frost
+
+            Log.d(TAG, "invoke: frameProcessor.processFrame");
             frameProcessor.processFrame(loadedFrame);
         }).start();
     }
@@ -75,6 +83,8 @@ public class VisibleImageMask implements FrameProcessor.Delegate {
 
     @Override
     public void onFrameProcessed(RenderedImage renderedImage) {
+        Log.d(TAG, "onFrameProcessed");
+
         if (renderedImage.imageType() == RenderedImage.ImageType.VisibleAlignedRGBA8888Image) {
             visibleBitmap = Bitmap.createBitmap(renderedImage.width(), renderedImage.height(), Bitmap.Config.ARGB_8888);
             visibleBitmap.copyPixelsFromBuffer(ByteBuffer.wrap(renderedImage.pixelData()));

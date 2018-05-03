@@ -40,6 +40,8 @@ import tw.cchi.medthimager.ui.camera.selectpatient.SelectPatientDialog;
 import tw.cchi.medthimager.ui.dumpviewer.DumpViewerActivity;
 
 public class CameraActivity extends BaseActivity implements CameraMvpView {
+    private final String TAG = Config.TAGPRE + getClass().getSimpleName();
+
     public static final int ACTION_PICK_FROM_GALLERY = 100;
 
     @Inject CameraMvpPresenter<CameraMvpView> presenter;
@@ -81,7 +83,7 @@ public class CameraActivity extends BaseActivity implements CameraMvpView {
 
             @Override
             public boolean onScale(ScaleGestureDetector detector) {
-                Log.d(Config.TAG, "zoom ongoing, scale: " + detector.getScaleFactor());
+                Log.d(TAG, "zoom ongoing, scale: " + detector.getScaleFactor());
 //                frameProcessor.setMSXDistance(detector.getScaleFactor());
                 return false;
             }
