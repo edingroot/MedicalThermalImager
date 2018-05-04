@@ -1,9 +1,7 @@
 package tw.cchi.medthimager.ui.camera;
 
 import android.graphics.Bitmap;
-import android.support.annotation.Nullable;
 
-import tw.cchi.medthimager.db.Patient;
 import tw.cchi.medthimager.di.BgThreadCapable;
 import tw.cchi.medthimager.di.NewThread;
 import tw.cchi.medthimager.model.ContiShootParameters;

@@ -168,20 +168,22 @@
             android:layout_height="wrap_content"
             android:layout_alignParentTop="true"
             android:layout_marginEnd="10dp"
-            android:layout_toStartOf="@+id/fabAddSpot"
+            android:layout_toStartOf="@+id/btnAddSpot"
             android:drawableTop="@drawable/ic_top_menu"
             android:textColor="#fff"
             android:textOff="@string/menu"
             android:textOn="@string/menu"/>
 
-        <android.support.design.widget.FloatingActionButton
-            android:id="@+id/fabAddSpot"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+        <ImageButton
+            android:id="@+id/btnAddSpot"
+            android:layout_width="@dimen/btn_add_spot_size"
+            android:layout_height="@dimen/btn_add_spot_size"
             android:layout_alignParentEnd="true"
-            android:layout_marginEnd="5dp"
-            android:layout_marginTop="3dp"
-            android:src="@android:drawable/ic_menu_add"/>
+            android:layout_marginTop="8dp"
+            android:layout_marginEnd="12dp"
+            android:background="@android:color/holo_blue_dark"
+            android:scaleType="fitCenter"
+            android:src="@drawable/ic_add_minus"/>
 
     </RelativeLayout>
 

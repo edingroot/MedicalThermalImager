@@ -293,13 +293,13 @@ public class DumpViewerActivity extends BaseActivity implements DumpViewerMvpVie
         popupMenu.show();
     }
 
-    @OnClick(R.id.fabAddSpot)
-    public void onFabAddSpotClick() {
+    @OnClick(R.id.btnAddSpot)
+    public void onAddSpotClick() {
         presenter.addThermalSpot();
     }
 
-    @OnLongClick(R.id.fabAddSpot)
-    public boolean onFabAddSpotLongClick() {
+    @OnLongClick(R.id.btnAddSpot)
+    public boolean onAddSpotLongClick() {
         if (presenter.getTabsCount() == 0)
             return true;
 

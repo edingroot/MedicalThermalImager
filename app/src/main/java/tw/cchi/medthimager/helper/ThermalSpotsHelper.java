@@ -5,6 +5,7 @@ import android.content.Context;
 import android.graphics.Point;
 import android.os.Handler;
 import android.os.Looper;
+import android.util.Log;
 import android.util.SparseArray;
 import android.view.MotionEvent;
 import android.view.View;
@@ -16,12 +17,15 @@ import java.util.Queue;
 
 import io.reactivex.Completable;
 import io.reactivex.schedulers.Schedulers;
+import tw.cchi.medthimager.Config;
 import tw.cchi.medthimager.component.ThermalSpotView;
 import tw.cchi.medthimager.di.BgThreadCapable;
 import tw.cchi.medthimager.thermalproc.RawThermalDump;
 import tw.cchi.medthimager.utils.CommonUtils;
 
 public class ThermalSpotsHelper {
+    private final String TAG = Config.TAGPRE + getClass().getSimpleName();
+
     private Context context;
     private ViewGroup parentView;
     private RawThermalDump rawThermalDump;
@@ -83,8 +87,8 @@ public class ThermalSpotsHelper {
      * @param imageViewRawY   thermalImageView.getTop() + Sum(ALL_PARENTS_OF_thermalImageView .getTop())
      */
     public void setImageViewMetrics(int imageViewWidth, int imageViewHeight, int imageViewRawY) {
-        System.out.printf("setImageViewMetrics: imageViewWidth=%d, imageViewHeight=%d, imageViewRawY=%d\n",
-                imageViewWidth, imageViewHeight, imageViewRawY);
+        Log.d(TAG, String.format("setImageViewMetrics: imageViewWidth=%d, imageViewHeight=%d, imageViewRawY=%d\n",
+            imageViewWidth, imageViewHeight, imageViewRawY));
         
         this.imageViewWidth = imageViewWidth;
         this.imageViewHeight = imageViewHeight;
@@ -230,8 +234,11 @@ public class ThermalSpotsHelper {
         ArrayList<org.opencv.core.Point> spotMarkers = rawThermalDump.getSpotMarkers();
         Point rawPosition = view2thermalPosition(viewPosition.x, viewPosition.y);
 
-        System.out.printf("Store2dump@BfConv id=%d, pos=(%d, %d)\n", spotView.getSpotId(), viewPosition.x, viewPosition.y);
-        System.out.printf("Store2dump@AfConv id=%d, pos=(%d, %d), temp=%.2f\n", spotView.getSpotId(), rawPosition.x, rawPosition.y, rawThermalDump.getTemperature9Average(rawPosition.x, rawPosition.y));
+        Log.d(TAG, String.format("Store2dump@BfConv id=%d, pos=(%d, %d)\n",
+            spotView.getSpotId(), viewPosition.x, viewPosition.y));
+        Log.d(TAG, String.format("Store2dump@AfConv id=%d, pos=(%d, %d), temp=%.2f\n",
+            spotView.getSpotId(), rawPosition.x, rawPosition.y, rawThermalDump.getTemperature9Average(rawPosition.x, rawPosition.y)
+        ));
 
         spotMarkers.get(spotView.getSpotId() - 1).set(new double[]{rawPosition.x, rawPosition.y});
         rawThermalDump.setSpotMarkers(spotMarkers);
@@ -247,10 +254,10 @@ public class ThermalSpotsHelper {
             // Convert position on rawThermalImage to position on the imageView
             Point viewPosition = thermal2viewPosition((int) dumpX, (int) dumpY);
 
-            System.out.printf("RestoreThermalSpot@BfConv: spotId=%s, x=%.0f, y=%.0f\n", spotId, dumpX, dumpY);
-            System.out.printf("RestoreThermalSpot@AfConv: spotId=%s, x=%d, y=%d, lastSpotId=%d\n",
+            Log.d(TAG, String.format("RestoreThermalSpot@BfConv: spotId=%s, x=%.0f, y=%.0f\n", spotId, dumpX, dumpY));
+            Log.d(TAG, String.format("RestoreThermalSpot@AfConv: spotId=%s, x=%d, y=%d, lastSpotId=%d\n",
                 spotId, viewPosition.x, viewPosition.y, lastSpotId
-            );
+            ));
 
             addSpot(spotId, viewPosition.x, viewPosition.y, false);
         });
@@ -268,11 +275,17 @@ public class ThermalSpotsHelper {
             Point viewPosition = spotView.getCenterPosition();
             final Point thermalPosition = view2thermalPosition(viewPosition.x, viewPosition.y);
 
-            System.out.printf("updateThermalValue, %d - viewPos=(%d, %d)\n", spotView.getSpotId(), viewPosition.x, viewPosition.y);
-            System.out.printf("updateThermalValue, %d - dumpPos=(%d, %d)\n", spotView.getSpotId(), thermalPosition.x, thermalPosition.y);
+            Log.d(TAG, String.format("updateThermalValue, %d - viewPos=(%d, %d)\n",
+                spotView.getSpotId(), viewPosition.x, viewPosition.y
+            ));
+            Log.d(TAG, String.format("updateThermalValue, %d - dumpPos=(%d, %d)\n",
+                spotView.getSpotId(), thermalPosition.x, thermalPosition.y
+            ));
 
             // Run on UI thread
-            new Handler(Looper.getMainLooper()).post(() -> spotView.setTemperature(rawThermalDump.getTemperature9Average(thermalPosition.x, thermalPosition.y)));
+            new Handler(Looper.getMainLooper()).post(() ->
+                spotView.setTemperature(rawThermalDump.getTemperature9Average(thermalPosition.x, thermalPosition.y))
+            );
         });
     }
 
