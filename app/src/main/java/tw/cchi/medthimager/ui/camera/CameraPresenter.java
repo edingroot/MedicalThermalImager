@@ -38,6 +38,7 @@ import tw.cchi.medthimager.db.helper.PatientThermalDumpsHelper;
 import tw.cchi.medthimager.di.BgThreadCapable;
 import tw.cchi.medthimager.di.NewThread;
 import tw.cchi.medthimager.helper.CSVExportHelper;
+import tw.cchi.medthimager.model.CaptureProcessInfo;
 import tw.cchi.medthimager.model.ContiShootParameters;
 import tw.cchi.medthimager.thermalproc.RawThermalDump;
 import tw.cchi.medthimager.ui.base.BasePresenter;
@@ -65,7 +66,7 @@ public class CameraPresenter<V extends CameraMvpView> extends BasePresenter<V>
     private volatile boolean simConnected = false; // simulated device connected
     private volatile boolean streamingFrame = false;
     private volatile boolean contiShooting = false; // TODO: volatile?
-    private volatile boolean imageCaptureRequested = false;
+    private CaptureProcessInfo captureProcessInfo = null;
     private int thermalSpotX = -1; // movable spot thermal indicator pX
     private int thermalSpotY = -1; // movable spot thermal indicator pY
     private String patientUUID = null;
@@ -83,7 +84,8 @@ public class CameraPresenter<V extends CameraMvpView> extends BasePresenter<V>
 
         frameProcessor = new FrameProcessor(activity, this, EnumSet.of(
             RenderedImage.ImageType.ThermalRGBA8888Image,
-            RenderedImage.ImageType.ThermalRadiometricKelvinImage
+            RenderedImage.ImageType.ThermalRadiometricKelvinImage,
+            RenderedImage.ImageType.VisibleAlignedRGBA8888Image
         ));
         frameProcessor.setImagePalette(RenderedImage.Palette.Gray);
         frameProcessor.setEmissivity(0.98f); // human skin, water, frost
@@ -153,7 +155,7 @@ public class CameraPresenter<V extends CameraMvpView> extends BasePresenter<V>
             return false;
 
         if (streamingFrame) {
-            this.imageCaptureRequested = true;
+            captureProcessInfo = new CaptureProcessInfo();
         } else {
             String filepathPrefix = AppUtils.getExportsDir() + "/" + AppUtils.generateCaptureFilename();
             captureRawThermalDump(lastRenderedImage, filepathPrefix + Constants.POSTFIX_THERMAL_DUMP + ".dat");
@@ -314,25 +316,34 @@ public class CameraPresenter<V extends CameraMvpView> extends BasePresenter<V>
         if (renderedImage.imageType() == RenderedImage.ImageType.ThermalRadiometricKelvinImage) {
             updateThermalSpotTemp();
 
-            if (imageCaptureRequested) {
-                imageCaptureRequested = false;
-
-                String filenamePrefix = AppUtils.generateCaptureFilename();
-                String filepathPrefix = AppUtils.getExportsDir() + "/" + filenamePrefix;
-                String dumpFilepath = filepathPrefix + Constants.POSTFIX_THERMAL_DUMP + ".dat";
-                captureFLIRImage(renderedImage, filepathPrefix + Constants.POSTFIX_FLIR_IMAGE + ".jpg");
-                captureRawThermalDump(renderedImage, dumpFilepath);
-
-                String title = RawThermalDump.generateTitleFromFilepath(dumpFilepath);
-                dbPatientDumpsHelper.addCaptureRecord(patientUUID, title, filenamePrefix).subscribe();
+            // If image capture in progress
+            if (captureProcessInfo != null) {
+                captureRawThermalDump(renderedImage, captureProcessInfo.getDumpFilepath());
+                captureProcessInfo.setThermalDumpCaptured(true);
+                checkCaptureProcessDone();
             }
-
-            // (DEBUG) Show image types
-            // for (RenderedImage.ImageType type : frameProcessor.getImageTypes()) {
-            //     Log.i(TAG, "ImageType=" + type);
-            // }
-        } else {
+        } else if (renderedImage.imageType() == RenderedImage.ImageType.VisibleAlignedRGBA8888Image) {
+            // If image capture in progress
+            if (captureProcessInfo != null) {
+                captureFLIRImage(renderedImage, captureProcessInfo.getFilepathPrefix() + Constants.POSTFIX_FLIR_IMAGE + ".jpg");
+                captureProcessInfo.setFlirImageCaptured(true);
+                checkCaptureProcessDone();
+            }
+        } else if (renderedImage.imageType() == RenderedImage.ImageType.ThermalRGBA8888Image) {
             updateThermalImageView(renderedImage.getBitmap());
+        }
+
+        // (DEBUG) Show image types
+        // for (RenderedImage.ImageType type : frameProcessor.getImageTypes()) {
+        //     Log.i(TAG, "ImageType=" + type);
+        // }
+    }
+
+    private void checkCaptureProcessDone() {
+        if (captureProcessInfo != null && captureProcessInfo.isCaptureProcessDone()) {
+            String title = RawThermalDump.generateTitleFromFilepath(captureProcessInfo.getDumpFilepath());
+            dbPatientDumpsHelper.addCaptureRecord(patientUUID, title, captureProcessInfo.getFilepathPrefix()).subscribe();
+            captureProcessInfo = null;
         }
     }
 
@@ -443,7 +454,7 @@ public class CameraPresenter<V extends CameraMvpView> extends BasePresenter<V>
             .observeOn(AndroidSchedulers.mainThread()).subscribe(getMvpView()::setThermalSpotTemp);
     }
 
-    // -------------------------------------- Private Methods ------------------------------------ //
+    // ------------------------------------------------------------------------------------------- //
 
     private void connectSimulatedDevice() {
         getMvpView().showToast(R.string.connecting_sim);

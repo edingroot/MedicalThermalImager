@@ -16,6 +16,7 @@ import org.opencv.imgproc.Imgproc;
 import java.io.File;
 import java.nio.ByteBuffer;
 import java.util.EnumSet;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import tw.cchi.medthimager.Config;
 import tw.cchi.medthimager.di.NewThread;
@@ -25,7 +26,7 @@ public class VisibleImageMask implements FrameProcessor.Delegate {
     private final String TAG = Config.TAGPRE + getClass().getSimpleName();
 
     private static final EnumSet<RenderedImage.ImageType> IMAGE_TYPES = EnumSet.of(
-            RenderedImage.ImageType.VisibleAlignedRGBA8888Image
+        RenderedImage.ImageType.VisibleAlignedRGBA8888Image
 //            RenderedImage.ImageType.BlendedMSXRGBA8888Image
     );
     private final RawThermalDump rawThermalDump;
@@ -34,7 +35,7 @@ public class VisibleImageMask implements FrameProcessor.Delegate {
     private LoadedFrame loadedFrame;
 
     private FrameProcessor frameProcessor;
-    private volatile int proceedTypes = 0;
+    private final AtomicInteger proceedTypeCount = new AtomicInteger(0);
     private volatile Bitmap visibleBitmap;
 //    private volatile Bitmap blendedMSXBitmap;
 
@@ -62,7 +63,7 @@ public class VisibleImageMask implements FrameProcessor.Delegate {
     @NewThread
     public void processFrame(final Context context, OnFrameProcessedListener onFrameProcessedListener) {
         this.onFrameProcessedListener = onFrameProcessedListener;
-        this.proceedTypes = 0;
+        this.proceedTypeCount.set(0);
 
         new Thread(() -> {
             Log.d(TAG, "processFrame");
@@ -83,7 +84,7 @@ public class VisibleImageMask implements FrameProcessor.Delegate {
 
     @Override
     public void onFrameProcessed(RenderedImage renderedImage) {
-        Log.d(TAG, "onFrameProcessed");
+        Log.d(TAG, "onFrameProcessed: " + renderedImage.imageType());
 
         if (renderedImage.imageType() == RenderedImage.ImageType.VisibleAlignedRGBA8888Image) {
             visibleBitmap = Bitmap.createBitmap(renderedImage.width(), renderedImage.height(), Bitmap.Config.ARGB_8888);
@@ -94,7 +95,7 @@ public class VisibleImageMask implements FrameProcessor.Delegate {
 //            blendedMSXBitmap.copyPixelsFromBuffer(ByteBuffer.wrap(renderedImage.pixelData()));
         }
 
-        if (++proceedTypes == IMAGE_TYPES.size()) {
+        if (proceedTypeCount.addAndGet(1) == IMAGE_TYPES.size()) {
             // Map<RenderedImage.ImageType, RenderedImage> renderedImageMap = frameProcessor.getProcessedFrames(loadedFrame);
             onFrameProcessedListener.onFrameProcessed(this);
         }
