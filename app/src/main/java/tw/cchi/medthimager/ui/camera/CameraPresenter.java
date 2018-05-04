@@ -1,10 +1,12 @@
 package tw.cchi.medthimager.ui.camera;
 
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.media.MediaScannerConnection;
+import android.net.Uri;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 
@@ -180,8 +182,9 @@ public class CameraPresenter<V extends CameraMvpView> extends BasePresenter<V>
         contiShootParameters.timeStart = new Date();
         contiShootParameters.capturedCount = 0;
 
-        getMvpView().setContinuousShootMode(
-            contiShootParameters.capturedCount, contiShootParameters.totalCaptures);
+        activity.runOnUiThread(() -> getMvpView().setContinuousShootMode(
+            contiShootParameters.capturedCount, contiShootParameters.totalCaptures)
+        );
 
         TimerTask timerTask = new TimerTask() {
             @Override
@@ -212,10 +215,11 @@ public class CameraPresenter<V extends CameraMvpView> extends BasePresenter<V>
                         });
                     }
                 } else if (++contiShootParameters.capturedCount >= contiShootParameters.totalCaptures) {
-                    activity.runOnUiThread(() -> finishContiShooting(false));
+                    finishContiShooting(false);
                 } else {
-                    getMvpView().setContinuousShootMode(
-                        contiShootParameters.capturedCount, contiShootParameters.totalCaptures);
+                    activity.runOnUiThread(() -> getMvpView().setContinuousShootMode(
+                        contiShootParameters.capturedCount, contiShootParameters.totalCaptures)
+                    );
                 }
             }
         };
@@ -516,12 +520,7 @@ public class CameraPresenter<V extends CameraMvpView> extends BasePresenter<V>
     private void scanMediaStorage(String filename) {
         // Call the system media scanner
         Log.i(TAG, "scanning media storage");
-        MediaScannerConnection.scanFile(activity,
-            new String[]{filename}, null,
-            (path, uri) -> {
-                Log.i(TAG, "ExternalStorage Scanned " + path + ":");
-                Log.i(TAG, "ExternalStorage -> uri=" + uri);
-            });
+        activity.sendBroadcast(new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE, Uri.fromFile(new File(filename))));
     }
 
     @Override

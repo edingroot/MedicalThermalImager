@@ -417,7 +417,7 @@ public class CameraActivity extends BaseActivity implements CameraMvpView {
     @Override
     public void setContinuousShootMode(int capturedCount, int totalCaptures) {
         imgBtnCapture.setImageResource(R.drawable.ic_camera_automation);
-        txtShootInfo.setText(getString(R.string.conti_shoot_counts, 0, totalCaptures));
+        txtShootInfo.setText(getString(R.string.conti_shoot_counts, capturedCount, totalCaptures));
     }
 
     @Override
