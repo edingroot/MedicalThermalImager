@@ -3,15 +3,15 @@ package tw.cchi.medthimager.model;
 import java.util.Date;
 
 public class ContiShootParameters {
-
-    public int period;
+    public Date timeStart;
+    public int interval;
+    public int capturedCount;
     public int totalCaptures;
 
-    public Date timeStart;
-    public int capturedCount;
+    public int secondsToNextTick = 0;
 
-    public ContiShootParameters(int period, int totalCaptures) {
-        this.period = period;
+    public ContiShootParameters(int interval, int totalCaptures) {
+        this.interval = interval;
         this.totalCaptures = totalCaptures;
     }
 

@@ -30,6 +30,8 @@ public interface CameraMvpView extends MvpView {
 
     void setContinuousShootMode(int capturedCount, int totalCaptures);
 
+    void setContinuousShootCountdown(int value);
+
 
     int getThermalImageViewWidth();
 

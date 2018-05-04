@@ -28,10 +28,9 @@ import com.flir.flironesdk.FlirUsbDevice;
 
 import javax.inject.Inject;
 
-import butterknife.ButterKnife;
 import butterknife.BindView;
+import butterknife.ButterKnife;
 import butterknife.OnClick;
-import butterknife.OnLongClick;
 import butterknife.OnTouch;
 import permissions.dispatcher.NeedsPermission;
 import permissions.dispatcher.OnPermissionDenied;
@@ -43,6 +42,7 @@ import tw.cchi.medthimager.ui.base.BaseActivity;
 import tw.cchi.medthimager.ui.camera.contishoot.ContiShootDialog;
 import tw.cchi.medthimager.ui.camera.selectpatient.SelectPatientDialog;
 import tw.cchi.medthimager.ui.dumpviewer.DumpViewerActivity;
+import tw.cchi.medthimager.utils.CommonUtils;
 
 @RuntimePermissions
 public class CameraActivity extends BaseActivity implements CameraMvpView {
@@ -66,6 +66,7 @@ public class CameraActivity extends BaseActivity implements CameraMvpView {
     @BindView(R.id.batteryLevelTextView) TextView batteryLevelTextView;
     @BindView(R.id.batteryChargeIndicator) ImageView batteryChargeIndicator;
     @BindView(R.id.imgBtnCapture) ImageButton imgBtnCapture;
+    @BindView(R.id.txtShootCountdown) TextView txtShootCountdown;
 
     @BindView(R.id.thermalSpotView) ThermalSpotView thermalSpotView;
     @BindView(R.id.tuningProgressBar) ProgressBar tuningProgressBar;
@@ -193,7 +194,7 @@ public class CameraActivity extends BaseActivity implements CameraMvpView {
         if (selectPatientDialog == null) {
             selectPatientDialog = new SelectPatientDialog(this, presenter::setCurrentPatient);
         }
-        selectPatientDialog.setSelectedPatientUUID(presenter.getCurrentPatient().getUuid());
+        selectPatientDialog.setSelectedPatientUUID(presenter.getCurrentPatientUuid());
         selectPatientDialog.show();
     }
 
@@ -410,14 +411,25 @@ public class CameraActivity extends BaseActivity implements CameraMvpView {
 
     @Override
     public void setSingleShootMode() {
-        txtShootInfo.setText(R.string.single_shoot);
         imgBtnCapture.setImageResource(android.R.drawable.ic_menu_camera);
+        txtShootCountdown.setVisibility(View.INVISIBLE);
+
+        txtShootInfo.setText(R.string.single_shoot);
+        txtShootInfo.setTextColor(getResources().getColor(R.color.contentText));
     }
 
     @Override
     public void setContinuousShootMode(int capturedCount, int totalCaptures) {
         imgBtnCapture.setImageResource(R.drawable.ic_camera_automation);
+        txtShootCountdown.setVisibility(View.VISIBLE);
+
         txtShootInfo.setText(getString(R.string.conti_shoot_counts, capturedCount, totalCaptures));
+        txtShootInfo.setTextColor(getResources().getColor(android.R.color.holo_green_dark));
+    }
+
+    @Override
+    public void setContinuousShootCountdown(int value) {
+        txtShootCountdown.setText(CommonUtils.padLeft(String.valueOf(value), '0', 3));
     }
 
     @Override

@@ -25,7 +25,7 @@ import tw.cchi.medthimager.R;
 import tw.cchi.medthimager.di.component.ActivityComponent;
 import tw.cchi.medthimager.di.component.DaggerActivityComponent;
 import tw.cchi.medthimager.di.module.ActivityModule;
-import tw.cchi.medthimager.utils.CommonUtils;
+import tw.cchi.medthimager.utils.AppUtils;
 
 public abstract class BaseActivity extends AppCompatActivity
     implements MvpView, BaseFragment.Callback {
@@ -55,7 +55,7 @@ public abstract class BaseActivity extends AppCompatActivity
     public void showLoading() {
         mainHandler.post(() -> {
             if (loadingDialog == null || !loadingDialog.isShowing()) {
-                loadingDialog = CommonUtils.showLoadingDialog(this);
+                loadingDialog = AppUtils.showLoadingDialog(this);
             }
         });
     }

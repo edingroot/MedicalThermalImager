@@ -1,7 +1,11 @@
 package tw.cchi.medthimager.utils;
 
+import android.app.Activity;
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
 import android.net.Uri;
 import android.os.Environment;
 
@@ -9,6 +13,8 @@ import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
+
+import tw.cchi.medthimager.R;
 
 public final class AppUtils {
 
@@ -34,5 +40,21 @@ public final class AppUtils {
         Uri uri = Uri.fromFile(new File(filePath));
         intent.setData(uri);
         context.sendBroadcast(intent);
+    }
+
+    public static ProgressDialog showLoadingDialog(final Activity activity) {
+        ProgressDialog progressDialog = new ProgressDialog(activity);
+        progressDialog.show();
+        if (progressDialog.getWindow() != null) {
+            progressDialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+        }
+        progressDialog.setContentView(R.layout.progress_dialog);
+        progressDialog.setIndeterminate(true);
+
+        progressDialog.setCancelable(true);
+        progressDialog.setCanceledOnTouchOutside(false);
+        progressDialog.setOnCancelListener(dialog -> activity.finish());
+
+        return progressDialog;
     }
 }

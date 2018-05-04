@@ -73,7 +73,8 @@
                     android:layout_gravity="start|center_vertical"
                     android:layout_weight="0.5"
                     android:text="--"
-                    android:textAppearance="?android:attr/textAppearanceMedium"/>
+                    android:textAppearance="?android:attr/textAppearanceMedium"
+                    android:textSize="@dimen/status_text_medium"/>
 
                 <ImageView
                     android:id="@+id/batteryChargeIndicator"
@@ -113,6 +114,7 @@
                 android:layout_height="wrap_content"
                 android:layout_alignParentStart="true"
                 android:text="@string/patient_"
+                android:textColor="@android:color/holo_blue_dark"
                 android:textSize="@dimen/status_text_small"/>
 
             <TextView
@@ -163,6 +165,18 @@
                 android:layout_alignParentTop="true"
                 android:layout_centerHorizontal="true"
                 android:src="@android:drawable/ic_menu_camera"/>
+
+            <TextView
+                android:id="@+id/txtShootCountdown"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerVertical="true"
+                android:layout_marginStart="-2dp"
+                android:layout_toEndOf="@id/imgBtnCapture"
+                android:text="000"
+                android:textColor="@android:color/holo_green_dark"
+                android:textSize="@dimen/status_text_medium"
+                android:visibility="invisible"/>
 
             <Button
                 android:id="@+id/btnContiShot"

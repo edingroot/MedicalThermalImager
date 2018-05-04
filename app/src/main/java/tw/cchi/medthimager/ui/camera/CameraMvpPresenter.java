@@ -33,7 +33,7 @@ public interface CameraMvpPresenter<V extends CameraMvpView> extends MvpPresente
 
     // --------------------------------- Getter / Setter / Updates ------------------------------- //
 
-    Patient getCurrentPatient();
+    String getCurrentPatientUuid();
 
     void setCurrentPatient(String patientUUID);
 

@@ -5,7 +5,6 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Paint;
-import android.media.MediaScannerConnection;
 import android.net.Uri;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
@@ -65,7 +64,7 @@ public class CameraPresenter<V extends CameraMvpView> extends BasePresenter<V>
 
     private Bitmap opacityMask; // TODO: volatile?
     private volatile RenderedImage lastRenderedImage;
-    private volatile ContiShootParameters contiShootParameters;
+    private volatile ContiShootParameters contiShootParams;
 
     private volatile boolean simConnected = false; // simulated device connected
     private volatile boolean streamingFrame = false;
@@ -73,7 +72,7 @@ public class CameraPresenter<V extends CameraMvpView> extends BasePresenter<V>
     private CaptureProcessInfo captureProcessInfo = null;
     private int thermalSpotX = -1; // movable spot thermal indicator pX
     private int thermalSpotY = -1; // movable spot thermal indicator pY
-    private Patient patient = null;
+    private String patientUuid = Patient.DEFAULT_PATIENT_UUID;
 
     @Inject
     public CameraPresenter(CompositeDisposable compositeDisposable) {
@@ -94,17 +93,16 @@ public class CameraPresenter<V extends CameraMvpView> extends BasePresenter<V>
         frameProcessor.setEmissivity(0.98f); // human skin, water, frost
 
         // Load saved values from shared preferences
-        Observable.create(emitter -> {
-            String patientUUID = preferencesHelper.getSelectedPatientUuid();
-            patient = database.patientDAO().getOrDefault(patientUUID);
-            emitter.onNext(true);
-        }).subscribeOn(Schedulers.io())
+        patientUuid = preferencesHelper.getSelectedPatientUuid();
+
+        // Query and display last selected patient name
+        Observable.<String>create(emitter ->
+            emitter.onNext(database.patientDAO().getOrDefault(patientUuid).getName())
+        ).subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
-            .subscribe(b -> {
-                // Initialize status text
-                getMvpView().setPatientStatusText(patient.getName());
-                getMvpView().setSingleShootMode();
-            });
+            .subscribe(getMvpView()::setPatientStatusText);
+
+        getMvpView().setSingleShootMode();
     }
 
     @Override
@@ -178,60 +176,63 @@ public class CameraPresenter<V extends CameraMvpView> extends BasePresenter<V>
     @Override
     public void startContiShooting(ContiShootParameters parameters) {
         contiShooting = true;
-        contiShootParameters = parameters;
-        contiShootParameters.timeStart = new Date();
-        contiShootParameters.capturedCount = 0;
+        contiShootParams = parameters;
+        contiShootParams.timeStart = new Date();
+        contiShootParams.capturedCount = 0;
+        contiShootParams.secondsToNextTick = Config.CONTI_SHOOT_START_DELAY;
 
-        activity.runOnUiThread(() -> getMvpView().setContinuousShootMode(
-            contiShootParameters.capturedCount, contiShootParameters.totalCaptures)
-        );
+        getMvpView().setContinuousShootMode(
+            contiShootParams.capturedCount, contiShootParams.totalCaptures);
+        getMvpView().setContinuousShootCountdown(contiShootParams.secondsToNextTick);
 
         TimerTask timerTask = new TimerTask() {
             @Override
             public void run() {
-                if (tuningState == Device.TuningState.InProgress) {
-                    activity.runOnUiThread(() -> getMvpView().showSnackBar(
-                        R.string.conti_shoot_tuning_skip,
-                        contiShootParameters.capturedCount,
-                        contiShootParameters.totalCaptures
-                    ));
-                    return;
-                }
-
-                if (!triggerImageCapture()) {
-                    contiShooting = false;
-                    contiShootTimer.cancel();
-                    contiShootTimer = null;
-
-                    if (isViewAttached()) {
-                        activity.runOnUiThread(() -> {
-                            getMvpView().setSingleShootMode();
-                            getMvpView().showMessageAlertDialog(
-                                activity.getString(R.string.error),
-                                activity.getString(R.string.conti_shoot_failed_report,
-                                    contiShootParameters.capturedCount,
-                                    contiShootParameters.totalCaptures)
-                            );
-                        });
+                activity.runOnUiThread(() -> {
+                    if (--contiShootParams.secondsToNextTick <= 0) {
+                        getMvpView().setContinuousShootCountdown(contiShootParams.secondsToNextTick = 0);
+                        handleContiShootTick();
+                        getMvpView().setContinuousShootCountdown(contiShootParams.secondsToNextTick = contiShootParams.interval);
+                    } else {
+                        getMvpView().setContinuousShootCountdown(contiShootParams.secondsToNextTick);
                     }
-                } else if (++contiShootParameters.capturedCount >= contiShootParameters.totalCaptures) {
-                    finishContiShooting(false);
-                } else {
-                    activity.runOnUiThread(() -> getMvpView().setContinuousShootMode(
-                        contiShootParameters.capturedCount, contiShootParameters.totalCaptures)
-                    );
-                }
+                });
             }
         };
+        contiShootTimer = new Timer();
+        contiShootTimer.schedule(timerTask, 0, 1000);
 
         getMvpView().showToast(R.string.conti_shoot_starting, Config.CONTI_SHOOT_START_DELAY);
+    }
 
-        contiShootTimer = new Timer();
-        contiShootTimer.schedule(
-            timerTask,
-            Config.CONTI_SHOOT_START_DELAY * 1000,
-            contiShootParameters.period * 1000
-        );
+    private void handleContiShootTick() {
+        if (tuningState == Device.TuningState.InProgress) {
+            getMvpView().showSnackBar(
+                R.string.conti_shoot_tuning_skip,
+                contiShootParams.capturedCount, contiShootParams.totalCaptures
+            );
+            return;
+        }
+
+        if (!triggerImageCapture()) {
+            contiShooting = false;
+            contiShootTimer.cancel();
+            contiShootTimer = null;
+
+            if (isViewAttached()) {
+                getMvpView().setSingleShootMode();
+                getMvpView().showMessageAlertDialog(
+                    activity.getString(R.string.error),
+                    activity.getString(R.string.conti_shoot_failed_report,
+                        contiShootParams.capturedCount, contiShootParams.totalCaptures)
+                );
+            }
+        } else if (++contiShootParams.capturedCount >= contiShootParams.totalCaptures) {
+            finishContiShooting(false);
+        } else {
+            getMvpView().setContinuousShootMode(
+                contiShootParams.capturedCount, contiShootParams.totalCaptures);
+        }
     }
 
     /**
@@ -249,15 +250,15 @@ public class CameraPresenter<V extends CameraMvpView> extends BasePresenter<V>
                 if (showMessageByToast) {
                     getMvpView().showToast(
                         activity.getString(R.string.conti_shoot_finished_report,
-                            contiShootParameters.capturedCount,
-                            contiShootParameters.totalCaptures)
+                            contiShootParams.capturedCount,
+                            contiShootParams.totalCaptures)
                     );
                 } else {
                     getMvpView().showMessageAlertDialog(
-                        activity.getString(R.string.message),
+                        activity.getString(R.string.information),
                         activity.getString(R.string.conti_shoot_finished_report,
-                            contiShootParameters.capturedCount,
-                            contiShootParameters.totalCaptures)
+                            contiShootParams.capturedCount,
+                            contiShootParams.totalCaptures)
                     );
                 }
             });
@@ -338,7 +339,7 @@ public class CameraPresenter<V extends CameraMvpView> extends BasePresenter<V>
                 captureRawThermalDump(renderedImage, captureProcessInfo.getDumpFilepath());
                 captureFLIRImage(renderedImage, captureProcessInfo.getFilepathPrefix() + Constants.POSTFIX_FLIR_IMAGE + ".jpg");
 
-                dbPatientDumpsHelper.addCaptureRecord(patient.getUuid(), captureProcessInfo.getTitle(), captureProcessInfo.getFilepathPrefix()).subscribe();
+                dbPatientDumpsHelper.addCaptureRecord(patientUuid, captureProcessInfo.getTitle(), captureProcessInfo.getFilepathPrefix()).subscribe();
                 captureProcessInfo = null;
             }
         } else if (renderedImage.imageType() == RenderedImage.ImageType.ThermalRGBA8888Image) {
@@ -364,15 +365,21 @@ public class CameraPresenter<V extends CameraMvpView> extends BasePresenter<V>
     // --------------------------------- Getter / Setter / Updates ------------------------------- //
 
     @Override
-    public Patient getCurrentPatient() {
-        return patient;
+    public String getCurrentPatientUuid() {
+        return patientUuid;
     }
 
     @Override
     public void setCurrentPatient(String patientUUID) {
-        patient = database.patientDAO().getOrDefault(patientUUID);
+        patientUuid = patientUUID;
         preferencesHelper.setSelectedPatientUuid(patientUUID);
-        getMvpView().setPatientStatusText(patient.getName());
+
+        // Query and display last selected patient name
+        Observable.<String>create(emitter ->
+            emitter.onNext(database.patientDAO().getOrDefault(patientUuid).getName())
+        ).subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe(getMvpView()::setPatientStatusText);
     }
 
     @Override

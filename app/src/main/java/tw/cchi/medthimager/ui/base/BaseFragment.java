@@ -11,7 +11,7 @@ import android.view.View;
 
 import butterknife.Unbinder;
 import tw.cchi.medthimager.di.component.ActivityComponent;
-import tw.cchi.medthimager.utils.CommonUtils;
+import tw.cchi.medthimager.utils.AppUtils;
 
 public abstract class BaseFragment extends Fragment implements MvpView {
 
@@ -47,7 +47,7 @@ public abstract class BaseFragment extends Fragment implements MvpView {
         mainHandler.post(() -> {
             if (loadingDialog == null || !loadingDialog.isShowing()) {
                 // TODO: check this.getActivity()
-                loadingDialog = CommonUtils.showLoadingDialog(this.getActivity());
+                loadingDialog = AppUtils.showLoadingDialog(this.getActivity());
             }
         });
     }

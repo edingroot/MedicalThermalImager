@@ -32,11 +32,11 @@
     <string name="remove">Remove</string>
     <string name="close">Close</string>
     <string name="ok">OK</string>
-    <string name="period">Period</string>
+    <string name="interval">Period</string>
     <string name="captures">Captures</string>
     <string name="start">Start</string>
     <string name="confirm">Confirm</string>
-    <string name="message">Message</string>
+    <string name="information">Information</string>
     <string name="error">Error</string>
     <string name="completed">Completed</string>
 
@@ -53,7 +53,7 @@
     <string name="conti_shoot_blocking">Please abort continuous shooting before performing any other actions.</string>
     <string name="conti_shoot_confirm_abort">Abort continuous shooting?</string>
     <string name="conti_shoot_failed_report">Failed to trigger image capture, aborting continuous shooting.\nNumber of shoots: %1$d / %2$d</string>
-    <string name="conti_shoot_finished_report">Continuous shooting finished.\nNumber of shots: %1$d / %2$d</string>
+    <string name="conti_shoot_finished_report">Continuous shooting finished.\nNumber of shoots: %1$d / %2$d</string>
     <string name="conti_shoot_tuning_skip">Skip taking shot: %1$d / %2$d due to device is tuning.</string>
 
     <string name="pick_thermal_images">Pick thermal dump files(*.dat) to visualize</string>
