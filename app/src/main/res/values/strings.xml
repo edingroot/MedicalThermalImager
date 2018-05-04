@@ -39,6 +39,7 @@
     <string name="error_occurred">Error occurred</string>
     <string name="invalid_input">Invalid input</string>
 
+    <string name="write_storage_required">Write storage permission is necessary for image capturing.</string>
     <string name="insert_flirone">Please insert FLIR One and select %1$s</string>
     <string name="flirone_disconnected">FLIR One disconnected.</string>
     <string name="connecting_sim">Connecting simulatedCam</string>

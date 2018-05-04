@@ -34,6 +34,7 @@ import butterknife.OnClick;
 import butterknife.OnLongClick;
 import butterknife.OnTouch;
 import permissions.dispatcher.NeedsPermission;
+import permissions.dispatcher.OnPermissionDenied;
 import permissions.dispatcher.RuntimePermissions;
 import tw.cchi.medthimager.Config;
 import tw.cchi.medthimager.R;
@@ -54,7 +55,7 @@ public class CameraActivity extends BaseActivity implements CameraMvpView {
     private SelectPatientDialog selectPatientDialog;
     private ScaleGestureDetector mScaleDetector;
     private ColorFilter originalChargingIndicatorColor;
-    private int thermalViewOnTouchMoves = 0;
+    // private int thermalViewOnTouchMoves = 0;
 
     @BindView(R.id.thermalImageView) ImageView thermalImageView;
     @BindView(R.id.pleaseConnect) TextView pleaseConnect;
@@ -286,11 +287,10 @@ public class CameraActivity extends BaseActivity implements CameraMvpView {
     public boolean onThermalImageViewTouch(View v, MotionEvent event) {
         switch (event.getAction()) {
             case MotionEvent.ACTION_DOWN:
-                thermalViewOnTouchMoves = 0;
+                // thermalViewOnTouchMoves = 0;
                 break;
 
             case MotionEvent.ACTION_MOVE:
-                thermalViewOnTouchMoves++;
                 break;
         }
 
@@ -301,7 +301,7 @@ public class CameraActivity extends BaseActivity implements CameraMvpView {
                 presenter.updateThermalSpotTemp(x, y);
                 thermalSpotView.setCenterPosition(x, y + thermalImageView.getTop());
             }
-            thermalViewOnTouchMoves++;
+            // thermalViewOnTouchMoves++;
         }
 
         mScaleDetector.onTouchEvent(event);
@@ -309,17 +309,14 @@ public class CameraActivity extends BaseActivity implements CameraMvpView {
         return false;
     }
 
-    @OnLongClick(R.id.thermalImageView)
+    /* @OnLongClick(R.id.thermalImageView)
     public boolean onThermalImageViewLongClick(View v) {
         // if (thermalViewOnTouchMoves >= 10)
             // return false;
 
-        if (checkContiShootBlocking())
-            return true;
-
         presenter.performTune();
         return true;
-    }
+    } */
 
 
     @Override
@@ -432,6 +429,12 @@ public class CameraActivity extends BaseActivity implements CameraMvpView {
     @NeedsPermission({Manifest.permission.WRITE_EXTERNAL_STORAGE})
     void checkAndConnectSimDevice() {
         presenter.checkAndConnectSimDevice();
+    }
+
+    @OnPermissionDenied({Manifest.permission.WRITE_EXTERNAL_STORAGE})
+    void onWriteStoragePermissionDenied() {
+        showToast(R.string.write_storage_required);
+        finish();
     }
 
     private boolean checkContiShootBlocking() {
