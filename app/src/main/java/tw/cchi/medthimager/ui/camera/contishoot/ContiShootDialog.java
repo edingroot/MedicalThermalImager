@@ -71,8 +71,8 @@ public class ContiShootDialog extends BaseDialog implements ContiShootMvpView {
     }
 
     @Override
-    public void dismissDialog() {
-        super.dismissDialog(TAG);
+    public void dismiss() {
+        super.dismiss(TAG);
     }
 
     @Override

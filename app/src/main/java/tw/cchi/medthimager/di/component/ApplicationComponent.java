@@ -10,6 +10,7 @@ import tw.cchi.medthimager.MvpApplication;
 import tw.cchi.medthimager.db.AppDatabase;
 import tw.cchi.medthimager.di.ApplicationContext;
 import tw.cchi.medthimager.di.module.ApplicationModule;
+import tw.cchi.medthimager.helper.pref.PreferencesHelper;
 
 @Singleton
 @Component(modules = ApplicationModule.class)
@@ -25,6 +26,8 @@ public interface ApplicationComponent {
     Application application();
 
     MvpApplication mvpApp();
+
+    PreferencesHelper preferenceHelper();
 
     AppDatabase appDatabase();
 

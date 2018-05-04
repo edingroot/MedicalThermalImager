@@ -7,4 +7,6 @@ public final class Constants {
     public static final String POSTFIX_COLORED_IMAGE = "_color";
     public static final String POSTFIX_VISIBLE_IMAGE = "_vis";
 
+    public static final String PREF_NAME = "medthimager_pref";
+
 }

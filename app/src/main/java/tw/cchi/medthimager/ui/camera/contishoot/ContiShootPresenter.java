@@ -33,7 +33,7 @@ public class ContiShootPresenter<V extends ContiShootMvpView> extends BasePresen
         ContiShootParameters parameters = new ContiShootParameters(periodVal, captureCountVal);
 
         getMvpView().getListener().onResult((ContiShootDialog) getMvpView(), parameters);
-        getMvpView().dismissDialog();
+        getMvpView().dismiss();
 
         return true;
     }

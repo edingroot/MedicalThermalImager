@@ -5,6 +5,7 @@ package tw.cchi.medthimager.ui.base;
 import javax.inject.Inject;
 
 import io.reactivex.disposables.CompositeDisposable;
+import tw.cchi.medthimager.helper.pref.PreferencesHelper;
 
 /**
  * Base class that implements the Presenter interface and provides a base implementation for
@@ -15,6 +16,8 @@ public class BasePresenter<V extends MvpView> implements MvpPresenter<V> {
 
     private final CompositeDisposable mCompositeDisposable;
     private V mMvpView;
+
+    @Inject public PreferencesHelper preferencesHelper;
 
     @Inject
     public BasePresenter(CompositeDisposable compositeDisposable) {

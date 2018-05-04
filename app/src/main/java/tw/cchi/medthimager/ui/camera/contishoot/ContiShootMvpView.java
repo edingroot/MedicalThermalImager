@@ -4,7 +4,7 @@ import tw.cchi.medthimager.ui.base.DialogMvpView;
 
 public interface ContiShootMvpView extends DialogMvpView {
 
-    void dismissDialog();
+    void dismiss();
 
     ContiShootDialog.OnResultListener getListener();
 

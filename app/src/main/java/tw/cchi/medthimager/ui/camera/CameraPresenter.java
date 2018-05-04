@@ -88,6 +88,9 @@ public class CameraPresenter<V extends CameraMvpView> extends BasePresenter<V>
         ));
         frameProcessor.setImagePalette(RenderedImage.Palette.Gray);
         frameProcessor.setEmissivity(0.98f); // human skin, water, frost
+
+        // Load saved values from shared preferences
+        patientUUID = preferencesHelper.getSelectedPatientUuid();
     }
 
     @Override
@@ -349,6 +352,7 @@ public class CameraPresenter<V extends CameraMvpView> extends BasePresenter<V>
     @Override
     public void setCurrentPatient(String patientUUID) {
         this.patientUUID = patientUUID;
+        preferencesHelper.setSelectedPatientUuid(patientUUID);
     }
 
     @Override
