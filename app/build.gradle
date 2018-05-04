@@ -2,7 +2,7 @@ import org.apache.tools.ant.taskdefs.condition.Os
 
 def versionMajor = 1
 def versionMinor = 3
-def versionPatch = 0
+def versionPatch = 1
 def versionBuild = 0
 
 apply plugin: 'com.android.application'
