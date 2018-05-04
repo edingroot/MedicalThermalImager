@@ -306,7 +306,7 @@ public class CameraActivity extends BaseActivity implements CameraMvpView {
 
         mScaleDetector.onTouchEvent(event);
 
-        return false;
+        return true;
     }
 
     /* @OnLongClick(R.id.thermalImageView)
