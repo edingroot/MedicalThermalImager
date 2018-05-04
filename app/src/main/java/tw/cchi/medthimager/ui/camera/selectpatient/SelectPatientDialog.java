@@ -18,6 +18,8 @@ import android.widget.ProgressBar;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.inject.Inject;
+
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import tw.cchi.medthimager.R;
@@ -32,9 +34,9 @@ public class SelectPatientDialog {
     private OnInteractionListener onInteractionListener;
     private Dialog dialog;
     private Handler handler;
-    private AppDatabase database;
     private PatientSelectsRecyclerAdapter patientRecyclerAdapter;
 
+    @Inject AppDatabase database;
     private List<Patient> patients;
     private String selectedPatientUUID;
 
@@ -47,7 +49,6 @@ public class SelectPatientDialog {
     public SelectPatientDialog(Context context, OnInteractionListener onInteractionListener) {
         this.context = context;
         this.onInteractionListener = onInteractionListener;
-        this.database = AppDatabase.getInstance(context);
 
         this.handler = new Handler(Looper.getMainLooper()) {
             @Override

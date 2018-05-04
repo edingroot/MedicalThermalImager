@@ -99,6 +99,42 @@
         </RelativeLayout>
 
         <RelativeLayout
+            android:id="@+id/statusTop"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/controls_top"
+            android:layout_marginTop="5dp"
+            android:paddingEnd="10dp"
+            android:paddingStart="10dp">
+
+            <TextView
+                android:id="@+id/txtPatientName"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentStart="true"
+                android:text="@string/patient_"
+                android:textSize="@dimen/status_text_small"/>
+
+            <TextView
+                android:id="@+id/txtShootInfo"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerHorizontal="true"
+                android:text="@string/single_shoot"
+                android:textSize="@dimen/status_text_small"/>
+
+            <TextView
+                android:id="@+id/txtTuningState"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentEnd="true"
+                android:text="TuningState"
+                android:textAlignment="textEnd"
+                android:textSize="@dimen/status_text_small"/>
+
+        </RelativeLayout>
+
+        <RelativeLayout
             android:id="@+id/content_controls_bottom"
             style="?metaButtonBarStyle"
             android:layout_width="match_parent"
@@ -168,19 +204,6 @@
             android:text="Please Connect FLIR One"
             android:textAppearance="?android:attr/textAppearanceLarge"
             android:visibility="gone"/>
-
-        <TextView
-            android:id="@+id/txtTuningState"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_alignParentEnd="true"
-            android:layout_below="@+id/controls_top"
-            android:layout_marginTop="-5dp"
-            android:ems="10"
-            android:paddingEnd="12dp"
-            android:text="Tuning State"
-            android:textAlignment="textEnd"
-            android:textSize="10sp"/>
 
 
     </RelativeLayout>

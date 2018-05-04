@@ -57,6 +57,10 @@ public class CameraActivity extends BaseActivity implements CameraMvpView {
     private ColorFilter originalChargingIndicatorColor;
     // private int thermalViewOnTouchMoves = 0;
 
+    @BindView(R.id.txtPatientName) TextView txtPatientName;
+    @BindView(R.id.txtShootInfo) TextView txtShootInfo;
+    @BindView(R.id.txtTuningState) TextView txtTuningState;
+
     @BindView(R.id.thermalImageView) ImageView thermalImageView;
     @BindView(R.id.pleaseConnect) TextView pleaseConnect;
     @BindView(R.id.batteryLevelTextView) TextView batteryLevelTextView;
@@ -64,7 +68,6 @@ public class CameraActivity extends BaseActivity implements CameraMvpView {
     @BindView(R.id.imgBtnCapture) ImageButton imgBtnCapture;
 
     @BindView(R.id.thermalSpotView) ThermalSpotView thermalSpotView;
-    @BindView(R.id.txtTuningState) TextView txtTuningState;
     @BindView(R.id.tuningProgressBar) ProgressBar tuningProgressBar;
     @BindView(R.id.tuningTextView) TextView tuningTextView;
 
@@ -190,7 +193,7 @@ public class CameraActivity extends BaseActivity implements CameraMvpView {
         if (selectPatientDialog == null) {
             selectPatientDialog = new SelectPatientDialog(this, presenter::setCurrentPatient);
         }
-        selectPatientDialog.setSelectedPatientUUID(presenter.getCurrentPatient());
+        selectPatientDialog.setSelectedPatientUUID(presenter.getCurrentPatient().getUuid());
         selectPatientDialog.show();
     }
 
@@ -320,13 +323,18 @@ public class CameraActivity extends BaseActivity implements CameraMvpView {
 
 
     @Override
-    public void updateForDeviceConnected() {
+    public void setPatientStatusText(String patientName) {
+        txtPatientName.setText(getString(R.string.patient_, patientName));
+    }
+
+    @Override
+    public void setDeviceConnected() {
         pleaseConnect.setVisibility(View.GONE);
         thermalSpotView.setVisibility(View.VISIBLE);
     }
 
     @Override
-    public void updateForDeviceDisconnected() {
+    public void setDeviceDisconnected() {
         pleaseConnect.setVisibility(View.VISIBLE);
         thermalImageView.setImageBitmap(Bitmap.createBitmap(1, 1, Bitmap.Config.RGB_565));
         thermalImageView.clearColorFilter();
@@ -339,7 +347,7 @@ public class CameraActivity extends BaseActivity implements CameraMvpView {
     }
 
     @Override
-    public void updateForDeviceChargingState(Device.BatteryChargingState batteryChargingState) {
+    public void setDeviceChargingState(Device.BatteryChargingState batteryChargingState) {
         if (originalChargingIndicatorColor == null) {  // TODO: which color?
             originalChargingIndicatorColor = batteryChargeIndicator.getColorFilter();
         }
@@ -364,7 +372,7 @@ public class CameraActivity extends BaseActivity implements CameraMvpView {
     }
 
     @Override
-    public void updateForDeviceTuningState(Device.TuningState tuningState) {
+    public void setDeviceTuningState(Device.TuningState tuningState) {
         if (tuningState == Device.TuningState.InProgress) {
             txtTuningState.setText(tuningState.name());
             thermalImageView.setColorFilter(Color.DKGRAY, PorterDuff.Mode.DARKEN);
@@ -379,7 +387,7 @@ public class CameraActivity extends BaseActivity implements CameraMvpView {
     }
 
     @Override
-    public void updateDeviceBatteryPercentage(byte percentage) {
+    public void setDeviceBatteryPercentage(byte percentage) {
         batteryLevelTextView.setText(String.valueOf((int) percentage) + "%");
     }
 
@@ -401,13 +409,15 @@ public class CameraActivity extends BaseActivity implements CameraMvpView {
     }
 
     @Override
-    public void setCameraMode() {
+    public void setSingleShootMode() {
+        txtShootInfo.setText(R.string.single_shoot);
         imgBtnCapture.setImageResource(android.R.drawable.ic_menu_camera);
     }
 
     @Override
-    public void setContinuousShootMode() {
+    public void setContinuousShootMode(int capturedCount, int totalCaptures) {
         imgBtnCapture.setImageResource(R.drawable.ic_camera_automation);
+        txtShootInfo.setText(getString(R.string.conti_shoot_counts, 0, totalCaptures));
     }
 
     @Override

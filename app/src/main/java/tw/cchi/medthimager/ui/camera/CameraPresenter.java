@@ -5,7 +5,6 @@ import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.media.MediaScannerConnection;
-import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 
@@ -34,6 +33,8 @@ import io.reactivex.schedulers.Schedulers;
 import tw.cchi.medthimager.Config;
 import tw.cchi.medthimager.Constants;
 import tw.cchi.medthimager.R;
+import tw.cchi.medthimager.db.AppDatabase;
+import tw.cchi.medthimager.db.Patient;
 import tw.cchi.medthimager.db.helper.PatientThermalDumpsHelper;
 import tw.cchi.medthimager.di.BgThreadCapable;
 import tw.cchi.medthimager.di.NewThread;
@@ -51,6 +52,7 @@ public class CameraPresenter<V extends CameraMvpView> extends BasePresenter<V>
     private final String TAG = Config.TAGPRE + getClass().getSimpleName();
 
     @Inject AppCompatActivity activity;
+    @Inject AppDatabase database;
     @Inject PatientThermalDumpsHelper dbPatientDumpsHelper;
     @Inject CSVExportHelper csvExportHelper;
 
@@ -69,7 +71,7 @@ public class CameraPresenter<V extends CameraMvpView> extends BasePresenter<V>
     private CaptureProcessInfo captureProcessInfo = null;
     private int thermalSpotX = -1; // movable spot thermal indicator pX
     private int thermalSpotY = -1; // movable spot thermal indicator pY
-    private String patientUUID = null;
+    private Patient patient = null;
 
     @Inject
     public CameraPresenter(CompositeDisposable compositeDisposable) {
@@ -90,7 +92,17 @@ public class CameraPresenter<V extends CameraMvpView> extends BasePresenter<V>
         frameProcessor.setEmissivity(0.98f); // human skin, water, frost
 
         // Load saved values from shared preferences
-        patientUUID = preferencesHelper.getSelectedPatientUuid();
+        Observable.create(emitter -> {
+            String patientUUID = preferencesHelper.getSelectedPatientUuid();
+            patient = database.patientDAO().getOrDefault(patientUUID);
+            emitter.onNext(true);
+        }).subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe(b -> {
+                // Initialize status text
+                getMvpView().setPatientStatusText(patient.getName());
+                getMvpView().setSingleShootMode();
+            });
     }
 
     @Override
@@ -164,11 +176,12 @@ public class CameraPresenter<V extends CameraMvpView> extends BasePresenter<V>
     @Override
     public void startContiShooting(ContiShootParameters parameters) {
         contiShooting = true;
-        getMvpView().setContinuousShootMode();
+        contiShootParameters = parameters;
+        contiShootParameters.timeStart = new Date();
+        contiShootParameters.capturedCount = 0;
 
-        this.contiShootParameters = parameters;
-        this.contiShootParameters.timeStart = new Date();
-        this.contiShootParameters.capturedCount = 0;
+        getMvpView().setContinuousShootMode(
+            contiShootParameters.capturedCount, contiShootParameters.totalCaptures);
 
         TimerTask timerTask = new TimerTask() {
             @Override
@@ -189,7 +202,7 @@ public class CameraPresenter<V extends CameraMvpView> extends BasePresenter<V>
 
                     if (isViewAttached()) {
                         activity.runOnUiThread(() -> {
-                            getMvpView().setCameraMode();
+                            getMvpView().setSingleShootMode();
                             getMvpView().showMessageAlertDialog(
                                 activity.getString(R.string.error),
                                 activity.getString(R.string.conti_shoot_failed_report,
@@ -200,6 +213,9 @@ public class CameraPresenter<V extends CameraMvpView> extends BasePresenter<V>
                     }
                 } else if (++contiShootParameters.capturedCount >= contiShootParameters.totalCaptures) {
                     activity.runOnUiThread(() -> finishContiShooting(false));
+                } else {
+                    getMvpView().setContinuousShootMode(
+                        contiShootParameters.capturedCount, contiShootParameters.totalCaptures);
                 }
             }
         };
@@ -225,7 +241,7 @@ public class CameraPresenter<V extends CameraMvpView> extends BasePresenter<V>
 
         if (isViewAttached()) {
             activity.runOnUiThread(() -> {
-                getMvpView().setCameraMode();
+                getMvpView().setSingleShootMode();
                 if (showMessageByToast) {
                     getMvpView().showToast(
                         activity.getString(R.string.conti_shoot_finished_report,
@@ -270,7 +286,7 @@ public class CameraPresenter<V extends CameraMvpView> extends BasePresenter<V>
         flirOneDevice.setPowerUpdateDelegate(this);
         flirOneDevice.startFrameStream(this);
         streamingFrame = true;
-        activity.runOnUiThread(() -> getMvpView().updateForDeviceConnected());
+        activity.runOnUiThread(() -> getMvpView().setDeviceConnected());
     }
 
     @Override
@@ -280,7 +296,7 @@ public class CameraPresenter<V extends CameraMvpView> extends BasePresenter<V>
 
         if (!activity.isDestroyed() && !activity.isFinishing()) {
             getMvpView().showSnackBar(R.string.flirone_disconnected);
-            activity.runOnUiThread(() -> getMvpView().updateForDeviceDisconnected());
+            activity.runOnUiThread(() -> getMvpView().setDeviceDisconnected());
         }
     }
 
@@ -291,7 +307,7 @@ public class CameraPresenter<V extends CameraMvpView> extends BasePresenter<V>
     @Override
     public void onTuningStateChanged(Device.TuningState tuningState) {
         this.tuningState = tuningState;
-        activity.runOnUiThread(() -> getMvpView().updateForDeviceTuningState(tuningState));
+        activity.runOnUiThread(() -> getMvpView().setDeviceTuningState(tuningState));
     }
 
     @Override
@@ -318,7 +334,7 @@ public class CameraPresenter<V extends CameraMvpView> extends BasePresenter<V>
                 captureRawThermalDump(renderedImage, captureProcessInfo.getDumpFilepath());
                 captureFLIRImage(renderedImage, captureProcessInfo.getFilepathPrefix() + Constants.POSTFIX_FLIR_IMAGE + ".jpg");
 
-                dbPatientDumpsHelper.addCaptureRecord(patientUUID, captureProcessInfo.getTitle(), captureProcessInfo.getFilepathPrefix()).subscribe();
+                dbPatientDumpsHelper.addCaptureRecord(patient.getUuid(), captureProcessInfo.getTitle(), captureProcessInfo.getFilepathPrefix()).subscribe();
                 captureProcessInfo = null;
             }
         } else if (renderedImage.imageType() == RenderedImage.ImageType.ThermalRGBA8888Image) {
@@ -333,26 +349,26 @@ public class CameraPresenter<V extends CameraMvpView> extends BasePresenter<V>
 
     @Override
     public void onBatteryChargingStateReceived(Device.BatteryChargingState batteryChargingState) {
-        activity.runOnUiThread(() -> getMvpView().updateForDeviceChargingState(batteryChargingState));
+        activity.runOnUiThread(() -> getMvpView().setDeviceChargingState(batteryChargingState));
     }
 
     @Override
     public void onBatteryPercentageReceived(byte percentage) {
-        activity.runOnUiThread(() -> getMvpView().updateDeviceBatteryPercentage(percentage));
+        activity.runOnUiThread(() -> getMvpView().setDeviceBatteryPercentage(percentage));
     }
 
     // --------------------------------- Getter / Setter / Updates ------------------------------- //
 
-    @Nullable
     @Override
-    public String getCurrentPatient() {
-        return patientUUID;
+    public Patient getCurrentPatient() {
+        return patient;
     }
 
     @Override
     public void setCurrentPatient(String patientUUID) {
-        this.patientUUID = patientUUID;
+        patient = database.patientDAO().getOrDefault(patientUUID);
         preferencesHelper.setSelectedPatientUuid(patientUUID);
+        getMvpView().setPatientStatusText(patient.getName());
     }
 
     @Override

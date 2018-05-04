@@ -2,6 +2,8 @@
 <resources>
 
     <string name="app_name">Medical Thermal Imager</string>
+
+    <!-- CameraActivity -->
     <string name="toggle_more_info">More Info \u21EA</string>
     <string name="toggle_less_info">Less Info \u21B2</string>
     <string name="performTuning">Tune</string>
@@ -11,6 +13,17 @@
     <string name="battery_label">Batt:</string>
     <string name="txtTuning">Tuning...</string>
     <string name="tools">Tools</string>
+    <string name="patient_">Patient: %1$s</string>
+    <string name="single_shoot">Single Shoot</string>
+    <string name="conti_shoot_counts">%1$d / %2$d</string>
+
+    <!-- Menu Items: CameraActivity: Tools -->
+    <string name="dump_viewer">Thermal Dump Viewer</string>
+    <string name="pick_mask">Pick Mask Image</string>
+    <string name="export_csv">Export to CSV</string>
+    <string name="unset_mask">Unset Mask Image</string>
+    <string name="rotate_view">Rotate View</string>
+    <string name="toggle_sim">Toggle SimulatedCam</string>
 
     <!-- Dialogs -->
     <string name="conti_shot_setting">Continuous Shooting Settings</string>
@@ -26,14 +39,6 @@
     <string name="message">Message</string>
     <string name="error">Error</string>
     <string name="completed">Completed</string>
-
-    <!-- Menu Items: preview_tools_menu -->
-    <string name="dump_viewer">Thermal Dump Viewer</string>
-    <string name="pick_mask">Pick Mask Image</string>
-    <string name="export_csv">Export to CSV</string>
-    <string name="unset_mask">Unset Mask Image</string>
-    <string name="rotate_view">Rotate View</string>
-    <string name="toggle_sim">Toggle SimulatedCam</string>
 
     <!-- Messages -->
     <string name="error_occurred">Error occurred</string>

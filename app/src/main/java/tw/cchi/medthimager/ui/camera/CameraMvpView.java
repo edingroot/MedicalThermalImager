@@ -8,15 +8,17 @@ import tw.cchi.medthimager.ui.base.MvpView;
 
 public interface CameraMvpView extends MvpView {
 
-    void updateForDeviceConnected();
+    void setPatientStatusText(String patientName);
 
-    void updateForDeviceDisconnected();
+    void setDeviceConnected();
 
-    void updateForDeviceChargingState(Device.BatteryChargingState batteryChargingState);
+    void setDeviceDisconnected();
 
-    void updateForDeviceTuningState(Device.TuningState tuningState);
+    void setDeviceChargingState(Device.BatteryChargingState batteryChargingState);
 
-    void updateDeviceBatteryPercentage(byte percentage);
+    void setDeviceTuningState(Device.TuningState tuningState);
+
+    void setDeviceBatteryPercentage(byte percentage);
 
     void setThermalImageViewBitmap(final Bitmap frame);
 
@@ -24,9 +26,9 @@ public interface CameraMvpView extends MvpView {
 
     void animateFlash();
 
-    void setCameraMode();
+    void setSingleShootMode();
 
-    void setContinuousShootMode();
+    void setContinuousShootMode(int capturedCount, int totalCaptures);
 
 
     int getThermalImageViewWidth();

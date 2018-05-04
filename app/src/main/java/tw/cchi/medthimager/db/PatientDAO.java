@@ -8,24 +8,29 @@ import android.arch.persistence.room.Query;
 import java.util.List;
 
 @Dao
-public interface PatientDAO {
+public abstract class PatientDAO {
 
     @Query("select * from patients")
-    List<Patient> getAll();
+    public abstract List<Patient> getAll();
 
     @Query("select * from patients where uuid = :uuid")
-    Patient get(String uuid);
+    public abstract Patient get(String uuid);
+
+    public Patient getOrDefault(String uuid) {
+        Patient patient = get(uuid);
+        return patient == null ? get(Patient.DEFAULT_PATIENT_UUID) : patient;
+    }
 
     @Query("select * from patients where uuid in (:uuids)")
-    List<Patient> findAllByUUIDs(String[] uuids);
+    public abstract List<Patient> findAllByUUIDs(String[] uuids);
 
     @Query("select * from patients where name like :name limit 1")
-    Patient findByName(String name);
+    public abstract Patient findByName(String name);
 
     @Insert
-    void insertAll(Patient... patients);
+    public abstract void insertAll(Patient... patients);
 
     @Delete
-    void delete(Patient patient);
+    public abstract void delete(Patient patient);
 
 }
