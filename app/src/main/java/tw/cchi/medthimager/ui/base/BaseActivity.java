@@ -7,6 +7,8 @@ import android.content.DialogInterface;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.support.annotation.Nullable;
 import android.support.annotation.StringRes;
 import android.support.design.widget.Snackbar;
@@ -35,8 +37,8 @@ public abstract class BaseActivity extends AppCompatActivity
 
     private ActivityComponent mActivityComponent;
     private Unbinder mUnBinder;
-
-    private ProgressDialog mProgressDialog;
+    private Handler mainHandler;
+    private ProgressDialog loadingDialog;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -45,6 +47,7 @@ public abstract class BaseActivity extends AppCompatActivity
                 .activityModule(new ActivityModule(this))
                 .applicationComponent(((MvpApplication) getApplication()).getComponent())
                 .build();
+        mainHandler = new Handler(Looper.getMainLooper());
     }
 
     public ActivityComponent getActivityComponent() {
@@ -66,14 +69,20 @@ public abstract class BaseActivity extends AppCompatActivity
 
     @Override
     public void showLoading() {
-        if (mProgressDialog == null || !mProgressDialog.isShowing())
-            mProgressDialog = CommonUtils.showLoadingDialog(this);
+        mainHandler.post(() -> {
+            if (loadingDialog == null || !loadingDialog.isShowing()) {
+                loadingDialog = CommonUtils.showLoadingDialog(this);
+            }
+        });
     }
 
     @Override
     public void hideLoading() {
-        if (mProgressDialog != null && mProgressDialog.isShowing())
-            mProgressDialog.dismiss();
+        mainHandler.post(() -> {
+            if (loadingDialog != null && loadingDialog.isShowing()) {
+                loadingDialog.dismiss();
+            }
+        });
     }
 
     @Override

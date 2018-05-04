@@ -3,6 +3,7 @@ package tw.cchi.medthimager.ui.base;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.annotation.Nullable;
 import android.support.annotation.StringRes;
 import android.support.v4.app.Fragment;
@@ -16,7 +17,8 @@ public abstract class BaseFragment extends Fragment implements MvpView {
 
     private BaseActivity mActivity;
     private Unbinder mUnBinder;
-    private ProgressDialog mProgressDialog;
+    private Handler mainHandler;
+    private ProgressDialog loadingDialog;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -42,16 +44,21 @@ public abstract class BaseFragment extends Fragment implements MvpView {
 
     @Override
     public void showLoading() {
-        hideLoading();
-        // TODO: check this.getActivity()
-        mProgressDialog = CommonUtils.showLoadingDialog(this.getActivity());
+        mainHandler.post(() -> {
+            if (loadingDialog == null || !loadingDialog.isShowing()) {
+                // TODO: check this.getActivity()
+                loadingDialog = CommonUtils.showLoadingDialog(this.getActivity());
+            }
+        });
     }
 
     @Override
     public void hideLoading() {
-        if (mProgressDialog != null && mProgressDialog.isShowing()) {
-            mProgressDialog.cancel();
-        }
+        mainHandler.post(() -> {
+            if (loadingDialog != null && loadingDialog.isShowing()) {
+                loadingDialog.dismiss();
+            }
+        });
     }
 
     @Override

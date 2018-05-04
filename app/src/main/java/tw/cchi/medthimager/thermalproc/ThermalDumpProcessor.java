@@ -1,7 +1,6 @@
 package tw.cchi.medthimager.thermalproc;
 
 import android.graphics.Bitmap;
-import android.util.Log;
 
 import org.opencv.android.OpenCVLoader;
 import org.opencv.android.Utils;

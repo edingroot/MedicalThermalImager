@@ -128,6 +128,8 @@ public class DumpViewerPresenter<V extends DumpViewerMvpView> extends BasePresen
                     if (isViewAttached()) {
                         updateThermalChartAxis();
 
+                        Log.d(TAG, "updateDumpsAfterPick@complete");
+
                         // Loading may have been hidden in switchDumpTab() in addThermalDump()
                         getMvpView().hideLoading();
                     }
@@ -153,10 +155,10 @@ public class DumpViewerPresenter<V extends DumpViewerMvpView> extends BasePresen
     @Override
     public synchronized boolean switchDumpTab(int position) {
         if (switchDumpTabTask != null && !switchDumpTabTask.isDisposed()) {
-            System.out.printf("switchDumpTab(%d)@rejected\n", position);
+            Log.d(TAG, "switchDumpTab(" + position + ")@rejected");
             return false;
         }
-        System.out.printf("switchDumpTab(%d)@locked\n", position);
+        Log.d(TAG, "switchDumpTab(" + position + ")@locked");
 
         // Hide all spots of the last dump, switch to new tab resources, show spots of the new dump
         ThermalSpotsHelper thermalSpotsHelper = tabResources.getThermalSpotHelper();
@@ -203,7 +205,7 @@ public class DumpViewerPresenter<V extends DumpViewerMvpView> extends BasePresen
                 if (isViewAttached())
                     getMvpView().hideLoading();
 
-                System.out.printf("switchDumpTab(%d)@unlocked\n", position);
+                Log.d(TAG, "switchDumpTab(" + position + ")@unlocked");
 
                 if (savingAllVisibleImages) {
                     saveVisibleLightImage();
@@ -585,6 +587,8 @@ public class DumpViewerPresenter<V extends DumpViewerMvpView> extends BasePresen
                     switchDumpTab(newIndex);
                 }
             });
+
+            Log.d(TAG, "addThermalDump@end");
         } else {
             getMvpView().showSnackBar("Failed reading thermal dump");
         }
@@ -673,9 +677,9 @@ public class DumpViewerPresenter<V extends DumpViewerMvpView> extends BasePresen
                 return;
             }
 
-            System.out.println("loadVisibleImage@start of dump: " + rawThermalDump.getTitle());
+            Log.d(TAG, "loadVisibleImage@start of dump: " + rawThermalDump.getTitle());
             rawThermalDump.getVisibleImageMask().processFrame(activity, maskInstance -> {
-                System.out.println("loadVisibleImage@done of dump: " + rawThermalDump.getTitle());
+                Log.d(TAG, "loadVisibleImage@done of dump: " + rawThermalDump.getTitle());
                 emitter.onNext(true);
                 emitter.onComplete();
 
