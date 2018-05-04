@@ -35,12 +35,17 @@
     public void print(...);
 }
 
-# DroidNinja/Android-FilePicker
+# Third party packages
 -dontwarn droidninja.filepicker.**
+-dontwarn com.github.mikephil.charting.**
+-dontwarn com.vashisthg.startpointseekbar.**
+
 
 # FLIR SDK
 # Ref: https://stackoverflow.com/questions/36249005/minifyenabled-true-leads-to-crash-on-app-start
 -keep class com.flir.flironesdk.** { *; }
+# Ref: https://developer.flir.com/forums/topic/sdk-3-0-1-not-building-with-proguard/
+-dontwarn org.jetbrains.annotations.Contract
 
 
 # Configs referenced from: https://stackoverflow.com/questions/7464035/how-to-tell-proguard-to-keep-everything-in-a-particular-package
@@ -64,13 +69,7 @@
 
 -keepclasseswithmembernames class * {
     native <methods>;
-}
-
--keepclasseswithmembernames class * {
     public <init>(android.content.Context, android.util.AttributeSet);
-}
-
--keepclasseswithmembernames class * {
     public <init>(android.content.Context, android.util.AttributeSet, int);
 }
 
