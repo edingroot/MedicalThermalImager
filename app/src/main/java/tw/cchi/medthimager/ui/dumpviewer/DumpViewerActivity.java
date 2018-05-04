@@ -108,11 +108,11 @@ public class DumpViewerActivity extends BaseActivity implements DumpViewerMvpVie
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        DumpViewerActivityPermissionsDispatcher.onRequestPermissionsResult(this,requestCode, grantResults);
+        DumpViewerActivityPermissionsDispatcher.onRequestPermissionsResult(this, requestCode, grantResults);
     }
 
     @NeedsPermission({Manifest.permission.WRITE_EXTERNAL_STORAGE})
-    public void onPickDoc(ArrayList<String> selectedFiles) {
+    void onPickDoc(ArrayList<String> selectedFiles) {
         String[] thermalDumpExts = {".dat"};
 
         FilePickerBuilder.getInstance().setMaxCount(MAX_OPEN_FILES)

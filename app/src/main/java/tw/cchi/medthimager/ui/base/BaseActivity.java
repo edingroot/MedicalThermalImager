@@ -1,11 +1,8 @@
 package tw.cchi.medthimager.ui.base;
 
-import android.annotation.TargetApi;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
-import android.content.pm.PackageManager;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -52,19 +49,6 @@ public abstract class BaseActivity extends AppCompatActivity
 
     public ActivityComponent getActivityComponent() {
         return mActivityComponent;
-    }
-
-    @TargetApi(Build.VERSION_CODES.M)
-    public void requestPermissionsSafely(String[] permissions, int requestCode) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            requestPermissions(permissions, requestCode);
-        }
-    }
-
-    @TargetApi(Build.VERSION_CODES.M)
-    public boolean hasPermission(String permission) {
-        return Build.VERSION.SDK_INT < Build.VERSION_CODES.M ||
-                checkSelfPermission(permission) == PackageManager.PERMISSION_GRANTED;
     }
 
     @Override
@@ -171,4 +155,18 @@ public abstract class BaseActivity extends AppCompatActivity
         }
         super.onDestroy();
     }
+
+
+    /* @TargetApi(Build.VERSION_CODES.M)
+    public void requestPermissionsSafely(String[] permissions, int requestCode) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            requestPermissions(permissions, requestCode);
+        }
+    }
+
+    @TargetApi(Build.VERSION_CODES.M)
+    public boolean hasPermission(String permission) {
+        return Build.VERSION.SDK_INT < Build.VERSION_CODES.M ||
+                checkSelfPermission(permission) == PackageManager.PERMISSION_GRANTED;
+    } */
 }

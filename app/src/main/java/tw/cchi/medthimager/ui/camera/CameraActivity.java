@@ -1,5 +1,6 @@
 package tw.cchi.medthimager.ui.camera;
 
+import android.Manifest;
 import android.app.Activity;
 import android.content.Intent;
 import android.database.Cursor;
@@ -10,6 +11,7 @@ import android.graphics.PorterDuff;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
+import android.support.annotation.NonNull;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
@@ -31,6 +33,8 @@ import butterknife.BindView;
 import butterknife.OnClick;
 import butterknife.OnLongClick;
 import butterknife.OnTouch;
+import permissions.dispatcher.NeedsPermission;
+import permissions.dispatcher.RuntimePermissions;
 import tw.cchi.medthimager.Config;
 import tw.cchi.medthimager.R;
 import tw.cchi.medthimager.component.ThermalSpotView;
@@ -39,6 +43,7 @@ import tw.cchi.medthimager.ui.camera.contishoot.ContiShootDialog;
 import tw.cchi.medthimager.ui.camera.selectpatient.SelectPatientDialog;
 import tw.cchi.medthimager.ui.dumpviewer.DumpViewerActivity;
 
+@RuntimePermissions
 public class CameraActivity extends BaseActivity implements CameraMvpView {
     private final String TAG = Config.TAGPRE + getClass().getSimpleName();
 
@@ -98,13 +103,7 @@ public class CameraActivity extends BaseActivity implements CameraMvpView {
             pleaseConnect.setVisibility(View.VISIBLE);
         }
 
-        if (!presenter.startDeviceDiscovery()) {
-            // On some platforms, we need the user to select the app to give us permisison to the USB device.
-            showToast(R.string.insert_flirone, getString(R.string.app_name));
-            // There is likely a cleaner way to recover, but for now, exit the activity and
-            // wait for user to follow the instructions;
-            finish();
-        }
+        CameraActivityPermissionsDispatcher.enableDeviceDiscoveryWithPermissionCheck(this);
     }
 
     @Override
@@ -131,6 +130,12 @@ public class CameraActivity extends BaseActivity implements CameraMvpView {
     public void onStop() {
         presenter.onActivityStop();
         super.onStop();
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        CameraActivityPermissionsDispatcher.onRequestPermissionsResult(this, requestCode, grantResults);
     }
 
     @Override
@@ -229,7 +234,7 @@ public class CameraActivity extends BaseActivity implements CameraMvpView {
                     return true;
 
                 case R.id.action_toggle_sim:
-                    presenter.checkConnectSimDevice();
+                    CameraActivityPermissionsDispatcher.checkAndConnectSimDeviceWithPermissionCheck(this);
                     return true;
 
                 default:
@@ -411,6 +416,22 @@ public class CameraActivity extends BaseActivity implements CameraMvpView {
     @Override
     public int getThermalImageViewWidth() {
         return thermalImageView.getMeasuredWidth();
+    }
+
+    @NeedsPermission({Manifest.permission.WRITE_EXTERNAL_STORAGE})
+    void enableDeviceDiscovery() {
+        if (!presenter.startDeviceDiscovery()) {
+            // On some platforms, we need the user to select the app to give us permission to the USB device.
+            showToast(R.string.insert_flirone, getString(R.string.app_name));
+            // There is likely a cleaner way to recover, but for now, exit the activity and
+            // wait for user to follow the instructions;
+            finish();
+        }
+    }
+
+    @NeedsPermission({Manifest.permission.WRITE_EXTERNAL_STORAGE})
+    void checkAndConnectSimDevice() {
+        presenter.checkAndConnectSimDevice();
     }
 
     private boolean checkContiShootBlocking() {

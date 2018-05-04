@@ -104,7 +104,7 @@ public class CameraPresenter<V extends CameraMvpView> extends BasePresenter<V>
     }
 
     @Override
-    public void checkConnectSimDevice() {
+    public void checkAndConnectSimDevice() {
         if (flirOneDevice == null) {
             connectSimulatedDevice();
         } else if (flirOneDevice instanceof SimulatedDevice) {

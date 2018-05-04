@@ -12,7 +12,7 @@ public interface CameraMvpPresenter<V extends CameraMvpView> extends MvpPresente
 
     boolean startDeviceDiscovery();
 
-    void checkConnectSimDevice();
+    void checkAndConnectSimDevice();
 
     void checkReconnectSimDevice();
 
