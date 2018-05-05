@@ -38,7 +38,6 @@
 # Third party packages
 -dontwarn droidninja.filepicker.**
 -dontwarn com.github.mikephil.charting.**
--dontwarn com.vashisthg.startpointseekbar.**
 
 
 # FLIR SDK

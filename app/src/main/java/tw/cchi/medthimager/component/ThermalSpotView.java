@@ -15,9 +15,12 @@ import java.text.NumberFormat;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import butterknife.Unbinder;
 import tw.cchi.medthimager.R;
 
 public class ThermalSpotView extends RelativeLayout {
+    private Unbinder unbinder;
+
     private int spotId;
     private boolean showId;
 
@@ -31,11 +34,11 @@ public class ThermalSpotView extends RelativeLayout {
     public ThermalSpotView(Context context, @Nullable AttributeSet attrs) {
         super(context, attrs);
         View rootView = inflate(context, R.layout.view_thermal_spot, this);
-        ButterKnife.bind(this, rootView);
+        unbinder = ButterKnife.bind(this, rootView);
 
+        // Load view attributes
         TypedArray typedArray = context.getTheme().obtainStyledAttributes(
-                attrs, R.styleable.ThermalSpotView, 0, 0
-        );
+                attrs, R.styleable.ThermalSpotView, 0, 0);
         try {
             spotId = typedArray.getInt(R.styleable.ThermalSpotView_spotId, 0);
             showId = typedArray.getBoolean(R.styleable.ThermalSpotView_showId, true);
@@ -53,7 +56,7 @@ public class ThermalSpotView extends RelativeLayout {
     public ThermalSpotView(Context context, int spotId, boolean showId) {
         super(context);
         View rootView = inflate(context, R.layout.view_thermal_spot, this);
-        ButterKnife.bind(this, rootView);
+        unbinder = ButterKnife.bind(this, rootView);
 
         this.spotId = spotId;
         this.showId = showId;
@@ -135,4 +138,10 @@ public class ThermalSpotView extends RelativeLayout {
         }
     }
 
+    @Override
+    protected void onDetachedFromWindow() {
+        if (unbinder != null)
+            unbinder.unbind();
+        super.onDetachedFromWindow();
+    }
 }

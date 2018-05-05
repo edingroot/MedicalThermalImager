@@ -19,21 +19,16 @@
         </attr>
     </declare-styleable>
 
-    <!-- com.vashisthg.startpointseekbar -->
-    <declare-styleable name="StartPointSeekBar">
-        <attr name="minValue" format="float"/>
-        <attr name="maxValue" format="float"/>
-        <attr name="progress" format="float"/>
-        <attr name="thumbDrawable" format="reference"/>
-        <attr name="thumbPressedDrawable" format="reference"/>
-        <attr name="defaultBackgroundColor" format="color"/>
-        <attr name="defaultBackgroundRangeColor" format="color"/>
-    </declare-styleable>
-
     <!-- .view.ThermalSpotView -->
     <declare-styleable name="ThermalSpotView">
         <attr name="spotId" format="integer"/>
         <attr name="showId" format="boolean"/>
+    </declare-styleable>
+
+    <!-- .view.SpotsControlView -->
+    <declare-styleable name="SpotsControlView">
+        <attr name="enabled" format="boolean"/>
+        <attr name="toggleVisibility" format="boolean"/>
     </declare-styleable>
 
 </resources>

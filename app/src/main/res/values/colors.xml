@@ -14,4 +14,7 @@
     <color name="black_overlay">#66000000</color>
     <color name="indicatorYellow">#ffed62</color>
 
+    <color name="spotsFab">#2196F3</color>
+    <color name="spotsFabDisabled">#6292b9</color>
+
 </resources>

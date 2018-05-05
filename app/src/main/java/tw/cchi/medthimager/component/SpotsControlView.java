@@ -1,6 +1,8 @@
 package tw.cchi.medthimager.component;
 
 import android.content.Context;
+import android.content.res.ColorStateList;
+import android.content.res.TypedArray;
 import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
 import android.util.AttributeSet;
@@ -14,13 +16,18 @@ import java.util.ArrayList;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
+import butterknife.Unbinder;
 import tw.cchi.medthimager.R;
 
 public class SpotsControlView extends RelativeLayout {
-
+    private Unbinder unbinder;
     private OnControlSpotsListener listener;
+
+    private final boolean toggleVisibility;
     private Animation animFabOpen, animFabClose, animRotateForward, animRotateBackward;
-    private ArrayList<FloatingActionButton> childSpots = new ArrayList<>();
+    private ArrayList<FloatingActionButton> childFabs = new ArrayList<>();
+
+    private boolean enabled = true;
     private boolean fabOpen = false;
     private boolean spotsVisible = true;
 
@@ -33,14 +40,18 @@ public class SpotsControlView extends RelativeLayout {
     public SpotsControlView(Context context, @Nullable AttributeSet attrs) {
         super(context, attrs);
         View rootView = inflate(context, R.layout.view_spots_control, this);
-        ButterKnife.bind(this, rootView);
-        initialize();
-    }
+        unbinder = ButterKnife.bind(this, rootView);
 
-    public SpotsControlView(Context context) {
-        super(context);
-        View rootView = inflate(context, R.layout.view_spots_control, this);
-        ButterKnife.bind(this, rootView);
+        // Load view attributes
+        TypedArray typedArray = context.getTheme().obtainStyledAttributes(
+            attrs, R.styleable.SpotsControlView, 0, 0);
+        try {
+            enabled = typedArray.getBoolean(R.styleable.SpotsControlView_enabled, true);
+            toggleVisibility = typedArray.getBoolean(R.styleable.SpotsControlView_toggleVisibility, true);
+        } finally {
+            typedArray.recycle();
+        }
+
         initialize();
     }
 
@@ -50,12 +61,20 @@ public class SpotsControlView extends RelativeLayout {
         animRotateForward = AnimationUtils.loadAnimation(getContext(),R.anim.rotate_forward);
         animRotateBackward = AnimationUtils.loadAnimation(getContext(),R.anim.rotate_backward);
 
-        childSpots.add(fabAddSpot);
-        childSpots.add(fabRemoveSpot);
-        childSpots.add(fabClearSpots);
-        childSpots.add(fabToggleVisibility);
+        // Primary fab
+        int color = enabled ? R.color.spotsFab : R.color.spotsFabDisabled;
+        fabSpotsControl.setBackgroundTintList(ColorStateList.valueOf(getResources().getColor(color)));
 
-        for (FloatingActionButton fab : childSpots) {
+        // Children fabs
+        childFabs.add(fabAddSpot);
+        childFabs.add(fabRemoveSpot);
+        childFabs.add(fabClearSpots);
+        if (toggleVisibility)
+            childFabs.add(fabToggleVisibility);
+        else
+            fabToggleVisibility.setVisibility(GONE);
+
+        for (FloatingActionButton fab : childFabs) {
             fab.setVisibility(INVISIBLE);
         }
     }
@@ -64,27 +83,42 @@ public class SpotsControlView extends RelativeLayout {
         this.listener = listener;
     }
 
+    @Override
+    public boolean isEnabled() {
+        return enabled;
+    }
+
+    @Override
+    public void setEnabled(boolean enabled) {
+        if (!enabled && fabOpen)
+            animateFab();
+
+        this.enabled = enabled;
+        int color = this.enabled ? R.color.spotsFab : R.color.spotsFabDisabled;
+        fabSpotsControl.setBackgroundTintList(ColorStateList.valueOf(getResources().getColor(color)));
+    }
+
     @OnClick(R.id.fabAddSpot)
     void onFabAddSpotClick() {
-        if (listener != null)
+        if (enabled && listener != null)
             listener.onAddSpot();
     }
 
     @OnClick(R.id.fabRemoveSpot)
     void onFabRemoveSpotClick() {
-        if (listener != null)
+        if (enabled && listener != null)
             listener.onRemoveSpot();
     }
 
     @OnClick(R.id.fabClearSpots)
     void onFabClearSpotsClick() {
-        if (listener != null)
+        if (enabled && listener != null)
             listener.onClearSpots();
     }
 
     @OnClick(R.id.fabToggleVisibility)
     void onFabToggleVisibilityClick(FloatingActionButton fab) {
-        if (listener != null) {
+        if (enabled && listener != null) {
             if (spotsVisible) {
                 listener.onHideSpots();
                 fab.setImageDrawable(getResources().getDrawable(R.drawable.ic_visible));
@@ -99,14 +133,15 @@ public class SpotsControlView extends RelativeLayout {
 
     @OnClick(R.id.fabSpotsControl)
     void onFabSpotsControlClick() {
-        animateFab();
+        if (enabled)
+            animateFab();
     }
 
     private void animateFab() {
         if (fabOpen) {
             fabSpotsControl.startAnimation(animRotateBackward);
 
-            for (FloatingActionButton fab : childSpots) {
+            for (FloatingActionButton fab : childFabs) {
                 fab.startAnimation(animFabClose);
                 fab.setClickable(false);
             }
@@ -120,13 +155,20 @@ public class SpotsControlView extends RelativeLayout {
             fabClearSpots.startAnimation(animFabOpen);
             fabToggleVisibility.startAnimation(animFabOpen);
 
-            for (FloatingActionButton fab : childSpots) {
+            for (FloatingActionButton fab : childFabs) {
                 fab.startAnimation(animFabOpen);
                 fab.setClickable(true);
             }
 
             fabOpen = true;
         }
+    }
+
+    @Override
+    protected void onDetachedFromWindow() {
+        if (unbinder != null)
+            unbinder.unbind();
+        super.onDetachedFromWindow();
     }
 
     public interface OnControlSpotsListener {
