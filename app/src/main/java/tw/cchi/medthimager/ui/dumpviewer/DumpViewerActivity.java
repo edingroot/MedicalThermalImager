@@ -248,11 +248,6 @@ public class DumpViewerActivity extends BaseActivity
         popupMenu.getMenu().add(Menu.NONE, 12, Menu.NONE, "Batch export opened (VL) images");
 
         // Spot actions
-        popupMenu.getMenu().add(Menu.NONE, 20, Menu.NONE, "Remove last spot");
-        popupMenu.getMenu().add(Menu.NONE, 21, Menu.NONE, "Clear spots");
-        popupMenu.getMenu().add(Menu.NONE, 22, Menu.NONE,
-            presenter.isSpotsVisible() ? "Hide spots" : "Show spots"
-        );
         popupMenu.getMenu().add(Menu.NONE, 23, Menu.NONE, "Copy spots");
         if (presenter.existCopiedSpots())
             popupMenu.getMenu().add(Menu.NONE, 24, Menu.NONE, "Paste spots");
@@ -270,18 +265,6 @@ public class DumpViewerActivity extends BaseActivity
 
                 case 12:
                     presenter.saveAllVisibleLightImageFromOpened();
-                    break;
-
-                case 20:
-                    presenter.removeLastThermalSpot();
-                    break;
-
-                case 21:
-                    presenter.clearThermalSpots();
-                    break;
-
-                case 22:
-                    presenter.setThermalSpotsVisible(!presenter.isSpotsVisible());
                     break;
 
                 case 23:

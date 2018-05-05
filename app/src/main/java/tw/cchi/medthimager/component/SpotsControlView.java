@@ -9,6 +9,8 @@ import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.RelativeLayout;
 
+import java.util.ArrayList;
+
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
@@ -17,12 +19,16 @@ import tw.cchi.medthimager.R;
 public class SpotsControlView extends RelativeLayout {
 
     private OnControlSpotsListener listener;
-    private Animation fabOpen, fabClose, rotateForward, rotateBackward;
-    private boolean isFabOpen = false;
+    private Animation animFabOpen, animFabClose, animRotateForward, animRotateBackward;
+    private ArrayList<FloatingActionButton> childSpots = new ArrayList<>();
+    private boolean fabOpen = false;
+    private boolean spotsVisible = true;
 
-    @BindView(R.id.fabSpotsControl) FloatingActionButton fabSpotsControl;
     @BindView(R.id.fabAddSpot) FloatingActionButton fabAddSpot;
     @BindView(R.id.fabRemoveSpot) FloatingActionButton fabRemoveSpot;
+    @BindView(R.id.fabClearSpots) FloatingActionButton fabClearSpots;
+    @BindView(R.id.fabToggleVisibility) FloatingActionButton fabToggleVisibility;
+    @BindView(R.id.fabSpotsControl) FloatingActionButton fabSpotsControl;
 
     public SpotsControlView(Context context, @Nullable AttributeSet attrs) {
         super(context, attrs);
@@ -39,19 +45,23 @@ public class SpotsControlView extends RelativeLayout {
     }
 
     private void initialize() {
-        fabOpen = AnimationUtils.loadAnimation(getContext(), R.anim.fab_open);
-        fabClose = AnimationUtils.loadAnimation(getContext(),R.anim.fab_close);
-        rotateForward = AnimationUtils.loadAnimation(getContext(),R.anim.rotate_forward);
-        rotateBackward = AnimationUtils.loadAnimation(getContext(),R.anim.rotate_backward);
+        animFabOpen = AnimationUtils.loadAnimation(getContext(), R.anim.fab_open);
+        animFabClose = AnimationUtils.loadAnimation(getContext(),R.anim.fab_close);
+        animRotateForward = AnimationUtils.loadAnimation(getContext(),R.anim.rotate_forward);
+        animRotateBackward = AnimationUtils.loadAnimation(getContext(),R.anim.rotate_backward);
+
+        childSpots.add(fabAddSpot);
+        childSpots.add(fabRemoveSpot);
+        childSpots.add(fabClearSpots);
+        childSpots.add(fabToggleVisibility);
+
+        for (FloatingActionButton fab : childSpots) {
+            fab.setVisibility(INVISIBLE);
+        }
     }
 
     public void setOnControlSpotsListener(OnControlSpotsListener listener) {
         this.listener = listener;
-    }
-
-    @OnClick(R.id.fabSpotsControl)
-    void onFabSpotsControlClick() {
-        animateFab();
     }
 
     @OnClick(R.id.fabAddSpot)
@@ -66,21 +76,56 @@ public class SpotsControlView extends RelativeLayout {
             listener.onRemoveSpot();
     }
 
+    @OnClick(R.id.fabClearSpots)
+    void onFabClearSpotsClick() {
+        if (listener != null)
+            listener.onClearSpots();
+    }
+
+    @OnClick(R.id.fabToggleVisibility)
+    void onFabToggleVisibilityClick(FloatingActionButton fab) {
+        if (listener != null) {
+            if (spotsVisible) {
+                listener.onHideSpots();
+                fab.setImageDrawable(getResources().getDrawable(R.drawable.ic_visible));
+                spotsVisible = false;
+            } else {
+                listener.onShowSpots();
+                fab.setImageDrawable(getResources().getDrawable(R.drawable.ic_not_visible));
+                spotsVisible = true;
+            }
+        }
+    }
+
+    @OnClick(R.id.fabSpotsControl)
+    void onFabSpotsControlClick() {
+        animateFab();
+    }
+
     private void animateFab() {
-        if (isFabOpen) {
-            fabSpotsControl.startAnimation(rotateBackward);
-            fabAddSpot.startAnimation(fabClose);
-            fabRemoveSpot.startAnimation(fabClose);
-            fabAddSpot.setClickable(false);
-            fabRemoveSpot.setClickable(false);
-            isFabOpen = false;
+        if (fabOpen) {
+            fabSpotsControl.startAnimation(animRotateBackward);
+
+            for (FloatingActionButton fab : childSpots) {
+                fab.startAnimation(animFabClose);
+                fab.setClickable(false);
+            }
+
+            fabOpen = false;
         } else {
-            fabSpotsControl.startAnimation(rotateForward);
-            fabAddSpot.startAnimation(fabOpen);
-            fabRemoveSpot.startAnimation(fabOpen);
-            fabAddSpot.setClickable(true);
-            fabRemoveSpot.setClickable(true);
-            isFabOpen = true;
+            fabSpotsControl.startAnimation(animRotateForward);
+
+            fabAddSpot.startAnimation(animFabOpen);
+            fabRemoveSpot.startAnimation(animFabOpen);
+            fabClearSpots.startAnimation(animFabOpen);
+            fabToggleVisibility.startAnimation(animFabOpen);
+
+            for (FloatingActionButton fab : childSpots) {
+                fab.startAnimation(animFabOpen);
+                fab.setClickable(true);
+            }
+
+            fabOpen = true;
         }
     }
 

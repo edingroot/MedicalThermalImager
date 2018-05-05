@@ -8,18 +8,6 @@
     android:layout_width="wrap_content"
     android:layout_height="wrap_content">
 
-    <!--<ImageButton-->
-    <!--android:id="@+id/btnSpotsControl"-->
-    <!--android:layout_width="30dp"-->
-    <!--android:layout_height="30dp"-->
-    <!--android:layout_alignParentStart="true"-->
-    <!--android:layout_alignParentTop="true"-->
-    <!--android:adjustViewBounds="true"-->
-    <!--android:background="@drawable/circle_button"-->
-    <!--android:padding="5dp"-->
-    <!--android:scaleType="centerCrop"-->
-    <!--android:src="@drawable/ic_add_minus"/>-->
-
     <android.support.design.widget.FloatingActionButton
         android:id="@+id/fabAddSpot"
         android:layout_width="@dimen/fab_spots_control_size"
@@ -28,8 +16,7 @@
         android:layout_alignParentStart="true"
         android:layout_marginTop="@dimen/fab_spots_margin"
         android:src="@drawable/ic_plus"
-        android:visibility="invisible"
-        app:backgroundTint="@color/colorAccent"
+        app:backgroundTint="#2196F3"
         app:elevation="6dp"
         app:pressedTranslationZ="12dp"/>
 
@@ -37,12 +24,35 @@
         android:id="@+id/fabRemoveSpot"
         android:layout_width="@dimen/fab_spots_control_size"
         android:layout_height="@dimen/fab_spots_control_size"
-        android:layout_above="@id/fabSpotsControl"
+        android:layout_above="@id/fabClearSpots"
         android:layout_alignParentStart="true"
         android:layout_marginTop="@dimen/fab_spots_margin"
         android:src="@drawable/ic_minus"
-        android:visibility="invisible"
         app:backgroundTint="#E040FB"
+        app:elevation="6dp"
+        app:pressedTranslationZ="12dp"/>
+
+    <android.support.design.widget.FloatingActionButton
+        android:id="@+id/fabClearSpots"
+        android:layout_width="@dimen/fab_spots_control_size"
+        android:layout_height="@dimen/fab_spots_control_size"
+        android:layout_above="@id/fabToggleVisibility"
+        android:layout_alignParentStart="true"
+        android:layout_marginTop="@dimen/fab_spots_margin"
+        android:src="@drawable/ic_cross"
+        app:backgroundTint="#da4d26"
+        app:elevation="6dp"
+        app:pressedTranslationZ="12dp"/>
+
+    <android.support.design.widget.FloatingActionButton
+        android:id="@+id/fabToggleVisibility"
+        android:layout_width="@dimen/fab_spots_control_size"
+        android:layout_height="@dimen/fab_spots_control_size"
+        android:layout_above="@id/fabSpotsControl"
+        android:layout_alignParentStart="true"
+        android:layout_marginTop="@dimen/fab_spots_margin"
+        android:src="@drawable/ic_not_visible"
+        app:backgroundTint="#72798b"
         app:elevation="6dp"
         app:pressedTranslationZ="12dp"/>
 
