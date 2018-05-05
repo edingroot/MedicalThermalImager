@@ -27,7 +27,6 @@ public class ThermalDumpsRecyclerAdapter extends RecyclerView.Adapter<ThermalDum
     }
 
     /**
-     * @param title
      * @return selected position
      */
     public int addDumpSwitch(String title) {
@@ -41,8 +40,6 @@ public class ThermalDumpsRecyclerAdapter extends RecyclerView.Adapter<ThermalDum
     }
 
     /**
-     *
-     * @param position
      * @return (new) selected position of -1 if the list is empty.
      */
     public int removeDumpSwitch(int position) {

@@ -437,21 +437,23 @@ public class DumpViewerActivity extends BaseActivity
     }
 
     /**
-     * @param title
      * @return Index of the new active tab
      */
     @Override
     public int addDumpTab(String title) {
+        spotsControl.setEnabled(true);
         return thermalDumpsRecyclerAdapter.addDumpSwitch(title);
     }
 
     /**
-     * @param index
      * @return Index of the new active tab or -1 for no tab after removing
      */
     @Override
     public int removeDumpTab(int index) {
-        return thermalDumpsRecyclerAdapter.removeDumpSwitch(index);
+        int activePosition = thermalDumpsRecyclerAdapter.removeDumpSwitch(index);
+        if (activePosition == -1)
+            spotsControl.setEnabled(false);
+        return activePosition;
     }
 
     @Override
