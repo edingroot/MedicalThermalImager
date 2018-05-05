@@ -113,7 +113,7 @@
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
         android:layout_alignParentStart="true"
-        android:layout_marginBottom="1dp">
+        android:layout_marginBottom="6dp">
 
         <ToggleButton
             android:id="@+id/toggleVisible"
@@ -166,25 +166,22 @@
             style="@style/metaToggleButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_toEndOf="@id/btnDelete"
             android:layout_alignParentTop="true"
-            android:layout_marginEnd="10dp"
-            android:layout_toStartOf="@+id/btnAddSpot"
+            android:layout_marginStart="10dp"
             android:drawableTop="@drawable/ic_top_menu"
             android:textColor="#fff"
             android:textOff="@string/menu"
             android:textOn="@string/menu"/>
 
-        <ImageButton
-            android:id="@+id/btnAddSpot"
-            android:layout_width="@dimen/btn_add_spot_size"
-            android:layout_height="@dimen/btn_add_spot_size"
-            android:layout_alignParentEnd="true"
-            android:layout_marginTop="8dp"
-            android:layout_marginEnd="12dp"
-            android:background="@android:color/holo_blue_dark"
-            android:scaleType="fitCenter"
-            android:src="@drawable/ic_add_minus"/>
-
     </RelativeLayout>
+
+    <tw.cchi.medthimager.component.SpotsControlView
+        android:id="@+id/spotsControl"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentEnd="true"
+        android:layout_marginBottom="9dp"
+        android:layout_marginEnd="10dp"/>
 
 </RelativeLayout>

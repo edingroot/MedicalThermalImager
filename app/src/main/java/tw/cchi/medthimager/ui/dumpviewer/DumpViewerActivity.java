@@ -39,6 +39,7 @@ import tw.cchi.medthimager.Config;
 import tw.cchi.medthimager.R;
 import tw.cchi.medthimager.adapter.ThermalDumpsRecyclerAdapter;
 import tw.cchi.medthimager.component.MultiChartView;
+import tw.cchi.medthimager.component.SpotsControlView;
 import tw.cchi.medthimager.di.BgThreadCapable;
 import tw.cchi.medthimager.helper.ThermalSpotsHelper;
 import tw.cchi.medthimager.model.ChartParameter;
@@ -47,7 +48,8 @@ import tw.cchi.medthimager.thermalproc.VisibleImageMask;
 import tw.cchi.medthimager.ui.base.BaseActivity;
 
 @RuntimePermissions
-public class DumpViewerActivity extends BaseActivity implements DumpViewerMvpView {
+public class DumpViewerActivity extends BaseActivity
+    implements DumpViewerMvpView, SpotsControlView.OnControlSpotsListener {
     private static final int MAX_OPEN_FILES = 24;
 
     @Inject DumpViewerMvpPresenter<DumpViewerMvpView> presenter;
@@ -70,6 +72,7 @@ public class DumpViewerActivity extends BaseActivity implements DumpViewerMvpVie
     @BindView(R.id.toggleVisible) ToggleButton toggleVisible;
     @BindView(R.id.toggleColoredMode) ToggleButton toggleColoredMode;
     @BindView(R.id.toggleHorizonChart) ToggleButton toggleHorizonChart;
+    @BindView(R.id.spotsControl) SpotsControlView spotsControl;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -103,6 +106,8 @@ public class DumpViewerActivity extends BaseActivity implements DumpViewerMvpVie
         recyclerDumpSwitcher.setLayoutManager(
                 new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
         );
+
+        spotsControl.setOnControlSpotsListener(this);
     }
 
     @Override
@@ -276,7 +281,7 @@ public class DumpViewerActivity extends BaseActivity implements DumpViewerMvpVie
                     break;
 
                 case 22:
-                    presenter.toggleThermalSpotsVisible();
+                    presenter.setThermalSpotsVisible(!presenter.isSpotsVisible());
                     break;
 
                 case 23:
@@ -293,19 +298,33 @@ public class DumpViewerActivity extends BaseActivity implements DumpViewerMvpVie
         popupMenu.show();
     }
 
-    @OnClick(R.id.btnAddSpot)
-    public void onAddSpotClick() {
+
+    // -------------------------- SpotsControlView.OnControlSpotsListener ------------------------ //
+    @Override
+    public void onAddSpot() {
         presenter.addThermalSpot();
     }
 
-    @OnLongClick(R.id.btnAddSpot)
-    public boolean onAddSpotLongClick() {
-        if (presenter.getTabsCount() == 0)
-            return true;
-
+    @Override
+    public void onRemoveSpot() {
         presenter.removeLastThermalSpot();
-        return true;
     }
+
+    @Override
+    public void onClearSpots() {
+        presenter.clearThermalSpots();
+    }
+
+    @Override
+    public void onHideSpots() {
+        presenter.setThermalSpotsVisible(false);
+    }
+
+    @Override
+    public void onShowSpots() {
+        presenter.setThermalSpotsVisible(true);
+    }
+    // -------------------------- /SpotsControlView.OnControlSpotsListener ------------------------ //
 
 
     @Override

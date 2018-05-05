@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Ref: https://www.learn2crack.com/2015/10/android-floating-action-button-animations.html -->
+
+<RelativeLayout
+    android:id="@+id/layoutRoot"
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content">
+
+    <!--<ImageButton-->
+    <!--android:id="@+id/btnSpotsControl"-->
+    <!--android:layout_width="30dp"-->
+    <!--android:layout_height="30dp"-->
+    <!--android:layout_alignParentStart="true"-->
+    <!--android:layout_alignParentTop="true"-->
+    <!--android:adjustViewBounds="true"-->
+    <!--android:background="@drawable/circle_button"-->
+    <!--android:padding="5dp"-->
+    <!--android:scaleType="centerCrop"-->
+    <!--android:src="@drawable/ic_add_minus"/>-->
+
+    <android.support.design.widget.FloatingActionButton
+        android:id="@+id/fabAddSpot"
+        android:layout_width="@dimen/fab_spots_control_size"
+        android:layout_height="@dimen/fab_spots_control_size"
+        android:layout_above="@id/fabRemoveSpot"
+        android:layout_alignParentStart="true"
+        android:layout_marginTop="@dimen/fab_spots_margin"
+        android:src="@drawable/ic_plus"
+        android:visibility="invisible"
+        app:backgroundTint="@color/colorAccent"
+        app:elevation="6dp"
+        app:pressedTranslationZ="12dp"/>
+
+    <android.support.design.widget.FloatingActionButton
+        android:id="@+id/fabRemoveSpot"
+        android:layout_width="@dimen/fab_spots_control_size"
+        android:layout_height="@dimen/fab_spots_control_size"
+        android:layout_above="@id/fabSpotsControl"
+        android:layout_alignParentStart="true"
+        android:layout_marginTop="@dimen/fab_spots_margin"
+        android:src="@drawable/ic_minus"
+        android:visibility="invisible"
+        app:backgroundTint="#E040FB"
+        app:elevation="6dp"
+        app:pressedTranslationZ="12dp"/>
+
+    <android.support.design.widget.FloatingActionButton
+        android:id="@+id/fabSpotsControl"
+        android:layout_width="@dimen/fab_spots_control_size"
+        android:layout_height="@dimen/fab_spots_control_size"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentStart="true"
+        android:layout_marginTop="@dimen/fab_spots_margin"
+        android:src="@drawable/ic_target"
+        app:backgroundTint="#2196F3"
+        app:elevation="6dp"
+        app:pressedTranslationZ="12dp"/>
+
+</RelativeLayout>

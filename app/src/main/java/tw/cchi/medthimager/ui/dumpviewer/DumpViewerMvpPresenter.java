@@ -31,7 +31,9 @@ public interface DumpViewerMvpPresenter<V extends DumpViewerMvpView> extends Mvp
     void saveAllVisibleLightImageFromOpened();
 
 
-    void toggleThermalSpotsVisible();
+    boolean setThermalSpotsVisible(boolean visible);
+
+    boolean isSpotsVisible();
 
     void addThermalSpot();
 
@@ -61,8 +63,6 @@ public interface DumpViewerMvpPresenter<V extends DumpViewerMvpView> extends Mvp
     String getDumpTitle();
 
     boolean isVisibleImageAlignMode();
-
-    boolean isSpotsVisible();
 
     boolean existCopiedSpots();
 

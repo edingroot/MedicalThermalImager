@@ -377,12 +377,18 @@ public class DumpViewerPresenter<V extends DumpViewerMvpView> extends BasePresen
     }
 
     @Override
-    public void toggleThermalSpotsVisible() {
+    public boolean setThermalSpotsVisible(boolean visible) {
         if (tabResources.getThermalSpotHelper() == null)
-            return;
+            return false;
 
-        showingThermalSpots = !showingThermalSpots;
+        showingThermalSpots = visible;
         tabResources.getThermalSpotHelper().setSpotsVisible(showingThermalSpots);
+        return true;
+    }
+
+    @Override
+    public boolean isSpotsVisible() {
+        return showingThermalSpots;
     }
 
     @Override
@@ -552,11 +558,6 @@ public class DumpViewerPresenter<V extends DumpViewerMvpView> extends BasePresen
     @Override
     public boolean isVisibleImageAlignMode() {
         return visibleImageAlignMode;
-    }
-
-    @Override
-    public boolean isSpotsVisible() {
-        return showingThermalSpots;
     }
 
     @Override

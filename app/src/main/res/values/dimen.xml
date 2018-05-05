@@ -1,11 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <!-- Floating action button -->
+    <dimen name="design_fab_image_size" tools:override="true">36dp</dimen>
+    <dimen name="fab_spots_control_size">46dp</dimen>
+    <dimen name="fab_spots_margin">8dp</dimen>
 
     <dimen name="buttonMediumHeight">40dp</dimen>
     <dimen name="buttonPadding">10dp</dimen>
     <dimen name="buttonMediumTextSize">14sp</dimen>
-
-    <dimen name="btn_add_spot_size">26sp</dimen>
 
     <dimen name="status_text_small">12sp</dimen>
     <dimen name="status_text_medium">14sp</dimen>
