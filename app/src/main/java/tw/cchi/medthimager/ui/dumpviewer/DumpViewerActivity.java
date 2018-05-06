@@ -8,6 +8,7 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MotionEvent;
 import android.view.View;
@@ -50,6 +51,8 @@ import tw.cchi.medthimager.ui.base.BaseActivity;
 @RuntimePermissions
 public class DumpViewerActivity extends BaseActivity
     implements DumpViewerMvpView, SpotsControlView.OnControlSpotsListener {
+    private final String TAG = Config.TAGPRE + getClass().getSimpleName();
+
     private static final int MAX_OPEN_FILES = 24;
 
     @Inject DumpViewerMvpPresenter<DumpViewerMvpView> presenter;
@@ -325,9 +328,9 @@ public class DumpViewerActivity extends BaseActivity
      */
     @Override
     public ThermalSpotsHelper createThermalSpotsHelper(RawThermalDump rawThermalDump) {
-        System.out.printf("[createThermalSpotsHelper] thermalImageView.getMeasuredHeight()=%d, thermalImageView.getTop()=%d, layoutThermalViews.getTop()=%d\n",
+        Log.i(TAG, String.format("[createThermalSpotsHelper] thermalImageView.getMeasuredHeight()=%d, thermalImageView.getTop()=%d, layoutThermalViews.getTop()=%d\n",
             thermalImageView.getMeasuredHeight(), thermalImageView.getTop(), layoutThermalViews.getTop()
-        );
+        ));
 
         final ThermalSpotsHelper thermalSpotsHelper = new ThermalSpotsHelper(this, topView, rawThermalDump);
         thermalSpotsHelper.setImageViewMetrics(

@@ -1,6 +1,6 @@
 package tw.cchi.medthimager.ui.camera;
 
-import android.graphics.Bitmap;
+import com.flir.flironesdk.RenderedImage;
 
 import tw.cchi.medthimager.di.BgThreadCapable;
 import tw.cchi.medthimager.di.NewThread;
@@ -11,6 +11,8 @@ public interface CameraMvpPresenter<V extends CameraMvpView> extends MvpPresente
 
     boolean startDeviceDiscovery();
 
+    void unregisterFlir();
+
     void checkAndConnectSimDevice();
 
     void checkReconnectSimDevice();
@@ -19,13 +21,17 @@ public interface CameraMvpPresenter<V extends CameraMvpView> extends MvpPresente
 
     void performTune();
 
-    void onActivityStop();
-
     boolean triggerImageCapture();
 
     void startContiShooting(ContiShootParameters contiShootParameters);
 
     void finishContiShooting(boolean showMessageByToast);
+
+    void addThermalSpot();
+
+    void removeLastThermalSpot();
+
+    void clearThermalSpots();
 
     void exportAllRecordsToCSV();
 
@@ -45,11 +51,6 @@ public interface CameraMvpPresenter<V extends CameraMvpView> extends MvpPresente
     void setOpacityMask(String imagePath);
 
     @NewThread @BgThreadCapable
-    void updateThermalImageView(Bitmap frame);
-
-    void updateThermalSpotTemp(int thermalViewX, int thermalViewY);
-
-    @NewThread @BgThreadCapable
-    void updateThermalSpotTemp();
+    void updateThermalImageView(RenderedImage renderedImage);
 
 }

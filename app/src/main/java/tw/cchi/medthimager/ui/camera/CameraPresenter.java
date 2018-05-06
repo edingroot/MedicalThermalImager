@@ -40,12 +40,12 @@ import tw.cchi.medthimager.db.helper.PatientThermalDumpsHelper;
 import tw.cchi.medthimager.di.BgThreadCapable;
 import tw.cchi.medthimager.di.NewThread;
 import tw.cchi.medthimager.helper.CSVExportHelper;
+import tw.cchi.medthimager.helper.ThermalSpotsHelper;
 import tw.cchi.medthimager.model.CaptureProcessInfo;
 import tw.cchi.medthimager.model.ContiShootParameters;
 import tw.cchi.medthimager.thermalproc.RawThermalDump;
 import tw.cchi.medthimager.ui.base.BasePresenter;
 import tw.cchi.medthimager.utils.AppUtils;
-import tw.cchi.medthimager.utils.CommonUtils;
 
 public class CameraPresenter<V extends CameraMvpView> extends BasePresenter<V>
     implements CameraMvpPresenter<V>, Device.Delegate, Device.StreamDelegate,
@@ -60,6 +60,7 @@ public class CameraPresenter<V extends CameraMvpView> extends BasePresenter<V>
     private volatile Device flirOneDevice;
     private Device.TuningState tuningState = Device.TuningState.Unknown;
     private FrameProcessor frameProcessor;
+    private ThermalSpotsHelper thermalSpotsHelper;
     private Timer contiShootTimer;
 
     private Bitmap opacityMask; // TODO: volatile?
@@ -70,8 +71,6 @@ public class CameraPresenter<V extends CameraMvpView> extends BasePresenter<V>
     private volatile boolean streamingFrame = false;
     private volatile boolean contiShooting = false; // TODO: volatile?
     private CaptureProcessInfo captureProcessInfo = null;
-    private int thermalSpotX = -1; // movable spot thermal indicator pX
-    private int thermalSpotY = -1; // movable spot thermal indicator pY
     private String patientUuid = Patient.DEFAULT_PATIENT_UUID;
 
     @Inject
@@ -118,6 +117,13 @@ public class CameraPresenter<V extends CameraMvpView> extends BasePresenter<V>
     }
 
     @Override
+    public void unregisterFlir() {
+        // We must unregister our usb receiver, otherwise we will steal events from other apps
+        Device.stopDiscovery();
+        flirOneDevice = null;
+    }
+
+    @Override
     public void checkAndConnectSimDevice() {
         if (flirOneDevice == null) {
             connectSimulatedDevice();
@@ -157,13 +163,6 @@ public class CameraPresenter<V extends CameraMvpView> extends BasePresenter<V>
     }
 
     @Override
-    public void onActivityStop() {
-        // We must unregister our usb receiver, otherwise we will steal events from other apps
-        Device.stopDiscovery();
-        flirOneDevice = null;
-    }
-
-    @Override
     public boolean triggerImageCapture() {
         if (isDeviceAttached() && streamingFrame && captureProcessInfo == null) {
             captureProcessInfo = new CaptureProcessInfo();
@@ -183,18 +182,18 @@ public class CameraPresenter<V extends CameraMvpView> extends BasePresenter<V>
 
         getMvpView().setContinuousShootMode(
             contiShootParams.capturedCount, contiShootParams.totalCaptures);
-        getMvpView().setContinuousShootCountdown(contiShootParams.secondsToNextTick);
+        getMvpView().updateContinuousShootCountdown(contiShootParams.secondsToNextTick);
 
         TimerTask timerTask = new TimerTask() {
             @Override
             public void run() {
                 activity.runOnUiThread(() -> {
                     if (--contiShootParams.secondsToNextTick <= 0) {
-                        getMvpView().setContinuousShootCountdown(contiShootParams.secondsToNextTick = 0);
+                        getMvpView().updateContinuousShootCountdown(contiShootParams.secondsToNextTick = 0);
                         handleContiShootTick();
-                        getMvpView().setContinuousShootCountdown(contiShootParams.secondsToNextTick = contiShootParams.interval);
+                        getMvpView().updateContinuousShootCountdown(contiShootParams.secondsToNextTick = contiShootParams.interval);
                     } else {
-                        getMvpView().setContinuousShootCountdown(contiShootParams.secondsToNextTick);
+                        getMvpView().updateContinuousShootCountdown(contiShootParams.secondsToNextTick);
                     }
                 });
             }
@@ -266,6 +265,28 @@ public class CameraPresenter<V extends CameraMvpView> extends BasePresenter<V>
     }
 
     @Override
+    public void addThermalSpot() {
+        if (thermalSpotsHelper != null) {
+            int lastSpotId = thermalSpotsHelper.getLastSpotId();
+            thermalSpotsHelper.addSpot(lastSpotId == -1 ? 1 : lastSpotId + 1);
+        }
+    }
+
+    @Override
+    public void removeLastThermalSpot() {
+        if (thermalSpotsHelper != null) {
+            thermalSpotsHelper.removeLastSpot();
+        }
+    }
+
+    @Override
+    public void clearThermalSpots() {
+        if (thermalSpotsHelper != null) {
+            thermalSpotsHelper.clearAllSpots();
+        }
+    }
+
+    @Override
     public void exportAllRecordsToCSV() {
         SimpleDateFormat sdf = new SimpleDateFormat("MMdd-HHmmss", Locale.getDefault());
         String csvFilepath = AppUtils.getExportsDir() + "/" + "RecordsExport_" + sdf.format(new Date()) + ".csv";
@@ -332,7 +353,8 @@ public class CameraPresenter<V extends CameraMvpView> extends BasePresenter<V>
         lastRenderedImage = renderedImage;
 
         if (renderedImage.imageType() == RenderedImage.ImageType.ThermalRadiometricKelvinImage) {
-            updateThermalSpotTemp();
+            if (thermalSpotsHelper != null)
+                thermalSpotsHelper.updateThermalValuesFromImage(renderedImage);
 
             // If image capture in progress
             if (captureProcessInfo != null) {
@@ -343,7 +365,7 @@ public class CameraPresenter<V extends CameraMvpView> extends BasePresenter<V>
                 captureProcessInfo = null;
             }
         } else if (renderedImage.imageType() == RenderedImage.ImageType.ThermalRGBA8888Image) {
-            updateThermalImageView(renderedImage.getBitmap());
+            updateThermalImageView(renderedImage);
         }
 
         // (DEBUG) Show image types
@@ -407,8 +429,10 @@ public class CameraPresenter<V extends CameraMvpView> extends BasePresenter<V>
 
     @NewThread @BgThreadCapable
     @Override
-    public void updateThermalImageView(Bitmap frame) {
-        Observable.create(emitter -> {
+    public void updateThermalImageView(RenderedImage renderedImage) {
+        Observable.<Bitmap>create(emitter -> {
+            Bitmap frame = renderedImage.getBitmap();
+
             // Draw opacity mask if assigned
             if (opacityMask != null) {
                 Canvas canvas = new Canvas(frame);
@@ -416,61 +440,38 @@ public class CameraPresenter<V extends CameraMvpView> extends BasePresenter<V>
                 alphaPaint.setAlpha(Config.PREVIEW_MASK_ALPHA);
                 canvas.drawBitmap(opacityMask, 0, 0, alphaPaint);
             }
-            emitter.onComplete();
 
+            emitter.onNext(frame);
+            emitter.onComplete();
         }).subscribeOn(Schedulers.computation())
             .observeOn(AndroidSchedulers.mainThread()).subscribe(
-                o -> {},
+                frame -> getMvpView().updateThermalImageView(frame),
                 e -> {},
-                () -> getMvpView().setThermalImageViewBitmap(frame)
+                () -> {
+
+                    if (thermalSpotsHelper == null) {
+                        // Wait measured width and height to be correct
+                        // TODO: better approach?
+                        mainLooperHandler.postDelayed(() -> {
+                            if (getMvpView().getThermalImageViewHeight() == 0) {
+                                // This should be called after getMvpView().updateThermalImageView()
+                                getMvpView().getThermalImageViewGlobalLayouts().take(1).subscribe(o -> {
+                                    thermalSpotsHelper = getMvpView().createThermalSpotsHelper(lastRenderedImage);
+                                    getMvpView().setSpotsControlEnabled(true);
+                                });
+                            } else {
+                                thermalSpotsHelper = getMvpView().createThermalSpotsHelper(lastRenderedImage);
+                                getMvpView().setSpotsControlEnabled(true);
+                            }
+                        }, 150);
+                    }
+                }
         );
-    }
-
-    /**
-     * @param thermalViewX pX on the imageView
-     * @param thermalViewY pY on the imageView
-     */
-    @Override
-    public void updateThermalSpotTemp(int thermalViewX, int thermalViewY) {
-        // Calculate the correspondent point on the thermal image
-        double ratio = (double) lastRenderedImage.width() / getMvpView().getThermalImageViewWidth();
-        int imgX = (int) (thermalViewX * ratio);
-        int imgY = (int) (thermalViewY * ratio);
-
-        thermalSpotX = CommonUtils.trimByRange(imgX, 1, lastRenderedImage.width() - 1);
-        thermalSpotY = CommonUtils.trimByRange(imgY, 1, lastRenderedImage.height() - 1);
-
-        updateThermalSpotTemp();
-    }
-
-    @NewThread @BgThreadCapable
-    @Override
-    public void updateThermalSpotTemp() {
-        if (lastRenderedImage == null)
-            return;
-
-        Observable.<Double>create(emitter -> {
-            int x = thermalSpotX, y = thermalSpotY;
-            RawThermalDump rawThermalDump = new RawThermalDump(
-                1, lastRenderedImage.width(), lastRenderedImage.height(), lastRenderedImage.thermalPixelValues());
-
-            double averageC;
-            if (thermalSpotX == -1) {
-                averageC = rawThermalDump.getTemperature9Average(rawThermalDump.getWidth() / 2, rawThermalDump.getHeight() / 2);
-            } else {
-                averageC = rawThermalDump.getTemperature9Average(x, y);
-            }
-            emitter.onNext(averageC);
-
-        }).subscribeOn(Schedulers.computation())
-            .observeOn(AndroidSchedulers.mainThread()).subscribe(getMvpView()::setThermalSpotTemp);
     }
 
     // ------------------------------------------------------------------------------------------- //
 
     private void connectSimulatedDevice() {
-        getMvpView().showToast(R.string.connecting_sim);
-
         try {
             flirOneDevice = new SimulatedDevice(this, activity,
                 activity.getResources().openRawResource(R.raw.sampleframes), 10);

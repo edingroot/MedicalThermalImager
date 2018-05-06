@@ -631,7 +631,7 @@ public class DumpViewerPresenter<V extends DumpViewerMvpView> extends BasePresen
                         // TODO: better approach?
                         mainLooperHandler.postDelayed(() -> {
                             if (getMvpView().getThermalImageViewHeight() == 0) {
-                                // This should be called after setThermalImageViewBitmap(), which was called in onNext() above
+                                // This should be called after getMvpView().updateThermalImageView(), which was called in onNext() above
                                 getMvpView().getThermalImageViewGlobalLayouts().take(1).subscribe(o -> {
                                     tabResources.setThermalSpotsHelper(
                                         getMvpView().createThermalSpotsHelper(tabResources.getRawThermalDump())

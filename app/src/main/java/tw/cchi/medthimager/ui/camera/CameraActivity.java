@@ -21,10 +21,13 @@ import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.PopupMenu;
 import android.widget.ProgressBar;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import com.flir.flironesdk.Device;
 import com.flir.flironesdk.FlirUsbDevice;
+import com.flir.flironesdk.RenderedImage;
+import com.jakewharton.rxbinding2.view.RxView;
 
 import javax.inject.Inject;
 
@@ -32,12 +35,15 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
 import butterknife.OnTouch;
+import io.reactivex.Observable;
 import permissions.dispatcher.NeedsPermission;
 import permissions.dispatcher.OnPermissionDenied;
 import permissions.dispatcher.RuntimePermissions;
 import tw.cchi.medthimager.Config;
 import tw.cchi.medthimager.R;
+import tw.cchi.medthimager.component.SpotsControlView;
 import tw.cchi.medthimager.component.ThermalSpotView;
+import tw.cchi.medthimager.helper.ThermalSpotsHelper;
 import tw.cchi.medthimager.ui.base.BaseActivity;
 import tw.cchi.medthimager.ui.camera.contishoot.ContiShootDialog;
 import tw.cchi.medthimager.ui.camera.selectpatient.SelectPatientDialog;
@@ -45,7 +51,8 @@ import tw.cchi.medthimager.ui.dumpviewer.DumpViewerActivity;
 import tw.cchi.medthimager.utils.CommonUtils;
 
 @RuntimePermissions
-public class CameraActivity extends BaseActivity implements CameraMvpView {
+public class CameraActivity extends BaseActivity implements
+    CameraMvpView, SpotsControlView.OnControlSpotsListener {
     private final String TAG = Config.TAGPRE + getClass().getSimpleName();
 
     public static final int ACTION_PICK_FROM_GALLERY = 100;
@@ -57,20 +64,23 @@ public class CameraActivity extends BaseActivity implements CameraMvpView {
     private ColorFilter originalChargingIndicatorColor;
     // private int thermalViewOnTouchMoves = 0;
 
+    @BindView(R.id.topView) RelativeLayout topView;
+    @BindView(R.id.batteryLevelTextView) TextView batteryLevelTextView;
+    @BindView(R.id.batteryChargeIndicator) ImageView batteryChargeIndicator;
+
     @BindView(R.id.txtPatientName) TextView txtPatientName;
     @BindView(R.id.txtShootInfo) TextView txtShootInfo;
     @BindView(R.id.txtTuningState) TextView txtTuningState;
 
     @BindView(R.id.thermalImageView) ImageView thermalImageView;
     @BindView(R.id.pleaseConnect) TextView pleaseConnect;
-    @BindView(R.id.batteryLevelTextView) TextView batteryLevelTextView;
-    @BindView(R.id.batteryChargeIndicator) ImageView batteryChargeIndicator;
-    @BindView(R.id.imgBtnCapture) ImageButton imgBtnCapture;
-    @BindView(R.id.txtShootCountdown) TextView txtShootCountdown;
-
-    @BindView(R.id.thermalSpotView) ThermalSpotView thermalSpotView;
+    @BindView(R.id.thermalSpotView) ThermalSpotView thermalSpotView; // TODO
     @BindView(R.id.tuningProgressBar) ProgressBar tuningProgressBar;
     @BindView(R.id.tuningTextView) TextView tuningTextView;
+
+    @BindView(R.id.spotsControl) SpotsControlView spotsControl;
+    @BindView(R.id.imgBtnCapture) ImageButton imgBtnCapture;
+    @BindView(R.id.txtShootCountdown) TextView txtShootCountdown;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -98,6 +108,8 @@ public class CameraActivity extends BaseActivity implements CameraMvpView {
                 return false;
             }
         });
+
+        spotsControl.setOnControlSpotsListener(this);
     }
 
     @Override
@@ -133,7 +145,7 @@ public class CameraActivity extends BaseActivity implements CameraMvpView {
 
     @Override
     public void onStop() {
-        presenter.onActivityStop();
+        presenter.unregisterFlir();
         super.onStop();
     }
 
@@ -302,8 +314,8 @@ public class CameraActivity extends BaseActivity implements CameraMvpView {
             int x = (int) event.getX();
             int y = (int) event.getY();
             if (y >= 0 && y < thermalImageView.getMeasuredHeight()) {
-                presenter.updateThermalSpotTemp(x, y);
-                thermalSpotView.setCenterPosition(x, y + thermalImageView.getTop());
+                // TODO
+                // presenter.updateThermalSpotTemp(x, y);
             }
             // thermalViewOnTouchMoves++;
         }
@@ -323,6 +335,57 @@ public class CameraActivity extends BaseActivity implements CameraMvpView {
     } */
 
 
+    // -------------------------- SpotsControlView.OnControlSpotsListener ------------------------ //
+    @Override
+    public void onAddSpot() {
+        presenter.addThermalSpot();
+    }
+
+    @Override
+    public void onRemoveSpot() {
+        presenter.removeLastThermalSpot();
+    }
+
+    @Override
+    public void onClearSpots() {
+        presenter.clearThermalSpots();
+    }
+
+    @Override
+    public void onHideSpots() {
+        // never called due to function disabled
+    }
+
+    @Override
+    public void onShowSpots() {
+        // never called due to function disabled
+    }
+    // -------------------------- /SpotsControlView.OnControlSpotsListener ------------------------ //
+
+
+    @Override
+    public Observable<Object> getThermalImageViewGlobalLayouts() {
+        return RxView.globalLayouts(thermalImageView);
+    }
+
+    /**
+     * This should be called after thermalImageView measured (global layouted).
+     */
+    @Override
+    public ThermalSpotsHelper createThermalSpotsHelper(RenderedImage renderedImage) {
+        Log.i(TAG, String.format("[createThermalSpotsHelper] thermalImageView.getMeasuredHeight()=%d, thermalImageView.getTop()=%d, layoutThermalViews.getTop()=%d\n",
+            thermalImageView.getMeasuredHeight(), thermalImageView.getTop(), topView.getTop()
+        ));
+
+        final ThermalSpotsHelper thermalSpotsHelper = new ThermalSpotsHelper(this, topView, renderedImage);
+        thermalSpotsHelper.setImageViewMetrics(
+            thermalImageView.getMeasuredWidth(),
+            thermalImageView.getMeasuredHeight(),
+            thermalImageView.getTop() + topView.getTop()
+        );
+        return thermalSpotsHelper;
+    }
+
     @Override
     public void setPatientStatusText(String patientName) {
         txtPatientName.setText(getString(R.string.patient_, patientName));
@@ -331,20 +394,20 @@ public class CameraActivity extends BaseActivity implements CameraMvpView {
     @Override
     public void setDeviceConnected() {
         pleaseConnect.setVisibility(View.GONE);
-        thermalSpotView.setVisibility(View.VISIBLE);
     }
 
     @Override
     public void setDeviceDisconnected() {
         pleaseConnect.setVisibility(View.VISIBLE);
+        setSpotsControlEnabled(false);
+
         thermalImageView.setImageBitmap(Bitmap.createBitmap(1, 1, Bitmap.Config.RGB_565));
         thermalImageView.clearColorFilter();
         thermalImageView.setImageResource(android.R.color.transparent);
         batteryLevelTextView.setText("--");
         batteryChargeIndicator.setVisibility(View.GONE);
-        thermalSpotView.setVisibility(View.GONE);
-        findViewById(R.id.tuningProgressBar).setVisibility(View.GONE);
-        findViewById(R.id.tuningTextView).setVisibility(View.GONE);
+        tuningProgressBar.setVisibility(View.GONE);
+        tuningTextView.setVisibility(View.GONE);
     }
 
     @Override
@@ -393,13 +456,18 @@ public class CameraActivity extends BaseActivity implements CameraMvpView {
     }
 
     @Override
-    public void setThermalImageViewBitmap(final Bitmap frame) {
+    public void setSpotsControlEnabled(boolean enabled) {
+        spotsControl.setEnabled(enabled);
+    }
+
+    @Override
+    public void updateThermalImageView(final Bitmap frame) {
         thermalImageView.setImageBitmap(frame);
     }
 
     @Override
-    public void setThermalSpotTemp(double temperature) {
-        thermalSpotView.setTemperature(temperature);
+    public int getThermalImageViewHeight() {
+        return thermalImageView.getMeasuredHeight();
     }
 
     @Override
@@ -428,14 +496,10 @@ public class CameraActivity extends BaseActivity implements CameraMvpView {
     }
 
     @Override
-    public void setContinuousShootCountdown(int value) {
+    public void updateContinuousShootCountdown(int value) {
         txtShootCountdown.setText(CommonUtils.padLeft(String.valueOf(value), '0', 3));
     }
 
-    @Override
-    public int getThermalImageViewWidth() {
-        return thermalImageView.getMeasuredWidth();
-    }
 
     @NeedsPermission({Manifest.permission.WRITE_EXTERNAL_STORAGE})
     void enableDeviceDiscovery() {

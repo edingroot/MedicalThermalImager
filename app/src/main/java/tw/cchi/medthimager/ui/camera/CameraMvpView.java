@@ -3,10 +3,17 @@ package tw.cchi.medthimager.ui.camera;
 import android.graphics.Bitmap;
 
 import com.flir.flironesdk.Device;
+import com.flir.flironesdk.RenderedImage;
 
+import io.reactivex.Observable;
+import tw.cchi.medthimager.helper.ThermalSpotsHelper;
 import tw.cchi.medthimager.ui.base.MvpView;
 
 public interface CameraMvpView extends MvpView {
+
+    Observable<Object> getThermalImageViewGlobalLayouts();
+
+    ThermalSpotsHelper createThermalSpotsHelper(RenderedImage renderedImage);
 
     void setPatientStatusText(String patientName);
 
@@ -20,9 +27,11 @@ public interface CameraMvpView extends MvpView {
 
     void setDeviceBatteryPercentage(byte percentage);
 
-    void setThermalImageViewBitmap(final Bitmap frame);
+    void setSpotsControlEnabled(boolean enabled);
 
-    void setThermalSpotTemp(double temperature);
+    void updateThermalImageView(final Bitmap frame);
+
+    int getThermalImageViewHeight();
 
     void animateFlash();
 
@@ -30,9 +39,6 @@ public interface CameraMvpView extends MvpView {
 
     void setContinuousShootMode(int capturedCount, int totalCaptures);
 
-    void setContinuousShootCountdown(int value);
-
-
-    int getThermalImageViewWidth();
+    void updateContinuousShootCountdown(int value);
 
 }
