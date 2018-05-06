@@ -39,7 +39,7 @@
         android:layout_above="@id/fabToggleVisibility"
         android:layout_alignParentStart="true"
         android:layout_marginTop="@dimen/fab_spots_margin"
-        android:src="@drawable/ic_cross"
+        android:src="@drawable/ic_erase"
         app:backgroundTint="#da4d26"
         app:elevation="6dp"
         app:pressedTranslationZ="12dp"/>
