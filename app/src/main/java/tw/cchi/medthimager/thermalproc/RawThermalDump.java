@@ -420,9 +420,9 @@ public class RawThermalDump {
 
     /**
      * Get the average of the 9 pixels around the point.
-     *  - Note: this code is not optimized.
-     * @param x
-     * @param y
+     *
+     * Note: this code is not optimized.
+     *
      * @return The average temperature in degree Celsius
      */
     public double getTemperature9Average(int x, int y) {
@@ -437,15 +437,15 @@ public class RawThermalDump {
                 centerPixelIndex + width + 1
         };
 
-        double averageTemp = 0;
+        int sum = 0;
         for (int i = 0; i < centerPixelIndexes.length; i++) {
             // Remember: all primitives are signed, we want the unsigned value,
             // we've used renderedImage.thermalPixelValues() to get unsigned values
-            int pixelValue = thermalValues[centerPixelIndexes[i]];
-            averageTemp += (((double) pixelValue) - averageTemp) / ((double) i + 1);
+            sum += thermalValues[centerPixelIndexes[i]];
         }
-        return (averageTemp / 100) - 273.15;
+        double averageTemp = (double) sum / centerPixelIndexes.length;
 
+        return (averageTemp / 100) - 273.15;
     }
 
     private static void signedInt2TwoBytes(int number, byte[] bytes, int startFrom) {
@@ -461,7 +461,7 @@ public class RawThermalDump {
         return result;
     }
 
-    public static boolean isPureAscii(String v) {
+    private static boolean isPureAscii(String v) {
         CharsetEncoder asciiEncoder = Charset.forName("US-ASCII").newEncoder(); // or "ISO-8859-1" for ISO Latin 1
         return asciiEncoder.canEncode(v);
     }
