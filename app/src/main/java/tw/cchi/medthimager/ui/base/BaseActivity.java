@@ -34,7 +34,7 @@ public abstract class BaseActivity extends AppCompatActivity
 
     private ActivityComponent mActivityComponent;
     private Unbinder mUnBinder;
-    private Handler mainHandler;
+    private Handler mainLooperHandler;
     private ProgressDialog loadingDialog;
 
     @Override
@@ -44,7 +44,7 @@ public abstract class BaseActivity extends AppCompatActivity
                 .activityModule(new ActivityModule(this))
                 .applicationComponent(((MvpApplication) getApplication()).getComponent())
                 .build();
-        mainHandler = new Handler(Looper.getMainLooper());
+        mainLooperHandler = new Handler(Looper.getMainLooper());
     }
 
     public ActivityComponent getActivityComponent() {
@@ -53,7 +53,7 @@ public abstract class BaseActivity extends AppCompatActivity
 
     @Override
     public void showLoading() {
-        mainHandler.post(() -> {
+        mainLooperHandler.post(() -> {
             if (loadingDialog == null || !loadingDialog.isShowing()) {
                 loadingDialog = AppUtils.showLoadingDialog(this);
             }
@@ -62,7 +62,7 @@ public abstract class BaseActivity extends AppCompatActivity
 
     @Override
     public void hideLoading() {
-        mainHandler.post(() -> {
+        mainLooperHandler.post(() -> {
             if (loadingDialog != null && loadingDialog.isShowing()) {
                 loadingDialog.dismiss();
             }

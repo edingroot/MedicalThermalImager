@@ -629,7 +629,7 @@ public class DumpViewerPresenter<V extends DumpViewerMvpView> extends BasePresen
 
                         // Wait measured width and height to be correct (while picking new dumps after the first time)
                         // TODO: better approach?
-                        new Handler(Looper.getMainLooper()).postDelayed(() -> {
+                        mainLooperHandler.postDelayed(() -> {
                             if (getMvpView().getThermalImageViewHeight() == 0) {
                                 // This should be called after setThermalImageViewBitmap(), which was called in onNext() above
                                 getMvpView().getThermalImageViewGlobalLayouts().take(1).subscribe(o -> {
