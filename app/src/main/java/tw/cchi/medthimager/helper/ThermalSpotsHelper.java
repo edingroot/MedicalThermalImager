@@ -38,7 +38,7 @@ public class ThermalSpotsHelper {
 
     private RawThermalDump rawThermalDump;
     private RenderedImage renderedImage;
-    private ArrayList<org.opencv.core.Point> preselectedSpots = new ArrayList<>();
+    private final ArrayList<org.opencv.core.Point> preSelectedSpots = new ArrayList<>();
 
     private int tempSourceWidth;
     private int lastSpotId = -1;
@@ -164,9 +164,7 @@ public class ThermalSpotsHelper {
                     break;
 
                 case MotionEvent.ACTION_UP:
-                    if (tempSource == TempSource.ThermalDump) {
-                        storeSpotPosition(thermalSpotView);
-                    }
+                    storeSpotPosition(thermalSpotView);
                     break;
 
                 case MotionEvent.ACTION_POINTER_DOWN:
@@ -204,7 +202,9 @@ public class ThermalSpotsHelper {
                     rawThermalDump.getSpotMarkers().add(thermalPositionCV);
                     rawThermalDump.saveAsync();
                 } else if (tempSource == TempSource.RenderedImage) {
-                    preselectedSpots.add(thermalPositionCV);
+                    synchronized (preSelectedSpots) {
+                        preSelectedSpots.add(thermalPositionCV);
+                    }
                 }
             }
         });
@@ -225,7 +225,9 @@ public class ThermalSpotsHelper {
             rawThermalDump.setSpotMarkers(spotMarkers);
             rawThermalDump.saveAsync();
         } else if (tempSource == TempSource.RenderedImage) {
-            preselectedSpots.remove(thermalSpotViews.indexOfKey(lastSpotId));
+            synchronized (preSelectedSpots) {
+                preSelectedSpots.remove(thermalSpotViews.indexOfKey(lastSpotId));
+            }
         }
 
         spotViewsListLock.writeLock().lock();
@@ -258,7 +260,9 @@ public class ThermalSpotsHelper {
                 rawThermalDump.getSpotMarkers().clear();
                 rawThermalDump.save();
             } else if (tempSource == TempSource.RenderedImage) {
-                preselectedSpots.clear();
+                synchronized (preSelectedSpots) {
+                    preSelectedSpots.clear();
+                }
             }
         });
     }
@@ -268,7 +272,7 @@ public class ThermalSpotsHelper {
      */
     public void updateThermalValuesFromImage(RenderedImage renderedImage) {
         if (tempSource != TempSource.RenderedImage) {
-            throw new RuntimeException("updateThermalValues(renderedImage) can only be called if TempSource is RenderedImage.");
+            throw new RuntimeException("should be called only if TempSource is RenderedImage");
         }
 
         this.renderedImage = renderedImage;
@@ -278,6 +282,12 @@ public class ThermalSpotsHelper {
             updateThermalValue(thermalSpotViews.valueAt(i));
         }
         spotViewsListLock.readLock().unlock();
+    }
+
+    public ArrayList<org.opencv.core.Point> getPreSelectedSpots() {
+        synchronized (preSelectedSpots) {
+            return preSelectedSpots;
+        }
     }
 
     public void dispose() {
@@ -290,18 +300,22 @@ public class ThermalSpotsHelper {
      */
     private void storeSpotPosition(final ThermalSpotView spotView) {
         Point viewPosition = spotView.getCenterPosition();
-        ArrayList<org.opencv.core.Point> spotMarkers = rawThermalDump.getSpotMarkers();
         Point rawPosition = view2thermalPosition(viewPosition.x, viewPosition.y);
 
-        Log.d(TAG, String.format("Store2dump@BfConv id=%d, pos=(%d, %d)\n",
-            spotView.getSpotId(), viewPosition.x, viewPosition.y));
-        Log.d(TAG, String.format("Store2dump@AfConv id=%d, pos=(%d, %d), temp=%.2f\n",
-            spotView.getSpotId(), rawPosition.x, rawPosition.y, rawThermalDump.getTemperature9Average(rawPosition.x, rawPosition.y)
+        Log.d(TAG, String.format("storeSpotPosition(id=%d) BfConv=(%d, %d), AfConv=(%d, %d)\n",
+            spotView.getSpotId(), viewPosition.x, viewPosition.y, rawPosition.x, rawPosition.y
         ));
 
-        spotMarkers.get(spotView.getSpotId() - 1).set(new double[]{rawPosition.x, rawPosition.y});
-        rawThermalDump.setSpotMarkers(spotMarkers);
-        rawThermalDump.saveAsync();
+        if (tempSource == TempSource.ThermalDump) {
+            ArrayList<org.opencv.core.Point> spotMarkers = rawThermalDump.getSpotMarkers();
+            spotMarkers.get(spotView.getSpotId() - 1).set(new double[]{rawPosition.x, rawPosition.y});
+            rawThermalDump.setSpotMarkers(spotMarkers);
+            rawThermalDump.saveAsync();
+        } else if (tempSource == TempSource.RenderedImage) {
+            synchronized (preSelectedSpots) {
+                preSelectedSpots.get(spotView.getSpotId() - 1).set(new double[]{rawPosition.x, rawPosition.y});
+            }
+        }
     }
 
     /**

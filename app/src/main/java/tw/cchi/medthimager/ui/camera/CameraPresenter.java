@@ -16,9 +16,11 @@ import com.flir.flironesdk.RenderedImage;
 import com.flir.flironesdk.SimulatedDevice;
 
 import org.opencv.android.OpenCVLoader;
+import org.opencv.core.Point;
 
 import java.io.File;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.EnumSet;
 import java.util.Locale;
@@ -511,6 +513,12 @@ public class CameraPresenter<V extends CameraMvpView> extends BasePresenter<V>
     private void captureRawThermalDump(final RenderedImage renderedImage, final String filename) {
         Observable.create(emitter -> {
             RawThermalDump rawThermalDump = new RawThermalDump(renderedImage);
+            if (thermalSpotsHelper != null) {
+                ArrayList<Point> preSelectedSpots = thermalSpotsHelper.getPreSelectedSpots();
+                if (preSelectedSpots.size() > 0)
+                    rawThermalDump.setSpotMarkers(preSelectedSpots);
+            }
+
             if (rawThermalDump.saveToFile(filename)) {
                 scanMediaStorage(filename);
                 emitter.onComplete();
