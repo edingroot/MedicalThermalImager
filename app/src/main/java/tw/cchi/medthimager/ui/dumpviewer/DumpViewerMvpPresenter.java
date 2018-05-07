@@ -1,10 +1,11 @@
 package tw.cchi.medthimager.ui.dumpviewer;
 
+import android.support.annotation.UiThread;
+
 import java.util.ArrayList;
 
 import tw.cchi.medthimager.di.BgThreadCapable;
 import tw.cchi.medthimager.di.NewThread;
-import tw.cchi.medthimager.di.UiThread;
 import tw.cchi.medthimager.ui.base.MvpPresenter;
 
 public interface DumpViewerMvpPresenter<V extends DumpViewerMvpView> extends MvpPresenter<V> {

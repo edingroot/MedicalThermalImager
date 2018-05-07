@@ -2,7 +2,7 @@ package tw.cchi.medthimager.ui.dumpviewer;
 
 import android.graphics.Bitmap;
 import android.os.Handler;
-import android.os.Looper;
+import android.support.annotation.UiThread;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 
@@ -23,7 +23,6 @@ import tw.cchi.medthimager.Constants;
 import tw.cchi.medthimager.R;
 import tw.cchi.medthimager.di.BgThreadCapable;
 import tw.cchi.medthimager.di.NewThread;
-import tw.cchi.medthimager.di.UiThread;
 import tw.cchi.medthimager.helper.ThermalSpotsHelper;
 import tw.cchi.medthimager.model.ChartParameter;
 import tw.cchi.medthimager.model.ViewerTabResources;
