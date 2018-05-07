@@ -252,7 +252,7 @@ public class ThermalSpotsHelper implements Disposable {
             lastSpotId = -1;
 
             // Run on UI thread
-            new Handler(Looper.getMainLooper()).post(() -> {
+            parentView.post(() -> {
                 for (int i = 0; i < thermalSpotViews.size(); i++) {
                     View spotView = thermalSpotViews.valueAt(i);
                     parentView.removeView(spotView);
@@ -302,13 +302,17 @@ public class ThermalSpotsHelper implements Disposable {
             onSetViewMetricsRunnables.clear();
         }
 
-        spotViewsListLock.writeLock().lock();
         // Remove all thermalSpotViews from parent view
-        for (int i = 0; i < thermalSpotViews.size(); i++) {
-            parentView.removeView(thermalSpotViews.valueAt(i));
+        if (parentView != null) {
+            parentView.post(() -> {
+                spotViewsListLock.writeLock().lock();
+                for (int i = 0; i < thermalSpotViews.size(); i++) {
+                    parentView.removeView(thermalSpotViews.valueAt(i));
+                }
+                thermalSpotViews.clear();
+                spotViewsListLock.writeLock().unlock();
+            });
         }
-        thermalSpotViews.clear();
-        spotViewsListLock.writeLock().unlock();
 
         if (tempSource == TempSource.ThermalDump) {
             rawThermalDump = null;

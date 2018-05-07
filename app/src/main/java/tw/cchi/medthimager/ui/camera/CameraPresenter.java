@@ -64,11 +64,13 @@ public class CameraPresenter<V extends CameraMvpView> extends BasePresenter<V>
     private FrameProcessor frameProcessor;
     private ThermalSpotsHelper thermalSpotsHelper;
     private Timer contiShootTimer;
+    private boolean clearSpotsOnDisconnect;
 
     private Bitmap opacityMask; // TODO: volatile?
     private volatile RenderedImage lastRenderedImage;
     private volatile ContiShootParameters contiShootParams;
 
+    // States
     private volatile boolean simConnected = false; // simulated device connected
     private volatile boolean streamingFrame = false;
     private volatile boolean contiShooting = false; // TODO: volatile?
@@ -83,6 +85,7 @@ public class CameraPresenter<V extends CameraMvpView> extends BasePresenter<V>
     @Override
     public void onAttach(V mvpView) {
         super.onAttach(mvpView);
+        loadSettings();
 
         OpenCVLoader.initDebug();
 
@@ -104,6 +107,10 @@ public class CameraPresenter<V extends CameraMvpView> extends BasePresenter<V>
             .subscribe(getMvpView()::setPatientStatusText);
 
         getMvpView().setSingleShootMode();
+    }
+
+    public void loadSettings() {
+        clearSpotsOnDisconnect = preferencesHelper.getClearSpotsOnDisconnect();
     }
 
     @Override
@@ -323,10 +330,11 @@ public class CameraPresenter<V extends CameraMvpView> extends BasePresenter<V>
         flirOneDevice = null;
 
         if (!activity.isDestroyed() && !activity.isFinishing()) {
-            // TODO: clear preselected thermal spots while device disconnected?
-//            if (thermalSpotsHelper != null) {
-//                thermalSpotsHelper.dispose();
-//            }
+            // Clear preselected thermal spots on camera disconnect
+            if (clearSpotsOnDisconnect && thermalSpotsHelper != null) {
+                thermalSpotsHelper.dispose();
+                thermalSpotsHelper = null;
+            }
 
             getMvpView().showSnackBar(R.string.flirone_disconnected);
             activity.runOnUiThread(() -> getMvpView().setDeviceDisconnected());
@@ -455,7 +463,6 @@ public class CameraPresenter<V extends CameraMvpView> extends BasePresenter<V>
                 frame -> getMvpView().updateThermalImageView(frame),
                 e -> {},
                 () -> {
-
                     if (thermalSpotsHelper == null) {
                         // Wait measured width and height to be correct
                         // TODO: better approach?

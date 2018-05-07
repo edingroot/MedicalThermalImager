@@ -13,6 +13,7 @@ import tw.cchi.medthimager.di.PreferenceInfo;
 @Singleton
 public class AppPreferencesHelper implements PreferencesHelper {
     private static final String KEY_SELECTED_PATIENT_UUID = "KEY_SELECTED_PATIENT_UUID";
+    private static final String KEY_KEY_CLEAR_SPOTS_ON_DISCONNECT = "KEY_CLEAR_SPOTS_ON_DISCONNECT";
 
     private final SharedPreferences mPrefs;
 
@@ -31,6 +32,16 @@ public class AppPreferencesHelper implements PreferencesHelper {
     @Override
     public void setSelectedPatientUuid(String selectedPatientUuid) {
         mPrefs.edit().putString(KEY_SELECTED_PATIENT_UUID, selectedPatientUuid).apply();
+    }
+
+    @Override
+    public boolean getClearSpotsOnDisconnect() {
+        return mPrefs.getBoolean(KEY_KEY_CLEAR_SPOTS_ON_DISCONNECT, false);
+    }
+
+    @Override
+    public void setClearSpotsOnDisconnect(boolean enable) {
+        mPrefs.edit().putBoolean(KEY_KEY_CLEAR_SPOTS_ON_DISCONNECT, enable).apply();
     }
 
 }

@@ -9,9 +9,14 @@
     <color name="colorActivityBackground">@android:color/background_dark</color>
     <color name="colorControlGray">#b2b2b2</color>
 
+    <!-- for v7.widget.SwitchCompat -->
+    <color name="colorControlActivated">#4ed8da</color>
+    <color name="colorSwitchThumbNormal">#f1f1f1</color>
+    <color name="colorSwitchTrackColor">#c8488ea9</color>
+
     <color name="contentText">#fff</color>
     <color name="contentTextSecondary">#c4c4c4</color>
-    <color name="buttonBackgroundTint">@color/black_effective</color>
+    <color name="buttonBackgroundTint">#262b31</color>
 
     <color name="menuBackground">#616161</color>
 

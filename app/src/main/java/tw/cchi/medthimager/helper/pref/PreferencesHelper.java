@@ -15,4 +15,8 @@ public interface PreferencesHelper {
 
     void setSelectedPatientUuid(String selectedPatientUuid);
 
+    boolean getClearSpotsOnDisconnect();
+
+    void setClearSpotsOnDisconnect(boolean enable);
+
 }

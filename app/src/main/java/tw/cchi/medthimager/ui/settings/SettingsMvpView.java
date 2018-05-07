@@ -4,6 +4,6 @@ import tw.cchi.medthimager.ui.base.MvpView;
 
 public interface SettingsMvpView extends MvpView {
 
-
+    void setSwClearSpotsOnDisconnChanged(boolean checked);
 
 }

@@ -21,6 +21,9 @@ public class SettingsPresenter<V extends SettingsMvpView> extends BasePresenter<
     @Override
     public void onAttach(V mvpView) {
         super.onAttach(mvpView);
+
+        // Load and display settings
+        getMvpView().setSwClearSpotsOnDisconnChanged(preferencesHelper.getClearSpotsOnDisconnect());
     }
 
     @Override
@@ -28,4 +31,8 @@ public class SettingsPresenter<V extends SettingsMvpView> extends BasePresenter<
         super.onDetach();
     }
 
+    @Override
+    public void setClearSpotsOnDisconnect(boolean enable) {
+        preferencesHelper.setClearSpotsOnDisconnect(enable);
+    }
 }

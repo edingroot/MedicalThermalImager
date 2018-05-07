@@ -26,6 +26,10 @@
     <string name="toggle_sim">Toggle SimulatedCam</string>
     <string name="settings">Settings</string>
 
+    <!-- SettingsActivity -->
+    <string name="auto_clear_spots">Auto Clear Spots</string>
+    <string name="auto_clear_spots_desc">Auto clear thermal spots on camera disconnect.</string>
+
     <!-- Dialogs -->
     <string name="conti_shot_setting">Continuous Shooting Settings</string>
     <string name="name">Name</string>

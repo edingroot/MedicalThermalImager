@@ -142,6 +142,7 @@ public class CameraActivity extends BaseActivity implements
     @Override
     public void onResume() {
         super.onResume();
+        presenter.loadSettings();
         presenter.frameStreamControl(true);
     }
 

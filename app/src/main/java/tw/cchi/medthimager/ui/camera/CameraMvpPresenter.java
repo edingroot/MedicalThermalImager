@@ -9,6 +9,8 @@ import tw.cchi.medthimager.ui.base.MvpPresenter;
 
 public interface CameraMvpPresenter<V extends CameraMvpView> extends MvpPresenter<V> {
 
+    void loadSettings();
+
     boolean startDeviceDiscovery();
 
     void unregisterFlir();
