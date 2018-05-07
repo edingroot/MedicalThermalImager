@@ -1,6 +1,7 @@
 package tw.cchi.medthimager.ui.dumpviewer.adapter;
 
 import android.app.Activity;
+import android.content.res.ColorStateList;
 import android.support.v4.content.res.ResourcesCompat;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
@@ -72,19 +73,14 @@ public class ThermalDumpsRecyclerAdapter extends RecyclerView.Adapter<ThermalDum
     public void onBindViewHolder(ViewHolder holder, int position) {
         final int holderPosition = position;
         final String holderTitle = titles.get(position);
+        int color = selectedPosition == position ? R.color.colorPrimaryDark : R.color.buttonBackgroundTint;
 
         holder.button.setText(holderTitle);
-
-        if (selectedPosition == position) {
-            holder.button.setBackground(
-                    ResourcesCompat.getDrawable(activity.getResources(), R.drawable.dumpbtn_selected, null)
-            );
-        } else {
-            // holder.button.setBackgroundResource(android.R.drawable.btn_default); // android default button style
-            holder.button.setBackground(
-                    ResourcesCompat.getDrawable(activity.getResources(), R.drawable.dumpbtn_normal, null)
-            );
-        }
+        holder.button.setBackground(
+            ResourcesCompat.getDrawable(activity.getResources(), R.drawable.btn_dump_tab, null));
+        holder.button.setBackgroundTintList(
+            ColorStateList.valueOf(ResourcesCompat.getColor(activity.getResources(), color, null)));
+        // holder.button.setBackgroundResource(android.R.drawable.btn_default); // android default button style
 
         holder.button.setOnClickListener(v -> {
             if (holderPosition != selectedPosition) {

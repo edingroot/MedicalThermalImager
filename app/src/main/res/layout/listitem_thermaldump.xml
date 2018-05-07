@@ -13,6 +13,7 @@
         android:layout_marginStart="2dp"
         android:text="Button"
         android:textAllCaps="false"
-        android:textSize="14sp"/>
+        android:textSize="14sp"
+        android:background="@drawable/btn_dump_tab"/>
 
 </RelativeLayout>

@@ -8,14 +8,19 @@
     <color name="colorBackground">#3a3b40</color>
     <color name="colorActivityBackground">@android:color/background_dark</color>
     <color name="colorControlGray">#b2b2b2</color>
-    <color name="black_effective">#2a2a2a</color>
+
     <color name="contentText">#fff</color>
+    <color name="contentTextSecondary">#c4c4c4</color>
+    <color name="buttonBackgroundTint">@color/black_effective</color>
+
     <color name="menuBackground">#616161</color>
 
+    <color name="black_effective">#2a2a2a</color>
     <color name="black_overlay">#66000000</color>
-    <color name="indicatorYellow">#ffed62</color>
 
     <color name="spotsFab">#2196F3</color>
     <color name="spotsFabDisabled">#6292b9</color>
+
+    <color name="indicatorYellow">#ffed62</color>
 
 </resources>

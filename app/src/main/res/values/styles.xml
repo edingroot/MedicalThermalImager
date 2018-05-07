@@ -8,6 +8,7 @@
         <item name="colorAccent">@color/colorControlGray</item>
         <item name="android:textColor">@color/contentText</item>
         <item name="android:textColorPrimary">@color/contentText</item>
+        <item name="android:buttonStyle">@style/ButtonStyle</item>
         <item name="android:popupMenuStyle">@style/MyPopupMenu</item>
         <item name="android:alertDialogStyle">@style/MyAlertDialog</item>
     </style>
@@ -25,20 +26,12 @@
         <item name="android:background">@color/black_overlay</item>
     </style>
 
-    <style name="DialogTheme" parent="@android:style/Theme.Holo.Dialog">
-        <item name="android:textSize">16sp</item>
+    <style name="ButtonStyle" parent="Widget.AppCompat.Button">
+        <item name="android:backgroundTint">@color/buttonBackgroundTint</item>
     </style>
 
-    <!--<style name="ButtonBar">-->
-        <!--<item name="android:paddingLeft">2dp</item>-->
-        <!--<item name="android:paddingTop">5dp</item>-->
-        <!--<item name="android:paddingRight">2dp</item>-->
-        <!--<item name="android:paddingBottom">0dp</item>-->
-        <!--<item name="android:background">@android:drawable/bottom_bar</item>-->
-    <!--</style>-->
-
-    <style name="ButtonStyle" parent="android:Widget.Button">
-        <item name="android:backgroundTint">@color/black_effective</item>
+    <style name="DialogTheme" parent="@android:style/Theme.Holo.Dialog">
+        <item name="android:textSize">16sp</item>
     </style>
 
     <style name="MyPopupMenu" parent="@android:style/Widget.Holo.ListPopupWindow">
