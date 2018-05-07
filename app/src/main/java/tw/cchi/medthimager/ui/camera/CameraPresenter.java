@@ -323,6 +323,11 @@ public class CameraPresenter<V extends CameraMvpView> extends BasePresenter<V>
         flirOneDevice = null;
 
         if (!activity.isDestroyed() && !activity.isFinishing()) {
+            // TODO: clear preselected thermal spots while device disconnected?
+//            if (thermalSpotsHelper != null) {
+//                thermalSpotsHelper.dispose();
+//            }
+
             getMvpView().showSnackBar(R.string.flirone_disconnected);
             activity.runOnUiThread(() -> getMvpView().setDeviceDisconnected());
         }

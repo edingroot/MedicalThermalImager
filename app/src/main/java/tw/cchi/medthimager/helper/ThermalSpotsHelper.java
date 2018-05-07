@@ -19,6 +19,7 @@ import java.util.Queue;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import io.reactivex.Completable;
+import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
 import tw.cchi.medthimager.Config;
 import tw.cchi.medthimager.component.ThermalSpotView;
@@ -27,7 +28,7 @@ import tw.cchi.medthimager.thermalproc.RawThermalDump;
 import tw.cchi.medthimager.utils.CommonUtils;
 import tw.cchi.medthimager.utils.ThermalDumpUtils;
 
-public class ThermalSpotsHelper {
+public class ThermalSpotsHelper implements Disposable {
     private final String TAG = Config.TAGPRE + getClass().getSimpleName();
 
     public enum TempSource {ThermalDump, RenderedImage}
@@ -35,6 +36,7 @@ public class ThermalSpotsHelper {
     private TempSource tempSource;
     private Context context;
     private ViewGroup parentView;
+    private volatile boolean disposed = false;
 
     private RawThermalDump rawThermalDump;
     private RenderedImage renderedImage;
@@ -50,7 +52,7 @@ public class ThermalSpotsHelper {
 
     private final ReentrantReadWriteLock spotViewsListLock = new ReentrantReadWriteLock();
     private SparseArray<ThermalSpotView> thermalSpotViews = new SparseArray<>(); // <spotId, ThermalSpotView>
-    private Queue<Runnable> onSetViewMetricsRunnables = new LinkedList<>();
+    private final Queue<Runnable> onSetViewMetricsRunnables = new LinkedList<>();
 
     private int spotDraggingDeltaX;
     private int spotDraggingDeltaY;
@@ -121,13 +123,15 @@ public class ThermalSpotsHelper {
         this.viewMetricsSet = true;
 
         // Execute runnables
-        while (!onSetViewMetricsRunnables.isEmpty()) {
-            Completable.fromRunnable(onSetViewMetricsRunnables.poll())
-                .subscribeOn(Schedulers.io()).subscribe();
+        synchronized (onSetViewMetricsRunnables) {
+            while (!onSetViewMetricsRunnables.isEmpty()) {
+                Completable.fromRunnable(onSetViewMetricsRunnables.poll())
+                    .subscribeOn(Schedulers.io()).subscribe();
+            }
         }
     }
 
-    public synchronized void addSpot(int spotId) {
+    public void addSpot(int spotId) {
         addSpot(spotId, -1, -1, true);
     }
 
@@ -141,7 +145,7 @@ public class ThermalSpotsHelper {
      */
     @SuppressLint("ClickableViewAccessibility")
     @BgThreadCapable
-    public synchronized void addSpot(final int spotId, int viewX, int viewY, boolean appendToDump) {
+    private synchronized void addSpot(final int spotId, int viewX, int viewY, boolean appendToDump) {
         final ThermalSpotView thermalSpotView = new ThermalSpotView(context, spotId, true);
 
         thermalSpotView.setOnTouchListener((view, motionEvent) -> {
@@ -290,10 +294,38 @@ public class ThermalSpotsHelper {
         }
     }
 
+    @Override
     public void dispose() {
-        setSpotsVisible(false);
+        disposed = true;
+
+        synchronized (onSetViewMetricsRunnables) {
+            onSetViewMetricsRunnables.clear();
+        }
+
+        spotViewsListLock.writeLock().lock();
+        // Remove all thermalSpotViews from parent view
+        for (int i = 0; i < thermalSpotViews.size(); i++) {
+            parentView.removeView(thermalSpotViews.valueAt(i));
+        }
+        thermalSpotViews.clear();
+        spotViewsListLock.writeLock().unlock();
+
+        if (tempSource == TempSource.ThermalDump) {
+            rawThermalDump = null;
+        } else if (tempSource == TempSource.RenderedImage) {
+            renderedImage = null;
+            synchronized (preSelectedSpots) {
+                preSelectedSpots.clear();
+            }
+        }
     }
 
+    @Override
+    public boolean isDisposed() {
+        return disposed;
+    }
+
+    // ------------------------------------------------------------------------------------------- //
 
     /**
      * Store spot position in thermal dump files
@@ -392,7 +424,9 @@ public class ThermalSpotsHelper {
         if (viewMetricsSet) {
             Completable.fromRunnable(runnable).subscribeOn(Schedulers.io()).subscribe();
         } else {
-            onSetViewMetricsRunnables.add(runnable);
+            synchronized (onSetViewMetricsRunnables) {
+                onSetViewMetricsRunnables.add(runnable);
+            }
         }
     }
 
