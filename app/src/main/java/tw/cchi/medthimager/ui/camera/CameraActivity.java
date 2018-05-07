@@ -465,7 +465,8 @@ public class CameraActivity extends BaseActivity implements
 
     @Override
     public void setSpotsControlEnabled(boolean enabled) {
-        spotsControl.setEnabled(enabled);
+        if (spotsControl.isEnabled() != enabled)
+            spotsControl.setEnabled(enabled);
     }
 
     @Override

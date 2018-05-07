@@ -471,6 +471,8 @@ public class CameraPresenter<V extends CameraMvpView> extends BasePresenter<V>
                                 getMvpView().setSpotsControlEnabled(true);
                             }
                         }, 150);
+                    } else {
+                        getMvpView().setSpotsControlEnabled(true);
                     }
                 }
         );
