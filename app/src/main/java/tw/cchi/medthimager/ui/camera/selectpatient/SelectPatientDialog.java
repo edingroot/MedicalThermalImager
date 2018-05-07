@@ -21,7 +21,7 @@ import java.util.List;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import tw.cchi.medthimager.R;
-import tw.cchi.medthimager.adapter.PatientSelectsRecyclerAdapter;
+import tw.cchi.medthimager.ui.camera.selectpatient.adapter.PatientSelectsRecyclerAdapter;
 import tw.cchi.medthimager.db.AppDatabase;
 import tw.cchi.medthimager.db.Patient;
 

@@ -1,4 +1,4 @@
-package tw.cchi.medthimager.adapter;
+package tw.cchi.medthimager.ui.dumpviewer.adapter;
 
 import android.app.Activity;
 import android.support.v4.content.res.ResourcesCompat;

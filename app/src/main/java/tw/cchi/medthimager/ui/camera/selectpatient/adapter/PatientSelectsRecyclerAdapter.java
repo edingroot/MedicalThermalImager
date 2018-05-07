@@ -1,4 +1,4 @@
-package tw.cchi.medthimager.adapter;
+package tw.cchi.medthimager.ui.camera.selectpatient.adapter;
 
 import android.content.Context;
 import android.support.v7.widget.RecyclerView;

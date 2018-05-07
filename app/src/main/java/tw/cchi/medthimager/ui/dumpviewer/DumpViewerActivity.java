@@ -38,7 +38,7 @@ import permissions.dispatcher.NeedsPermission;
 import permissions.dispatcher.RuntimePermissions;
 import tw.cchi.medthimager.Config;
 import tw.cchi.medthimager.R;
-import tw.cchi.medthimager.adapter.ThermalDumpsRecyclerAdapter;
+import tw.cchi.medthimager.ui.dumpviewer.adapter.ThermalDumpsRecyclerAdapter;
 import tw.cchi.medthimager.component.MultiChartView;
 import tw.cchi.medthimager.component.SpotsControlView;
 import tw.cchi.medthimager.di.BgThreadCapable;
