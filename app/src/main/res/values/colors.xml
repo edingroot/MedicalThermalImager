@@ -6,6 +6,7 @@
     <color name="colorPrimaryDark">#303F9F</color>
     <!--<color name="colorAccent">#FF4081</color>-->
     <color name="colorBackground">#3a3b40</color>
+    <color name="colorActivityBackground">@android:color/background_dark</color>
     <color name="colorControlGray">#b2b2b2</color>
     <color name="black_effective">#2a2a2a</color>
     <color name="contentText">#fff</color>

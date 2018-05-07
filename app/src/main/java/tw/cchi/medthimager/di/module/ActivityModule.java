@@ -13,11 +13,14 @@ import tw.cchi.medthimager.ui.camera.CameraMvpPresenter;
 import tw.cchi.medthimager.ui.camera.CameraMvpView;
 import tw.cchi.medthimager.ui.camera.CameraPresenter;
 import tw.cchi.medthimager.ui.camera.contishoot.ContiShootMvpPresenter;
-import tw.cchi.medthimager.ui.camera.contishoot.ContiShootPresenter;
 import tw.cchi.medthimager.ui.camera.contishoot.ContiShootMvpView;
+import tw.cchi.medthimager.ui.camera.contishoot.ContiShootPresenter;
 import tw.cchi.medthimager.ui.dumpviewer.DumpViewerMvpPresenter;
 import tw.cchi.medthimager.ui.dumpviewer.DumpViewerMvpView;
 import tw.cchi.medthimager.ui.dumpviewer.DumpViewerPresenter;
+import tw.cchi.medthimager.ui.settings.SettingsMvpPresenter;
+import tw.cchi.medthimager.ui.settings.SettingsMvpView;
+import tw.cchi.medthimager.ui.settings.SettingsPresenter;
 
 @Module
 public class ActivityModule {
@@ -56,6 +59,11 @@ public class ActivityModule {
 
     @Provides
     ContiShootMvpPresenter<ContiShootMvpView> provideContiShotMvpPresenter(ContiShootPresenter<ContiShootMvpView> presenter) {
+        return presenter;
+    }
+
+    @Provides
+    SettingsMvpPresenter<SettingsMvpView> provideSettingsMvpPresenter(SettingsPresenter<SettingsMvpView> presenter) {
         return presenter;
     }
 

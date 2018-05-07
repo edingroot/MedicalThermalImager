@@ -1,14 +1,15 @@
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-                xmlns:tools="http://schemas.android.com/tools"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                xmlns:custom="http://schemas.android.com/apk/res-auto"
-                android:background="@android:color/background_dark"
-                android:orientation="vertical"
-                tools:context=".ui.camera.CameraActivity"
-                android:keepScreenOn="true"
-                android:id="@+id/topView"
-                android:touchscreenBlocksFocus="false">
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:custom="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/topView"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/colorActivityBackground"
+    android:keepScreenOn="true"
+    android:orientation="vertical"
+    android:touchscreenBlocksFocus="false"
+    tools:context=".ui.camera.CameraActivity">
 
     <!-- This FrameLayout insets its children based on system windows using
          android:fitsSystemWindows. -->

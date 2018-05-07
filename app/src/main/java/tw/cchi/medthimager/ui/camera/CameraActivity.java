@@ -14,6 +14,7 @@ import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.util.Log;
 import android.view.KeyEvent;
+import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
 import android.view.View;
@@ -48,11 +49,12 @@ import tw.cchi.medthimager.ui.base.BaseActivity;
 import tw.cchi.medthimager.ui.camera.contishoot.ContiShootDialog;
 import tw.cchi.medthimager.ui.camera.selectpatient.SelectPatientDialog;
 import tw.cchi.medthimager.ui.dumpviewer.DumpViewerActivity;
+import tw.cchi.medthimager.ui.settings.SettingsActivity;
 import tw.cchi.medthimager.utils.CommonUtils;
 
 @RuntimePermissions
 public class CameraActivity extends BaseActivity implements
-    CameraMvpView, SpotsControlView.OnControlSpotsListener {
+    CameraMvpView, PopupMenu.OnMenuItemClickListener, SpotsControlView.OnControlSpotsListener {
     private final String TAG = Config.TAGPRE + getClass().getSimpleName();
 
     public static final int ACTION_PICK_FROM_GALLERY = 100;
@@ -221,44 +223,50 @@ public class CameraActivity extends BaseActivity implements
         String pickMaskTitle = getString(presenter.isOpacityMaskAttached() ? R.string.unset_mask : R.string.pick_mask);
         popup.getMenu().findItem(R.id.action_pick_mask).setTitle(pickMaskTitle);
 
-        popup.setOnMenuItemClickListener(item -> {
-            switch (item.getItemId()) {
-                case R.id.action_dump_viewer:
-                    startActivity(new Intent(CameraActivity.this, DumpViewerActivity.class));
-                    return true;
-
-                case R.id.action_pick_mask:
-                    if (!presenter.isOpacityMaskAttached()) {
-                        Intent galleryIntent = new Intent(
-                                Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
-                        startActivityForResult(galleryIntent, ACTION_PICK_FROM_GALLERY);
-                    } else {
-                        presenter.setOpacityMask(null);
-                    }
-                    return true;
-
-                case R.id.export_csv:
-                    presenter.exportAllRecordsToCSV();
-                    return true;
-
-                case R.id.action_switch_rotate:
-                    // TODO: also rotate the capturing image?
-                    if (thermalImageView.getRotation() == 0f) {
-                        thermalImageView.setRotation(180f);
-                    } else {
-                        thermalImageView.setRotation(0f);
-                    }
-                    return true;
-
-                case R.id.action_toggle_sim:
-                    CameraActivityPermissionsDispatcher.checkAndConnectSimDeviceWithPermissionCheck(this);
-                    return true;
-
-                default:
-                    return false;
-            }
-        });
+        popup.setOnMenuItemClickListener(this);
         popup.show();
+    }
+
+    @Override
+    public boolean onMenuItemClick(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.action_dump_viewer:
+                startActivity(new Intent(CameraActivity.this, DumpViewerActivity.class));
+                return true;
+
+            case R.id.action_pick_mask:
+                if (!presenter.isOpacityMaskAttached()) {
+                    Intent galleryIntent = new Intent(
+                        Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+                    startActivityForResult(galleryIntent, ACTION_PICK_FROM_GALLERY);
+                } else {
+                    presenter.setOpacityMask(null);
+                }
+                return true;
+
+            case R.id.export_csv:
+                presenter.exportAllRecordsToCSV();
+                return true;
+
+            case R.id.action_switch_rotate:
+                // TODO: also rotate the capturing image?
+                if (thermalImageView.getRotation() == 0f) {
+                    thermalImageView.setRotation(180f);
+                } else {
+                    thermalImageView.setRotation(0f);
+                }
+                return true;
+
+            case R.id.action_toggle_sim:
+                CameraActivityPermissionsDispatcher.checkAndConnectSimDeviceWithPermissionCheck(this);
+                return true;
+
+            case R.id.action_open_settings:
+                startActivity(new Intent(CameraActivity.this, SettingsActivity.class));
+                return true;
+        }
+
+        return false;
     }
 
     @OnClick(R.id.imgBtnCapture)

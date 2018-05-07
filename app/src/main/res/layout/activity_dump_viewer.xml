@@ -4,7 +4,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     xmlns:custom="http://schemas.android.com/apk/res-auto"
-    android:background="@android:color/background_dark"
+    android:background="@color/colorActivityBackground"
     android:orientation="vertical"
     tools:context=".ui.camera.CameraActivity"
     android:keepScreenOn="true"

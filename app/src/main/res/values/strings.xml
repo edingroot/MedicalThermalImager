@@ -24,6 +24,7 @@
     <string name="unset_mask">Unset Mask Image</string>
     <string name="rotate_view">Rotate View</string>
     <string name="toggle_sim">Toggle SimulatedCam</string>
+    <string name="settings">Settings</string>
 
     <!-- Dialogs -->
     <string name="conti_shot_setting">Continuous Shooting Settings</string>
