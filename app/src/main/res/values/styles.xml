@@ -14,7 +14,15 @@
 
     <style name="FullscreenTheme" parent="AppTheme">
         <item name="android:windowContentOverlay">@null</item>
-        <!--<item name="android:windowBackground">@null</item>-->
+        <item name="android:windowBackground">@null</item>
+        <item name="android:actionBarStyle">@style/FullscreenActionBarStyle</item>
+        <item name="android:windowActionBarOverlay">true</item>
+        <item name="metaButtonBarStyle">?android:attr/buttonBarStyle</item>
+        <item name="metaButtonBarButtonStyle">?android:attr/buttonBarButtonStyle</item>
+    </style>
+
+    <style name="FullscreenActionBarStyle" parent="android:Widget.Holo.ActionBar">
+        <item name="android:background">@color/black_overlay</item>
     </style>
 
     <style name="DialogTheme" parent="@android:style/Theme.Holo.Dialog">
@@ -28,6 +36,10 @@
         <!--<item name="android:paddingBottom">0dp</item>-->
         <!--<item name="android:background">@android:drawable/bottom_bar</item>-->
     <!--</style>-->
+
+    <style name="ButtonStyle" parent="android:Widget.Button">
+        <item name="android:backgroundTint">@color/black_effective</item>
+    </style>
 
     <style name="MyPopupMenu" parent="@android:style/Widget.Holo.ListPopupWindow">
         <item name="android:popupBackground">@color/menuBackground</item>
