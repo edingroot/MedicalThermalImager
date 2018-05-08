@@ -1,5 +1,6 @@
 package tw.cchi.medthimager.utils;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.Context;
@@ -8,11 +9,13 @@ import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.net.Uri;
 import android.os.Environment;
+import android.provider.Settings;
+import android.support.annotation.Nullable;
 
 import java.io.File;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.Locale;
+import java.net.NetworkInterface;
+import java.util.Collections;
+import java.util.List;
 
 import tw.cchi.medthimager.R;
 
@@ -22,17 +25,49 @@ public final class AppUtils {
         // This utility class is not publicly instantiable
     }
 
+    @SuppressLint("HardwareIds")
+    public static String getDeviceId(Context context) {
+        return Settings.Secure.getString(context.getContentResolver(), Settings.Secure.ANDROID_ID);
+    }
+
+    /**
+     * Ref: https://stackoverflow.com/a/39144299
+     * Works in Android 6.0 and 7.0
+     */
+    @Nullable
+    public static String getWlanMacAddr() {
+        try {
+            List<NetworkInterface> all = Collections.list(NetworkInterface.getNetworkInterfaces());
+            for (NetworkInterface nif : all) {
+                if (!nif.getName().equalsIgnoreCase("wlan0"))
+                    continue;
+
+                byte[] macBytes = nif.getHardwareAddress();
+                if (macBytes == null)
+                    return null;
+
+                StringBuilder res1 = new StringBuilder();
+                for (byte b : macBytes)
+                    res1.append(String.format("%02X:", b));
+
+                if (res1.length() > 0)
+                    res1.deleteCharAt(res1.length() - 1);
+
+                return res1.toString();
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+
+        return null;
+    }
+
     public static String getExportsDir() {
         // String path = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES).toString();
         File dir = new File(Environment.getExternalStorageDirectory().getAbsolutePath() + "/flirEx1");
         dir.mkdirs();
         return dir.getAbsolutePath();
-    }
-
-    public static String generateCaptureFilename() {
-        SimpleDateFormat sdf = new SimpleDateFormat("MMdd-HHmmss-SSS", Locale.getDefault());
-        String dateString = sdf.format(new Date());
-        return dateString.substring(0, dateString.length() - 2);
     }
 
     public static void sendBroadcastToMedia(Context context, String filePath) {

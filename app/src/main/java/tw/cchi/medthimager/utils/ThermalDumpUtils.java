@@ -6,12 +6,21 @@ import android.graphics.Point;
 import com.flir.flironesdk.RenderedImage;
 
 import java.io.File;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
 
 import io.reactivex.Observable;
 import tw.cchi.medthimager.R;
 import tw.cchi.medthimager.thermalproc.RawThermalDump;
 
 public class ThermalDumpUtils {
+
+    public static String generateCaptureFilename() {
+        SimpleDateFormat sdf = new SimpleDateFormat("MMdd-HHmmss-SSS", Locale.getDefault());
+        String dateString = sdf.format(new Date());
+        return dateString.substring(0, dateString.length() - 2);
+    }
 
     public static Observable<String> deleteThermalDumpBundle(Context context, RawThermalDump rawThermalDump) {
         String dumpPath = rawThermalDump.getFilepath();

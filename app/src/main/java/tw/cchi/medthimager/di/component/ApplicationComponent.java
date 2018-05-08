@@ -10,6 +10,7 @@ import tw.cchi.medthimager.MvpApplication;
 import tw.cchi.medthimager.db.AppDatabase;
 import tw.cchi.medthimager.di.ApplicationContext;
 import tw.cchi.medthimager.di.module.ApplicationModule;
+import tw.cchi.medthimager.helper.fanalytics.FirebaseAnalyticsHelper;
 import tw.cchi.medthimager.helper.pref.PreferencesHelper;
 
 @Singleton
@@ -30,5 +31,7 @@ public interface ApplicationComponent {
     PreferencesHelper preferenceHelper();
 
     AppDatabase appDatabase();
+
+    FirebaseAnalyticsHelper firebaseAnalyticsHelper();
 
 }

@@ -1,5 +1,4 @@
 // Ref: https://github.com/MindorksOpenSource/android-mvp-architecture
-
 package tw.cchi.medthimager.ui.base;
 
 import android.os.Handler;
@@ -8,6 +7,7 @@ import android.os.Looper;
 import javax.inject.Inject;
 
 import io.reactivex.disposables.CompositeDisposable;
+import tw.cchi.medthimager.helper.fanalytics.FirebaseAnalyticsHelper;
 import tw.cchi.medthimager.helper.pref.PreferencesHelper;
 
 /**
@@ -16,12 +16,13 @@ import tw.cchi.medthimager.helper.pref.PreferencesHelper;
  * can be accessed from the children classes by calling getMvpView().
  */
 public class BasePresenter<V extends MvpView> implements MvpPresenter<V> {
-    protected Handler mainLooperHandler;
-
     private final CompositeDisposable mCompositeDisposable;
     private V mMvpView;
 
-    @Inject public PreferencesHelper preferencesHelper;
+    protected Handler mainLooperHandler;
+
+    @Inject protected FirebaseAnalyticsHelper firebaseAnalyticsHelper;
+    @Inject protected PreferencesHelper preferencesHelper;
 
     @Inject
     public BasePresenter(CompositeDisposable compositeDisposable) {

@@ -17,8 +17,6 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import javax.inject.Inject;
-
 import butterknife.Unbinder;
 import tw.cchi.medthimager.MvpApplication;
 import tw.cchi.medthimager.R;
@@ -29,8 +27,6 @@ import tw.cchi.medthimager.utils.AppUtils;
 
 public abstract class BaseActivity extends AppCompatActivity
     implements MvpView, BaseFragment.Callback {
-
-    @Inject public MvpApplication application;
 
     private ActivityComponent mActivityComponent;
     private Unbinder mUnBinder;

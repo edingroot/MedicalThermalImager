@@ -3,6 +3,8 @@ package tw.cchi.medthimager.di.module;
 import android.app.Application;
 import android.content.Context;
 
+import com.google.firebase.analytics.FirebaseAnalytics;
+
 import javax.inject.Singleton;
 
 import dagger.Module;
@@ -12,6 +14,7 @@ import tw.cchi.medthimager.MvpApplication;
 import tw.cchi.medthimager.db.AppDatabase;
 import tw.cchi.medthimager.di.ApplicationContext;
 import tw.cchi.medthimager.di.PreferenceInfo;
+import tw.cchi.medthimager.helper.fanalytics.FirebaseAnalyticsHelper;
 import tw.cchi.medthimager.helper.pref.AppPreferencesHelper;
 import tw.cchi.medthimager.helper.pref.PreferencesHelper;
 
@@ -19,9 +22,11 @@ import tw.cchi.medthimager.helper.pref.PreferencesHelper;
 public class ApplicationModule {
 
     private final MvpApplication mvpApplication;
+    private final FirebaseAnalytics firebaseAnalytics;
 
     public ApplicationModule(MvpApplication mvpApplication) {
         this.mvpApplication = mvpApplication;
+        this.firebaseAnalytics = FirebaseAnalytics.getInstance(mvpApplication);
     }
 
     @Provides
@@ -56,6 +61,12 @@ public class ApplicationModule {
     @Singleton
     AppDatabase provideAppDatabase() {
         return AppDatabase.getInstance(mvpApplication);
+    }
+
+    @Provides
+    @Singleton
+    FirebaseAnalyticsHelper provideFirebaseAnalyticsHelper() {
+        return new FirebaseAnalyticsHelper(mvpApplication, firebaseAnalytics);
     }
 
 }

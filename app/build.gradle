@@ -123,6 +123,7 @@ dependencies {
     implementation 'com.android.support:design:27.1.1'
     implementation 'com.android.support:cardview-v7:27.1.1'
     implementation 'com.android.support.constraint:constraint-layout:1.1.0'
+    implementation 'com.google.firebase:firebase-core:15.0.2'
 
     implementation 'com.github.PhilJay:MPAndroidChart:v3.0.3'
     implementation 'com.droidninja:filepicker:2.1.2'
@@ -160,3 +161,5 @@ repositories {
         dirs 'libs'
     }
 }
+
+apply plugin: 'com.google.gms.google-services'
