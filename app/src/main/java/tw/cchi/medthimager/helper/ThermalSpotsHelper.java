@@ -92,11 +92,14 @@ public class ThermalSpotsHelper implements Disposable {
         if (this.spotsVisible == spotsVisible)
             return;
 
+        spotViewsListLock.readLock().lock();
         for (int i = 0; i < thermalSpotViews.size(); i++) {
             int key = thermalSpotViews.keyAt(i);
             ThermalSpotView thermalSpotView = thermalSpotViews.get(key);
             thermalSpotView.setVisibility(spotsVisible ? View.VISIBLE : View.GONE);
         }
+        spotViewsListLock.readLock().unlock();
+
         this.spotsVisible = spotsVisible;
     }
 
@@ -253,11 +256,13 @@ public class ThermalSpotsHelper implements Disposable {
 
             // Run on UI thread
             parentView.post(() -> {
+                spotViewsListLock.writeLock().lock();
                 for (int i = 0; i < thermalSpotViews.size(); i++) {
                     View spotView = thermalSpotViews.valueAt(i);
                     parentView.removeView(spotView);
                 }
                 thermalSpotViews.clear();
+                spotViewsListLock.writeLock().unlock();
             });
 
             if (tempSource == TempSource.ThermalDump) {
