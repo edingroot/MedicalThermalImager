@@ -165,6 +165,9 @@ public class CameraPresenter<V extends CameraMvpView> extends BasePresenter<V>
 
     @Override
     public void performTune() {
+        // Log event
+        firebaseAnalyticsHelper.logManuallyTune();
+
         // If device is connected and it's not a simulated device
         if (flirOneDevice != null) {
             flirOneDevice.performTuning();
@@ -215,6 +218,9 @@ public class CameraPresenter<V extends CameraMvpView> extends BasePresenter<V>
 
     private void handleContiShootTick() {
         if (tuningState == Device.TuningState.InProgress) {
+            // Log event
+            firebaseAnalyticsHelper.logTuningWhileContiShoot(contiShootParams);
+
             getMvpView().showSnackBar(
                 R.string.conti_shoot_tuning_skip,
                 contiShootParams.capturedCount, contiShootParams.totalCaptures
@@ -317,6 +323,9 @@ public class CameraPresenter<V extends CameraMvpView> extends BasePresenter<V>
 
     @Override
     public void onDeviceConnected(Device device) {
+        // Log event
+        firebaseAnalyticsHelper.logCameraConnected(true);
+
         flirOneDevice = device;
         flirOneDevice.setPowerUpdateDelegate(this);
         flirOneDevice.startFrameStream(this);
@@ -326,6 +335,9 @@ public class CameraPresenter<V extends CameraMvpView> extends BasePresenter<V>
 
     @Override
     public void onDeviceDisconnected(Device device) {
+        // Log event
+        firebaseAnalyticsHelper.logCameraConnected(false);
+
         streamingFrame = false;
         flirOneDevice = null;
 
@@ -347,12 +359,19 @@ public class CameraPresenter<V extends CameraMvpView> extends BasePresenter<V>
      */
     @Override
     public void onTuningStateChanged(Device.TuningState tuningState) {
+        // Log event
+        firebaseAnalyticsHelper.logTuningStateChanged(tuningState);
+
         this.tuningState = tuningState;
         activity.runOnUiThread(() -> getMvpView().setDeviceTuningState(tuningState));
     }
 
     @Override
-    public void onAutomaticTuningChanged(boolean b) {
+    public void onAutomaticTuningChanged(boolean deviceWillTuneAutomatically) {
+        // Log event
+        firebaseAnalyticsHelper.logAutomaticTuningChanged(deviceWillTuneAutomatically);
+
+        // TODO: turn off auto tune while conti shoot activated
     }
 
     @Override
@@ -391,6 +410,9 @@ public class CameraPresenter<V extends CameraMvpView> extends BasePresenter<V>
 
     @Override
     public void onBatteryChargingStateReceived(Device.BatteryChargingState batteryChargingState) {
+        // Log event
+        firebaseAnalyticsHelper.logCameraChargingStateChanged(batteryChargingState);
+
         activity.runOnUiThread(() -> getMvpView().setDeviceChargingState(batteryChargingState));
     }
 
@@ -408,6 +430,9 @@ public class CameraPresenter<V extends CameraMvpView> extends BasePresenter<V>
 
     @Override
     public void setCurrentPatient(String patientUUID) {
+        // Log event
+        firebaseAnalyticsHelper.logSetCurrentPatient(patientUUID);
+
         patientUuid = patientUUID;
         preferencesHelper.setSelectedPatientUuid(patientUUID);
 
@@ -488,6 +513,9 @@ public class CameraPresenter<V extends CameraMvpView> extends BasePresenter<V>
     // ------------------------------------------------------------------------------------------- //
 
     private void connectSimulatedDevice() {
+        // Log event
+        firebaseAnalyticsHelper.logConnectSimulatedDevice();
+
         try {
             flirOneDevice = new SimulatedDevice(this, activity,
                 activity.getResources().openRawResource(R.raw.sampleframes), 10);
@@ -502,6 +530,9 @@ public class CameraPresenter<V extends CameraMvpView> extends BasePresenter<V>
 
     @NewThread
     private void captureFLIRImage(final RenderedImage renderedImage, final String filename) {
+        // Log event
+        firebaseAnalyticsHelper.logCameraCapture(contiShooting, contiShootParams);
+
         Observable.create(emitter -> {
             try {
                 // Save the original thermal image
@@ -548,6 +579,9 @@ public class CameraPresenter<V extends CameraMvpView> extends BasePresenter<V>
     }
 
     private void scanMediaStorage(String filename) {
+        // Log event
+        firebaseAnalyticsHelper.logSimpleEvent("scanMediaStorage", "filename=" + filename);
+
         // Call the system media scanner
         Log.i(TAG, "scanning media storage");
         activity.sendBroadcast(new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE, Uri.fromFile(new File(filename))));
