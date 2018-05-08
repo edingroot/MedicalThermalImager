@@ -219,7 +219,7 @@ public class CameraActivity extends BaseActivity implements
             return;
 
         PopupMenu popup = new PopupMenu(this, v);
-        popup.inflate(R.menu.preview_tools_menu);
+        popup.inflate(R.menu.camera_tools_menu);
 
         String pickMaskTitle = getString(presenter.isOpacityMaskAttached() ? R.string.unset_mask : R.string.pick_mask);
         popup.getMenu().findItem(R.id.action_pick_mask).setTitle(pickMaskTitle);

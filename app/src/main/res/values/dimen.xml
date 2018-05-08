@@ -1,6 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:tools="http://schemas.android.com/tools">
-    <!-- Floating action button -->
+    <!-- Standard Page -->
+    <dimen name="page_padding_top">12dp</dimen>
+    <dimen name="page_padding_bottom">8dp</dimen>
+    <dimen name="page_padding_start">14dp</dimen>
+    <dimen name="page_padding_end">14dp</dimen>
+    <dimen name="page_title_bottom_margin">20dp</dimen>
+    <dimen name="page_title_text_size">24sp</dimen>
+    <dimen name="content_margin_start">10dp</dimen>
+    <dimen name="content_margin_end">2dp</dimen>
+
+    <!-- Floating Action Button -->
     <dimen name="design_fab_image_size" tools:override="true">36dp</dimen>
     <dimen name="fab_spots_control_size">46dp</dimen>
     <dimen name="fab_spots_margin">8dp</dimen>
