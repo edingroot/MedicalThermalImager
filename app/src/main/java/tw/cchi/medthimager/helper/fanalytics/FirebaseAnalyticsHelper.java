@@ -94,6 +94,19 @@ public class FirebaseAnalyticsHelper {
         logEvent(Event.CAMERA_CAPTURE, params);
     }
 
+    /**
+     * @param start true for start, false for finish
+     */
+    public void logContiShootStart(boolean start, ContiShootParameters contiShootParams) {
+        Bundle params = new Bundle();
+        if (contiShootParams != null) {
+            params.putInt(Param.CAPTURED_COUNT, contiShootParams.capturedCount);
+            params.putInt(Param.TOTAL_CAPTURES, contiShootParams.totalCaptures);
+            params.putInt(Param.INTERVAL, contiShootParams.interval);
+        }
+        logEvent(start ? Event.CONTISHOOT_START : Event.CONTISHOOT_FINISH, params);
+    }
+
     public void logTuningWhileContiShoot(ContiShootParameters contiShootParams) {
         Bundle params = new Bundle();
         if (contiShootParams != null) {

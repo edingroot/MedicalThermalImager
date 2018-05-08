@@ -186,6 +186,9 @@ public class CameraPresenter<V extends CameraMvpView> extends BasePresenter<V>
 
     @Override
     public void startContiShooting(ContiShootParameters parameters) {
+        // Log event
+        firebaseAnalyticsHelper.logContiShootStart(true, contiShootParams);
+
         contiShooting = true;
         contiShootParams = parameters;
         contiShootParams.timeStart = new Date();
@@ -242,6 +245,9 @@ public class CameraPresenter<V extends CameraMvpView> extends BasePresenter<V>
      */
     @Override
     public void finishContiShooting(boolean success, boolean showMessageByDialog) {
+        // Log event
+        firebaseAnalyticsHelper.logContiShootStart(false, contiShootParams);
+
         contiShooting = false;
         contiShootTimer.cancel();
         contiShootTimer = null;
