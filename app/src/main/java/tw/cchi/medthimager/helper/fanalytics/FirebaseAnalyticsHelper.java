@@ -30,8 +30,7 @@ public class FirebaseAnalyticsHelper {
         String macAddr = AppUtils.getWlanMacAddr();
         Log.i(TAG, String.format("Initializing with %s=%s, %s=%s",
             UserProperty.DEVICE_ID, deviceId,
-            UserProperty.WIFI_MAC_ADDR, macAddr
-        ));
+            UserProperty.WIFI_MAC_ADDR, macAddr));
 
         mFirebaseAnalytics.setUserProperty(UserProperty.DEVICE_ID, deviceId);
         mFirebaseAnalytics.setUserProperty(UserProperty.WIFI_MAC_ADDR, macAddr);

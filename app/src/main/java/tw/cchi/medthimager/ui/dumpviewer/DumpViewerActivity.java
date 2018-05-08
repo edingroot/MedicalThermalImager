@@ -329,8 +329,7 @@ public class DumpViewerActivity extends BaseActivity
     @Override
     public ThermalSpotsHelper createThermalSpotsHelper(RawThermalDump rawThermalDump) {
         Log.i(TAG, String.format("[createThermalSpotsHelper] thermalImageView.getMeasuredHeight()=%d, thermalImageView.getTop()=%d, layoutThermalViews.getTop()=%d\n",
-            thermalImageView.getMeasuredHeight(), thermalImageView.getTop(), layoutThermalViews.getTop()
-        ));
+            thermalImageView.getMeasuredHeight(), thermalImageView.getTop(), layoutThermalViews.getTop()));
 
         final ThermalSpotsHelper thermalSpotsHelper = new ThermalSpotsHelper(this, topView, rawThermalDump);
         thermalSpotsHelper.setImageViewMetrics(

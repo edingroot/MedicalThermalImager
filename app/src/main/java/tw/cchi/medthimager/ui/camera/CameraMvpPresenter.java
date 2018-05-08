@@ -27,7 +27,7 @@ public interface CameraMvpPresenter<V extends CameraMvpView> extends MvpPresente
 
     void startContiShooting(ContiShootParameters contiShootParameters);
 
-    void finishContiShooting(boolean showMessageByToast);
+    void finishContiShooting(boolean success, boolean showMessageByDialog);
 
     void addThermalSpot();
 

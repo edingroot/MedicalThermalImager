@@ -133,7 +133,7 @@ public class CameraActivity extends BaseActivity implements
             selectPatientDialog.dismiss();
 
         if (presenter.isContiShootingMode()) {
-            presenter.finishContiShooting(true);
+            presenter.finishContiShooting(true, false);
         }
 
         presenter.frameStreamControl(false);
@@ -280,7 +280,7 @@ public class CameraActivity extends BaseActivity implements
                 getString(R.string.confirm),
                 getString(R.string.conti_shoot_confirm_abort),
                 (dialog, which) -> {
-                    presenter.finishContiShooting(false);
+                    presenter.finishContiShooting(true, true);
                     dialog.dismiss();
                 },
                 (dialog, which) -> dialog.dismiss()
@@ -383,8 +383,7 @@ public class CameraActivity extends BaseActivity implements
     @Override
     public ThermalSpotsHelper createThermalSpotsHelper(RenderedImage renderedImage) {
         Log.i(TAG, String.format("[createThermalSpotsHelper] thermalImageView.getMeasuredHeight()=%d, thermalImageView.getTop()=%d, layoutThermalViews.getTop()=%d\n",
-            thermalImageView.getMeasuredHeight(), thermalImageView.getTop(), topView.getTop()
-        ));
+            thermalImageView.getMeasuredHeight(), thermalImageView.getTop(), topView.getTop()));
 
         final ThermalSpotsHelper thermalSpotsHelper = new ThermalSpotsHelper(this, topView, renderedImage);
         thermalSpotsHelper.setImageViewMetrics(

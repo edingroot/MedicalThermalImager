@@ -223,26 +223,14 @@ public class CameraPresenter<V extends CameraMvpView> extends BasePresenter<V>
 
             getMvpView().showSnackBar(
                 R.string.conti_shoot_tuning_skip,
-                contiShootParams.capturedCount, contiShootParams.totalCaptures
-            );
+                contiShootParams.capturedCount, contiShootParams.totalCaptures);
             return;
         }
 
         if (!triggerImageCapture()) {
-            contiShooting = false;
-            contiShootTimer.cancel();
-            contiShootTimer = null;
-
-            if (isViewAttached()) {
-                getMvpView().setSingleShootMode();
-                getMvpView().showMessageAlertDialog(
-                    activity.getString(R.string.error),
-                    activity.getString(R.string.conti_shoot_failed_report,
-                        contiShootParams.capturedCount, contiShootParams.totalCaptures)
-                );
-            }
+            finishContiShooting(false, true);
         } else if (++contiShootParams.capturedCount >= contiShootParams.totalCaptures) {
-            finishContiShooting(false);
+            finishContiShooting(false, true);
         } else {
             getMvpView().setContinuousShootMode(
                 contiShootParams.capturedCount, contiShootParams.totalCaptures);
@@ -250,30 +238,35 @@ public class CameraPresenter<V extends CameraMvpView> extends BasePresenter<V>
     }
 
     /**
-     * @param showMessageByToast would be useful while activity pausing
+     * @param showMessageByDialog would be useful if set to false while activity pausing
      */
     @Override
-    public void finishContiShooting(boolean showMessageByToast) {
+    public void finishContiShooting(boolean success, boolean showMessageByDialog) {
         contiShooting = false;
         contiShootTimer.cancel();
         contiShootTimer = null;
 
+        flirOneDevice.setAutomaticTuning(true);
+
         if (isViewAttached()) {
             activity.runOnUiThread(() -> {
                 getMvpView().setSingleShootMode();
-                if (showMessageByToast) {
-                    getMvpView().showToast(
-                        activity.getString(R.string.conti_shoot_finished_report,
-                            contiShootParams.capturedCount,
-                            contiShootParams.totalCaptures)
-                    );
+
+                String message;
+                if (success) {
+                    message = activity.getString(R.string.conti_shoot_finished_report,
+                        contiShootParams.capturedCount,
+                        contiShootParams.totalCaptures);
                 } else {
-                    getMvpView().showMessageAlertDialog(
-                        activity.getString(R.string.information),
-                        activity.getString(R.string.conti_shoot_finished_report,
-                            contiShootParams.capturedCount,
-                            contiShootParams.totalCaptures)
-                    );
+                    message = activity.getString(R.string.conti_shoot_failed_report,
+                        contiShootParams.capturedCount, contiShootParams.totalCaptures);
+                }
+
+                if (showMessageByDialog) {
+                    getMvpView().showToast(message);
+                } else {
+                    String dialogTitle = activity.getString(success ? R.string.information : R.string.error);
+                    getMvpView().showMessageAlertDialog(dialogTitle, message);
                 }
             });
         }
@@ -370,8 +363,6 @@ public class CameraPresenter<V extends CameraMvpView> extends BasePresenter<V>
     public void onAutomaticTuningChanged(boolean deviceWillTuneAutomatically) {
         // Log event
         firebaseAnalyticsHelper.logAutomaticTuningChanged(deviceWillTuneAutomatically);
-
-        // TODO: turn off auto tune while conti shoot activated
     }
 
     @Override
