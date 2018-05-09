@@ -3,6 +3,8 @@ package tw.cchi.medthimager;
 public final class Config {
     public static final String TAGPRE = "medthimager_";
 
+    public static final boolean ENABLE_ANALYTICS_COLLECTION = true;
+
     public static final int PREVIEW_MASK_ALPHA = 55; // 0 ~ 255
     public static final int VISIBLE_ALIGN_ALPHA = 55; // 0 ~ 255
 

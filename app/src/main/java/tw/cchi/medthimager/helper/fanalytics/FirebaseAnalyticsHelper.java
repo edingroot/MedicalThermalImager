@@ -22,6 +22,11 @@ public class FirebaseAnalyticsHelper {
     public FirebaseAnalyticsHelper(Context context, FirebaseAnalytics firebaseAnalytics) {
         this.context = context;
         this.mFirebaseAnalytics = firebaseAnalytics;
+
+        boolean enable = Config.ENABLE_ANALYTICS_COLLECTION &&
+            !AppUtils.checkIsRunningInFirebaseTestLab(context);
+        firebaseAnalytics.setAnalyticsCollectionEnabled(enable);
+
         initialize();
     }
 
@@ -36,9 +41,15 @@ public class FirebaseAnalyticsHelper {
         mFirebaseAnalytics.setUserProperty(UserProperty.WIFI_MAC_ADDR, macAddr);
     }
 
+    /**
+     * [Warning] Check if analytics collection enabled before sending data.
+     *   (disabled if running in test lab)
+     */
     public FirebaseAnalytics getFirebaseAnalytics() {
         return mFirebaseAnalytics;
     }
+
+    // ------------------------------------- Logging Methods ------------------------------------- //
 
     public void logSimpleEvent(String name, @Nullable String value) {
         Bundle params = new Bundle();
@@ -46,7 +57,6 @@ public class FirebaseAnalyticsHelper {
         params.putString(Param.VALUE, value);
         logEvent(Event.SIMPLE_EVENT, params);
     }
-
 
     public void logCameraConnected(boolean connected) {
         logEvent(connected ? Event.CAMERA_CONNECTED : Event.CAMERA_DISCONNECTED, null);
@@ -124,6 +134,7 @@ public class FirebaseAnalyticsHelper {
         logEvent(Event.SET_CURRENT_PATIENT, params);
     }
 
+    // ------------------------------------- /Logging Methods ------------------------------------- //
 
     private void logEvent(@NonNull String event, @Nullable Bundle params) {
         mFirebaseAnalytics.logEvent(Event.PREFIX + event, params);
