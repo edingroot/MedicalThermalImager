@@ -24,7 +24,13 @@
     <string name="unset_mask">Unset Mask Image</string>
     <string name="rotate_view">Rotate View</string>
     <string name="toggle_sim">Toggle SimulatedCam</string>
+    <string name="browse">Browse</string>
     <string name="settings">Settings</string>
+
+    <!-- BrowserActivity -->
+    <string name="patient">Patient</string>
+    <string name="dates">Dates</string>
+    <string name="n_days_selected">%1$d days selected</string>
 
     <!-- SettingsActivity -->
     <string name="auto_clear_spots">Auto Clear Spots</string>

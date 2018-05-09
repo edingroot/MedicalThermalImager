@@ -26,10 +26,35 @@
         <item name="android:background">@color/black_overlay</item>
     </style>
 
+
+    <!-- Button -->
     <style name="MyButtonStyle" parent="Widget.AppCompat.Button">
         <item name="android:backgroundTint">@color/buttonBackgroundTint</item>
     </style>
 
+    <style name="MyTextButtonStyle" parent="Widget.AppCompat.Button">
+        <item name="android:minHeight">40dp</item>
+        <item name="android:backgroundTint">@color/buttonFieldBackgroundTint</item>
+        <item name="android:textAlignment">center</item>
+        <item name="android:textAllCaps">false</item>
+        <item name="android:textSize">14sp</item>
+    </style>
+
+    <style name="metaButton" parent="@style/Widget.AppCompat.Button.Borderless">
+        <item name="android:minWidth">50dp</item>
+        <item name="android:minHeight">40dp</item>
+        <item name="android:layout_marginStart">4dp</item>
+        <item name="android:layout_marginEnd">4dp</item>
+        <item name="android:padding">0dp</item>
+    </style>
+
+    <style name="metaToggleButton" parent="metaButton">
+        <item name="android:textSize">12sp</item>
+        <item name="android:textColor">@color/toggle_text_color</item>
+    </style>
+
+
+    <!-- Switch -->
     <!-- Ref: https://stackoverflow.com/a/38278533 -->
     <style name="MySwitchStyle" parent="Theme.AppCompat.DayNight">
         <!-- active thumb & track color -->
@@ -42,6 +67,8 @@
         <item name="android:colorForeground">@color/colorSwitchTrackColor</item>
     </style>
 
+
+    <!-- Popup & Dialog -->
     <style name="DialogTheme" parent="@android:style/Theme.Holo.Dialog">
         <item name="android:textSize">16sp</item>
     </style>
@@ -65,19 +92,6 @@
         <item name="colorPrimary">@color/colorPrimary</item>
         <item name="colorPrimaryDark">@color/colorBackground</item>
         <item name="colorAccent">@color/colorControlGray</item>
-    </style>
-
-    <style name="metaButton" parent="@style/Widget.AppCompat.Button.Borderless">
-        <item name="android:minWidth">50dp</item>
-        <item name="android:minHeight">40dp</item>
-        <item name="android:layout_marginStart">4dp</item>
-        <item name="android:layout_marginEnd">4dp</item>
-        <item name="android:padding">0dp</item>
-    </style>
-
-    <style name="metaToggleButton" parent="metaButton">
-        <item name="android:textSize">12sp</item>
-        <item name="android:textColor">@color/toggle_text_color</item>
     </style>
 
 </resources>

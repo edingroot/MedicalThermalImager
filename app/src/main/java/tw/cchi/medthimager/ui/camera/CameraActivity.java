@@ -46,6 +46,7 @@ import tw.cchi.medthimager.component.SpotsControlView;
 import tw.cchi.medthimager.component.ThermalSpotView;
 import tw.cchi.medthimager.helper.ThermalSpotsHelper;
 import tw.cchi.medthimager.ui.base.BaseActivity;
+import tw.cchi.medthimager.ui.browser.BrowserActivity;
 import tw.cchi.medthimager.ui.camera.contishoot.ContiShootDialog;
 import tw.cchi.medthimager.ui.camera.selectpatient.SelectPatientDialog;
 import tw.cchi.medthimager.ui.dumpviewer.DumpViewerActivity;
@@ -260,6 +261,10 @@ public class CameraActivity extends BaseActivity implements
 
             case R.id.action_toggle_sim:
                 CameraActivityPermissionsDispatcher.checkAndConnectSimDeviceWithPermissionCheck(this);
+                return true;
+
+            case R.id.action_browse:
+                startActivity(new Intent(CameraActivity.this, BrowserActivity.class));
                 return true;
 
             case R.id.action_open_settings:

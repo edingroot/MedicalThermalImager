@@ -9,6 +9,9 @@ import dagger.Provides;
 import io.reactivex.disposables.CompositeDisposable;
 import tw.cchi.medthimager.di.ActivityContext;
 import tw.cchi.medthimager.ui.base.BaseActivity;
+import tw.cchi.medthimager.ui.browser.BrowserMvpPresenter;
+import tw.cchi.medthimager.ui.browser.BrowserMvpView;
+import tw.cchi.medthimager.ui.browser.BrowserPresenter;
 import tw.cchi.medthimager.ui.camera.CameraMvpPresenter;
 import tw.cchi.medthimager.ui.camera.CameraMvpView;
 import tw.cchi.medthimager.ui.camera.CameraPresenter;
@@ -64,6 +67,11 @@ public class ActivityModule {
 
     @Provides
     SettingsMvpPresenter<SettingsMvpView> provideSettingsMvpPresenter(SettingsPresenter<SettingsMvpView> presenter) {
+        return presenter;
+    }
+
+    @Provides
+    BrowserMvpPresenter<BrowserMvpView> provideBrowserMvpPresenter(BrowserPresenter<BrowserMvpView> presenter) {
         return presenter;
     }
 

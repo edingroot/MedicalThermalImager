@@ -3,6 +3,7 @@ package tw.cchi.medthimager.di.component;
 import dagger.Component;
 import tw.cchi.medthimager.di.PerActivity;
 import tw.cchi.medthimager.di.module.ActivityModule;
+import tw.cchi.medthimager.ui.browser.BrowserActivity;
 import tw.cchi.medthimager.ui.camera.CameraActivity;
 import tw.cchi.medthimager.ui.camera.contishoot.ContiShootDialog;
 import tw.cchi.medthimager.ui.dumpviewer.DumpViewerActivity;
@@ -17,6 +18,8 @@ public interface ActivityComponent {
     void inject(ContiShootDialog dialog);
 
     void inject(SettingsActivity activity);
+
+    void inject(BrowserActivity activity);
 
     void inject(DumpViewerActivity activity);
 
