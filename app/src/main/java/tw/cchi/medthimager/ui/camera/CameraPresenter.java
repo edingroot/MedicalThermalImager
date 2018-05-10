@@ -233,11 +233,15 @@ public class CameraPresenter<V extends CameraMvpView> extends BasePresenter<V>
 
         if (!triggerImageCapture()) {
             finishContiShooting(false, true);
-        } else if (++contiShootParams.capturedCount >= contiShootParams.totalCaptures) {
-            finishContiShooting(false, true);
         } else {
-            getMvpView().setContinuousShootMode(
-                contiShootParams.capturedCount, contiShootParams.totalCaptures);
+            contiShootParams.capturedCount++;
+
+            if (contiShootParams.capturedCount >= contiShootParams.totalCaptures) {
+                finishContiShooting(false, true);
+            } else {
+                getMvpView().setContinuousShootMode(
+                        contiShootParams.capturedCount, contiShootParams.totalCaptures);
+            }
         }
     }
 
@@ -271,10 +275,10 @@ public class CameraPresenter<V extends CameraMvpView> extends BasePresenter<V>
                 }
 
                 if (showMessageByDialog) {
-                    getMvpView().showToast(message);
-                } else {
                     String dialogTitle = activity.getString(success ? R.string.information : R.string.error);
                     getMvpView().showMessageAlertDialog(dialogTitle, message);
+                } else {
+                    getMvpView().showToast(message);
                 }
             });
         }
