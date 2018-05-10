@@ -6,6 +6,7 @@ import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.net.Uri;
+import android.support.annotation.UiThread;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 
@@ -34,7 +35,6 @@ import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.schedulers.Schedulers;
 import tw.cchi.medthimager.Config;
-import tw.cchi.medthimager.Constants;
 import tw.cchi.medthimager.R;
 import tw.cchi.medthimager.db.AppDatabase;
 import tw.cchi.medthimager.db.Patient;
@@ -66,16 +66,16 @@ public class CameraPresenter<V extends CameraMvpView> extends BasePresenter<V>
     private Timer contiShootTimer;
     private boolean clearSpotsOnDisconnect;
 
-    private Bitmap opacityMask; // TODO: volatile?
+    private Bitmap opacityMask;
     private volatile RenderedImage lastRenderedImage;
     private volatile ContiShootParameters contiShootParams;
 
     // States
     private volatile boolean simConnected = false; // simulated device connected
     private volatile boolean streamingFrame = false;
-    private volatile boolean contiShooting = false; // TODO: volatile?
+    private volatile boolean contiShooting = false;
     private CaptureProcessInfo captureProcessInfo = null;
-    private String patientUuid = Patient.DEFAULT_PATIENT_UUID;
+    private Patient patient;
 
     @Inject
     public CameraPresenter(CompositeDisposable compositeDisposable) {
@@ -96,13 +96,12 @@ public class CameraPresenter<V extends CameraMvpView> extends BasePresenter<V>
         frameProcessor.setImagePalette(RenderedImage.Palette.Gray);
         frameProcessor.setEmissivity(0.98f); // human skin, water, frost
 
-        // Load saved values from shared preferences
-        patientUuid = preferencesHelper.getSelectedPatientUuid();
-
         // Query and display last selected patient name
-        Observable.<String>create(emitter ->
-            emitter.onNext(database.patientDAO().getOrDefault(patientUuid).getName())
-        ).subscribeOn(Schedulers.io())
+        Observable.<String>create(emitter -> {
+            // Load saved values from shared preferences
+            patient = database.patientDAO().getOrDefault(preferencesHelper.getSelectedPatientUuid());
+            emitter.onNext(patient.getName());
+        }).subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe(getMvpView()::setPatientStatusText);
 
@@ -177,7 +176,8 @@ public class CameraPresenter<V extends CameraMvpView> extends BasePresenter<V>
     @Override
     public boolean triggerImageCapture() {
         if (isDeviceAttached() && streamingFrame && captureProcessInfo == null) {
-            captureProcessInfo = new CaptureProcessInfo();
+            // this.patient may be null if the query executed in onAttach() hasn't finish
+            captureProcessInfo = new CaptureProcessInfo(getCurrentPatientName());
             return true;
         } else {
             return false;
@@ -219,6 +219,7 @@ public class CameraPresenter<V extends CameraMvpView> extends BasePresenter<V>
         getMvpView().showToast(R.string.conti_shoot_starting, Config.CONTI_SHOOT_START_DELAY);
     }
 
+    @UiThread
     private void handleContiShootTick() {
         if (tuningState == Device.TuningState.InProgress) {
             // Log event
@@ -243,6 +244,7 @@ public class CameraPresenter<V extends CameraMvpView> extends BasePresenter<V>
     /**
      * @param showMessageByDialog would be useful if set to false while activity pausing
      */
+    @BgThreadCapable
     @Override
     public void finishContiShooting(boolean success, boolean showMessageByDialog) {
         // Log event
@@ -390,9 +392,10 @@ public class CameraPresenter<V extends CameraMvpView> extends BasePresenter<V>
             // If image capture in progress
             if (captureProcessInfo != null) {
                 captureRawThermalDump(renderedImage, captureProcessInfo.getDumpFilepath());
-                captureFLIRImage(renderedImage, captureProcessInfo.getFilepathPrefix() + Constants.POSTFIX_FLIR_IMAGE + ".jpg");
+                captureFLIRImage(renderedImage, captureProcessInfo.getFlirFilepath());
 
-                dbPatientDumpsHelper.addCaptureRecord(patientUuid, captureProcessInfo.getTitle(), captureProcessInfo.getFilepathPrefix()).subscribe();
+                dbPatientDumpsHelper.addCaptureRecord(getCurrentPatientUuid(),
+                    captureProcessInfo.getTitle(), captureProcessInfo.getFilepathPrefix()).subscribe();
                 captureProcessInfo = null;
             }
         } else if (renderedImage.imageType() == RenderedImage.ImageType.ThermalRGBA8888Image) {
@@ -422,21 +425,25 @@ public class CameraPresenter<V extends CameraMvpView> extends BasePresenter<V>
 
     @Override
     public String getCurrentPatientUuid() {
-        return patientUuid;
+        return patient != null ? patient.getUuid() : Patient.DEFAULT_PATIENT_UUID;
     }
 
     @Override
-    public void setCurrentPatient(String patientUUID) {
-        // Log event
-        firebaseAnalyticsHelper.logSetCurrentPatient(patientUUID);
+    public String getCurrentPatientName() {
+        return patient != null ? patient.getName() : Patient.DEFAULT_PATIENT_NAME;
+    }
 
-        patientUuid = patientUUID;
-        preferencesHelper.setSelectedPatientUuid(patientUUID);
+    @Override
+    public void setCurrentPatient(final String patientUuid) {
+        // Log event
+        firebaseAnalyticsHelper.logSetCurrentPatient(patientUuid);
 
         // Query and display last selected patient name
-        Observable.<String>create(emitter ->
-            emitter.onNext(database.patientDAO().getOrDefault(patientUuid).getName())
-        ).subscribeOn(Schedulers.io())
+        Observable.<String>create(emitter -> {
+            preferencesHelper.setSelectedPatientUuid(patientUuid);
+            patient = database.patientDAO().getOrDefault(patientUuid);
+            emitter.onNext(patient.getName());
+        }).subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe(getMvpView()::setPatientStatusText);
     }

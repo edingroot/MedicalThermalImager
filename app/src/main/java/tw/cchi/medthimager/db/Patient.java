@@ -12,6 +12,7 @@ import java.util.UUID;
 @Entity(tableName = "patients")
 public class Patient {
     public static final String DEFAULT_PATIENT_UUID = "AAAAAAAA-BBBB-CCCC-DDDD-123456789012";
+    public static final String DEFAULT_PATIENT_NAME = "Not Specified";
 
     @PrimaryKey
     @ColumnInfo(name = "uuid")

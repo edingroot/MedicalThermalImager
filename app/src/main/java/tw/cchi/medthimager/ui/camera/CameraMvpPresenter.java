@@ -27,6 +27,7 @@ public interface CameraMvpPresenter<V extends CameraMvpView> extends MvpPresente
 
     void startContiShooting(ContiShootParameters contiShootParameters);
 
+    @BgThreadCapable
     void finishContiShooting(boolean success, boolean showMessageByDialog);
 
     void addThermalSpot();
@@ -40,6 +41,8 @@ public interface CameraMvpPresenter<V extends CameraMvpView> extends MvpPresente
     // --------------------------------- Getter / Setter / Updates ------------------------------- //
 
     String getCurrentPatientUuid();
+
+    String getCurrentPatientName();
 
     void setCurrentPatient(String patientUUID);
 
