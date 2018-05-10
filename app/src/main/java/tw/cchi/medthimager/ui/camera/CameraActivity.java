@@ -77,7 +77,6 @@ public class CameraActivity extends BaseActivity implements
 
     @BindView(R.id.thermalImageView) ImageView thermalImageView;
     @BindView(R.id.pleaseConnect) TextView pleaseConnect;
-    @BindView(R.id.thermalSpotView) ThermalSpotView thermalSpotView; // TODO
     @BindView(R.id.tuningProgressBar) ProgressBar tuningProgressBar;
     @BindView(R.id.tuningTextView) TextView tuningTextView;
 

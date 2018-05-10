@@ -70,6 +70,14 @@ public final class AppUtils {
         return dir.getAbsolutePath();
     }
 
+    /**
+     * Google Play's pre-launch report is also running in firebase test lab.
+     */
+    public static boolean checkIsRunningInFirebaseTestLab(Context context) {
+        String firebaseTestLab = Settings.System.getString(context.getContentResolver(), "firebase.test.lab");
+        return firebaseTestLab != null && firebaseTestLab.equals("true");
+    }
+
     public static void sendBroadcastToMedia(Context context, String filePath) {
         Intent intent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
         Uri uri = Uri.fromFile(new File(filePath));
