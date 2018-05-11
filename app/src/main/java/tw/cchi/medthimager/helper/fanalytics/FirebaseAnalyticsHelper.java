@@ -26,6 +26,7 @@ public class FirebaseAnalyticsHelper {
         boolean enable = Config.ENABLE_ANALYTICS_COLLECTION &&
             !AppUtils.checkIsRunningInFirebaseTestLab(context);
         firebaseAnalytics.setAnalyticsCollectionEnabled(enable);
+        Log.i(TAG, "Enabled FA collection: " + enable);
 
         initialize();
     }

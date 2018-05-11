@@ -1,7 +1,7 @@
 package tw.cchi.medthimager.helper.fanalytics;
 
 public class Event {
-    public static final String PREFIX = "app_";
+    public static final String PREFIX = "medth_";
 
     public static final String SIMPLE_EVENT = "simple_event";
 

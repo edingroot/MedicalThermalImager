@@ -75,7 +75,7 @@ public final class AppUtils {
      */
     public static boolean checkIsRunningInFirebaseTestLab(Context context) {
         String firebaseTestLab = Settings.System.getString(context.getContentResolver(), "firebase.test.lab");
-        return firebaseTestLab != null && firebaseTestLab.equals("true");
+        return "true".equals(firebaseTestLab);
     }
 
     public static void sendBroadcastToMedia(Context context, String filePath) {
