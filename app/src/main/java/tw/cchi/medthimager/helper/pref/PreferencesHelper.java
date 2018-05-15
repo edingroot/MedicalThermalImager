@@ -1,5 +1,6 @@
 package tw.cchi.medthimager.helper.pref;
 
+import android.graphics.Point;
 import android.support.annotation.Nullable;
 
 public interface PreferencesHelper {
@@ -14,6 +15,10 @@ public interface PreferencesHelper {
     String getSelectedPatientUuid();
 
     void setSelectedPatientUuid(String selectedPatientUuid);
+
+    Point getDefaultVisibleOffset();
+
+    void setDefaultVisibleOffset(Point offset);
 
     boolean getClearSpotsOnDisconnect();
 

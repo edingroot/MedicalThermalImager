@@ -105,7 +105,6 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_below="@+id/controls_top"
-            android:layout_marginTop="5dp"
             android:paddingEnd="10dp"
             android:paddingStart="10dp">
 

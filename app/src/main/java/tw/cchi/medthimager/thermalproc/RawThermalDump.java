@@ -18,7 +18,6 @@ import java.util.Arrays;
 
 import io.reactivex.Observable;
 import io.reactivex.schedulers.Schedulers;
-import tw.cchi.medthimager.Config;
 import tw.cchi.medthimager.Constants;
 import tw.cchi.medthimager.utils.CommonUtils;
 
@@ -54,9 +53,6 @@ import tw.cchi.medthimager.utils.CommonUtils;
  *  (M+172)          EOF
  */
 public class RawThermalDump {
-    private static final int DEFAULT_VISIBLE_OFFSET_X = 133;
-    private static final int DEFAULT_VISIBLE_OFFSET_Y = -8;
-
     private int formatVersion = 3;
     private String title = null;
     private String patientUUID = null;
@@ -509,7 +505,7 @@ public class RawThermalDump {
 
     // ---------------------- [Android] ---------------------- //
 
-    public boolean attachVisibleImageMask() {
+    public boolean attachVisibleImageMask(int defaultOffsetX, int defaultOffsetY) {
         if (visibleImageMask != null) {
             return true;
         } else {
@@ -517,12 +513,10 @@ public class RawThermalDump {
                 this, getFlirImagePath()
             );
 
-            System.out.printf("[attachVisibleImageMask] offset=(%d, %d)\n", visibleOffsetX, visibleOffsetY);
-
             // If visible image offset wasn't set, set from the default value
             if (visibleOffsetX == 0 && visibleOffsetY == 0) {
-                visibleOffsetX = DEFAULT_VISIBLE_OFFSET_X;
-                visibleOffsetY = DEFAULT_VISIBLE_OFFSET_Y;
+                visibleOffsetX = defaultOffsetX;
+                visibleOffsetY = defaultOffsetY;
                 saveAsync();
             }
 

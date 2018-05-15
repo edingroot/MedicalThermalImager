@@ -363,6 +363,9 @@ public class DumpViewerPresenter<V extends DumpViewerMvpView> extends BasePresen
             rawThermalDump.setVisibleOffsetY(dumpPixelOffsetY);
             rawThermalDump.save();
 
+            preferencesHelper.setDefaultVisibleOffset(
+                    new android.graphics.Point(dumpPixelOffsetX, dumpPixelOffsetY));
+
         }).subscribeOn(Schedulers.io()).subscribe();
     }
 
@@ -670,7 +673,8 @@ public class DumpViewerPresenter<V extends DumpViewerMvpView> extends BasePresen
                 return;
             }
 
-            if (!rawThermalDump.attachVisibleImageMask()) {
+            android.graphics.Point defaultOffset = preferencesHelper.getDefaultVisibleOffset();
+            if (!rawThermalDump.attachVisibleImageMask(defaultOffset.x, defaultOffset.y)) {
                 getMvpView().showSnackBar("Failed to read visible image. Does the jpg file with same name exist?");
                 emitter.onNext(false);
                 emitter.onComplete();
