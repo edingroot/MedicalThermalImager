@@ -89,12 +89,12 @@ public class CameraPresenter<V extends CameraMvpView> extends BasePresenter<V>
 
         OpenCVLoader.initDebug();
 
-        frameProcessor = new FrameProcessor(activity, this, EnumSet.of(
-            RenderedImage.ImageType.ThermalRGBA8888Image,
-            RenderedImage.ImageType.ThermalRadiometricKelvinImage
-        ));
-        frameProcessor.setImagePalette(RenderedImage.Palette.Gray);
-        frameProcessor.setEmissivity(0.98f); // human skin, water, frost
+//        frameProcessor = new FrameProcessor(activity, this, EnumSet.of(
+//            RenderedImage.ImageType.ThermalRGBA8888Image,
+//            RenderedImage.ImageType.ThermalRadiometricKelvinImage
+//        ));
+//        frameProcessor.setImagePalette(RenderedImage.Palette.Gray);
+//        frameProcessor.setEmissivity(0.98f); // human skin, water, frost
 
         // Query and display last selected patient name
         Observable.<String>create(emitter -> {
@@ -115,7 +115,7 @@ public class CameraPresenter<V extends CameraMvpView> extends BasePresenter<V>
     @Override
     public boolean startDeviceDiscovery() {
         try {
-            Device.startDiscovery(activity, this);
+//            Device.startDiscovery(activity, this);
         } catch (IllegalStateException e) {
             // it's okay if we've already started discovery
         } catch (SecurityException e) {

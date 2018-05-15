@@ -117,9 +117,9 @@ public class CameraActivity extends BaseActivity implements
     protected void onStart() {
         super.onStart();
 
-        if (Device.getSupportedDeviceClasses(this).contains(FlirUsbDevice.class)) {
-            pleaseConnect.setVisibility(View.VISIBLE);
-        }
+//        if (Device.getSupportedDeviceClasses(this).contains(FlirUsbDevice.class)) {
+//            pleaseConnect.setVisibility(View.VISIBLE);
+//        }
 
         CameraActivityPermissionsDispatcher.enableDeviceDiscoveryWithPermissionCheck(this);
     }
