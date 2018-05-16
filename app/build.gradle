@@ -38,6 +38,17 @@ android {
                 arguments = ["room.schemaLocation": "$projectDir/schemas".toString()]
             }
         }
+
+        externalNativeBuild {
+            ndkBuild {
+                targets "NativeLibs"
+                abiFilters "armeabi-v7a"
+                arguments '-C' + file('src/main/jni').absolutePath,
+                        "NDK_APPLICATION_MK:=" + file('src/main/jni/Application.mk').absolutePath,
+                        '-j' + Runtime.runtime.availableProcessors()
+                // 'NDK_DEBUG=1'
+            }
+        }
     }
     signingConfigs { release }
 
@@ -80,41 +91,10 @@ android {
         androidTest.assets.srcDirs += files("$projectDir/schemas".toString())
 
         // Disable (built-in) automatic ndk-build call with auto-generated Android.mk
-        main.jni.srcDirs = []
+        // main.jni.srcDirs = []
         // Set libs as .so's location instead of jniLibs
-        main.jniLibs.srcDirs = ['src/main/libs', 'src/main/jniLibs']
+        // main.jniLibs.srcDirs = ['src/main/libs', 'src/main/jniLibs']
     }
-
-    // Call regular ndk-build(.cmd) script from app directory
-    // To see errors from ndk build, run:
-    //   ndk-build -C app/src/main/jni -j4 NDK_OUT=app/src/main/jniLibs all NDK_DEBUG=1
-    task ndkBuild(type: Exec, description: 'Compile JNI source with NDK') {
-        Properties properties = new Properties()
-        properties.load(project.rootProject.file('local.properties').newDataInputStream())
-        def ndkDir = properties.getProperty('ndk.dir')
-
-        if (Os.isFamily(Os.FAMILY_WINDOWS)) {
-            commandLine "$ndkDir/ndk-build.cmd", '-C', file('src/main/jni').absolutePath
-        } else {
-            commandLine "$ndkDir/ndk-build", '-C', file('src/main/jni').absolutePath
-        }
-    }
-    tasks.withType(JavaCompile) {
-        compileTask -> compileTask.dependsOn ndkBuild
-    }
-
-    task ndkClean(type: Exec, description: 'Clean NDK Binaries') {
-        Properties properties = new Properties()
-        properties.load(project.rootProject.file('local.properties').newDataInputStream())
-        def ndkDir = properties.getProperty('ndk.dir')
-
-        if (Os.isFamily(Os.FAMILY_WINDOWS)) {
-            commandLine "$ndkDir/ndk-build.cmd", 'clean', '-C', file('src/main/jni').absolutePath
-        } else {
-            commandLine "$ndkDir/ndk-build", 'clean', '-C', file('src/main/jni').absolutePath
-        }
-    }
-    clean.dependsOn 'ndkClean'
 
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
@@ -125,6 +105,12 @@ android {
         disable 'LongLogTag' // mitigate log tag too long error caused by OpenCV loader
     }
     productFlavors {
+    }
+
+    externalNativeBuild {
+        ndkBuild {
+            path 'src/main/jni/Android.mk'
+        }
     }
 }
 
