@@ -1,3 +1,17 @@
+/**
+ * References to configuring OpenCV JNI for Android:
+ *  - [Android 使用OpenCV的三种方式]
+ *      https://blog.csdn.net/sbsujjbcy/article/details/49520791
+ *  - [How to use my own Android.mk file with Android Studio]
+ *      https://stackoverflow.com/questions/27833530/how-to-use-my-own-android-mk-file-with-android-sudio
+ *  - [Android studio 1.5.1 NDK JNI環境安裝與執行原理]
+ *      http://blog.xuite.net/lwchafter30/blog/373974237-Android+studio+1.5.1+NDK+JNI%E7%92%B0%E5%A2%83%E5%AE%89%E8%A3%9D%E8%88%87%E5%9F%B7%E8%A1%8C%E5%8E%9F%E7%90%86
+ *  - [错误 undefined reference to '__atomic_fetch_add_4']
+ *      https://blog.csdn.net/Qyee16/article/details/47070115
+ *  - [Android Studio failed build NDK project non-zero exit value]
+ *      https://stackoverflow.com/a/42255268
+ */
+
 import org.apache.tools.ant.taskdefs.condition.Os
 
 def versionMajor = 1
@@ -65,12 +79,15 @@ android {
         // Used by Room, to test migrations
         androidTest.assets.srcDirs += files("$projectDir/schemas".toString())
 
-        // Disable the built in ndk
+        // Disable (built-in) automatic ndk-build call with auto-generated Android.mk
         main.jni.srcDirs = []
-        // Add .so directory src/main/libs to jni srcDirs
+        // Set libs as .so's location instead of jniLibs
         main.jniLibs.srcDirs = ['src/main/libs', 'src/main/jniLibs']
     }
 
+    // Call regular ndk-build(.cmd) script from app directory
+    // To see errors from ndk build, run:
+    //   ndk-build -C app/src/main/jni -j4 NDK_OUT=app/src/main/jniLibs all NDK_DEBUG=1
     task ndkBuild(type: Exec, description: 'Compile JNI source with NDK') {
         Properties properties = new Properties()
         properties.load(project.rootProject.file('local.properties').newDataInputStream())
