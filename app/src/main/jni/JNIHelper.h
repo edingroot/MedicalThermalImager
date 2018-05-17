@@ -16,11 +16,16 @@ class JNIHelper {
 public:
     static int GetIntField(JNIEnv *env, jobject obj, const char *fieldName);
 
+    static void SetIntField(JNIEnv *env, jobject obj, int value, const char *fieldName);
+
     static int GetIntArrayField(JNIEnv *env, jobject obj, int **array, const char *fieldName);
 
     static void SetIntArrayField(JNIEnv *env, jobject obj, int *array, int arrayLength, const char *fieldName);
 
+
     static float GetFloatField(JNIEnv *env, jobject obj, const char *fieldName);
+
+    static void SetFloatField(JNIEnv *env, jobject obj, float value, const char *fieldName);
 
     static int GetFloatArrayField(JNIEnv *env, jobject obj, float **array, const char *fieldName);
 

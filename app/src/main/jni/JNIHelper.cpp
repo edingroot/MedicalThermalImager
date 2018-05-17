@@ -3,7 +3,12 @@
 
 int JNIHelper::GetIntField(JNIEnv *env, jobject obj, const char *fieldName) {
     jfieldID fieldId = env->GetFieldID(env->GetObjectClass(obj), fieldName, "I");
-    return (int) env->GetIntField(obj, fieldId);
+    return reinterpret_cast<int>(env->GetIntField(obj, fieldId));
+}
+
+void JNIHelper::SetIntField(JNIEnv *env, jobject obj, int value, const char *fieldName) {
+    jfieldID fieldId = env->GetFieldID(env->GetObjectClass(obj), fieldName, "I");
+    env->SetIntField(obj, fieldId, reinterpret_cast<jint>(value));
 }
 
 /**
@@ -23,7 +28,7 @@ int JNIHelper::GetIntArrayField(JNIEnv *env, jobject obj, int **array, const cha
 
     // Get the elements
     *array = env->GetIntArrayElements(*iArray, 0);
-    return (int) env->GetArrayLength(*iArray);
+    return reinterpret_cast<int>(env->GetArrayLength(*iArray));
 }
 
 void JNIHelper::SetIntArrayField(JNIEnv *env, jobject obj, int *array, int arrayLength, const char *fieldName) {
@@ -39,7 +44,12 @@ void JNIHelper::SetIntArrayField(JNIEnv *env, jobject obj, int *array, int array
 
 float JNIHelper::GetFloatField(JNIEnv *env, jobject obj, const char *fieldName) {
     jfieldID fieldId = env->GetFieldID(env->GetObjectClass(obj), fieldName, "F");
-    return (int) env->GetFloatField(obj, fieldId);
+    return env->GetFloatField(obj, fieldId);
+}
+
+void JNIHelper::SetFloatField(JNIEnv *env, jobject obj, float value, const char *fieldName) {
+    jfieldID fieldId = env->GetFieldID(env->GetObjectClass(obj), fieldName, "F");
+    env->SetFloatField(obj, fieldId, value);
 }
 
 int JNIHelper::GetFloatArrayField(JNIEnv *env, jobject obj, float **array, const char *fieldName) {
@@ -52,7 +62,7 @@ int JNIHelper::GetFloatArrayField(JNIEnv *env, jobject obj, float **array, const
 
     // Get the elements
     *array = env->GetFloatArrayElements(*fArray, 0);
-    return (int) env->GetArrayLength(*fArray);
+    return reinterpret_cast<int>(env->GetArrayLength(*fArray));
 }
 
 void JNIHelper::SetFloatArrayField(JNIEnv *env, jobject obj, float *array, int arrayLength, const char *fieldName) {

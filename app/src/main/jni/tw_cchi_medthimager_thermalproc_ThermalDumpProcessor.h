@@ -21,6 +21,22 @@ extern "C" {
 JNIEXPORT void JNICALL Java_tw_cchi_medthimager_thermalproc_ThermalDumpProcessor_generateThermalImageNative
   (JNIEnv *, jobject, jfloat, jfloat, jlong);
 
+/*
+ * Class:     tw_cchi_medthimager_thermalproc_ThermalDumpProcessor
+ * Method:    cvtThermalValues10Native
+ * Signature: ([II)V
+ */
+JNIEXPORT void JNICALL Java_tw_cchi_medthimager_thermalproc_ThermalDumpProcessor_cvtThermalValues10Native
+  (JNIEnv *, jobject, jintArray);
+
+/*
+ * Class:     tw_cchi_medthimager_thermalproc_ThermalDumpProcessor
+ * Method:    updateThermalHistNative
+ * Signature: ()V
+ */
+JNIEXPORT void JNICALL Java_tw_cchi_medthimager_thermalproc_ThermalDumpProcessor_updateThermalHistNative
+  (JNIEnv *, jobject);
+
 #ifdef __cplusplus
 }
 #endif

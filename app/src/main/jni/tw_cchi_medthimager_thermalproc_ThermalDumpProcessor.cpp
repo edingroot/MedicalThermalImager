@@ -1,12 +1,23 @@
+/**
+ * Ref:
+ *  [Returning a Mat from native JNI to Java]
+ *      http://answers.opencv.org/question/12090/returning-a-mat-from-native-jni-to-java/
+ *  [Android NDK: Passing complex data between Java and JNI methods]
+ *      http://adndevblog.typepad.com/cloud_and_mobile/2013/08/android-ndk-passing-complex-data-to-jni.html
+ *  [JNI Types and Data Structures]
+ *      https://docs.oracle.com/javase/7/docs/technotes/guides/jni/spec/types.html
+ */
+
 #include "tw_cchi_medthimager_thermalproc_ThermalDumpProcessor.h"
 #include "JNIHelper.h"
 #include <opencv2/opencv.hpp>
 #include <omp.h>
+#include <cstring>
 
 
 JNIEXPORT void JNICALL Java_tw_cchi_medthimager_thermalproc_ThermalDumpProcessor_generateThermalImageNative
   (JNIEnv *env, jobject obj, jfloat temp0, jfloat temp255, jlong resultMatAddr) {
-    // Init JNI execution environment
+    // Load class fields
     unsigned char *thermalLUT;
     int *thermalValues10;
     int thermalValues10Length = JNIHelper::GetIntArrayField(env, obj, &thermalValues10, "thermalValues10");
@@ -54,4 +65,51 @@ JNIEXPORT void JNICALL Java_tw_cchi_medthimager_thermalproc_ThermalDumpProcessor
 
     // Pass fields back to the java class
     JNIHelper::SetIntArrayField(env, obj, thermalValues10, thermalValues10Length, "thermalValues10");
+}
+
+void Java_tw_cchi_medthimager_thermalproc_ThermalDumpProcessor_cvtThermalValues10Native(
+        JNIEnv *env, jobject obj, jintArray thermalValuesJNI) {
+    // Load class fields
+    jint *thermalValues = env->GetIntArrayElements(thermalValuesJNI, 0);
+    int *thermalValues10;
+    int thermalValues10Length = JNIHelper::GetIntArrayField(env, obj, &thermalValues10, "thermalValues10");
+
+    // PS. thermalValues10Length is equal to pixelCount
+#pragma omp parallel for
+    for (int i = 0; i < thermalValues10Length; i++) {
+        thermalValues10[i] = thermalValues[i] < 0 ? 0 : thermalValues[i] / 10;
+    }
+
+    // Pass fields back to the java class
+    JNIHelper::SetIntArrayField(env, obj, thermalValues10, thermalValues10Length, "thermalValues10");
+    env->ReleaseIntArrayElements(thermalValuesJNI, thermalValues, 0);
+}
+
+void Java_tw_cchi_medthimager_thermalproc_ThermalDumpProcessor_updateThermalHistNative(
+        JNIEnv *env, jobject obj) {
+    // Load class fields
+    int *thermalValues10;
+    int thermalValues10Length = JNIHelper::GetIntArrayField(env, obj, &thermalValues10, "thermalValues10");
+    int *thermalHist;
+    int thermalHistLength = JNIHelper::GetIntArrayField(env, obj, &thermalHist, "thermalHist");
+    int pixelCount = thermalValues10Length;
+
+    // Reset histogram to an zero-filled array
+    memset(thermalHist, 0, sizeof(int) * tw_cchi_medthimager_thermalproc_ThermalDumpProcessor_MAX_ALLOWED);
+
+    int minThermalValue = pixelCount;
+    int maxThermalValue = 0;
+#pragma omp parallel for
+    for (int i = 0; i < pixelCount; i++) {
+        thermalHist[thermalValues10[i]]++;
+        if (thermalValues10[i] != 0 && thermalValues10[i] < minThermalValue)
+            minThermalValue = thermalValues10[i];
+        if (thermalValues10[i] > maxThermalValue)
+            maxThermalValue = thermalValues10[i];
+    }
+
+    // Pass fields back to the java class
+    JNIHelper::SetIntArrayField(env, obj, thermalHist, thermalHistLength, "thermalHist");
+    JNIHelper::SetIntField(env, obj, minThermalValue, "minThermalValue");
+    JNIHelper::SetIntField(env, obj, maxThermalValue, "maxThermalValue");
 }

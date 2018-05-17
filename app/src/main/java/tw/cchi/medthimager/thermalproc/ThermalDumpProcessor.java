@@ -48,20 +48,11 @@ public class ThermalDumpProcessor {
         this.height = thermalDump.getHeight();
         this.pixelCount = thermalValues.length;
         this.thermalValues10 = new int[pixelCount];
+        this.thermalHist = new int[MAX_ALLOWED];
 
-        // Load thermalValues10 & calculate thermalHist (same as this.updateThermalHist())
-        thermalHist = new int[MAX_ALLOWED];
-        minThermalValue = Integer.MAX_VALUE;
-        maxThermalValue = Integer.MIN_VALUE;
-        for (int i = 0; i < pixelCount; i++) {
-            thermalValues10[i] = thermalValues[i] < 0 ? 0 : thermalValues[i] / 10;
-            thermalHist[thermalValues10[i]]++;
-
-            if (thermalValues10[i] != 0 && thermalValues10[i] < minThermalValue)
-                minThermalValue = thermalValues10[i];
-            if (thermalValues10[i] > maxThermalValue)
-                maxThermalValue = thermalValues10[i];
-        }
+        // Load thermalValues10 & calculate thermalHist
+        cvtThermalValues10Native(thermalValues);
+        updateThermalHistNative();
     }
 
     // Would be lossy compared to the original thermalDump input (due to the thermalValues10 conversion)
@@ -152,7 +143,7 @@ public class ThermalDumpProcessor {
         for (Point point : ImageUtils.getPointsOutsideContour(contour, generatedImage.size())) {
             thermalValues10[(int) (point.x + point.y * width)] = 0;
         }
-        updateThermalHist();
+        updateThermalHistNative();
         generatedImage = null;
     }
 
@@ -219,17 +210,7 @@ public class ThermalDumpProcessor {
 
     private synchronized native void generateThermalImageNative(float temp0, float temp255, long resultMatAddr);
 
-    private void updateThermalHist() {
-        thermalHist = new int[MAX_ALLOWED];
-        minThermalValue = pixelCount;
-        maxThermalValue = 0;
-        for (int i = 0; i < pixelCount; i++) {
-            thermalHist[thermalValues10[i]]++;
-            if (thermalValues10[i] != 0 && thermalValues10[i] < minThermalValue)
-                minThermalValue = thermalValues10[i];
-            if (thermalValues10[i] > maxThermalValue)
-                maxThermalValue = thermalValues10[i];
-        }
-    }
+    private native void cvtThermalValues10Native(int[] thermalValues);
 
+    private synchronized native void updateThermalHistNative();
 }
