@@ -673,8 +673,7 @@ public class DumpViewerPresenter<V extends DumpViewerMvpView> extends BasePresen
                 return;
             }
 
-            android.graphics.Point defaultOffset = preferencesHelper.getDefaultVisibleOffset();
-            if (!rawThermalDump.attachVisibleImageMask(defaultOffset.x, defaultOffset.y)) {
+            if (!rawThermalDump.attachVisibleImageMask(Config.INIT_DEFAULT_VISIBLE_OFFSET_X, Config.INIT_DEFAULT_VISIBLE_OFFSET_Y)) {
                 getMvpView().showSnackBar("Failed to read visible image. Does the jpg file with same name exist?");
                 emitter.onNext(false);
                 emitter.onComplete();

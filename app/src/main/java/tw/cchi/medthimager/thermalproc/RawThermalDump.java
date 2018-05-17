@@ -1,6 +1,7 @@
 package tw.cchi.medthimager.thermalproc;
 
 import android.support.annotation.NonNull;
+import android.util.Log;
 
 import com.flir.flironesdk.RenderedImage;
 
@@ -18,6 +19,7 @@ import java.util.Arrays;
 
 import io.reactivex.Observable;
 import io.reactivex.schedulers.Schedulers;
+import tw.cchi.medthimager.Config;
 import tw.cchi.medthimager.Constants;
 import tw.cchi.medthimager.utils.CommonUtils;
 
@@ -53,6 +55,8 @@ import tw.cchi.medthimager.utils.CommonUtils;
  *  (M+172)          EOF
  */
 public class RawThermalDump {
+    private final String TAG = Config.TAGPRE + getClass().getSimpleName();
+
     private int formatVersion = 3;
     private String title = null;
     private String patientUUID = null;
@@ -519,6 +523,9 @@ public class RawThermalDump {
                 visibleOffsetY = defaultOffsetY;
                 saveAsync();
             }
+
+            Log.i(TAG, String.format("[attachVisibleImageMask] isMaskNull=%b offset=(%d, %d)",
+                    visibleImageMask == null, visibleOffsetX, visibleOffsetY));
 
             return visibleImageMask != null;
         }

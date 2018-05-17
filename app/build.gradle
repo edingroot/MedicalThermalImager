@@ -12,7 +12,6 @@
  *      https://stackoverflow.com/a/42255268
  */
 
-import org.apache.tools.ant.taskdefs.condition.Os
 
 def versionMajor = 1
 def versionMinor = 4
@@ -68,7 +67,7 @@ android {
     }
 
     // Load release signing configs
-    File propFile = file('signing.properties');
+    File propFile = file('signing.properties')
     if (propFile.exists()) {
         Properties props = new Properties()
         props.load(new FileInputStream(propFile))

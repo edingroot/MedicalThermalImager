@@ -567,9 +567,16 @@ public class CameraPresenter<V extends CameraMvpView> extends BasePresenter<V>
         Observable.create(emitter -> {
             RawThermalDump rawThermalDump = new RawThermalDump(renderedImage);
             if (thermalSpotsHelper != null) {
+                // Set preselected spots if exists
                 ArrayList<Point> preSelectedSpots = thermalSpotsHelper.getPreSelectedSpots();
                 if (preSelectedSpots.size() > 0)
                     rawThermalDump.setSpotMarkers(preSelectedSpots);
+
+                // Auto set visible light image offset based on config in shared preferences
+                // TODO: disable this function from app settings
+                android.graphics.Point defaultOffset = preferencesHelper.getDefaultVisibleOffset();
+                rawThermalDump.setVisibleOffsetX(defaultOffset.x);
+                rawThermalDump.setVisibleOffsetY(defaultOffset.y);
             }
 
             if (rawThermalDump.saveToFile(filename)) {
