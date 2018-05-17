@@ -1,6 +1,7 @@
 #include "tw_cchi_medthimager_thermalproc_ThermalDumpProcessor.h"
 #include "JNIHelper.h"
 #include <opencv2/opencv.hpp>
+#include <omp.h>
 
 
 JNIEXPORT void JNICALL Java_tw_cchi_medthimager_thermalproc_ThermalDumpProcessor_generateThermalImageNative
@@ -35,6 +36,7 @@ JNIEXPORT void JNICALL Java_tw_cchi_medthimager_thermalproc_ThermalDumpProcessor
 
     // Effective range: [1, 254]
     double sum = 1;
+#pragma omp parallel for
     for (int i = thermalValue0; i <= thermalValue255; i++) {
         thermalLUT[i] = sum > 255 ? (unsigned char) 255 : (unsigned char) sum;
         sum += hopPer10K;
@@ -45,6 +47,7 @@ JNIEXPORT void JNICALL Java_tw_cchi_medthimager_thermalproc_ThermalDumpProcessor
     }
 
     // Generate image from LUT
+#pragma omp parallel for
     for (int i = 0; i < width * height; i++) {
         img->data[i] = thermalLUT[thermalValues10[i]];
     }
