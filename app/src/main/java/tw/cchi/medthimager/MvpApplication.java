@@ -2,6 +2,8 @@ package tw.cchi.medthimager;
 
 import android.app.Application;
 
+import com.squareup.leakcanary.LeakCanary;
+
 import tw.cchi.medthimager.di.component.ApplicationComponent;
 import tw.cchi.medthimager.di.component.DaggerApplicationComponent;
 import tw.cchi.medthimager.di.module.ApplicationModule;
@@ -15,6 +17,12 @@ public class MvpApplication extends Application {
     @Override
     public void onCreate() {
         super.onCreate();
+        if (LeakCanary.isInAnalyzerProcess(this)) {
+            // This process is dedicated to LeakCanary for heap analysis.
+            // You should not init your app in this process.
+            return;
+        }
+        LeakCanary.install(this);
 
         mApplicationComponent = DaggerApplicationComponent.builder()
                 .applicationModule(new ApplicationModule(this)).build();
