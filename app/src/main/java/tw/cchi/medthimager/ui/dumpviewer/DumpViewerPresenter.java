@@ -129,8 +129,10 @@ public class DumpViewerPresenter<V extends DumpViewerMvpView> extends BasePresen
 
                         Log.d(TAG, "updateDumpsAfterPick@complete");
 
-                        // Loading may have been hidden in switchDumpTab() in addThermalDump()
-                        getMvpView().hideLoading();
+                        // switchDumpTab() called by addThermalDump() may not yet finished
+                        if (tabResources.hasLoaded()) {
+                            getMvpView().hideLoading();
+                        }
                     }
                 }
             );
@@ -201,8 +203,9 @@ public class DumpViewerPresenter<V extends DumpViewerMvpView> extends BasePresen
             () -> {
                 tabResources.setHasLoaded(true);
 
-                if (isViewAttached())
+                if (isViewAttached()) {
                     getMvpView().hideLoading();
+                }
 
                 Log.d(TAG, "switchDumpTab(" + position + ")@unlocked");
 
@@ -622,10 +625,10 @@ public class DumpViewerPresenter<V extends DumpViewerMvpView> extends BasePresen
                         // Create new thermalSpotsHelper if not existed
                         ThermalSpotsHelper thermalSpotsHelper = tabResources.getThermalSpotHelper();
                         if (thermalSpotsHelper != null) {
-                            thermalSpotsHelper.setSpotsVisible(true && showingThermalSpots);
+                            thermalSpotsHelper.setSpotsVisible(showingThermalSpots);
                             emitter.onNext(true);
                             emitter.onComplete();
-                            Log.d(TAG, "loadThermalImageBitmap@done1");
+                            Log.d(TAG, "loadThermalImageBitmap@done - (thermalSpotsHelper existed)");
                             return;
                         }
 
@@ -648,7 +651,7 @@ public class DumpViewerPresenter<V extends DumpViewerMvpView> extends BasePresen
                                 emitter.onNext(true);
                                 emitter.onComplete();
                             }
-                            Log.d(TAG, "loadThermalImageBitmap@done2");
+                            Log.d(TAG, "loadThermalImageBitmap@done - (thermalSpotsHelper created)");
                         }, 150);
                     }
                 );
