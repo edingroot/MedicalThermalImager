@@ -13,7 +13,7 @@ else
     include $(OPENCV_MK_PATH)
 endif
 
-LOCAL_MODULE := OpenCV
+LOCAL_MODULE := NativeLibs
 
 LOCAL_SRC_FILES :=
 
