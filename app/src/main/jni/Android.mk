@@ -15,7 +15,7 @@ endif
 
 LOCAL_MODULE := NativeLibs
 
-LOCAL_SRC_FILES :=
+LOCAL_SRC_FILES := JNIHelper.cpp tw_cchi_medthimager_thermalproc_ThermalDumpProcessor.cpp
 
 LOCAL_LDLIBS +=  -lm -llog -latomic
 

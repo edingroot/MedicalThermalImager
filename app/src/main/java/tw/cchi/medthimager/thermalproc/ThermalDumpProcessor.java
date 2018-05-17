@@ -33,8 +33,12 @@ public class ThermalDumpProcessor {
     private volatile Mat generatedImage = null;
 
     static {
-        OpenCVLoader.initDebug(); // [Android]
-//        System.loadLibrary(Core.NATIVE_LIBRARY_NAME); // [Native Java]
+        // [Android]
+        OpenCVLoader.initDebug();
+        System.loadLibrary("NativeLibs");
+
+//        // [Native Java]
+//        System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
     }
 
     public ThermalDumpProcessor(RawThermalDump thermalDump) {
@@ -194,14 +198,11 @@ public class ThermalDumpProcessor {
 
     /**
      * Generate grayscale thermal image from temperature values
-     *
-     * @return
      */
-    public synchronized Mat generateThermalImage() {
-        return generateThermalImage(
+    public synchronized void generateThermalImage() {
+        generateThermalImage(
                 (minThermalValue - 2731) / 10.0f,
-                (maxThermalValue - 2731) / 10.0f
-        );
+                (maxThermalValue - 2731) / 10.0f);
     }
 
     /**
@@ -210,45 +211,13 @@ public class ThermalDumpProcessor {
      *
      * @param temp0 The minimum temperature of the histogram left most index (0/255)
      * @param temp255 The minimum temperature of the histogram right most index (255/255)
-     * @return
      */
-    public synchronized Mat generateThermalImage(float temp0, float temp255) {
+    public synchronized void generateThermalImage(float temp0, float temp255) {
         generatedImage = new Mat(height, width, CvType.CV_8UC1);
-        int thermalValue0 = (int) (temp0 * 10) + 2731;
-        int thermalValue255 = (int) (temp255 * 10) + 2731;
-        double hopPer10K = 254.0 / (thermalValue255 - thermalValue0);
-
-        // Generate thermalValue-grayLevel LUT: thermalLUT[temp10K] = grayLevel (0~255)
-        short[] thermalLUT = new short[1 + (maxThermalValue > thermalValue255 ? maxThermalValue : thermalValue255)];
-
-        // We reserve grayLevel=0 for identifying image moved
-        for (int i = minThermalValue; i < thermalValue0; i++) {
-            thermalLUT[i] = 1;
-        }
-
-        // Effective range: [1, 254]
-        double sum = 1;
-        for (int i = thermalValue0; i <= thermalValue255; i++) {
-            thermalLUT[i] = sum > 255 ? (short) 255 : (short) sum;
-            sum += hopPer10K;
-        }
-
-        for (int i = thermalValue255 + 1; i <= maxThermalValue; i++) {
-            thermalLUT[i] = 255;
-        }
-
-        // Generate image from LUT
-        for (int row = 0; row < height; row++) {
-            for (int col = 0; col < width; col++) {
-                if (thermalValues10[col + row * width] == 0)
-                    generatedImage.put(row, col, 0);
-                else
-                    generatedImage.put(row, col, thermalLUT[thermalValues10[col + row * width]]);
-            }
-        }
-
-        return generatedImage;
+        generateThermalImageNative(temp0, temp255, generatedImage.getNativeObjAddr());
     }
+
+    private synchronized native void generateThermalImageNative(float temp0, float temp255, long resultMatAddr);
 
     private void updateThermalHist() {
         thermalHist = new int[MAX_ALLOWED];
