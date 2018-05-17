@@ -6,4 +6,6 @@ public interface SettingsMvpPresenter<V extends SettingsMvpView> extends MvpPres
 
     void setClearSpotsOnDisconnect(boolean enable);
 
+    void setAutoSetVisibleOffset(boolean enable);
+
 }

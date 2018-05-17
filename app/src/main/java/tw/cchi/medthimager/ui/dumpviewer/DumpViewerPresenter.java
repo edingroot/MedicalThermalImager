@@ -673,7 +673,7 @@ public class DumpViewerPresenter<V extends DumpViewerMvpView> extends BasePresen
                 return;
             }
 
-            if (!rawThermalDump.attachVisibleImageMask(Config.INIT_DEFAULT_VISIBLE_OFFSET_X, Config.INIT_DEFAULT_VISIBLE_OFFSET_Y)) {
+            if (!rawThermalDump.attachVisibleImageMask(0, 0)) {
                 getMvpView().showSnackBar("Failed to read visible image. Does the jpg file with same name exist?");
                 emitter.onNext(false);
                 emitter.onComplete();

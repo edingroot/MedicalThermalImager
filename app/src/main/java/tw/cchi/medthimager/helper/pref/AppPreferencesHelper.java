@@ -15,6 +15,8 @@ import tw.cchi.medthimager.di.PreferenceInfo;
 @Singleton
 public class AppPreferencesHelper implements PreferencesHelper {
     private static final String KEY_SELECTED_PATIENT_UUID = "KEY_SELECTED_PATIENT_UUID";
+
+    private static final String KEY_DEFAULT_VISIBLE_OFFSET_ENABLED = "KEY_DEFAULT_VISIBLE_OFFSET_ENABLED";
     private static final String KEY_DEFAULT_VISIBLE_OFFSET_X = "KEY_DEFAULT_VISIBLE_OFFSET_X";
     private static final String KEY_DEFAULT_VISIBLE_OFFSET_Y = "KEY_DEFAULT_VISIBLE_OFFSET_Y";
 
@@ -40,11 +42,21 @@ public class AppPreferencesHelper implements PreferencesHelper {
     }
 
     @Override
+    public boolean getAutoApplyVisibleOffsetEnabled() {
+        return mPrefs.getBoolean(KEY_DEFAULT_VISIBLE_OFFSET_ENABLED, false);
+    }
+
+    @Override
+    public void setAutoApplyVisibleOffsetEnabled(boolean enabled) {
+        mPrefs.edit().putBoolean(KEY_DEFAULT_VISIBLE_OFFSET_ENABLED, enabled).apply();
+    }
+
+
+    @Override
     public Point getDefaultVisibleOffset() {
         return new Point(
                 mPrefs.getInt(KEY_DEFAULT_VISIBLE_OFFSET_X, Config.INIT_DEFAULT_VISIBLE_OFFSET_X),
-                mPrefs.getInt(KEY_DEFAULT_VISIBLE_OFFSET_Y, Config.INIT_DEFAULT_VISIBLE_OFFSET_Y)
-        );
+                mPrefs.getInt(KEY_DEFAULT_VISIBLE_OFFSET_Y, Config.INIT_DEFAULT_VISIBLE_OFFSET_Y));
     }
 
     @Override
@@ -56,7 +68,7 @@ public class AppPreferencesHelper implements PreferencesHelper {
     }
 
     @Override
-    public boolean getClearSpotsOnDisconnect() {
+    public boolean getClearSpotsOnDisconnectEnabled() {
         return mPrefs.getBoolean(KEY_CLEAR_SPOTS_ON_DISCONNECT, false);
     }
 

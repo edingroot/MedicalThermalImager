@@ -18,6 +18,7 @@ public class SettingsActivity extends BaseActivity implements SettingsMvpView {
     @Inject SettingsMvpPresenter<SettingsMvpView> presenter;
 
     @BindView(R.id.swClearSpotsOnDisconn) SwitchCompat swClearSpotsOnDisconn;
+    @BindView(R.id.swAutoApplyVisibleOffset) SwitchCompat swAutoApplyVisibleOffset;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -34,9 +35,19 @@ public class SettingsActivity extends BaseActivity implements SettingsMvpView {
         presenter.setClearSpotsOnDisconnect(sw.isChecked());
     }
 
+    @OnCheckedChanged(R.id.swAutoApplyVisibleOffset)
+    void onSwAutoApplyVisibleOffsetChanged(SwitchCompat sw) {
+        presenter.setAutoSetVisibleOffset(sw.isChecked());
+    }
+
     @Override
-    public void setSwClearSpotsOnDisconnChanged(boolean checked) {
+    public void setSwClearSpotsOnDisconn(boolean checked) {
         swClearSpotsOnDisconn.setChecked(checked);
+    }
+
+    @Override
+    public void setSwAutoApplyVisibleOffset(boolean checked) {
+        swAutoApplyVisibleOffset.setChecked(checked);
     }
 
     @Override

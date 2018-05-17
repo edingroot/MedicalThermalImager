@@ -518,7 +518,8 @@ public class RawThermalDump {
             );
 
             // If visible image offset wasn't set, set from the default value
-            if (visibleOffsetX == 0 && visibleOffsetY == 0) {
+            if (visibleOffsetX == 0 && visibleOffsetY == 0 &&
+                    defaultOffsetX != 0 && defaultOffsetY != 0) {
                 visibleOffsetX = defaultOffsetX;
                 visibleOffsetY = defaultOffsetY;
                 saveAsync();

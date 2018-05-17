@@ -109,7 +109,7 @@ public class CameraPresenter<V extends CameraMvpView> extends BasePresenter<V>
     }
 
     public void loadSettings() {
-        clearSpotsOnDisconnect = preferencesHelper.getClearSpotsOnDisconnect();
+        clearSpotsOnDisconnect = preferencesHelper.getClearSpotsOnDisconnectEnabled();
     }
 
     @Override
@@ -573,10 +573,11 @@ public class CameraPresenter<V extends CameraMvpView> extends BasePresenter<V>
                     rawThermalDump.setSpotMarkers(preSelectedSpots);
 
                 // Auto set visible light image offset based on config in shared preferences
-                // TODO: disable this function from app settings
-                android.graphics.Point defaultOffset = preferencesHelper.getDefaultVisibleOffset();
-                rawThermalDump.setVisibleOffsetX(defaultOffset.x);
-                rawThermalDump.setVisibleOffsetY(defaultOffset.y);
+                if (preferencesHelper.getAutoApplyVisibleOffsetEnabled()) {
+                    android.graphics.Point defaultOffset = preferencesHelper.getDefaultVisibleOffset();
+                    rawThermalDump.setVisibleOffsetX(defaultOffset.x);
+                    rawThermalDump.setVisibleOffsetY(defaultOffset.y);
+                }
             }
 
             if (rawThermalDump.saveToFile(filename)) {

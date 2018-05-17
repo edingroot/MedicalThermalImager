@@ -68,7 +68,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginEnd="8dp"
                         android:layout_marginTop="2dp"
-                        android:text="@string/auto_clear_spots_desc"
+                        android:text="@string/auto_clear_spots_dscrp"
                         android:textColor="@color/contentTextSecondary"
                         app:layout_constraintEnd_toStartOf="@id/swClearSpotsOnDisconn"
                         app:layout_constraintHorizontal_bias="0.0"
@@ -77,6 +77,44 @@
 
                     <android.support.v7.widget.SwitchCompat
                         android:id="@+id/swClearSpotsOnDisconn"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:theme="@style/MySwitchStyle"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintTop_toTopOf="parent"/>
+
+                </android.support.constraint.ConstraintLayout>
+
+                <android.support.constraint.ConstraintLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="16dp">
+
+                    <TextView
+                        android:id="@+id/textView5"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/auto_apply_visible_image_offset"
+                        android:textSize="16sp"
+                        android:textStyle="bold"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toTopOf="parent"/>
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginEnd="8dp"
+                        android:layout_marginTop="2dp"
+                        android:text="@string/auto_apply_visible_image_offset_dscrp"
+                        android:textColor="@color/contentTextSecondary"
+                        app:layout_constraintEnd_toStartOf="@id/swAutoApplyVisibleOffset"
+                        app:layout_constraintHorizontal_bias="0.0"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toBottomOf="@+id/textView5"/>
+
+                    <android.support.v7.widget.SwitchCompat
+                        android:id="@+id/swAutoApplyVisibleOffset"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:theme="@style/MySwitchStyle"

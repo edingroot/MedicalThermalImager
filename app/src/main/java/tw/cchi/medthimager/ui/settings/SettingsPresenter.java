@@ -23,7 +23,8 @@ public class SettingsPresenter<V extends SettingsMvpView> extends BasePresenter<
         super.onAttach(mvpView);
 
         // Load and display settings
-        getMvpView().setSwClearSpotsOnDisconnChanged(preferencesHelper.getClearSpotsOnDisconnect());
+        getMvpView().setSwClearSpotsOnDisconn(preferencesHelper.getClearSpotsOnDisconnectEnabled());
+        getMvpView().setSwAutoApplyVisibleOffset(preferencesHelper.getAutoApplyVisibleOffsetEnabled());
     }
 
     @Override
@@ -34,5 +35,10 @@ public class SettingsPresenter<V extends SettingsMvpView> extends BasePresenter<
     @Override
     public void setClearSpotsOnDisconnect(boolean enable) {
         preferencesHelper.setClearSpotsOnDisconnect(enable);
+    }
+
+    @Override
+    public void setAutoSetVisibleOffset(boolean enable) {
+        preferencesHelper.setAutoApplyVisibleOffsetEnabled(enable);
     }
 }

@@ -16,11 +16,15 @@ public interface PreferencesHelper {
 
     void setSelectedPatientUuid(String selectedPatientUuid);
 
+    boolean getAutoApplyVisibleOffsetEnabled();
+
+    void setAutoApplyVisibleOffsetEnabled(boolean enabled);
+
     Point getDefaultVisibleOffset();
 
     void setDefaultVisibleOffset(Point offset);
 
-    boolean getClearSpotsOnDisconnect();
+    boolean getClearSpotsOnDisconnectEnabled();
 
     void setClearSpotsOnDisconnect(boolean enable);
 
