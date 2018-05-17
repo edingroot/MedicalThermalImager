@@ -9,6 +9,7 @@ import android.util.Log;
 import com.flir.flironesdk.Device;
 import com.google.firebase.analytics.FirebaseAnalytics;
 
+import tw.cchi.medthimager.BuildConfig;
 import tw.cchi.medthimager.Config;
 import tw.cchi.medthimager.model.ContiShootParameters;
 import tw.cchi.medthimager.utils.AppUtils;
@@ -23,12 +24,16 @@ public class FirebaseAnalyticsHelper {
         this.context = context;
         this.mFirebaseAnalytics = firebaseAnalytics;
 
-        boolean enable = Config.ENABLE_ANALYTICS_COLLECTION &&
-            !AppUtils.checkIsRunningInFirebaseTestLab(context);
-        firebaseAnalytics.setAnalyticsCollectionEnabled(enable);
-        Log.i(TAG, "Enabled FA collection: " + enable);
+        boolean enableAnalytics = !BuildConfig.DEBUG &&
+                                  Config.ENABLE_ANALYTICS_COLLECTION &&
+                                  !AppUtils.checkIsRunningInFirebaseTestLab(context);
 
-        initialize();
+        firebaseAnalytics.setAnalyticsCollectionEnabled(enableAnalytics);
+        Log.i(TAG, "Enabled FA collection: " + enableAnalytics);
+
+        if (enableAnalytics) {
+            initialize();
+        }
     }
 
     private void initialize() {
