@@ -48,6 +48,9 @@ public class VisibleImageExtractor implements FrameProcessor.Delegate {
             } catch (Exception e) {
                 e.printStackTrace();
                 onFrameProcessedListener.onFrameProcessed(null);
+
+                // Remove reference to avoid memory leak
+                this.onFrameProcessedListener = null;
                 return;
             }
 
@@ -77,6 +80,9 @@ public class VisibleImageExtractor implements FrameProcessor.Delegate {
             // Map<RenderedImage.ImageType, RenderedImage> renderedImageMap = frameProcessor.getProcessedFrames(loadedFrame);
             frameProcessorLock.unlock();
         }
+
+        // Remove reference to avoid memory leak
+        this.onFrameProcessedListener = null;
     }
 
     /* public Bitmap getBlendedMSXBitmap() {

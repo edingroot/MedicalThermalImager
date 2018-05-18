@@ -8,16 +8,18 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import javax.inject.Inject;
 
+import io.reactivex.disposables.Disposable;
 import tw.cchi.medthimager.Config;
 import tw.cchi.medthimager.helper.ThermalSpotsHelper;
 import tw.cchi.medthimager.thermalproc.RawThermalDump;
 import tw.cchi.medthimager.thermalproc.ThermalDumpProcessor;
 
-public class ViewerTabResources {
+public class ViewerTabResources implements Disposable {
     private final String TAG = Config.TAGPRE + getClass().getSimpleName();
 
     private static final ReentrantReadWriteLock listsLock = new ReentrantReadWriteLock();
     private int currentIndex = -1;
+    private boolean disposed = false;
 
     private ArrayList<Boolean> hasLoaded = new ArrayList<>(); // <whether the tab had been loaded before>
     private ArrayList<String> thermalDumpPaths = new ArrayList<>(); // manage opened dumps by path because filepicker returns selected paths
@@ -199,5 +201,19 @@ public class ViewerTabResources {
         listsLock.writeLock().lock();
         this.hasLoaded.set(currentIndex, hasLoaded);
         listsLock.writeLock().unlock();
+    }
+
+    @Override
+    public void dispose() {
+        while (getCount() > 0) {
+            removeResources(0, 0);
+        }
+
+        disposed = true;
+    }
+
+    @Override
+    public boolean isDisposed() {
+        return disposed;
     }
 }

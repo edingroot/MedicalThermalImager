@@ -38,7 +38,6 @@ import permissions.dispatcher.NeedsPermission;
 import permissions.dispatcher.RuntimePermissions;
 import tw.cchi.medthimager.Config;
 import tw.cchi.medthimager.R;
-import tw.cchi.medthimager.ui.dumpviewer.adapter.ThermalDumpsRecyclerAdapter;
 import tw.cchi.medthimager.component.MultiChartView;
 import tw.cchi.medthimager.component.SpotsControlView;
 import tw.cchi.medthimager.di.BgThreadCapable;
@@ -47,6 +46,7 @@ import tw.cchi.medthimager.model.ChartParameter;
 import tw.cchi.medthimager.thermalproc.RawThermalDump;
 import tw.cchi.medthimager.thermalproc.VisibleImageMask;
 import tw.cchi.medthimager.ui.base.BaseActivity;
+import tw.cchi.medthimager.ui.dumpviewer.adapter.ThermalDumpsRecyclerAdapter;
 
 @RuntimePermissions
 public class DumpViewerActivity extends BaseActivity
@@ -86,9 +86,8 @@ public class DumpViewerActivity extends BaseActivity
         setUnBinder(ButterKnife.bind(this));
         presenter.onAttach(this);
 
-        thermalDumpsRecyclerAdapter = new ThermalDumpsRecyclerAdapter(this,
-                new ThermalDumpsRecyclerAdapter.OnInteractionListener() {
-
+        thermalDumpsRecyclerAdapter = new ThermalDumpsRecyclerAdapter(
+                this, new ThermalDumpsRecyclerAdapter.OnInteractionListener() {
             @Override
             public boolean onClick(View v, int position) {
                 return presenter.switchDumpTab(position);
@@ -461,6 +460,11 @@ public class DumpViewerActivity extends BaseActivity
     @Override
     protected void onDestroy() {
         presenter.onDetach();
+
+        recyclerDumpSwitcher.setAdapter(null);
+        thermalDumpsRecyclerAdapter.setOnInteractionListener(null);
+        thermalDumpsRecyclerAdapter = null;
+
         super.onDestroy();
     }
 }

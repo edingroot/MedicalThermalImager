@@ -10,6 +10,9 @@ import org.opencv.core.Point;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
 
 import javax.inject.Inject;
 
@@ -39,6 +42,7 @@ public class DumpViewerPresenter<V extends DumpViewerMvpView> extends BasePresen
     private final String TAG = Config.TAGPRE + getClass().getSimpleName();
 
     @Inject AppCompatActivity activity;
+    private Set<Disposable> disposables = Collections.synchronizedSet(new HashSet<>());
 
     // Data models & helpers
     @Inject volatile ViewerTabResources tabResources;
@@ -74,13 +78,15 @@ public class DumpViewerPresenter<V extends DumpViewerMvpView> extends BasePresen
         thermalChartParameter = new ChartParameter<>(ChartParameter.ChartType.MULTI_LINE_CURVE);
         thermalChartParameter.setAlpha(0.6f);
 
+        disposables.add(tabResources);
+
         // Wait until the view have been measured (visibility state considered)
         // Ref: https://stackoverflow.com/questions/36586146/ongloballayoutlistener-vs-postrunnable
-        getMvpView().getVisibleImageViewLayoutObservable().subscribe(o -> {
+        disposables.add(getMvpView().getVisibleImageViewLayoutObservable().subscribe(o -> {
             if (showingVisibleImage) {
                 getMvpView().resizeVisibleImageViewToThermalImage();
             }
-        });
+        }));
 
         // Launch image picker on activity first started
         pickImages();
@@ -643,17 +649,15 @@ public class DumpViewerPresenter<V extends DumpViewerMvpView> extends BasePresen
                         mainLooperHandler.postDelayed(() -> {
                             if (getMvpView().getThermalImageViewHeight() == 0) {
                                 // This should be called after getMvpView().updateThermalImageView(), which was called in onNext() above
-                                getMvpView().getThermalImageViewGlobalLayouts().take(1).subscribe(o -> {
+                                disposables.add(getMvpView().getThermalImageViewGlobalLayouts().take(1).subscribe(o -> {
                                     tabResources.setThermalSpotsHelper(
-                                        getMvpView().createThermalSpotsHelper(tabResources.getRawThermalDump())
-                                    );
+                                            getMvpView().createThermalSpotsHelper(tabResources.getRawThermalDump()));
                                     emitter.onNext(true);
                                     emitter.onComplete();
-                                });
+                                }));
                             } else {
                                 tabResources.setThermalSpotsHelper(
-                                    getMvpView().createThermalSpotsHelper(tabResources.getRawThermalDump())
-                                );
+                                        getMvpView().createThermalSpotsHelper(tabResources.getRawThermalDump()));
                                 emitter.onNext(true);
                                 emitter.onComplete();
                             }
@@ -778,6 +782,12 @@ public class DumpViewerPresenter<V extends DumpViewerMvpView> extends BasePresen
 
     @Override
     public void onDetach() {
+        for (Disposable disposable : disposables)
+            disposable.dispose();
+
+        tabResources = null;
+        thermalChartParameter = null;
+
         super.onDetach();
     }
 }
