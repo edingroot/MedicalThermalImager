@@ -163,6 +163,10 @@ public class ThermalDumpProcessor {
         return resultBmp;
     }
 
+    public Mat getImageMat() {
+        return getImageMat(1, false);
+    }
+
     /**
      * Get generated image Mat with contrast adjusted with contrastRatio.
      *
@@ -190,7 +194,7 @@ public class ThermalDumpProcessor {
     /**
      * Generate grayscale thermal image from temperature values
      */
-    public synchronized void generateThermalImage() {
+    private synchronized void generateThermalImage() {
         generateThermalImage(
                 (minThermalValue - 2731) / 10.0f,
                 (maxThermalValue - 2731) / 10.0f);
