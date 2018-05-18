@@ -1,6 +1,8 @@
 package tw.cchi.medthimager.thermalproc;
 
+import android.graphics.Bitmap;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.util.Log;
 
 import com.flir.flironesdk.RenderedImage;
@@ -18,6 +20,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 
 import io.reactivex.Observable;
+import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
 import tw.cchi.medthimager.Config;
 import tw.cchi.medthimager.Constants;
@@ -54,7 +57,7 @@ import tw.cchi.medthimager.utils.CommonUtils;
  *  (M+92) ~ (M+171) thermal spot marker #1 ~ #20, (x: 2 bytes, y: 2 bytes)
  *  (M+172)          EOF
  */
-public class RawThermalDump {
+public class RawThermalDump implements Disposable {
     private final String TAG = Config.TAGPRE + getClass().getSimpleName();
 
     private int formatVersion = 3;
@@ -69,7 +72,10 @@ public class RawThermalDump {
     private int maxValue = -1;
     private int minValue = -1;
     private String filepath;
-    private VisibleImageMask visibleImageMask; // [Android Only]
+
+    // [Android Only]
+    private VisibleImageMask visibleImageMask;
+    private boolean disposed = false;
 
     /**
      * [Android]
@@ -509,34 +515,43 @@ public class RawThermalDump {
 
     // ---------------------- [Android] ---------------------- //
 
-    public boolean attachVisibleImageMask(int defaultOffsetX, int defaultOffsetY) {
+    public void attachVisibleImageMask(Bitmap visibleImage, int defaultOffsetX, int defaultOffsetY) {
+        Log.i(TAG, String.format("[attachVisibleImageMask] offset=(%d, %d)", visibleOffsetX, visibleOffsetY));
+
         if (visibleImageMask != null) {
-            return true;
-        } else {
-            visibleImageMask = VisibleImageMask.openVisibleImage(
-                this, getFlirImagePath()
-            );
+            visibleImageMask.dispose();
+        }
+        visibleImageMask = new VisibleImageMask(this, visibleImage);
 
-            // If visible image offset wasn't set, set from the default value
-            if (visibleOffsetX == 0 && visibleOffsetY == 0 &&
-                    defaultOffsetX != 0 && defaultOffsetY != 0) {
-                visibleOffsetX = defaultOffsetX;
-                visibleOffsetY = defaultOffsetY;
-                saveAsync();
-            }
-
-            Log.i(TAG, String.format("[attachVisibleImageMask] isMaskNull=%b offset=(%d, %d)",
-                    visibleImageMask == null, visibleOffsetX, visibleOffsetY));
-
-            return visibleImageMask != null;
+        // If visible image offset wasn't set, set from the default value
+        if (visibleOffsetX == 0 && visibleOffsetY == 0 &&
+                defaultOffsetX != 0 && defaultOffsetY != 0) {
+            visibleOffsetX = defaultOffsetX;
+            visibleOffsetY = defaultOffsetY;
+            saveAsync();
         }
     }
 
-    public boolean isVisibleImageAttached() {
-        return visibleImageMask != null;
+    public void detachVisibleImageMask() {
+        if (visibleImageMask != null) {
+            visibleImageMask.dispose();
+            visibleImageMask = null;
+        }
     }
 
+    @Nullable
     public VisibleImageMask getVisibleImageMask() {
         return visibleImageMask;
+    }
+
+    @Override
+    public void dispose() {
+        detachVisibleImageMask();
+        disposed = true;
+    }
+
+    @Override
+    public boolean isDisposed() {
+        return disposed;
     }
 }

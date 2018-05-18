@@ -1,3 +1,9 @@
+/*
+ * Ref:
+ *  [Avoiding memory leaks]
+ *      https://android-developers.googleblog.com/2009/01/avoiding-memory-leaks.html
+ */
+
 package tw.cchi.medthimager.helper;
 
 import android.annotation.SuppressLint;
@@ -13,6 +19,7 @@ import android.view.ViewGroup;
 
 import com.flir.flironesdk.RenderedImage;
 
+import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.Queue;
@@ -34,8 +41,8 @@ public class ThermalSpotsHelper implements Disposable {
     public enum TempSource {ThermalDump, RenderedImage}
 
     private TempSource tempSource;
-    private Context context;
-    private ViewGroup parentView;
+    private WeakReference<Context> contextRef;
+    private WeakReference<ViewGroup> parentViewRef;
     private volatile boolean disposed = false;
 
     private RawThermalDump rawThermalDump;
@@ -60,8 +67,8 @@ public class ThermalSpotsHelper implements Disposable {
     @BgThreadCapable
     public ThermalSpotsHelper(Context context, ViewGroup parentView, RawThermalDump rawThermalDump) {
         this.tempSource = TempSource.ThermalDump;
-        this.context = context;
-        this.parentView = parentView;
+        this.contextRef = new WeakReference<>(context);
+        this.parentViewRef = new WeakReference<>(parentView);
         this.rawThermalDump = rawThermalDump;
         this.tempSourceWidth = rawThermalDump.getWidth();
 
@@ -82,8 +89,8 @@ public class ThermalSpotsHelper implements Disposable {
     @BgThreadCapable
     public ThermalSpotsHelper(Context context, ViewGroup parentView, RenderedImage renderedImage) {
         this.tempSource = TempSource.RenderedImage;
-        this.context = context;
-        this.parentView = parentView;
+        this.contextRef = new WeakReference<>(context);
+        this.parentViewRef = new WeakReference<>(parentView);
         this.renderedImage = renderedImage;
         this.tempSourceWidth = renderedImage.width();
     }
@@ -149,7 +156,10 @@ public class ThermalSpotsHelper implements Disposable {
     @SuppressLint("ClickableViewAccessibility")
     @BgThreadCapable
     private synchronized void addSpot(final int spotId, int viewX, int viewY, boolean appendToDump) {
-        final ThermalSpotView thermalSpotView = new ThermalSpotView(context, spotId, true);
+        if (disposed || contextRef.get() == null || parentViewRef.get() == null)
+            return;
+
+        final ThermalSpotView thermalSpotView = new ThermalSpotView(contextRef.get(), spotId, true);
 
         thermalSpotView.setOnTouchListener((view, motionEvent) -> {
             int x1 = (int) motionEvent.getRawX();
@@ -195,8 +205,8 @@ public class ThermalSpotsHelper implements Disposable {
             lastSpotId = spotId;
 
         // Adding view on UI thread after view render
-        parentView.post(() -> {
-            parentView.addView(thermalSpotView);
+        parentViewRef.get().post(() -> {
+            parentViewRef.get().addView(thermalSpotView);
             updateThermalValue(thermalSpotView);
 
             // Add and save to thermal dump file
@@ -222,7 +232,7 @@ public class ThermalSpotsHelper implements Disposable {
     }
 
     public void removeLastSpot() {
-        if (lastSpotId == -1)
+        if (disposed || parentViewRef.get() == null || lastSpotId == -1)
             return;
 
         if (tempSource == TempSource.ThermalDump) {
@@ -239,7 +249,7 @@ public class ThermalSpotsHelper implements Disposable {
 
         spotViewsListLock.writeLock().lock();
         ThermalSpotView thermalSpotView = thermalSpotViews.get(lastSpotId);
-        parentView.removeView(thermalSpotView);
+        parentViewRef.get().removeView(thermalSpotView);
         thermalSpotViews.remove(lastSpotId);
         if (thermalSpotViews.size() > 0) {
             lastSpotId = thermalSpotViews.keyAt(thermalSpotViews.size() - 1);
@@ -252,14 +262,17 @@ public class ThermalSpotsHelper implements Disposable {
     @BgThreadCapable
     public void clearAllSpots() {
         proceedViewMetricsRunnable(() -> {
+            if (disposed || parentViewRef.get() == null)
+                return;
+
             lastSpotId = -1;
 
             // Run on UI thread
-            parentView.post(() -> {
+            parentViewRef.get().post(() -> {
                 spotViewsListLock.writeLock().lock();
                 for (int i = 0; i < thermalSpotViews.size(); i++) {
                     View spotView = thermalSpotViews.valueAt(i);
-                    parentView.removeView(spotView);
+                    parentViewRef.get().removeView(spotView);
                 }
                 thermalSpotViews.clear();
                 spotViewsListLock.writeLock().unlock();
@@ -308,11 +321,11 @@ public class ThermalSpotsHelper implements Disposable {
         }
 
         // Remove all thermalSpotViews from parent view
-        if (parentView != null) {
-            parentView.post(() -> {
+        if (parentViewRef.get() != null) {
+            parentViewRef.get().post(() -> {
                 spotViewsListLock.writeLock().lock();
                 for (int i = 0; i < thermalSpotViews.size(); i++) {
-                    parentView.removeView(thermalSpotViews.valueAt(i));
+                    parentViewRef.get().removeView(thermalSpotViews.valueAt(i));
                 }
                 thermalSpotViews.clear();
                 spotViewsListLock.writeLock().unlock();

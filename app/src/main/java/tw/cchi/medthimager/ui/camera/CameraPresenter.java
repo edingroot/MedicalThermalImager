@@ -77,6 +77,10 @@ public class CameraPresenter<V extends CameraMvpView> extends BasePresenter<V>
     private CaptureProcessInfo captureProcessInfo = null;
     private Patient patient;
 
+    static {
+        OpenCVLoader.initDebug();
+    }
+
     @Inject
     public CameraPresenter(CompositeDisposable compositeDisposable) {
         super(compositeDisposable);
@@ -86,8 +90,6 @@ public class CameraPresenter<V extends CameraMvpView> extends BasePresenter<V>
     public void onAttach(V mvpView) {
         super.onAttach(mvpView);
         loadSettings();
-
-        OpenCVLoader.initDebug();
 
         frameProcessor = new FrameProcessor(activity, this, EnumSet.of(
             RenderedImage.ImageType.ThermalRGBA8888Image,

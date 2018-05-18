@@ -55,6 +55,7 @@ public class ViewerTabResources {
 
         hasLoaded.remove(removeIndex);
         thermalDumpPaths.remove(removeIndex);
+        rawThermalDumps.get(removeIndex).dispose();
         rawThermalDumps.remove(removeIndex);
         thermalDumpProcessors.remove(removeIndex);
         grayBitmaps.remove(removeIndex);

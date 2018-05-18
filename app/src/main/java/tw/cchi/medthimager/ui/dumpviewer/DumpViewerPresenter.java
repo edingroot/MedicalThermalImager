@@ -28,6 +28,7 @@ import tw.cchi.medthimager.model.ChartParameter;
 import tw.cchi.medthimager.model.ViewerTabResources;
 import tw.cchi.medthimager.thermalproc.RawThermalDump;
 import tw.cchi.medthimager.thermalproc.ThermalDumpProcessor;
+import tw.cchi.medthimager.thermalproc.VisibleImageExtractor;
 import tw.cchi.medthimager.ui.base.BasePresenter;
 import tw.cchi.medthimager.utils.AppUtils;
 import tw.cchi.medthimager.utils.CommonUtils;
@@ -43,6 +44,7 @@ public class DumpViewerPresenter<V extends DumpViewerMvpView> extends BasePresen
     @Inject volatile ViewerTabResources tabResources;
     private volatile ChartParameter<Float> thermalChartParameter;
     private ArrayList<org.opencv.core.Point> copiedSpotMarkers;
+    private static VisibleImageExtractor visibleImageExtractor;
 
     // States
     private int contrastRatio = 1;
@@ -64,6 +66,10 @@ public class DumpViewerPresenter<V extends DumpViewerMvpView> extends BasePresen
     @Override
     public void onAttach(V mvpView) {
         super.onAttach(mvpView);
+
+        if (visibleImageExtractor == null) {
+            visibleImageExtractor = new VisibleImageExtractor(activity.getApplicationContext());
+        }
 
         thermalChartParameter = new ChartParameter<>(ChartParameter.ChartType.MULTI_LINE_CURVE);
         thermalChartParameter.setAlpha(0.6f);
@@ -198,7 +204,7 @@ public class DumpViewerPresenter<V extends DumpViewerMvpView> extends BasePresen
             e -> {
                 e.printStackTrace();
                 getMvpView().hideLoading();
-                getMvpView().showSnackBar("Error occurred while switching dump tab.");
+                getMvpView().showSnackBar(R.string.error_switch_dump_tab);
             },
             () -> {
                 tabResources.setHasLoaded(true);
@@ -307,7 +313,7 @@ public class DumpViewerPresenter<V extends DumpViewerMvpView> extends BasePresen
         if (tabResources.getCount() == 0)
             return;
 
-        if (!tabResources.getRawThermalDump().isVisibleImageAttached()) {
+        if (tabResources.getRawThermalDump().getVisibleImageMask() != null) {
             getMvpView().showToast(R.string.error_occurred);
             return;
         }
@@ -668,34 +674,31 @@ public class DumpViewerPresenter<V extends DumpViewerMvpView> extends BasePresen
      */
     private Observable<Boolean> loadVisibleImage(final RawThermalDump rawThermalDump) {
         return Observable.create(emitter -> {
-            Log.d(TAG, "loadVisibleImage@start");
+            Log.d(TAG, "loadVisibleImage@start - " + rawThermalDump.getTitle());
 
-            if (rawThermalDump.isVisibleImageAttached()) {
+            if (rawThermalDump.getVisibleImageMask() != null) {
                 emitter.onNext(true);
                 emitter.onComplete();
                 return;
             }
 
-            if (!rawThermalDump.attachVisibleImageMask(0, 0)) {
-                getMvpView().showSnackBar("Failed to read visible image. Does the jpg file with same name exist?");
-                emitter.onNext(false);
-                emitter.onComplete();
-                return;
-            }
+            visibleImageExtractor.extractImage(rawThermalDump.getFlirImagePath(), visibleImage -> {
+                if (visibleImage == null) {
+                    getMvpView().showSnackBar("Failed to read visible image. Does the jpg file with same name exist?");
+                    emitter.onNext(false);
+                } else {
+                    rawThermalDump.attachVisibleImageMask(visibleImage, 0, 0);
+                    emitter.onNext(true);
+                }
 
-            Log.d(TAG, "loadVisibleImage@start of dump: " + rawThermalDump.getTitle());
-            rawThermalDump.getVisibleImageMask().processFrame(activity, maskInstance -> {
-                Log.d(TAG, "loadVisibleImage@done of dump: " + rawThermalDump.getTitle());
-                emitter.onNext(true);
+                Log.d(TAG, "loadVisibleImage@done - " + rawThermalDump.getTitle());
                 emitter.onComplete();
-
-                Log.d(TAG, "loadVisibleImage@done");
             });
         });
     }
 
     private boolean displayVisibleImage(RawThermalDump rawThermalDump) {
-        if (rawThermalDump.isVisibleImageAttached()) {
+        if (rawThermalDump.getVisibleImageMask() != null) {
             getMvpView().updateVisibleImageView(rawThermalDump.getVisibleImageMask(), visibleImageAlignMode);
             return true;
         } else {
@@ -777,5 +780,4 @@ public class DumpViewerPresenter<V extends DumpViewerMvpView> extends BasePresen
     public void onDetach() {
         super.onDetach();
     }
-
 }

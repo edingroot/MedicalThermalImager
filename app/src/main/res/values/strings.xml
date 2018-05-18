@@ -69,6 +69,7 @@
     <string name="visible_image_dumped">%1$s Visible light image exported: %2$s</string>
     <string name="dump_failed">Dumped failed.</string>
     <string name="no_spot_to_copied">No spot to be copied.</string>
+    <string name="error_switch_dump_tab">Error occurred while switching dump tab.</string>
     <string name="error_delete_flir">Error deleting thermal image file of dump.</string>
     <string name="error_delete_color">Error deleting color image file of dump.</string>
     <string name="error_delete_visible">Error deleting visible light image file of dump.</string>
