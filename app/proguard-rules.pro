@@ -65,6 +65,7 @@
 -keep public class com.android.vending.licensing.ILicensingService
 -keep class javax.** { *; }
 -keep class org.** { *; }
+-keep class tw.cchi.medthimager.thermalproc.ThermalDumpProcessor { *; }
 
 -keepclasseswithmembernames class * {
     native <methods>;
