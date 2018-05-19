@@ -7,8 +7,12 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-#undef tw_cchi_medthimager_thermalproc_ThermalDumpProcessor_MAX_ALLOWED
-#define tw_cchi_medthimager_thermalproc_ThermalDumpProcessor_MAX_ALLOWED 3931L
+#undef tw_cchi_medthimager_thermalproc_ThermalDumpProcessor_MAX_TEMP_ALLOWED
+#define tw_cchi_medthimager_thermalproc_ThermalDumpProcessor_MAX_TEMP_ALLOWED 3931L
+#undef tw_cchi_medthimager_thermalproc_ThermalDumpProcessor_COLOR_TEMP_MIN
+#define tw_cchi_medthimager_thermalproc_ThermalDumpProcessor_COLOR_TEMP_MIN 3731L
+#undef tw_cchi_medthimager_thermalproc_ThermalDumpProcessor_COLOR_TEMP_MAX
+#define tw_cchi_medthimager_thermalproc_ThermalDumpProcessor_COLOR_TEMP_MAX 6731L
 #undef tw_cchi_medthimager_thermalproc_ThermalDumpProcessor_FILTER_RATIO_LOW
 #define tw_cchi_medthimager_thermalproc_ThermalDumpProcessor_FILTER_RATIO_LOW 0.005
 #undef tw_cchi_medthimager_thermalproc_ThermalDumpProcessor_FILTER_RATIO_HIGH
@@ -24,7 +28,7 @@ JNIEXPORT void JNICALL Java_tw_cchi_medthimager_thermalproc_ThermalDumpProcessor
 /*
  * Class:     tw_cchi_medthimager_thermalproc_ThermalDumpProcessor
  * Method:    cvtThermalValues10Native
- * Signature: ([II)V
+ * Signature: ([I)V
  */
 JNIEXPORT void JNICALL Java_tw_cchi_medthimager_thermalproc_ThermalDumpProcessor_cvtThermalValues10Native
   (JNIEnv *, jobject, jintArray);

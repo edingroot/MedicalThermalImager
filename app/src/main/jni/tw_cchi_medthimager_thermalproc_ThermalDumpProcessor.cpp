@@ -95,7 +95,7 @@ void Java_tw_cchi_medthimager_thermalproc_ThermalDumpProcessor_updateThermalHist
     int pixelCount = thermalValues10Length;
 
     // Reset histogram to an zero-filled array
-    memset(thermalHist, 0, sizeof(int) * tw_cchi_medthimager_thermalproc_ThermalDumpProcessor_MAX_ALLOWED);
+    memset(thermalHist, 0, sizeof(int) * tw_cchi_medthimager_thermalproc_ThermalDumpProcessor_MAX_TEMP_ALLOWED);
 
     int minThermalValue = pixelCount;
     int maxThermalValue = 0;

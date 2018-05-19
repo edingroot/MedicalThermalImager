@@ -294,7 +294,7 @@ public class DumpViewerPresenter<V extends DumpViewerMvpView> extends BasePresen
         String exportPath = dumpPath.substring(0, dumpPath.lastIndexOf("_")) + Constants.POSTFIX_COLORED_IMAGE + ".png";
 
         Observable.create(emitter -> {
-            if (ImageUtils.saveBitmap(tabResources.getThermalBitmap(contrastRatio, coloredMode), exportPath)) {
+            if (ImageUtils.saveBitmap(tabResources.getThermalBitmap(contrastRatio, true), exportPath)) {
                 emitter.onComplete();
             } else {
                 emitter.onError(new Error());
