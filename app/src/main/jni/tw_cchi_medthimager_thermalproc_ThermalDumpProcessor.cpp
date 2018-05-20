@@ -4,6 +4,8 @@
  *      http://answers.opencv.org/question/12090/returning-a-mat-from-native-jni-to-java/
  *  [Android NDK: Passing complex data between Java and JNI methods]
  *      http://adndevblog.typepad.com/cloud_and_mobile/2013/08/android-ndk-passing-complex-data-to-jni.html
+ *  [Best practices for using the Java Native Interface]
+ *      https://www.ibm.com/developerworks/library/j-jni/index.html#return
  *  [JNI Types and Data Structures]
  *      https://docs.oracle.com/javase/7/docs/technotes/guides/jni/spec/types.html
  */
@@ -19,8 +21,9 @@ JNIEXPORT void JNICALL Java_tw_cchi_medthimager_thermalproc_ThermalDumpProcessor
   (JNIEnv *env, jobject obj, jfloat temp0, jfloat temp255, jlong resultMatAddr) {
     // Load class fields
     unsigned char *thermalLUT;
+    jintArray thermalValues10JNI;
     int *thermalValues10;
-    int thermalValues10Length = JNIHelper::GetIntArrayField(env, obj, &thermalValues10, "thermalValues10");
+    int thermalValues10Length = JNIHelper::GetIntArrayField(env, obj, &thermalValues10JNI, &thermalValues10, "thermalValues10");
     int width = JNIHelper::GetIntField(env, obj, "width");
     int height = JNIHelper::GetIntField(env, obj, "height");
     int minThermalValue = JNIHelper::GetIntField(env, obj, "minThermalValue");
@@ -63,16 +66,21 @@ JNIEXPORT void JNICALL Java_tw_cchi_medthimager_thermalproc_ThermalDumpProcessor
         img->data[i] = thermalLUT[thermalValues10[i]];
     }
 
+    // Clean native resources
+    delete[] thermalLUT;
+
     // Pass fields back to the java class
-    JNIHelper::SetIntArrayField(env, obj, thermalValues10, thermalValues10Length, "thermalValues10");
+    JNIHelper::SetIntArrayField(env, thermalValues10JNI, thermalValues10, thermalValues10Length);
+    env->ReleaseIntArrayElements(thermalValues10JNI, thermalValues10, 0);
 }
 
 void Java_tw_cchi_medthimager_thermalproc_ThermalDumpProcessor_cvtThermalValues10Native(
         JNIEnv *env, jobject obj, jintArray thermalValuesJNI) {
     // Load class fields
-    jint *thermalValues = env->GetIntArrayElements(thermalValuesJNI, 0);
+    int *thermalValues = env->GetIntArrayElements(thermalValuesJNI, 0);
+    jintArray thermalValues10JNI;
     int *thermalValues10;
-    int thermalValues10Length = JNIHelper::GetIntArrayField(env, obj, &thermalValues10, "thermalValues10");
+    int thermalValues10Length = JNIHelper::GetIntArrayField(env, obj, &thermalValues10JNI, &thermalValues10, "thermalValues10");
 
     // PS. thermalValues10Length is equal to pixelCount
 #pragma omp parallel for
@@ -81,17 +89,20 @@ void Java_tw_cchi_medthimager_thermalproc_ThermalDumpProcessor_cvtThermalValues1
     }
 
     // Pass fields back to the java class
-    JNIHelper::SetIntArrayField(env, obj, thermalValues10, thermalValues10Length, "thermalValues10");
+    JNIHelper::SetIntArrayField(env, thermalValues10JNI, thermalValues10, thermalValues10Length);
+    env->ReleaseIntArrayElements(thermalValues10JNI, thermalValues10, 0);
     env->ReleaseIntArrayElements(thermalValuesJNI, thermalValues, 0);
 }
 
 void Java_tw_cchi_medthimager_thermalproc_ThermalDumpProcessor_updateThermalHistNative(
         JNIEnv *env, jobject obj) {
     // Load class fields
+    jintArray thermalValues10JNI;
     int *thermalValues10;
-    int thermalValues10Length = JNIHelper::GetIntArrayField(env, obj, &thermalValues10, "thermalValues10");
+    int thermalValues10Length = JNIHelper::GetIntArrayField(env, obj, &thermalValues10JNI, &thermalValues10, "thermalValues10");
+    jintArray thermalHistJNI;
     int *thermalHist;
-    int thermalHistLength = JNIHelper::GetIntArrayField(env, obj, &thermalHist, "thermalHist");
+    int thermalHistLength = JNIHelper::GetIntArrayField(env, obj, &thermalHistJNI, &thermalHist, "thermalHist");
     int pixelCount = thermalValues10Length;
 
     // Reset histogram to an zero-filled array
@@ -109,7 +120,9 @@ void Java_tw_cchi_medthimager_thermalproc_ThermalDumpProcessor_updateThermalHist
     }
 
     // Pass fields back to the java class
-    JNIHelper::SetIntArrayField(env, obj, thermalHist, thermalHistLength, "thermalHist");
+    JNIHelper::SetIntArrayField(env, thermalHistJNI, thermalHist, thermalHistLength);
     JNIHelper::SetIntField(env, obj, minThermalValue, "minThermalValue");
     JNIHelper::SetIntField(env, obj, maxThermalValue, "maxThermalValue");
+    env->ReleaseIntArrayElements(thermalValues10JNI, thermalValues10, 0);
+    env->ReleaseIntArrayElements(thermalHistJNI, thermalHist, 0);
 }

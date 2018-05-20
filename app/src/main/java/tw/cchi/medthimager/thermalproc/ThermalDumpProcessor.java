@@ -32,7 +32,7 @@ public class ThermalDumpProcessor {
     private int minThermalValue = 0; // thermalValue10 = 0 ignored
     private int maxThermalValue = 0;
 
-    private volatile Mat generatedImage = null;
+    private Mat generatedImage = null;
 
     static {
         // [Android]
@@ -211,14 +211,14 @@ public class ThermalDumpProcessor {
      * @param temp0 The minimum temperature of the histogram left most index (0/255)
      * @param temp255 The minimum temperature of the histogram right most index (255/255)
      */
-    public synchronized void generateThermalImage(float temp0, float temp255) {
+    public void generateThermalImage(float temp0, float temp255) {
         generatedImage = new Mat(height, width, CvType.CV_8UC1);
         generateThermalImageNative(temp0, temp255, generatedImage.getNativeObjAddr());
     }
 
     private synchronized native void generateThermalImageNative(float temp0, float temp255, long resultMatAddr);
 
-    private native void cvtThermalValues10Native(int[] thermalValues);
+    private synchronized native void cvtThermalValues10Native(int[] thermalValues);
 
     private synchronized native void updateThermalHistNative();
 }
