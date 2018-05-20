@@ -1,3 +1,9 @@
+/*
+ * Ref:
+ *  [Avoiding memory leaks]
+ *      https://android-developers.googleblog.com/2009/01/avoiding-memory-leaks.html
+ */
+
 package tw.cchi.medthimager.ui.dumpviewer;
 
 import android.graphics.Bitmap;
@@ -10,9 +16,6 @@ import org.opencv.core.Point;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Set;
 
 import javax.inject.Inject;
 
@@ -42,7 +45,7 @@ public class DumpViewerPresenter<V extends DumpViewerMvpView> extends BasePresen
     private final String TAG = Config.TAGPRE + getClass().getSimpleName();
 
     @Inject AppCompatActivity activity;
-    private Set<Disposable> disposables = Collections.synchronizedSet(new HashSet<>());
+    private final CompositeDisposable disposables;
 
     // Data models & helpers
     @Inject volatile ViewerTabResources tabResources;
@@ -65,6 +68,7 @@ public class DumpViewerPresenter<V extends DumpViewerMvpView> extends BasePresen
     @Inject
     public DumpViewerPresenter(CompositeDisposable compositeDisposable) {
         super(compositeDisposable);
+        this.disposables = compositeDisposable;
     }
 
     @Override
@@ -782,9 +786,7 @@ public class DumpViewerPresenter<V extends DumpViewerMvpView> extends BasePresen
 
     @Override
     public void onDetach() {
-        for (Disposable disposable : disposables)
-            disposable.dispose();
-
+        disposables.dispose();
         tabResources = null;
         thermalChartParameter = null;
 

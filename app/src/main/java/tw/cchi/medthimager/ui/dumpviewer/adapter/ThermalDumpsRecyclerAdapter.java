@@ -10,7 +10,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 
-import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Locale;
 
@@ -19,13 +18,13 @@ import butterknife.ButterKnife;
 import tw.cchi.medthimager.R;
 
 public class ThermalDumpsRecyclerAdapter extends RecyclerView.Adapter<ThermalDumpsRecyclerAdapter.ViewHolder> {
-    private final WeakReference<Context> contextRef;
+    private final Context context;
     private OnInteractionListener onInteractionListener;
     private ArrayList<String> titles = new ArrayList<>();
     private int selectedPosition = -1;
 
     public ThermalDumpsRecyclerAdapter(Context context, OnInteractionListener onInteractionListener) {
-        this.contextRef = new WeakReference<>(context);
+        this.context = context;
         this.onInteractionListener = onInteractionListener;
     }
 
@@ -77,18 +76,15 @@ public class ThermalDumpsRecyclerAdapter extends RecyclerView.Adapter<ThermalDum
 
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
-        if (contextRef.get() == null)
-            return;
-
         final int holderPosition = position;
         final String holderTitle = titles.get(position);
         int color = selectedPosition == position ? R.color.colorPrimaryDark : R.color.buttonBackgroundTint;
 
         holder.button.setText(holderTitle);
         holder.button.setBackground(
-            ResourcesCompat.getDrawable(contextRef.get().getResources(), R.drawable.btn_dump_tab, null));
+            ResourcesCompat.getDrawable(context.getResources(), R.drawable.btn_dump_tab, null));
         holder.button.setBackgroundTintList(
-            ColorStateList.valueOf(ResourcesCompat.getColor(contextRef.get().getResources(), color, null)));
+            ColorStateList.valueOf(ResourcesCompat.getColor(context.getResources(), color, null)));
         // holder.button.setBackgroundResource(android.R.drawable.btn_default); // android default button style
 
         holder.button.setOnClickListener(v -> {
@@ -130,7 +126,6 @@ public class ThermalDumpsRecyclerAdapter extends RecyclerView.Adapter<ThermalDum
     }
 
     public interface OnInteractionListener {
-
         /**
          * @return false if reject tab switching
          */

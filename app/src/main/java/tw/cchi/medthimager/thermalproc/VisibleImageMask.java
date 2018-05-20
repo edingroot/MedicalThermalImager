@@ -3,16 +3,11 @@ package tw.cchi.medthimager.thermalproc;
 import android.graphics.Bitmap;
 import android.support.annotation.Nullable;
 
-import com.flir.flironesdk.LoadedFrame;
-import com.flir.flironesdk.RenderedImage;
-
 import org.opencv.android.Utils;
 import org.opencv.core.Mat;
 import org.opencv.imgproc.Imgproc;
 
-import java.io.File;
 import java.lang.ref.WeakReference;
-import java.util.EnumSet;
 
 import io.reactivex.disposables.Disposable;
 import tw.cchi.medthimager.Config;
@@ -21,9 +16,7 @@ import tw.cchi.medthimager.utils.ImageUtils;
 public class VisibleImageMask implements Disposable {
     private final String TAG = Config.TAGPRE + getClass().getSimpleName();
 
-    private VisibleImageExtractor visibleImageExtractor;
     private WeakReference<RawThermalDump> rawThermalDumpRef;
-
     private Bitmap visibleBitmap;
     private volatile boolean disposed = false;
 
@@ -80,7 +73,6 @@ public class VisibleImageMask implements Disposable {
 
     @Override
     public void dispose() {
-        visibleImageExtractor = null;
         rawThermalDumpRef = new WeakReference<>(null);
         disposed = true;
     }
