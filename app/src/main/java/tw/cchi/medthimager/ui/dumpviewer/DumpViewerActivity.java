@@ -228,7 +228,9 @@ public class DumpViewerActivity extends BaseActivity
 
     @OnClick(R.id.btnDelete)
     public void onDeleteClick(ToggleButton b) {
-        // Show confirm dialog for deleting thermal dump and related files
+        if (presenter.getTabsCount() == 0)
+            return;
+
         showAlertDialog(
             getString(R.string.confirm),
             getString(R.string.confirm_delete_dump, presenter.getDumpTitle()),
