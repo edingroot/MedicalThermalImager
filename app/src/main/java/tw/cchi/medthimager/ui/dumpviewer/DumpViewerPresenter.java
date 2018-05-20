@@ -323,7 +323,7 @@ public class DumpViewerPresenter<V extends DumpViewerMvpView> extends BasePresen
         if (tabResources.getCount() == 0)
             return;
 
-        if (tabResources.getRawThermalDump().getVisibleImageMask() != null) {
+        if (tabResources.getRawThermalDump().getVisibleImageMask() == null) {
             getMvpView().showToast(R.string.error_occurred);
             return;
         }
