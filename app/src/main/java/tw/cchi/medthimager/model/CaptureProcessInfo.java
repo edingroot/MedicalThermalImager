@@ -4,8 +4,8 @@ import android.support.annotation.Nullable;
 
 import tw.cchi.medthimager.Constants;
 import tw.cchi.medthimager.thermalproc.RawThermalDump;
-import tw.cchi.medthimager.utils.AppUtils;
-import tw.cchi.medthimager.utils.ThermalDumpUtils;
+import tw.cchi.medthimager.util.AppUtils;
+import tw.cchi.medthimager.util.ThermalDumpUtils;
 
 /**
  * New instance should be created every time when capture requested.

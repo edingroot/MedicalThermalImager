@@ -49,7 +49,7 @@ import tw.cchi.medthimager.ui.camera.contishoot.ContiShootDialog;
 import tw.cchi.medthimager.ui.camera.selectpatient.SelectPatientDialog;
 import tw.cchi.medthimager.ui.dumpviewer.DumpViewerActivity;
 import tw.cchi.medthimager.ui.settings.SettingsActivity;
-import tw.cchi.medthimager.utils.CommonUtils;
+import tw.cchi.medthimager.util.CommonUtils;
 
 @RuntimePermissions
 public class CameraActivity extends BaseActivity implements

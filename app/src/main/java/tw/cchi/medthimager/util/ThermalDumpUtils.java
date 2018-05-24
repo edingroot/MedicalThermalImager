@@ -1,7 +1,6 @@
-package tw.cchi.medthimager.utils;
+package tw.cchi.medthimager.util;
 
 import android.content.Context;
-import android.graphics.Point;
 
 import com.flir.flironesdk.RenderedImage;
 

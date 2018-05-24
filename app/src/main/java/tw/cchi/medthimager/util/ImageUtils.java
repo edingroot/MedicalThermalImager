@@ -1,4 +1,4 @@
-package tw.cchi.medthimager.utils;
+package tw.cchi.medthimager.util;
 
 import android.graphics.Bitmap;
 

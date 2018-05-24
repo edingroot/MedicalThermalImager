@@ -27,7 +27,7 @@ import tw.cchi.medthimager.di.component.DaggerActivityComponent;
 import tw.cchi.medthimager.di.module.ActivityModule;
 import tw.cchi.medthimager.helper.pref.PreferencesHelper;
 import tw.cchi.medthimager.ui.auth.LoginActivity;
-import tw.cchi.medthimager.utils.AppUtils;
+import tw.cchi.medthimager.util.AppUtils;
 
 public abstract class BaseActivity extends AppCompatActivity
         implements MvpView, BaseFragment.Callback {

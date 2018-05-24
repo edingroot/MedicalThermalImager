@@ -13,7 +13,7 @@ import org.opencv.core.Point;
 import org.opencv.imgproc.Imgproc;
 
 import tw.cchi.medthimager.Config;
-import tw.cchi.medthimager.utils.ImageUtils;
+import tw.cchi.medthimager.util.ImageUtils;
 
 public class ThermalDumpProcessor {
     private final String TAG = Config.TAGPRE + getClass().getSimpleName();

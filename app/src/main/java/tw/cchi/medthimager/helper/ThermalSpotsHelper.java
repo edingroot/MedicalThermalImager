@@ -25,8 +25,8 @@ import tw.cchi.medthimager.Config;
 import tw.cchi.medthimager.component.ThermalSpotView;
 import tw.cchi.medthimager.utils.annotation.BgThreadCapable;
 import tw.cchi.medthimager.thermalproc.RawThermalDump;
-import tw.cchi.medthimager.utils.CommonUtils;
-import tw.cchi.medthimager.utils.ThermalDumpUtils;
+import tw.cchi.medthimager.util.CommonUtils;
+import tw.cchi.medthimager.util.ThermalDumpUtils;
 
 public class ThermalSpotsHelper implements Disposable {
     private final String TAG = Config.TAGPRE + getClass().getSimpleName();
