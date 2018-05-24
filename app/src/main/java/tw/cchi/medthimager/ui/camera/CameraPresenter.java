@@ -35,7 +35,6 @@ import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.schedulers.Schedulers;
 import tw.cchi.medthimager.Config;
-import tw.cchi.medthimager.MvpApplication;
 import tw.cchi.medthimager.R;
 import tw.cchi.medthimager.db.AppDatabase;
 import tw.cchi.medthimager.db.Patient;
@@ -55,7 +54,6 @@ public class CameraPresenter<V extends CameraMvpView> extends BasePresenter<V>
                 FrameProcessor.Delegate, Device.PowerUpdateDelegate {
     private final String TAG = Config.TAGPRE + getClass().getSimpleName();
 
-    @Inject MvpApplication application;
     @Inject AppCompatActivity activity;
     @Inject AppDatabase database;
     @Inject PatientThermalDumpsHelper dbPatientDumpsHelper;
@@ -95,10 +93,10 @@ public class CameraPresenter<V extends CameraMvpView> extends BasePresenter<V>
 
         application.flirDeviceDelegate.setListener(this);
 
+        // TODO: FrameProcessor is also caused memory leak (static FrameProcessor.processors)
         frameProcessor = new FrameProcessor(activity.getApplicationContext(), this, EnumSet.of(
-            RenderedImage.ImageType.ThermalRGBA8888Image,
-            RenderedImage.ImageType.ThermalRadiometricKelvinImage
-        ));
+                RenderedImage.ImageType.ThermalRGBA8888Image,
+                RenderedImage.ImageType.ThermalRadiometricKelvinImage));
         frameProcessor.setImagePalette(RenderedImage.Palette.Gray);
         frameProcessor.setEmissivity(0.98f); // human skin, water, frost
 
@@ -611,6 +609,7 @@ public class CameraPresenter<V extends CameraMvpView> extends BasePresenter<V>
 
     @Override
     public void onDetach() {
+        // Avoid memory leak
         application.flirDeviceDelegate.setListener(null);
         super.onDetach();
     }

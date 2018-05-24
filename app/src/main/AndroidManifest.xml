@@ -42,6 +42,7 @@
             android:name=".ui.settings.SettingsActivity"
             android:theme="@style/FullscreenTheme">
         </activity>
+        <activity android:name=".ui.auth.LoginActivity"/>
 
     </application>
 

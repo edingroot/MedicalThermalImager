@@ -43,7 +43,6 @@ import permissions.dispatcher.RuntimePermissions;
 import tw.cchi.medthimager.Config;
 import tw.cchi.medthimager.R;
 import tw.cchi.medthimager.component.SpotsControlView;
-import tw.cchi.medthimager.component.ThermalSpotView;
 import tw.cchi.medthimager.helper.ThermalSpotsHelper;
 import tw.cchi.medthimager.ui.base.BaseActivity;
 import tw.cchi.medthimager.ui.camera.contishoot.ContiShootDialog;
@@ -87,6 +86,12 @@ public class CameraActivity extends BaseActivity implements
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_camera);
+
+        // Check is user is authenticated here again due to this is the launcher activity
+        if (!preferencesHelper.isAuthenticated()) {
+            // finish() was already called in BaseActivity
+            return;
+        }
 
         getActivityComponent().inject(this);
         setUnBinder(ButterKnife.bind(this));

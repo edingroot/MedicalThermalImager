@@ -6,17 +6,17 @@ import retrofit2.http.FormUrlEncoded;
 import retrofit2.http.POST;
 import tw.cchi.medthimager.model.AccessTokens;
 
-public abstract class APIClient {
+public interface ApiClient {
 
     @FormUrlEncoded
-    @POST("/auth")
-    abstract Call<AccessTokens> getNewAccessToken(
+    @POST("auth")
+    Call<AccessTokens> getNewAccessToken(
             @Field("email") String email,
             @Field("password") String password);
 
     @FormUrlEncoded
-    @POST("/refreshToken")
-    abstract Call<AccessTokens> getRefreshAccessToken(
+    @POST("refreshToken")
+    Call<AccessTokens> getRefreshAccessToken(
             @Field("refresh_token") String refreshToken);
 
 }

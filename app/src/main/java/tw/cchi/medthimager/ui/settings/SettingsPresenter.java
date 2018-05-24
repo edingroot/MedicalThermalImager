@@ -21,15 +21,25 @@ public class SettingsPresenter<V extends SettingsMvpView> extends BasePresenter<
     @Override
     public void onAttach(V mvpView) {
         super.onAttach(mvpView);
+        loadSettings();
+    }
 
-        // Load and display settings
+    private void loadSettings() {
+        // Auth status
+        getMvpView().setAuthState(preferencesHelper.isAuthenticated());
+
         getMvpView().setSwClearSpotsOnDisconn(preferencesHelper.getClearSpotsOnDisconnectEnabled());
         getMvpView().setSwAutoApplyVisibleOffset(preferencesHelper.getAutoApplyVisibleOffsetEnabled());
     }
 
     @Override
-    public void onDetach() {
-        super.onDetach();
+    public void login() {
+
+    }
+
+    @Override
+    public void logout() {
+
     }
 
     @Override
@@ -40,5 +50,10 @@ public class SettingsPresenter<V extends SettingsMvpView> extends BasePresenter<
     @Override
     public void setAutoSetVisibleOffset(boolean enable) {
         preferencesHelper.setAutoApplyVisibleOffsetEnabled(enable);
+    }
+
+    @Override
+    public void onDetach() {
+        super.onDetach();
     }
 }

@@ -1,6 +1,7 @@
 package tw.cchi.medthimager;
 
 import android.app.Application;
+import android.support.annotation.Nullable;
 
 import com.squareup.leakcanary.LeakCanary;
 
@@ -10,6 +11,10 @@ import tw.cchi.medthimager.di.component.ApplicationComponent;
 import tw.cchi.medthimager.di.component.DaggerApplicationComponent;
 import tw.cchi.medthimager.di.module.ApplicationModule;
 import tw.cchi.medthimager.helper.FlirDeviceDelegate;
+import tw.cchi.medthimager.helper.api.ApiClient;
+import tw.cchi.medthimager.helper.api.ApiServiceGenerator;
+import tw.cchi.medthimager.helper.pref.PreferencesHelper;
+import tw.cchi.medthimager.model.AccessTokens;
 
 /**
  * This is able to be access globally in whole app
@@ -17,7 +22,11 @@ import tw.cchi.medthimager.helper.FlirDeviceDelegate;
 public class MvpApplication extends Application {
     private ApplicationComponent mApplicationComponent;
 
+    // Null if access tokens not exists in shared preferences
+    @Nullable public ApiClient authedApiClient;
+    // This is used to avoid memory leak due to (flir) Deivce.cachedDelegate is a static field
     @Inject public FlirDeviceDelegate flirDeviceDelegate;
+    @Inject public PreferencesHelper preferencesHelper;
 
     @Override
     public void onCreate() {
@@ -33,6 +42,8 @@ public class MvpApplication extends Application {
                 .applicationModule(new ApplicationModule(this)).build();
         mApplicationComponent.inject(this);
 
+        createAuthedAPIClient();
+
         // copyDatabaseToSDCard();
     }
 
@@ -45,6 +56,15 @@ public class MvpApplication extends Application {
         mApplicationComponent = applicationComponent;
     }
 
+    public boolean createAuthedAPIClient() {
+        AccessTokens accessTokens = preferencesHelper.getAccessTokens();
+        if (accessTokens != null) {
+            authedApiClient = ApiServiceGenerator.createService(ApiClient.class, accessTokens, getApplicationContext());
+            return true;
+        } else {
+            return false;
+        }
+    }
 
 //    /**
 //     * copyDatabaseToSDCard: Copy db file to sdcard for development purpose.

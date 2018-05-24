@@ -2,12 +2,15 @@ package tw.cchi.medthimager.ui.settings;
 
 import android.os.Bundle;
 import android.support.v7.widget.SwitchCompat;
+import android.widget.Button;
+import android.widget.TextView;
 
 import javax.inject.Inject;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnCheckedChanged;
+import butterknife.OnClick;
 import tw.cchi.medthimager.Config;
 import tw.cchi.medthimager.R;
 import tw.cchi.medthimager.ui.base.BaseActivity;
@@ -17,8 +20,12 @@ public class SettingsActivity extends BaseActivity implements SettingsMvpView {
 
     @Inject SettingsMvpPresenter<SettingsMvpView> presenter;
 
+    @BindView(R.id.txtAuthStatusDescription) TextView txtAuthStatusDescription;
+    @BindView(R.id.btnAuth) Button btnAuth;
     @BindView(R.id.swClearSpotsOnDisconn) SwitchCompat swClearSpotsOnDisconn;
     @BindView(R.id.swAutoApplyVisibleOffset) SwitchCompat swAutoApplyVisibleOffset;
+
+    private boolean authenticated = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -30,6 +37,15 @@ public class SettingsActivity extends BaseActivity implements SettingsMvpView {
         presenter.onAttach(this);
     }
 
+    @OnClick(R.id.btnAuth)
+    void onAuthClick() {
+        if (authenticated) {
+            presenter.logout();
+        } else {
+            presenter.login();
+        }
+    }
+
     @OnCheckedChanged(R.id.swClearSpotsOnDisconn)
     void onSwClearSpotsOnDisconnChanged(SwitchCompat sw) {
         presenter.setClearSpotsOnDisconnect(sw.isChecked());
@@ -38,6 +54,19 @@ public class SettingsActivity extends BaseActivity implements SettingsMvpView {
     @OnCheckedChanged(R.id.swAutoApplyVisibleOffset)
     void onSwAutoApplyVisibleOffsetChanged(SwitchCompat sw) {
         presenter.setAutoSetVisibleOffset(sw.isChecked());
+    }
+
+    // TODO: add parameter and fill user info
+    @Override
+    public void setAuthState(boolean authenticated) {
+        this.authenticated = authenticated;
+        if (authenticated) {
+            txtAuthStatusDescription.setText(getString(R.string.user_brief, "Name", "email"));
+            btnAuth.setText(R.string.logout);
+        } else {
+            txtAuthStatusDescription.setText(R.string.unauthenticated);
+            btnAuth.setText(R.string.login);
+        }
     }
 
     @Override

@@ -3,6 +3,7 @@ package tw.cchi.medthimager.ui.base;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -12,35 +13,49 @@ import android.support.design.widget.Snackbar;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import butterknife.Unbinder;
+import tw.cchi.medthimager.Config;
+import tw.cchi.medthimager.Constants;
 import tw.cchi.medthimager.MvpApplication;
 import tw.cchi.medthimager.R;
 import tw.cchi.medthimager.di.component.ActivityComponent;
 import tw.cchi.medthimager.di.component.DaggerActivityComponent;
 import tw.cchi.medthimager.di.module.ActivityModule;
+import tw.cchi.medthimager.helper.pref.AppPreferencesHelper;
+import tw.cchi.medthimager.helper.pref.PreferencesHelper;
+import tw.cchi.medthimager.ui.auth.LoginActivity;
 import tw.cchi.medthimager.utils.AppUtils;
 
 public abstract class BaseActivity extends AppCompatActivity
     implements MvpView, BaseFragment.Callback {
+    private final String TAG = Config.TAGPRE + BaseActivity.class.getSimpleName();
 
     private ActivityComponent mActivityComponent;
     private Unbinder mUnBinder;
     private Handler mainLooperHandler;
     private ProgressDialog loadingDialog;
 
+    protected PreferencesHelper preferencesHelper;
+
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
         mActivityComponent = DaggerActivityComponent.builder()
                 .activityModule(new ActivityModule(this))
                 .applicationComponent(((MvpApplication) getApplication()).getComponent())
                 .build();
         mainLooperHandler = new Handler(Looper.getMainLooper());
+
+        preferencesHelper = ((MvpApplication) getApplication()).preferencesHelper;
+
+        checkAuthenticated();
     }
 
     public ActivityComponent getActivityComponent() {
@@ -142,6 +157,18 @@ public abstract class BaseActivity extends AppCompatActivity
 
     public void setUnBinder(Unbinder unBinder) {
         mUnBinder = unBinder;
+    }
+
+    private void checkAuthenticated() {
+        for (Class guestActivityClass : Config.GUEST_ACTIVITIES) {
+            if (getClass() == guestActivityClass)
+                return;
+        }
+
+        if (!preferencesHelper.isAuthenticated()) {
+            startActivity(new Intent(this, LoginActivity.class));
+            finish();
+        }
     }
 
     @Override

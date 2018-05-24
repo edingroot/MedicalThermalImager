@@ -8,6 +8,9 @@ import dagger.Module;
 import dagger.Provides;
 import io.reactivex.disposables.CompositeDisposable;
 import tw.cchi.medthimager.di.ActivityContext;
+import tw.cchi.medthimager.ui.auth.LoginMvpPresenter;
+import tw.cchi.medthimager.ui.auth.LoginMvpView;
+import tw.cchi.medthimager.ui.auth.LoginPresenter;
 import tw.cchi.medthimager.ui.base.BaseActivity;
 import tw.cchi.medthimager.ui.camera.CameraMvpPresenter;
 import tw.cchi.medthimager.ui.camera.CameraMvpView;
@@ -50,6 +53,11 @@ public class ActivityModule {
     @Provides
     CompositeDisposable provideCompositeDisposable() {
         return new CompositeDisposable();
+    }
+
+    @Provides
+    LoginMvpPresenter<LoginMvpView> provideLoginMvpPresenter(LoginPresenter<LoginMvpView> presenter) {
+        return presenter;
     }
 
     @Provides

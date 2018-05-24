@@ -7,6 +7,7 @@ import android.os.Looper;
 import javax.inject.Inject;
 
 import io.reactivex.disposables.CompositeDisposable;
+import tw.cchi.medthimager.MvpApplication;
 import tw.cchi.medthimager.helper.fanalytics.FirebaseAnalyticsHelper;
 import tw.cchi.medthimager.helper.pref.PreferencesHelper;
 
@@ -21,8 +22,9 @@ public class BasePresenter<V extends MvpView> implements MvpPresenter<V> {
 
     protected Handler mainLooperHandler;
 
+    @Inject protected MvpApplication application;
     @Inject protected FirebaseAnalyticsHelper firebaseAnalyticsHelper;
-    @Inject protected PreferencesHelper preferencesHelper;
+    protected PreferencesHelper preferencesHelper;
 
     @Inject
     public BasePresenter(CompositeDisposable compositeDisposable) {
@@ -33,6 +35,7 @@ public class BasePresenter<V extends MvpView> implements MvpPresenter<V> {
     @Override
     public void onAttach(V mvpView) {
         this.mMvpView = mvpView;
+        this.preferencesHelper = application.preferencesHelper;
     }
 
     @Override

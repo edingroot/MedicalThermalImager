@@ -8,6 +8,7 @@
     <color name="colorBackground">#3a3b40</color>
     <color name="colorActivityBackground">@android:color/background_dark</color>
     <color name="colorControlGray">#b2b2b2</color>
+    <color name="shadow">#d0d8dc</color>
 
     <!-- for v7.widget.SwitchCompat -->
     <color name="colorControlActivated">#4ed8da</color>

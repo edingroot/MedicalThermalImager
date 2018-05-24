@@ -3,6 +3,10 @@
 
     <string name="app_name">Medical Thermal Imager</string>
 
+    <string name="authentication">Authentication</string>
+    <string name="email">Email</string>
+    <string name="password">Password</string>
+
     <!-- CameraActivity -->
     <string name="toggle_more_info">More Info \u21EA</string>
     <string name="toggle_less_info">Less Info \u21B2</string>
@@ -27,6 +31,11 @@
     <string name="settings">Settings</string>
 
     <!-- SettingsActivity -->
+    <string name="auth_status">Auth Status</string>
+    <string name="unauthenticated">Unauthenticated</string>
+    <string name="user_brief">%1$s (%2$s)</string>
+    <string name="login">Login</string>
+    <string name="logout">Logout</string>
     <string name="auto_clear_spots">Auto Clear Spots</string>
     <string name="auto_clear_spots_dscrp">Auto clear thermal spots on camera disconnect.</string>
     <string name="auto_apply_visible_image_offset">Auto Apply Visible Image Offset</string>
@@ -50,6 +59,9 @@
     <!-- Messages -->
     <string name="error_occurred">Error occurred</string>
     <string name="invalid_input">Invalid input</string>
+
+    <string name="login_failed">Login failed.</string>
+    <string name="login_failed_comm_err">Login failed: error communicating with server.</string>
 
     <string name="write_storage_required">Write storage permission is necessary for image capturing.</string>
     <string name="insert_flirone">Please insert FLIR One and select %1$s</string>

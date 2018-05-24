@@ -15,11 +15,11 @@ import tw.cchi.medthimager.model.AccessTokens;
 
 import static tw.cchi.medthimager.Config.API_BASE_URL;
 
-public class ServiceGenerator {
+public class ApiServiceGenerator {
     private static OkHttpClient.Builder httpClient;
     private static Retrofit.Builder builder;
 
-    private static AccessTokens accesTokens;
+    private static AccessTokens accessTokens;
 
     public static <S> S createService(Class<S> serviceClass) {
         httpClient = new OkHttpClient.Builder();
@@ -32,14 +32,14 @@ public class ServiceGenerator {
         return retrofit.create(serviceClass);
     }
 
-    public static <S> S createService(Class<S> serviceClass, AccessTokens accessTokens, Context context) {
+    public static <S> S createService(Class<S> serviceClass, AccessTokens accessTokens, Context applicationContext) {
         httpClient = new OkHttpClient.Builder();
         builder = new Retrofit.Builder()
                 .baseUrl(API_BASE_URL)
                 .addConverterFactory(GsonConverterFactory.create());
 
         if (accessTokens != null) {
-            accesTokens = accessTokens;
+            ApiServiceGenerator.accessTokens = accessTokens;
             final AccessTokens token = accessTokens;
             httpClient.addInterceptor(chain -> {
                 Request original = chain.request();
@@ -63,15 +63,15 @@ public class ServiceGenerator {
                 }
 
                 // We need a new client, since we don't want to make another call using our client with access token
-                APIClient tokenClient = createService(APIClient.class);
-                Call<AccessTokens> call = tokenClient.getRefreshAccessToken(accesTokens.getRefreshToken());
+                ApiClient tokenClient = createService(ApiClient.class);
+                Call<AccessTokens> call = tokenClient.getRefreshAccessToken(ApiServiceGenerator.accessTokens.getRefreshToken());
                 try {
                     retrofit2.Response<AccessTokens> tokenResponse = call.execute();
                     if (tokenResponse.code() == 200) {
                         AccessTokens newTokens = tokenResponse.body();
-                        accesTokens = newTokens;
+                        ApiServiceGenerator.accessTokens = newTokens;
 
-                        PreferencesHelper preferencesHelper = new AppPreferencesHelper(context, Constants.PREF_NAME);
+                        PreferencesHelper preferencesHelper = new AppPreferencesHelper(applicationContext, Constants.PREF_NAME);
                         preferencesHelper.setAuthenticated(true);
                         preferencesHelper.setAccessTokens(newTokens);
 
