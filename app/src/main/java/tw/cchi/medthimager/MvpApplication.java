@@ -4,15 +4,20 @@ import android.app.Application;
 
 import com.squareup.leakcanary.LeakCanary;
 
+import javax.inject.Inject;
+
 import tw.cchi.medthimager.di.component.ApplicationComponent;
 import tw.cchi.medthimager.di.component.DaggerApplicationComponent;
 import tw.cchi.medthimager.di.module.ApplicationModule;
+import tw.cchi.medthimager.helper.FlirDeviceDelegate;
 
 /**
  * This is able to be access globally in whole app
  */
 public class MvpApplication extends Application {
     private ApplicationComponent mApplicationComponent;
+
+    @Inject public FlirDeviceDelegate flirDeviceDelegate;
 
     @Override
     public void onCreate() {
