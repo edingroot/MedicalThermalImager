@@ -44,7 +44,7 @@ public class LoginActivity extends BaseActivity implements LoginMvpView {
     }
 
     @Override
-    public void launchCameraActivityAndFinish() {
+    public void startCameraActivityAndFinish() {
         startActivity(new Intent(LoginActivity.this, CameraActivity.class));
         finish();
     }

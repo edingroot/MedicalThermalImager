@@ -13,7 +13,6 @@ import android.support.design.widget.Snackbar;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.TextView;
@@ -21,21 +20,17 @@ import android.widget.Toast;
 
 import butterknife.Unbinder;
 import tw.cchi.medthimager.Config;
-import tw.cchi.medthimager.Constants;
 import tw.cchi.medthimager.MvpApplication;
 import tw.cchi.medthimager.R;
 import tw.cchi.medthimager.di.component.ActivityComponent;
 import tw.cchi.medthimager.di.component.DaggerActivityComponent;
 import tw.cchi.medthimager.di.module.ActivityModule;
-import tw.cchi.medthimager.helper.pref.AppPreferencesHelper;
 import tw.cchi.medthimager.helper.pref.PreferencesHelper;
 import tw.cchi.medthimager.ui.auth.LoginActivity;
 import tw.cchi.medthimager.utils.AppUtils;
 
 public abstract class BaseActivity extends AppCompatActivity
-    implements MvpView, BaseFragment.Callback {
-    private final String TAG = Config.TAGPRE + BaseActivity.class.getSimpleName();
-
+        implements MvpView, BaseFragment.Callback {
     private ActivityComponent mActivityComponent;
     private Unbinder mUnBinder;
     private Handler mainLooperHandler;
@@ -55,6 +50,12 @@ public abstract class BaseActivity extends AppCompatActivity
 
         preferencesHelper = ((MvpApplication) getApplication()).preferencesHelper;
 
+        checkAuthenticated();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
         checkAuthenticated();
     }
 

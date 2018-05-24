@@ -5,6 +5,7 @@ import retrofit2.http.Field;
 import retrofit2.http.FormUrlEncoded;
 import retrofit2.http.POST;
 import tw.cchi.medthimager.model.AccessTokens;
+import tw.cchi.medthimager.utils.annotation.RequireAuth;
 
 public interface ApiClient {
 
@@ -14,10 +15,15 @@ public interface ApiClient {
             @Field("email") String email,
             @Field("password") String password);
 
+    @RequireAuth
     @FormUrlEncoded
     @POST("refreshToken")
     Call<AccessTokens> getRefreshAccessToken(
             @Field("refresh_token") String refreshToken);
+
+    @RequireAuth
+    @POST("logout")
+    Call<Void> logout();
 
 }
 

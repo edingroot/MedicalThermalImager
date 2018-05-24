@@ -6,6 +6,6 @@ public interface LoginMvpView extends MvpView {
 
     void setCredentials(String email, String password);
 
-    void launchCameraActivityAndFinish();
+    void startCameraActivityAndFinish();
 
 }

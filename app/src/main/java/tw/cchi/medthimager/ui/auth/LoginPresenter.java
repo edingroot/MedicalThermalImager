@@ -9,7 +9,6 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 import tw.cchi.medthimager.Config;
-import tw.cchi.medthimager.MvpApplication;
 import tw.cchi.medthimager.R;
 import tw.cchi.medthimager.helper.api.ApiClient;
 import tw.cchi.medthimager.helper.api.ApiServiceGenerator;
@@ -42,7 +41,8 @@ public class LoginPresenter<V extends LoginMvpView> extends BasePresenter<V> imp
         guestApiClient.getNewAccessToken(email, password).enqueue(new Callback<AccessTokens>() {
             @Override
             public void onResponse(Call<AccessTokens> call, Response<AccessTokens> response) {
-                Log.i(TAG, "login: " + call.request().method() + " " + call.request().url());
+                // Log.i(TAG, "login: " + call.request().method() + " " + call.request().url());
+                Log.i(TAG, "login: got status code " + response.code());
 
                 if (response.code() == 200) {
                     AccessTokens accessTokens = response.body();
@@ -51,7 +51,7 @@ public class LoginPresenter<V extends LoginMvpView> extends BasePresenter<V> imp
                     preferencesHelper.setAuthenticated(true);
                     if (application.createAuthedAPIClient()) {
                         if (isViewAttached())
-                            getMvpView().launchCameraActivityAndFinish();
+                            getMvpView().startCameraActivityAndFinish();
                         return;
                     }
                 }
