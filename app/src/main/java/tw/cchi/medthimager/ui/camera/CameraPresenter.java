@@ -35,6 +35,7 @@ import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.schedulers.Schedulers;
 import tw.cchi.medthimager.Config;
+import tw.cchi.medthimager.MvpApplication;
 import tw.cchi.medthimager.R;
 import tw.cchi.medthimager.db.AppDatabase;
 import tw.cchi.medthimager.db.Patient;
@@ -54,6 +55,7 @@ public class CameraPresenter<V extends CameraMvpView> extends BasePresenter<V>
                 FrameProcessor.Delegate, Device.PowerUpdateDelegate {
     private final String TAG = Config.TAGPRE + getClass().getSimpleName();
 
+    @Inject MvpApplication application;
     @Inject AppCompatActivity activity;
     @Inject AppDatabase database;
     @Inject PatientThermalDumpsHelper dbPatientDumpsHelper;
@@ -91,6 +93,8 @@ public class CameraPresenter<V extends CameraMvpView> extends BasePresenter<V>
         super.onAttach(mvpView);
         loadSettings();
 
+        application.flirDeviceDelegate.setListener(this);
+
         frameProcessor = new FrameProcessor(activity.getApplicationContext(), this, EnumSet.of(
             RenderedImage.ImageType.ThermalRGBA8888Image,
             RenderedImage.ImageType.ThermalRadiometricKelvinImage
@@ -117,7 +121,7 @@ public class CameraPresenter<V extends CameraMvpView> extends BasePresenter<V>
     @Override
     public boolean startDeviceDiscovery() {
         try {
-            Device.startDiscovery(activity.getApplicationContext(), this);
+            Device.startDiscovery(activity.getApplicationContext(), application.flirDeviceDelegate);
         } catch (IllegalStateException e) {
             // it's okay if we've already started discovery
         } catch (SecurityException e) {
@@ -607,6 +611,7 @@ public class CameraPresenter<V extends CameraMvpView> extends BasePresenter<V>
 
     @Override
     public void onDetach() {
+        application.flirDeviceDelegate.setListener(null);
         super.onDetach();
     }
 }
