@@ -91,7 +91,7 @@ public class CameraPresenter<V extends CameraMvpView> extends BasePresenter<V>
         super.onAttach(mvpView);
         loadSettings();
 
-        frameProcessor = new FrameProcessor(activity, this, EnumSet.of(
+        frameProcessor = new FrameProcessor(activity.getApplicationContext(), this, EnumSet.of(
             RenderedImage.ImageType.ThermalRGBA8888Image,
             RenderedImage.ImageType.ThermalRadiometricKelvinImage
         ));
@@ -117,7 +117,7 @@ public class CameraPresenter<V extends CameraMvpView> extends BasePresenter<V>
     @Override
     public boolean startDeviceDiscovery() {
         try {
-            Device.startDiscovery(activity, this);
+            Device.startDiscovery(activity.getApplicationContext(), this);
         } catch (IllegalStateException e) {
             // it's okay if we've already started discovery
         } catch (SecurityException e) {
