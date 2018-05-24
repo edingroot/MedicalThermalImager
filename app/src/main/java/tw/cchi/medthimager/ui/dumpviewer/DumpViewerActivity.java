@@ -461,7 +461,8 @@ public class DumpViewerActivity extends BaseActivity
 
     @Override
     protected void onDestroy() {
-        presenter.onDetach();
+        if (presenter != null)
+            presenter.onDetach();
 
         recyclerDumpSwitcher.setAdapter(null);
         thermalDumpsRecyclerAdapter.setOnInteractionListener(null);

@@ -11,6 +11,7 @@ import tw.cchi.medthimager.di.component.ApplicationComponent;
 import tw.cchi.medthimager.di.component.DaggerApplicationComponent;
 import tw.cchi.medthimager.di.module.ApplicationModule;
 import tw.cchi.medthimager.helper.FlirDeviceDelegate;
+import tw.cchi.medthimager.helper.FlirFrameProcessorDelegate;
 import tw.cchi.medthimager.helper.api.ApiClient;
 import tw.cchi.medthimager.helper.api.ApiServiceGenerator;
 import tw.cchi.medthimager.helper.pref.PreferencesHelper;
@@ -24,9 +25,12 @@ public class MvpApplication extends Application {
 
     // Null if access tokens not exists in shared preferences
     @Nullable public ApiClient authedApiClient;
+    @Inject public PreferencesHelper preferencesHelper;
+
     // This is used to avoid memory leak due to (flir) Deivce.cachedDelegate is a static field
     @Inject public FlirDeviceDelegate flirDeviceDelegate;
-    @Inject public PreferencesHelper preferencesHelper;
+    // This is used to avoid memory leak due to (flir) FrameProcessor.processors is a static field
+    @Inject public FlirFrameProcessorDelegate flirFrameProcessorDelegate;
 
     @Override
     public void onCreate() {

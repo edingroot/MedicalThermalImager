@@ -544,6 +544,13 @@ public class CameraActivity extends BaseActivity implements
             return false;
         }
     }
+
+    @Override
+    protected void onDestroy() {
+        if (presenter != null)
+            presenter.onDetach();
+        super.onDestroy();
+    }
 }
 
 // Notes:

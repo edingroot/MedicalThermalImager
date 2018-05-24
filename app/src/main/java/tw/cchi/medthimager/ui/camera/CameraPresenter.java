@@ -92,9 +92,9 @@ public class CameraPresenter<V extends CameraMvpView> extends BasePresenter<V>
         loadSettings();
 
         application.flirDeviceDelegate.setListener(this);
+        application.flirFrameProcessorDelegate.setListener(this);
 
-        // TODO: FrameProcessor is also caused memory leak (static FrameProcessor.processors)
-        frameProcessor = new FrameProcessor(activity.getApplicationContext(), this, EnumSet.of(
+        frameProcessor = new FrameProcessor(activity.getApplicationContext(), application.flirFrameProcessorDelegate, EnumSet.of(
                 RenderedImage.ImageType.ThermalRGBA8888Image,
                 RenderedImage.ImageType.ThermalRadiometricKelvinImage));
         frameProcessor.setImagePalette(RenderedImage.Palette.Gray);
@@ -609,8 +609,12 @@ public class CameraPresenter<V extends CameraMvpView> extends BasePresenter<V>
 
     @Override
     public void onDetach() {
-        // Avoid memory leak
+        Log.d(TAG, "onDetach");
+
+        // Avoid memory leaks
         application.flirDeviceDelegate.setListener(null);
+        application.flirFrameProcessorDelegate.setListener(null);
+
         super.onDetach();
     }
 }

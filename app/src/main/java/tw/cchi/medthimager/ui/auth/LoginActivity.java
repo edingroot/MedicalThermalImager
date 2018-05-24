@@ -51,7 +51,8 @@ public class LoginActivity extends BaseActivity implements LoginMvpView {
 
     @Override
     protected void onDestroy() {
-        presenter.onDetach();
+        if (presenter != null)
+            presenter.onDetach();
         super.onDestroy();
     }
 }

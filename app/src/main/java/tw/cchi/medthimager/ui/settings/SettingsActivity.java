@@ -81,7 +81,8 @@ public class SettingsActivity extends BaseActivity implements SettingsMvpView {
 
     @Override
     protected void onDestroy() {
-        presenter.onDetach();
+        if (presenter != null)
+            presenter.onDetach();
         super.onDestroy();
     }
 }
