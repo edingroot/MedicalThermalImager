@@ -5,29 +5,61 @@ import android.content.SharedPreferences;
 import android.graphics.Point;
 import android.support.annotation.Nullable;
 
+import com.google.gson.Gson;
+
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
 import tw.cchi.medthimager.Config;
 import tw.cchi.medthimager.di.ApplicationContext;
 import tw.cchi.medthimager.di.PreferenceInfo;
+import tw.cchi.medthimager.model.AccessTokens;
 
 @Singleton
 public class AppPreferencesHelper implements PreferencesHelper {
+    // Authentication
+    private static final String KEY_AUTHENTICATED = "KEY_AUTHENTICATED";
+    private static final String KEY_ACCESS_TOKENS = "KEY_ACCESS_TOKENS";
+
+    // States
     private static final String KEY_SELECTED_PATIENT_UUID = "KEY_SELECTED_PATIENT_UUID";
 
+    // Settings
     private static final String KEY_DEFAULT_VISIBLE_OFFSET_ENABLED = "KEY_DEFAULT_VISIBLE_OFFSET_ENABLED";
     private static final String KEY_DEFAULT_VISIBLE_OFFSET_X = "KEY_DEFAULT_VISIBLE_OFFSET_X";
     private static final String KEY_DEFAULT_VISIBLE_OFFSET_Y = "KEY_DEFAULT_VISIBLE_OFFSET_Y";
-
     private static final String KEY_CLEAR_SPOTS_ON_DISCONNECT = "KEY_CLEAR_SPOTS_ON_DISCONNECT";
 
     private final SharedPreferences mPrefs;
+    private final Gson gson = new Gson();
 
     @Inject
     public AppPreferencesHelper(@ApplicationContext Context context,
                                 @PreferenceInfo String prefFileName) {
         mPrefs = context.getSharedPreferences(prefFileName, Context.MODE_PRIVATE);
+    }
+
+    @Override
+    public boolean isAuthenticated() {
+        return mPrefs.getBoolean(KEY_AUTHENTICATED, false);
+    }
+
+    @Override
+    public void setAuthenticated(boolean authenticated) {
+        mPrefs.edit().putBoolean(KEY_AUTHENTICATED, authenticated).apply();
+    }
+
+    @Nullable
+    @Override
+    public AccessTokens getAccessTokens() {
+        String json = mPrefs.getString(KEY_ACCESS_TOKENS, null);
+        return json == null ? null : gson.fromJson(json, AccessTokens.class);
+    }
+
+    @Override
+    public void setAccessTokens(@Nullable AccessTokens accessTokens) {
+        mPrefs.edit().putString(KEY_ACCESS_TOKENS,
+                accessTokens == null ? null : gson.toJson(accessTokens)).apply();
     }
 
     @Nullable

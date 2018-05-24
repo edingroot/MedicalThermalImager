@@ -23,5 +23,6 @@ allprojects {
 }
 
 ext {
+    retrofitVersion = '2.4.0'
     roomVersion = '1.1.0'
 }

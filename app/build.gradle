@@ -12,7 +12,6 @@
  *      https://stackoverflow.com/a/42255268
  */
 
-
 def versionMajor = 1
 def versionMinor = 5
 def versionPatch = 2
@@ -147,6 +146,11 @@ dependencies {
     implementation 'com.jakewharton.rxbinding2:rxbinding-appcompat-v7:2.1.1'
     implementation 'com.jakewharton.rxbinding2:rxbinding-design:2.1.1'
     implementation 'com.jakewharton.rxbinding2:rxbinding-recyclerview-v7:2.1.1'
+
+    // Retrofit
+    implementation "com.squareup.retrofit2:retrofit:$rootProject.retrofitVersion"
+    implementation "com.squareup.retrofit2:converter-gson:$rootProject.retrofitVersion"
+    implementation 'com.google.code.gson:gson:2.8.4'
 
     // PermissionsDispatcher
     implementation 'com.github.hotchemi:permissionsdispatcher:3.0.1'
