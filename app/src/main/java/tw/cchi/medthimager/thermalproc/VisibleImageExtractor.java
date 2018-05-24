@@ -16,7 +16,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReentrantLock;
 
 import tw.cchi.medthimager.Config;
-import tw.cchi.medthimager.utils.annotation.NewThread;
+import tw.cchi.medthimager.util.annotation.NewThread;
 
 public class VisibleImageExtractor implements FrameProcessor.Delegate {
     private final String TAG = Config.TAGPRE + getClass().getSimpleName();

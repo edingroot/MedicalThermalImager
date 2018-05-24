@@ -17,7 +17,7 @@ import tw.cchi.medthimager.Constants;
 import tw.cchi.medthimager.db.AppDatabase;
 import tw.cchi.medthimager.db.CaptureRecord;
 import tw.cchi.medthimager.db.Patient;
-import tw.cchi.medthimager.utils.annotation.NewThread;
+import tw.cchi.medthimager.util.annotation.NewThread;
 import tw.cchi.medthimager.thermalproc.RawThermalDump;
 import tw.cchi.medthimager.util.AppUtils;
 import tw.cchi.medthimager.util.FileUtils;

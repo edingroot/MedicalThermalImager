@@ -2,8 +2,8 @@ package tw.cchi.medthimager.ui.camera;
 
 import com.flir.flironesdk.RenderedImage;
 
-import tw.cchi.medthimager.utils.annotation.BgThreadCapable;
-import tw.cchi.medthimager.utils.annotation.NewThread;
+import tw.cchi.medthimager.util.annotation.BgThreadCapable;
+import tw.cchi.medthimager.util.annotation.NewThread;
 import tw.cchi.medthimager.model.ContiShootParameters;
 import tw.cchi.medthimager.ui.base.MvpPresenter;
 

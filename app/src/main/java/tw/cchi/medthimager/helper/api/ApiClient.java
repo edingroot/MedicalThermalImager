@@ -5,7 +5,7 @@ import retrofit2.http.Field;
 import retrofit2.http.FormUrlEncoded;
 import retrofit2.http.POST;
 import tw.cchi.medthimager.model.AccessTokens;
-import tw.cchi.medthimager.utils.annotation.RequireAuth;
+import tw.cchi.medthimager.util.annotation.RequireAuth;
 
 public interface ApiClient {
 

@@ -1,4 +1,4 @@
-package tw.cchi.medthimager.utils.annotation;
+package tw.cchi.medthimager.util.annotation;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -6,9 +6,9 @@ import java.lang.annotation.RetentionPolicy;
 import javax.inject.Scope;
 
 /**
- * Identifies the target is capable of executing on a background thread.
+ * Identifies the target api is authentication needed.
  */
 @Scope
 @Retention(RetentionPolicy.SOURCE)
-public @interface BgThreadCapable {
+public @interface RequireAuth {
 }
