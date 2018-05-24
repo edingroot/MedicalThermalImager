@@ -1,4 +1,4 @@
-package tw.cchi.medthimager.utils;
+package tw.cchi.medthimager.util;
 
 import java.util.ArrayList;
 import java.util.List;

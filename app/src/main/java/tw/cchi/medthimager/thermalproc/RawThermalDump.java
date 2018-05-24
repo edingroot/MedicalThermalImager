@@ -24,7 +24,7 @@ import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
 import tw.cchi.medthimager.Config;
 import tw.cchi.medthimager.Constants;
-import tw.cchi.medthimager.utils.CommonUtils;
+import tw.cchi.medthimager.util.CommonUtils;
 
 /**
  * File format v1:

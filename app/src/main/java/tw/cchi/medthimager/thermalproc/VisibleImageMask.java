@@ -11,7 +11,7 @@ import java.lang.ref.WeakReference;
 
 import io.reactivex.disposables.Disposable;
 import tw.cchi.medthimager.Config;
-import tw.cchi.medthimager.utils.ImageUtils;
+import tw.cchi.medthimager.util.ImageUtils;
 
 public class VisibleImageMask implements Disposable {
     private final String TAG = Config.TAGPRE + getClass().getSimpleName();

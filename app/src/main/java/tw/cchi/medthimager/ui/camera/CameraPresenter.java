@@ -48,7 +48,7 @@ import tw.cchi.medthimager.model.CaptureProcessInfo;
 import tw.cchi.medthimager.model.ContiShootParameters;
 import tw.cchi.medthimager.thermalproc.RawThermalDump;
 import tw.cchi.medthimager.ui.base.BasePresenter;
-import tw.cchi.medthimager.utils.AppUtils;
+import tw.cchi.medthimager.util.AppUtils;
 
 public class CameraPresenter<V extends CameraMvpView> extends BasePresenter<V>
     implements CameraMvpPresenter<V>, Device.Delegate, Device.StreamDelegate,

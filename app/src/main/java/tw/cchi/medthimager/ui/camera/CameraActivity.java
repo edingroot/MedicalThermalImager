@@ -43,14 +43,13 @@ import permissions.dispatcher.RuntimePermissions;
 import tw.cchi.medthimager.Config;
 import tw.cchi.medthimager.R;
 import tw.cchi.medthimager.component.SpotsControlView;
-import tw.cchi.medthimager.component.ThermalSpotView;
 import tw.cchi.medthimager.helper.ThermalSpotsHelper;
 import tw.cchi.medthimager.ui.base.BaseActivity;
 import tw.cchi.medthimager.ui.camera.contishoot.ContiShootDialog;
 import tw.cchi.medthimager.ui.camera.selectpatient.SelectPatientDialog;
 import tw.cchi.medthimager.ui.dumpviewer.DumpViewerActivity;
 import tw.cchi.medthimager.ui.settings.SettingsActivity;
-import tw.cchi.medthimager.utils.CommonUtils;
+import tw.cchi.medthimager.util.CommonUtils;
 
 @RuntimePermissions
 public class CameraActivity extends BaseActivity implements

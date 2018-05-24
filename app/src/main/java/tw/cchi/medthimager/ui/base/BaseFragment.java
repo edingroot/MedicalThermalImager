@@ -11,7 +11,7 @@ import android.view.View;
 
 import butterknife.Unbinder;
 import tw.cchi.medthimager.di.component.ActivityComponent;
-import tw.cchi.medthimager.utils.AppUtils;
+import tw.cchi.medthimager.util.AppUtils;
 
 public abstract class BaseFragment extends Fragment implements MvpView {
 

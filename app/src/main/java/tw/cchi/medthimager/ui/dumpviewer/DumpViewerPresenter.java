@@ -36,10 +36,10 @@ import tw.cchi.medthimager.thermalproc.RawThermalDump;
 import tw.cchi.medthimager.thermalproc.ThermalDumpProcessor;
 import tw.cchi.medthimager.thermalproc.VisibleImageExtractor;
 import tw.cchi.medthimager.ui.base.BasePresenter;
-import tw.cchi.medthimager.utils.AppUtils;
-import tw.cchi.medthimager.utils.CommonUtils;
-import tw.cchi.medthimager.utils.ImageUtils;
-import tw.cchi.medthimager.utils.ThermalDumpUtils;
+import tw.cchi.medthimager.util.AppUtils;
+import tw.cchi.medthimager.util.CommonUtils;
+import tw.cchi.medthimager.util.ImageUtils;
+import tw.cchi.medthimager.util.ThermalDumpUtils;
 
 public class DumpViewerPresenter<V extends DumpViewerMvpView> extends BasePresenter<V> implements DumpViewerMvpPresenter<V> {
     private final String TAG = Config.TAGPRE + getClass().getSimpleName();

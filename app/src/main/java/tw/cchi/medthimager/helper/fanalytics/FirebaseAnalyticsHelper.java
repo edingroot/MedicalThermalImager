@@ -12,7 +12,7 @@ import com.google.firebase.analytics.FirebaseAnalytics;
 import tw.cchi.medthimager.BuildConfig;
 import tw.cchi.medthimager.Config;
 import tw.cchi.medthimager.model.ContiShootParameters;
-import tw.cchi.medthimager.utils.AppUtils;
+import tw.cchi.medthimager.util.AppUtils;
 
 public class FirebaseAnalyticsHelper {
     private final String TAG = Config.TAGPRE + "FAHelper";
