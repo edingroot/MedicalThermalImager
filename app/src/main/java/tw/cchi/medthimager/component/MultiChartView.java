@@ -20,7 +20,7 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.Unbinder;
 import tw.cchi.medthimager.R;
-import tw.cchi.medthimager.di.BgThreadCapable;
+import tw.cchi.medthimager.utils.annotation.BgThreadCapable;
 import tw.cchi.medthimager.model.ChartParameter;
 
 public class MultiChartView extends RelativeLayout {

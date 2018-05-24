@@ -6,7 +6,7 @@ import android.support.annotation.Nullable;
 import java.util.ArrayList;
 
 import io.reactivex.Observable;
-import tw.cchi.medthimager.di.BgThreadCapable;
+import tw.cchi.medthimager.utils.annotation.BgThreadCapable;
 import tw.cchi.medthimager.helper.ThermalSpotsHelper;
 import tw.cchi.medthimager.model.ChartParameter;
 import tw.cchi.medthimager.thermalproc.RawThermalDump;

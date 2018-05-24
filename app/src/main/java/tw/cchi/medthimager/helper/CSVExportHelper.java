@@ -13,12 +13,11 @@ import javax.inject.Inject;
 
 import io.reactivex.Observable;
 import io.reactivex.schedulers.Schedulers;
-import tw.cchi.medthimager.Config;
 import tw.cchi.medthimager.Constants;
 import tw.cchi.medthimager.db.AppDatabase;
 import tw.cchi.medthimager.db.CaptureRecord;
 import tw.cchi.medthimager.db.Patient;
-import tw.cchi.medthimager.di.NewThread;
+import tw.cchi.medthimager.utils.annotation.NewThread;
 import tw.cchi.medthimager.thermalproc.RawThermalDump;
 import tw.cchi.medthimager.utils.AppUtils;
 import tw.cchi.medthimager.utils.FileUtils;

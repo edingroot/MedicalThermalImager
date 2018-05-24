@@ -23,7 +23,7 @@ import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
 import tw.cchi.medthimager.Config;
 import tw.cchi.medthimager.component.ThermalSpotView;
-import tw.cchi.medthimager.di.BgThreadCapable;
+import tw.cchi.medthimager.utils.annotation.BgThreadCapable;
 import tw.cchi.medthimager.thermalproc.RawThermalDump;
 import tw.cchi.medthimager.utils.CommonUtils;
 import tw.cchi.medthimager.utils.ThermalDumpUtils;

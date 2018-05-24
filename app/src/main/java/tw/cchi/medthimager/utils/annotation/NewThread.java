@@ -1,4 +1,4 @@
-package tw.cchi.medthimager.di;
+package tw.cchi.medthimager.utils.annotation;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;

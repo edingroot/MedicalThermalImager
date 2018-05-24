@@ -40,7 +40,7 @@ import tw.cchi.medthimager.Config;
 import tw.cchi.medthimager.R;
 import tw.cchi.medthimager.component.MultiChartView;
 import tw.cchi.medthimager.component.SpotsControlView;
-import tw.cchi.medthimager.di.BgThreadCapable;
+import tw.cchi.medthimager.utils.annotation.BgThreadCapable;
 import tw.cchi.medthimager.helper.ThermalSpotsHelper;
 import tw.cchi.medthimager.model.ChartParameter;
 import tw.cchi.medthimager.thermalproc.RawThermalDump;
