@@ -1,6 +1,7 @@
 package tw.cchi.medthimager.ui.settings;
 
 import android.os.Bundle;
+import android.support.annotation.Nullable;
 import android.support.v7.widget.SwitchCompat;
 import android.widget.Button;
 import android.widget.TextView;
@@ -13,6 +14,7 @@ import butterknife.OnCheckedChanged;
 import butterknife.OnClick;
 import tw.cchi.medthimager.Config;
 import tw.cchi.medthimager.R;
+import tw.cchi.medthimager.model.User;
 import tw.cchi.medthimager.ui.base.BaseActivity;
 
 public class SettingsActivity extends BaseActivity implements SettingsMvpView {
@@ -56,12 +58,18 @@ public class SettingsActivity extends BaseActivity implements SettingsMvpView {
         presenter.setAutoSetVisibleOffset(sw.isChecked());
     }
 
-    // TODO: add parameter and fill user info
+    /**
+     * @param user can be null if authenticated is false
+     */
     @Override
-    public void setAuthState(boolean authenticated) {
+    public void setAuthState(boolean authenticated, @Nullable User user) {
         this.authenticated = authenticated;
         if (authenticated) {
-            txtAuthStatusDescription.setText(getString(R.string.user_brief, "Name", "email"));
+            if (user != null) {
+                txtAuthStatusDescription.setText(getString(R.string.user_brief, user.getName(), user.getEmail()));
+            } else {
+                txtAuthStatusDescription.setText(getString(R.string.user_brief, "INVALID", "INVALID"));
+            }
             btnAuth.setText(R.string.logout);
         } else {
             txtAuthStatusDescription.setText(R.string.unauthenticated);

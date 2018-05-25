@@ -14,7 +14,8 @@ import tw.cchi.medthimager.helper.FlirDeviceDelegate;
 import tw.cchi.medthimager.helper.FlirFrameProcessorDelegate;
 import tw.cchi.medthimager.helper.api.ApiClient;
 import tw.cchi.medthimager.helper.api.ApiServiceGenerator;
-import tw.cchi.medthimager.helper.api.SessionManager;
+import tw.cchi.medthimager.helper.session.Session;
+import tw.cchi.medthimager.helper.session.SessionManager;
 import tw.cchi.medthimager.helper.pref.PreferencesHelper;
 import tw.cchi.medthimager.model.api.AccessTokens;
 
@@ -29,7 +30,7 @@ public class MvpApplication extends Application {
     @Inject public SessionManager sessionManager;
     @Inject public PreferencesHelper preferencesHelper;
 
-    // This is used to avoid memory leak due to (flir) Deivce.cachedDelegate is a static field
+    // This is used to avoid memory leak due to (flir) Device.cachedDelegate is a static field
     @Inject public FlirDeviceDelegate flirDeviceDelegate;
     // This is used to avoid memory leak due to (flir) FrameProcessor.processors is a static field
     @Inject public FlirFrameProcessorDelegate flirFrameProcessorDelegate;
@@ -48,7 +49,7 @@ public class MvpApplication extends Application {
                 .applicationModule(new ApplicationModule(this)).build();
         this.mApplicationComponent.inject(this);
 
-        createAuthedAPIClient(preferencesHelper.getAccessTokens());
+        createAuthedAPIClient(getSession().getAccessTokens());
 
         // copyDatabaseToSDCard();
     }
@@ -69,6 +70,10 @@ public class MvpApplication extends Application {
         } else {
             return false;
         }
+    }
+
+    public Session getSession() {
+        return sessionManager.getSession();
     }
 
 //    /**

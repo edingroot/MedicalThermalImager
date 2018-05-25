@@ -8,6 +8,7 @@ import tw.cchi.medthimager.model.User;
 
 public interface PreferencesHelper {
 
+    // Authentication api should only be accessed by class helper.session.Session
     // ------------------------- Authentication ------------------------- //
 
     boolean isAuthenticated();

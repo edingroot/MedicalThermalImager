@@ -11,12 +11,15 @@ import retrofit2.Callback;
 import retrofit2.Response;
 import tw.cchi.medthimager.Config;
 import tw.cchi.medthimager.R;
+import tw.cchi.medthimager.helper.session.Session;
 import tw.cchi.medthimager.ui.base.BasePresenter;
 
 public class SettingsPresenter<V extends SettingsMvpView> extends BasePresenter<V> implements SettingsMvpPresenter<V> {
     private final String TAG = Config.TAGPRE + getClass().getSimpleName();
 
     @Inject AppCompatActivity activity;
+
+    private Session currentSession;
 
     @Inject
     public SettingsPresenter(CompositeDisposable compositeDisposable) {
@@ -30,8 +33,10 @@ public class SettingsPresenter<V extends SettingsMvpView> extends BasePresenter<
     }
 
     private void loadSettings() {
+        currentSession = application.getSession();
+
         // Auth status
-        getMvpView().setAuthState(application.sessionManager.isSessionActive());
+        getMvpView().setAuthState(currentSession.isActive(), currentSession.getUser());
 
         getMvpView().setSwClearSpotsOnDisconn(preferencesHelper.getClearSpotsOnDisconnectEnabled());
         getMvpView().setSwAutoApplyVisibleOffset(preferencesHelper.getAutoApplyVisibleOffsetEnabled());
@@ -56,7 +61,7 @@ public class SettingsPresenter<V extends SettingsMvpView> extends BasePresenter<
 
                 // Logout anyway
                 // activity will be notified to finish by invalidateSession()
-                application.sessionManager.invalidateSession();
+                currentSession.invalidate();
             }
 
             @Override
@@ -65,7 +70,7 @@ public class SettingsPresenter<V extends SettingsMvpView> extends BasePresenter<
                 t.printStackTrace();
 
                 // Logout anyway
-                application.sessionManager.invalidateSession();
+                currentSession.invalidate();
             }
         });
     }

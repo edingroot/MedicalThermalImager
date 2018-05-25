@@ -1,4 +1,4 @@
-package tw.cchi.medthimager.helper.api;
+package tw.cchi.medthimager.helper.session;
 
 import android.content.Intent;
 import android.util.Log;
@@ -10,54 +10,23 @@ import javax.inject.Inject;
 import tw.cchi.medthimager.Config;
 import tw.cchi.medthimager.MvpApplication;
 import tw.cchi.medthimager.helper.pref.PreferencesHelper;
-import tw.cchi.medthimager.model.User;
-import tw.cchi.medthimager.model.api.AccessTokens;
 import tw.cchi.medthimager.ui.auth.LoginActivity;
 
 public class SessionManager {
     private final String TAG = Config.TAGPRE + getClass().getSimpleName();
 
     private MvpApplication application;
-    private PreferencesHelper preferencesHelper;
     private final ArrayList<AuthEventListener> authEventListeners = new ArrayList<>();
+    private Session session;
 
     @Inject
     public SessionManager(MvpApplication application, PreferencesHelper preferencesHelper) {
         this.application = application;
-        this.preferencesHelper = preferencesHelper;
+        this.session = new Session(this, preferencesHelper);
     }
 
-    /**
-     * Note: make sure {@link MvpApplication#createAuthedAPIClient(AccessTokens)} has been called.
-     */
-    public synchronized void activateSession(AccessTokens accessTokens, User user) {
-        Log.i(TAG, "Activating session");
-        preferencesHelper.setAccessTokens(accessTokens);
-        preferencesHelper.setUser(user);
-        preferencesHelper.setAuthenticated(true);
-        notifyLogin();
-    }
-
-    public synchronized void invalidateSession() {
-        Log.i(TAG, "Invalidating session");
-        preferencesHelper.setAuthenticated(false);
-        preferencesHelper.setAccessTokens(null);
-        preferencesHelper.setUser(null);
-        application.authedApiClient = null;
-        notifyLogout();
-
-        // Ask to login
-        Intent intent = new Intent(application, LoginActivity.class);
-        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
-        application.startActivity(intent);
-    }
-
-    public void updateTokens(AccessTokens accessTokens) {
-        preferencesHelper.setAccessTokens(accessTokens);
-    }
-
-    public boolean isSessionActive() {
-        return preferencesHelper.isAuthenticated();
+    public Session getSession() {
+        return session;
     }
 
     public void addAuthEventListener(AuthEventListener listener) {
@@ -70,6 +39,22 @@ public class SessionManager {
         synchronized (authEventListeners) {
             this.authEventListeners.remove(listener);
         }
+    }
+
+    synchronized void handleSessionActivate() {
+        Log.i(TAG, "Activating session");
+        notifyLogin();
+    }
+
+    synchronized void handleSessionInvalidate() {
+        Log.i(TAG, "Invalidating session");
+        application.authedApiClient = null;
+        notifyLogout();
+
+        // Ask to login
+        Intent intent = new Intent(application, LoginActivity.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
+        application.startActivity(intent);
     }
 
     private void notifyLogin() {

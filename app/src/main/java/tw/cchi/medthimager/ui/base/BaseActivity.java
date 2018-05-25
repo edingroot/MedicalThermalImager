@@ -25,7 +25,7 @@ import tw.cchi.medthimager.R;
 import tw.cchi.medthimager.di.component.ActivityComponent;
 import tw.cchi.medthimager.di.component.DaggerActivityComponent;
 import tw.cchi.medthimager.di.module.ActivityModule;
-import tw.cchi.medthimager.helper.api.SessionManager;
+import tw.cchi.medthimager.helper.session.SessionManager;
 import tw.cchi.medthimager.helper.pref.PreferencesHelper;
 import tw.cchi.medthimager.ui.auth.LoginActivity;
 import tw.cchi.medthimager.util.AppUtils;
@@ -166,7 +166,7 @@ public abstract class BaseActivity extends AppCompatActivity
                 return;
         }
 
-        if (!application.sessionManager.isSessionActive()) {
+        if (!application.getSession().isActive()) {
             Intent intent = new Intent(this, LoginActivity.class);
             intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
             startActivity(intent);

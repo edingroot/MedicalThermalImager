@@ -73,7 +73,7 @@ public class ApiServiceGenerator {
                 if (responseCount(response) >= 2) {
                     // If both the original call and the call with refreshed token failed,
                     // it will probably keep failing, so don't try again.
-                    application.sessionManager.invalidateSession();
+                    application.getSession().invalidate();
                     return null;
                 }
 
@@ -86,17 +86,17 @@ public class ApiServiceGenerator {
                         AccessTokens newTokens = tokenResponse.body();
                         ApiServiceGenerator.accessTokens = newTokens;
 
-                        application.sessionManager.updateTokens(newTokens);
+                        application.getSession().setAccessTokens(newTokens);
 
                         return response.request().newBuilder()
                                 .header("Authorization", newTokens.getTokenType() + " " + newTokens.getAccessToken())
                                 .build();
                     } else {
-                        application.sessionManager.invalidateSession();
+                        application.getSession().invalidate();
                         return null;
                     }
                 } catch (Exception e) {
-                    application.sessionManager.invalidateSession();
+                    application.getSession().invalidate();
                     return null;
                 }
             });

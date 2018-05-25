@@ -89,7 +89,7 @@ public class CameraActivity extends BaseActivity implements
 
         // Check is user is authenticated here again to prevent further actions
         // due to this is the launcher activity.
-        if (!application.sessionManager.isSessionActive()) {
+        if (!application.getSession().isActive()) {
             // finish() was already called in BaseActivity
             return;
         }

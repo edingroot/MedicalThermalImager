@@ -1,5 +1,6 @@
 package tw.cchi.medthimager.ui.auth;
 
+import java.net.UnknownHostException;
 import java.util.concurrent.atomic.AtomicReference;
 
 import javax.inject.Inject;
@@ -14,8 +15,8 @@ import tw.cchi.medthimager.Config;
 import tw.cchi.medthimager.R;
 import tw.cchi.medthimager.helper.api.ApiClient;
 import tw.cchi.medthimager.helper.api.ApiServiceGenerator;
-import tw.cchi.medthimager.model.api.AccessTokens;
 import tw.cchi.medthimager.model.User;
+import tw.cchi.medthimager.model.api.AccessTokens;
 import tw.cchi.medthimager.ui.base.BasePresenter;
 
 public class LoginPresenter<V extends LoginMvpView> extends BasePresenter<V> implements LoginMvpPresenter<V> {
@@ -75,14 +76,14 @@ public class LoginPresenter<V extends LoginMvpView> extends BasePresenter<V> imp
 
                     if (isViewAttached()) {
                         getMvpView().setLoggingIn(false);
-                        if (e instanceof HttpException)
+                        if (e instanceof UnknownHostException || e instanceof HttpException)
                             getMvpView().showSnackBar(R.string.login_failed_comm_err);
                         else
                             getMvpView().showSnackBar(R.string.login_failed);
                     }
                 },
                 () -> {
-                    application.sessionManager.activateSession(accessTokensRef.get(), userRef.get());
+                    application.getSession().activate(accessTokensRef.get(), userRef.get());
 
                     if (isViewAttached()) {
                         getMvpView().startCameraActivityAndFinish();
