@@ -62,6 +62,7 @@
 
     <string name="login_failed">Login failed.</string>
     <string name="login_failed_comm_err">Login failed: error communicating with server.</string>
+    <string name="please_login">Please login.</string>
 
     <string name="write_storage_required">Write storage permission is necessary for image capturing.</string>
     <string name="insert_flirone">Please insert FLIR One and select %1$s</string>

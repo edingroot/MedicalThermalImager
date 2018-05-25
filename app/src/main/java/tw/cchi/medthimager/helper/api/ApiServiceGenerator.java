@@ -1,7 +1,5 @@
 package tw.cchi.medthimager.helper.api;
 
-import android.content.Context;
-
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
@@ -11,10 +9,8 @@ import retrofit2.Retrofit;
 import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory;
 import retrofit2.converter.gson.GsonConverterFactory;
 import tw.cchi.medthimager.Config;
-import tw.cchi.medthimager.Constants;
-import tw.cchi.medthimager.helper.pref.AppPreferencesHelper;
-import tw.cchi.medthimager.helper.pref.PreferencesHelper;
-import tw.cchi.medthimager.model.AccessTokens;
+import tw.cchi.medthimager.MvpApplication;
+import tw.cchi.medthimager.model.api.AccessTokens;
 
 import static tw.cchi.medthimager.Config.API_BASE_URL;
 
@@ -48,7 +44,7 @@ public class ApiServiceGenerator {
         return retrofit.create(serviceClass);
     }
 
-    public static <S> S createService(Class<S> serviceClass, AccessTokens accessTokens, Context applicationContext) {
+    public static <S> S createService(Class<S> serviceClass, AccessTokens accessTokens, MvpApplication application) {
         httpClient = new OkHttpClient.Builder();
         builder = new Retrofit.Builder()
                 .baseUrl(API_BASE_URL)
@@ -77,6 +73,7 @@ public class ApiServiceGenerator {
                 if (responseCount(response) >= 2) {
                     // If both the original call and the call with refreshed token failed,
                     // it will probably keep failing, so don't try again.
+                    application.sessionManager.invalidateSession();
                     return null;
                 }
 
@@ -89,17 +86,17 @@ public class ApiServiceGenerator {
                         AccessTokens newTokens = tokenResponse.body();
                         ApiServiceGenerator.accessTokens = newTokens;
 
-                        PreferencesHelper preferencesHelper = new AppPreferencesHelper(applicationContext, Constants.PREF_NAME);
-                        preferencesHelper.setAuthenticated(true);
-                        preferencesHelper.setAccessTokens(newTokens);
+                        application.sessionManager.updateTokens(newTokens);
 
                         return response.request().newBuilder()
                                 .header("Authorization", newTokens.getTokenType() + " " + newTokens.getAccessToken())
                                 .build();
                     } else {
+                        application.sessionManager.invalidateSession();
                         return null;
                     }
                 } catch (Exception e) {
+                    application.sessionManager.invalidateSession();
                     return null;
                 }
             });

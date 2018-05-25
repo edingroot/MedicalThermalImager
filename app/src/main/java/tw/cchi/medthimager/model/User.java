@@ -1,5 +1,8 @@
 package tw.cchi.medthimager.model;
 
+import tw.cchi.medthimager.util.annotation.ApiIntegration;
+
+@ApiIntegration
 public class User {
     private final int id;
     private final String email;

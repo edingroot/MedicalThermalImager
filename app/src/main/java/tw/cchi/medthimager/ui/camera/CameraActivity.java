@@ -87,8 +87,9 @@ public class CameraActivity extends BaseActivity implements
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_camera);
 
-        // Check is user is authenticated here again due to this is the launcher activity
-        if (!preferencesHelper.isAuthenticated()) {
+        // Check is user is authenticated here again to prevent further actions
+        // due to this is the launcher activity.
+        if (!application.sessionManager.isSessionActive()) {
             // finish() was already called in BaseActivity
             return;
         }

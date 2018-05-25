@@ -3,7 +3,7 @@ package tw.cchi.medthimager.helper.pref;
 import android.graphics.Point;
 import android.support.annotation.Nullable;
 
-import tw.cchi.medthimager.model.AccessTokens;
+import tw.cchi.medthimager.model.api.AccessTokens;
 import tw.cchi.medthimager.model.User;
 
 public interface PreferencesHelper {

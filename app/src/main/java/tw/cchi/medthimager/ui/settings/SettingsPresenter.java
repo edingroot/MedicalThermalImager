@@ -31,7 +31,7 @@ public class SettingsPresenter<V extends SettingsMvpView> extends BasePresenter<
 
     private void loadSettings() {
         // Auth status
-        getMvpView().setAuthState(preferencesHelper.isAuthenticated());
+        getMvpView().setAuthState(application.sessionManager.isSessionActive());
 
         getMvpView().setSwClearSpotsOnDisconn(preferencesHelper.getClearSpotsOnDisconnectEnabled());
         getMvpView().setSwAutoApplyVisibleOffset(preferencesHelper.getAutoApplyVisibleOffsetEnabled());
@@ -52,10 +52,11 @@ public class SettingsPresenter<V extends SettingsMvpView> extends BasePresenter<
         application.authedApiClient.logout().enqueue(new Callback<Void>() {
             @Override
             public void onResponse(Call<Void> call, Response<Void> response) {
-                Log.i(TAG, "logout: got status code " + response.code());
+                Log.i(TAG, "onLogout: got status code " + response.code());
 
                 // Logout anyway
-                clearCredentialsAndFinish();
+                // activity will be notified to finish by invalidateSession()
+                application.sessionManager.invalidateSession();
             }
 
             @Override
@@ -64,7 +65,7 @@ public class SettingsPresenter<V extends SettingsMvpView> extends BasePresenter<
                 t.printStackTrace();
 
                 // Logout anyway
-                clearCredentialsAndFinish();
+                application.sessionManager.invalidateSession();
             }
         });
     }
@@ -77,13 +78,6 @@ public class SettingsPresenter<V extends SettingsMvpView> extends BasePresenter<
     @Override
     public void setAutoSetVisibleOffset(boolean enable) {
         preferencesHelper.setAutoApplyVisibleOffsetEnabled(enable);
-    }
-
-    private void clearCredentialsAndFinish() {
-        preferencesHelper.setAuthenticated(false);
-        preferencesHelper.setAccessTokens(null);
-        // TODO: clear user info
-        activity.finish();
     }
 
     @Override

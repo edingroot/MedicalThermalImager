@@ -25,17 +25,19 @@ import tw.cchi.medthimager.R;
 import tw.cchi.medthimager.di.component.ActivityComponent;
 import tw.cchi.medthimager.di.component.DaggerActivityComponent;
 import tw.cchi.medthimager.di.module.ActivityModule;
+import tw.cchi.medthimager.helper.api.SessionManager;
 import tw.cchi.medthimager.helper.pref.PreferencesHelper;
 import tw.cchi.medthimager.ui.auth.LoginActivity;
 import tw.cchi.medthimager.util.AppUtils;
 
 public abstract class BaseActivity extends AppCompatActivity
-        implements MvpView, BaseFragment.Callback {
+        implements MvpView, BaseFragment.Callback, SessionManager.AuthEventListener {
     private ActivityComponent mActivityComponent;
     private Unbinder mUnBinder;
     private Handler mainLooperHandler;
     private ProgressDialog loadingDialog;
 
+    protected MvpApplication application;
     protected PreferencesHelper preferencesHelper;
 
     @Override
@@ -48,15 +50,13 @@ public abstract class BaseActivity extends AppCompatActivity
                 .build();
         mainLooperHandler = new Handler(Looper.getMainLooper());
 
-        preferencesHelper = ((MvpApplication) getApplication()).preferencesHelper;
+        application = (MvpApplication) getApplication();
+        application.sessionManager.addAuthEventListener(this);
 
-        checkAuthenticated();
-    }
+        // Sugar
+        preferencesHelper = application.preferencesHelper;
 
-    @Override
-    protected void onResume() {
-        super.onResume();
-        checkAuthenticated();
+        finishIfNotAuthorized();
     }
 
     public ActivityComponent getActivityComponent() {
@@ -160,23 +160,40 @@ public abstract class BaseActivity extends AppCompatActivity
         mUnBinder = unBinder;
     }
 
-    private void checkAuthenticated() {
+    private void finishIfNotAuthorized() {
         for (Class guestActivityClass : Config.GUEST_ACTIVITIES) {
             if (getClass() == guestActivityClass)
                 return;
         }
 
-        if (!preferencesHelper.isAuthenticated()) {
-            startActivity(new Intent(this, LoginActivity.class));
+        if (!application.sessionManager.isSessionActive()) {
+            Intent intent = new Intent(this, LoginActivity.class);
+            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+            startActivity(intent);
             finish();
         }
     }
 
     @Override
+    public void onLogin() {
+    }
+
+    @Override
+    public void onLogout() {
+        showToast(R.string.please_login);
+
+        // Explicitly finish active activities
+        // Login activity will be started by SessionManager
+        finish();
+    }
+
+    @Override
     protected void onDestroy() {
-        if (mUnBinder != null) {
+        application.sessionManager.removeAuthEventListener(this);
+
+        if (mUnBinder != null)
             mUnBinder.unbind();
-        }
+
         super.onDestroy();
     }
 

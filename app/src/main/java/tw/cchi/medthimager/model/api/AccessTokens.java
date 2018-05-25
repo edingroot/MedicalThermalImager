@@ -1,5 +1,8 @@
-package tw.cchi.medthimager.model;
+package tw.cchi.medthimager.model.api;
 
+import tw.cchi.medthimager.util.annotation.ApiIntegration;
+
+@ApiIntegration
 public class AccessTokens {
     private String access_token;
     private String token_type;

@@ -14,7 +14,7 @@ import tw.cchi.medthimager.Config;
 import tw.cchi.medthimager.R;
 import tw.cchi.medthimager.helper.api.ApiClient;
 import tw.cchi.medthimager.helper.api.ApiServiceGenerator;
-import tw.cchi.medthimager.model.AccessTokens;
+import tw.cchi.medthimager.model.api.AccessTokens;
 import tw.cchi.medthimager.model.User;
 import tw.cchi.medthimager.ui.base.BasePresenter;
 
@@ -48,8 +48,8 @@ public class LoginPresenter<V extends LoginMvpView> extends BasePresenter<V> imp
 
         // Note: Only the 2xx responses will go to onNext
         guestApiClient.getNewAccessToken(email, password).flatMap((Response<AccessTokens> response) -> {
-            // Log.i(TAG, "[login] " + call.request().method() + " " + call.request().url());
-            // Log.i(TAG, "[login] AccessTokens: got status code " + response.code());
+            // Log.i(TAG, "[onLogin] " + call.request().method() + " " + call.request().url());
+            // Log.i(TAG, "[onLogin] AccessTokens: got status code " + response.code());
 
             if (response.code() == 200 &&
                     application.createAuthedAPIClient(response.body()) &&
@@ -82,9 +82,7 @@ public class LoginPresenter<V extends LoginMvpView> extends BasePresenter<V> imp
                     }
                 },
                 () -> {
-                    preferencesHelper.setAccessTokens(accessTokensRef.get());
-                    preferencesHelper.setUser(userRef.get());
-                    preferencesHelper.setAuthenticated(true);
+                    application.sessionManager.activateSession(accessTokensRef.get(), userRef.get());
 
                     if (isViewAttached()) {
                         getMvpView().startCameraActivityAndFinish();

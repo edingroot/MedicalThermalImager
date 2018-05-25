@@ -14,8 +14,9 @@ import tw.cchi.medthimager.helper.FlirDeviceDelegate;
 import tw.cchi.medthimager.helper.FlirFrameProcessorDelegate;
 import tw.cchi.medthimager.helper.api.ApiClient;
 import tw.cchi.medthimager.helper.api.ApiServiceGenerator;
+import tw.cchi.medthimager.helper.api.SessionManager;
 import tw.cchi.medthimager.helper.pref.PreferencesHelper;
-import tw.cchi.medthimager.model.AccessTokens;
+import tw.cchi.medthimager.model.api.AccessTokens;
 
 /**
  * This is able to be access globally in whole app
@@ -25,6 +26,7 @@ public class MvpApplication extends Application {
 
     // Null if access tokens not exists in shared preferences
     @Nullable public ApiClient authedApiClient;
+    @Inject public SessionManager sessionManager;
     @Inject public PreferencesHelper preferencesHelper;
 
     // This is used to avoid memory leak due to (flir) Deivce.cachedDelegate is a static field
@@ -42,9 +44,9 @@ public class MvpApplication extends Application {
         }
         LeakCanary.install(this);
 
-        mApplicationComponent = DaggerApplicationComponent.builder()
+        this.mApplicationComponent = DaggerApplicationComponent.builder()
                 .applicationModule(new ApplicationModule(this)).build();
-        mApplicationComponent.inject(this);
+        this.mApplicationComponent.inject(this);
 
         createAuthedAPIClient(preferencesHelper.getAccessTokens());
 
@@ -62,7 +64,7 @@ public class MvpApplication extends Application {
 
     public boolean createAuthedAPIClient(AccessTokens accessTokens) {
         if (accessTokens != null) {
-            authedApiClient = ApiServiceGenerator.createService(ApiClient.class, accessTokens, getApplicationContext());
+            authedApiClient = ApiServiceGenerator.createService(ApiClient.class, accessTokens, this);
             return true;
         } else {
             return false;
