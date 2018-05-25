@@ -1,5 +1,7 @@
 package tw.cchi.medthimager.helper.api;
 
+import android.util.Log;
+
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
@@ -15,6 +17,8 @@ import tw.cchi.medthimager.model.api.AccessTokens;
 import static tw.cchi.medthimager.Config.API_BASE_URL;
 
 public class ApiServiceGenerator {
+    private static final String TAG = Config.TAGPRE + ApiServiceGenerator.class.getSimpleName();
+
     private static OkHttpClient.Builder httpClient;
     private static Retrofit.Builder builder;
 
@@ -73,7 +77,6 @@ public class ApiServiceGenerator {
                 if (responseCount(response) >= 2) {
                     // If both the original call and the call with refreshed token failed,
                     // it will probably keep failing, so don't try again.
-                    application.getSession().invalidate();
                     return null;
                 }
 
@@ -112,6 +115,7 @@ public class ApiServiceGenerator {
         while ((response = response.priorResponse()) != null) {
             result++;
         }
+        Log.d(TAG, "authenticator responseCount=" + result);
         return result;
     }
 }

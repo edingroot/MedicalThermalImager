@@ -14,6 +14,7 @@ import tw.cchi.medthimager.MvpApplication;
 import tw.cchi.medthimager.db.AppDatabase;
 import tw.cchi.medthimager.di.ApplicationContext;
 import tw.cchi.medthimager.di.PreferenceInfo;
+import tw.cchi.medthimager.helper.api.ApiHelper;
 import tw.cchi.medthimager.helper.fanalytics.FirebaseAnalyticsHelper;
 import tw.cchi.medthimager.helper.pref.AppPreferencesHelper;
 import tw.cchi.medthimager.helper.pref.PreferencesHelper;
@@ -66,6 +67,12 @@ public class ApplicationModule {
     @Singleton
     FirebaseAnalyticsHelper provideFirebaseAnalyticsHelper() {
         return new FirebaseAnalyticsHelper(mvpApplication, firebaseAnalytics);
+    }
+
+    @Provides
+    @Singleton
+    ApiHelper provideApiHelper(ApiHelper apiHelper) {
+        return apiHelper;
     }
 
 }

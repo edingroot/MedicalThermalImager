@@ -186,7 +186,7 @@ public abstract class BaseActivity extends AppCompatActivity
 
     @Override
     public void onLogout() {
-        showToast(R.string.please_login);
+        mainLooperHandler.post(() -> showToast(R.string.please_login));
 
         // Explicitly finish active activities
         // Login activity will be started by SessionManager

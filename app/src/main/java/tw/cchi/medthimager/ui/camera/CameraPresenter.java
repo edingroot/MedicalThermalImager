@@ -609,8 +609,6 @@ public class CameraPresenter<V extends CameraMvpView> extends BasePresenter<V>
 
     @Override
     public void onDetach() {
-        Log.d(TAG, "onDetach");
-
         // Avoid memory leaks
         application.flirDeviceDelegate.setListener(null);
         application.flirFrameProcessorDelegate.setListener(null);

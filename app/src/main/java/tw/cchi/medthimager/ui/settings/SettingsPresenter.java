@@ -5,12 +5,14 @@ import android.util.Log;
 
 import javax.inject.Inject;
 
+import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 import tw.cchi.medthimager.Config;
 import tw.cchi.medthimager.R;
+import tw.cchi.medthimager.helper.api.ApiHelper;
 import tw.cchi.medthimager.helper.session.Session;
 import tw.cchi.medthimager.ui.base.BasePresenter;
 
@@ -18,6 +20,7 @@ public class SettingsPresenter<V extends SettingsMvpView> extends BasePresenter<
     private final String TAG = Config.TAGPRE + getClass().getSimpleName();
 
     @Inject AppCompatActivity activity;
+    @Inject ApiHelper apiHelper;
 
     private Session currentSession;
 
@@ -35,11 +38,20 @@ public class SettingsPresenter<V extends SettingsMvpView> extends BasePresenter<
     private void loadSettings() {
         currentSession = application.getSession();
 
-        // Auth status
         getMvpView().setAuthState(currentSession.isActive(), currentSession.getUser());
-
         getMvpView().setSwClearSpotsOnDisconn(preferencesHelper.getClearSpotsOnDisconnectEnabled());
         getMvpView().setSwAutoApplyVisibleOffset(preferencesHelper.getAutoApplyVisibleOffsetEnabled());
+
+        // Refresh data asynchronously
+        apiHelper.refreshUserProfile().observeOn(AndroidSchedulers.mainThread()).subscribe(success -> {
+            if (isViewAttached()) {
+                if (success) {
+                    getMvpView().setAuthState(currentSession.isActive(), currentSession.getUser());
+                } else {
+                    getMvpView().showSnackBar(R.string.error_refresh_profile);
+                }
+            }
+        });
     }
 
     @Override
