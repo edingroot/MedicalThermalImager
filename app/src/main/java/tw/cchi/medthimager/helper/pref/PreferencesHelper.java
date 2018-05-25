@@ -4,6 +4,7 @@ import android.graphics.Point;
 import android.support.annotation.Nullable;
 
 import tw.cchi.medthimager.model.AccessTokens;
+import tw.cchi.medthimager.model.User;
 
 public interface PreferencesHelper {
 
@@ -17,6 +18,11 @@ public interface PreferencesHelper {
     AccessTokens getAccessTokens();
 
     void setAccessTokens(@Nullable AccessTokens accessTokens);
+
+    @Nullable
+    User getUser();
+
+    void setUser(@Nullable User user);
 
     // ------------------------- States ------------------------- //
 

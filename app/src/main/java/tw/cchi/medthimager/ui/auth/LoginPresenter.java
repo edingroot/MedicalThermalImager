@@ -1,18 +1,21 @@
 package tw.cchi.medthimager.ui.auth;
 
-import android.util.Log;
+import java.util.concurrent.atomic.AtomicReference;
 
 import javax.inject.Inject;
 
+import io.reactivex.Observable;
+import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
-import retrofit2.Call;
-import retrofit2.Callback;
+import io.reactivex.schedulers.Schedulers;
+import retrofit2.HttpException;
 import retrofit2.Response;
 import tw.cchi.medthimager.Config;
 import tw.cchi.medthimager.R;
 import tw.cchi.medthimager.helper.api.ApiClient;
 import tw.cchi.medthimager.helper.api.ApiServiceGenerator;
 import tw.cchi.medthimager.model.AccessTokens;
+import tw.cchi.medthimager.model.User;
 import tw.cchi.medthimager.ui.base.BasePresenter;
 
 public class LoginPresenter<V extends LoginMvpView> extends BasePresenter<V> implements LoginMvpPresenter<V> {
@@ -38,38 +41,56 @@ public class LoginPresenter<V extends LoginMvpView> extends BasePresenter<V> imp
         if (email.isEmpty() || password.isEmpty())
             return;
 
-        guestApiClient.getNewAccessToken(email, password).enqueue(new Callback<AccessTokens>() {
-            @Override
-            public void onResponse(Call<AccessTokens> call, Response<AccessTokens> response) {
-                // Log.i(TAG, "login: " + call.request().method() + " " + call.request().url());
-                Log.i(TAG, "login: got status code " + response.code());
+        getMvpView().setLoggingIn(true);
 
-                if (response.code() == 200) {
-                    AccessTokens accessTokens = response.body();
-                    preferencesHelper.setAccessTokens(accessTokens);
-                    // TODO: fetch user info
+        AtomicReference<AccessTokens> accessTokensRef = new AtomicReference<>();
+        AtomicReference<User> userRef = new AtomicReference<>();
+
+        // Note: Only the 2xx responses will go to onNext
+        guestApiClient.getNewAccessToken(email, password).flatMap((Response<AccessTokens> response) -> {
+            // Log.i(TAG, "[login] " + call.request().method() + " " + call.request().url());
+            // Log.i(TAG, "[login] AccessTokens: got status code " + response.code());
+
+            if (response.code() == 200 &&
+                    application.createAuthedAPIClient(response.body()) &&
+                    application.authedApiClient != null) {
+                accessTokensRef.set(response.body());
+                return application.authedApiClient.getProfile();
+            } else {
+                throw new Error();
+            }
+        }).flatMap((Response<User> response) -> {
+            if (response.code() == 200) {
+                userRef.set(response.body());
+                return Observable.just(true);
+            } else {
+                throw new Error();
+            }
+        }).subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe(
+                o -> {},
+                e -> {
+                    e.printStackTrace();
+
+                    if (isViewAttached()) {
+                        getMvpView().setLoggingIn(false);
+                        if (e instanceof HttpException)
+                            getMvpView().showSnackBar(R.string.login_failed_comm_err);
+                        else
+                            getMvpView().showSnackBar(R.string.login_failed);
+                    }
+                },
+                () -> {
+                    preferencesHelper.setAccessTokens(accessTokensRef.get());
+                    preferencesHelper.setUser(userRef.get());
                     preferencesHelper.setAuthenticated(true);
-                    if (application.createAuthedAPIClient()) {
-                        if (isViewAttached())
-                            getMvpView().startCameraActivityAndFinish();
-                        return;
+
+                    if (isViewAttached()) {
+                        getMvpView().startCameraActivityAndFinish();
                     }
                 }
-
-                // If fails
-                if (isViewAttached())
-                    getMvpView().showSnackBar(R.string.login_failed);
-            }
-
-            @Override
-            public void onFailure(Call<AccessTokens> call, Throwable t) {
-                call.cancel();
-                t.printStackTrace();
-
-                if (isViewAttached())
-                    getMvpView().showSnackBar(R.string.login_failed_comm_err);
-            }
-        });
+            );
     }
 
     @Override

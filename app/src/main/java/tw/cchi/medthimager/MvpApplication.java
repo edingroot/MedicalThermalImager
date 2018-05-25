@@ -46,7 +46,7 @@ public class MvpApplication extends Application {
                 .applicationModule(new ApplicationModule(this)).build();
         mApplicationComponent.inject(this);
 
-        createAuthedAPIClient();
+        createAuthedAPIClient(preferencesHelper.getAccessTokens());
 
         // copyDatabaseToSDCard();
     }
@@ -60,8 +60,7 @@ public class MvpApplication extends Application {
         mApplicationComponent = applicationComponent;
     }
 
-    public boolean createAuthedAPIClient() {
-        AccessTokens accessTokens = preferencesHelper.getAccessTokens();
+    public boolean createAuthedAPIClient(AccessTokens accessTokens) {
         if (accessTokens != null) {
             authedApiClient = ApiServiceGenerator.createService(ApiClient.class, accessTokens, getApplicationContext());
             return true;

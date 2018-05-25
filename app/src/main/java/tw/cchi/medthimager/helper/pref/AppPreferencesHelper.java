@@ -14,12 +14,14 @@ import tw.cchi.medthimager.Config;
 import tw.cchi.medthimager.di.ApplicationContext;
 import tw.cchi.medthimager.di.PreferenceInfo;
 import tw.cchi.medthimager.model.AccessTokens;
+import tw.cchi.medthimager.model.User;
 
 @Singleton
 public class AppPreferencesHelper implements PreferencesHelper {
     // Authentication
     private static final String KEY_AUTHENTICATED = "KEY_AUTHENTICATED";
     private static final String KEY_ACCESS_TOKENS = "KEY_ACCESS_TOKENS";
+    private static final String KEY_USER = "KEY_USER";
 
     // States
     private static final String KEY_SELECTED_PATIENT_UUID = "KEY_SELECTED_PATIENT_UUID";
@@ -60,6 +62,18 @@ public class AppPreferencesHelper implements PreferencesHelper {
     public void setAccessTokens(@Nullable AccessTokens accessTokens) {
         mPrefs.edit().putString(KEY_ACCESS_TOKENS,
                 accessTokens == null ? null : gson.toJson(accessTokens)).apply();
+    }
+
+    @Nullable
+    @Override
+    public User getUser() {
+        String json = mPrefs.getString(KEY_USER, null);
+        return json == null ? null : gson.fromJson(json, User.class);
+    }
+
+    @Override
+    public void setUser(@Nullable User user) {
+        mPrefs.edit().putString(KEY_USER, user == null ? null : gson.toJson(user)).apply();
     }
 
     @Nullable

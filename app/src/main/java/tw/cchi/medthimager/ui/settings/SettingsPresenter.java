@@ -52,7 +52,7 @@ public class SettingsPresenter<V extends SettingsMvpView> extends BasePresenter<
         application.authedApiClient.logout().enqueue(new Callback<Void>() {
             @Override
             public void onResponse(Call<Void> call, Response<Void> response) {
-                Log.i(TAG, "logout: got status code " + response.code()); // 201 for success
+                Log.i(TAG, "logout: got status code " + response.code());
 
                 // Logout anyway
                 clearCredentialsAndFinish();

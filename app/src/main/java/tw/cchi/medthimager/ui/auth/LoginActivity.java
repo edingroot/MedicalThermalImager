@@ -2,6 +2,7 @@ package tw.cchi.medthimager.ui.auth;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.widget.Button;
 import android.widget.EditText;
 
 import javax.inject.Inject;
@@ -21,6 +22,7 @@ public class LoginActivity extends BaseActivity implements LoginMvpView {
 
     @BindView(R.id.editEmail) EditText editEmail;
     @BindView(R.id.editPassword) EditText editPassword;
+    @BindView(R.id.btnLogin) Button btnLogin;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -41,6 +43,17 @@ public class LoginActivity extends BaseActivity implements LoginMvpView {
     public void setCredentials(String email, String password) {
         editEmail.setText(email);
         editPassword.setText(password);
+    }
+
+    @Override
+    public void setLoggingIn(boolean loggingIn) {
+        if (loggingIn) {
+            btnLogin.setEnabled(false);
+            showLoading();
+        } else {
+            hideLoading();
+            btnLogin.setEnabled(true);
+        }
     }
 
     @Override

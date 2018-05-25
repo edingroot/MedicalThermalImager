@@ -151,8 +151,10 @@ dependencies {
 
     // Retrofit
     implementation "com.squareup.retrofit2:retrofit:$rootProject.retrofitVersion"
+    implementation "com.squareup.retrofit2:adapter-rxjava2:$rootProject.retrofitVersion"
     implementation "com.squareup.retrofit2:converter-gson:$rootProject.retrofitVersion"
     implementation 'com.google.code.gson:gson:2.8.4'
+    implementation 'com.squareup.okhttp3:logging-interceptor:3.10.0'
 
     // PermissionsDispatcher
     implementation 'com.github.hotchemi:permissionsdispatcher:3.0.1'

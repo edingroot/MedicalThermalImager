@@ -5,9 +5,12 @@ import android.content.Context;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
+import okhttp3.logging.HttpLoggingInterceptor;
 import retrofit2.Call;
 import retrofit2.Retrofit;
+import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory;
 import retrofit2.converter.gson.GsonConverterFactory;
+import tw.cchi.medthimager.Config;
 import tw.cchi.medthimager.Constants;
 import tw.cchi.medthimager.helper.pref.AppPreferencesHelper;
 import tw.cchi.medthimager.helper.pref.PreferencesHelper;
@@ -25,7 +28,20 @@ public class ApiServiceGenerator {
         httpClient = new OkHttpClient.Builder();
         builder = new Retrofit.Builder()
                 .baseUrl(API_BASE_URL)
+                .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
                 .addConverterFactory(GsonConverterFactory.create());
+
+        httpClient.addInterceptor(new HttpLoggingInterceptor().setLevel(Config.API_LOGGING_LEVEL));
+
+        httpClient.addInterceptor(chain -> {
+            Request original = chain.request();
+            Request request = original.newBuilder()
+                    .header("Accept", "application/json")
+                    .header("Content-type", "application/json")
+                    .method(original.method(), original.body())
+                    .build();
+            return chain.proceed(request);
+        });
 
         OkHttpClient client = httpClient.build();
         Retrofit retrofit = builder.client(client).build();
@@ -36,22 +52,24 @@ public class ApiServiceGenerator {
         httpClient = new OkHttpClient.Builder();
         builder = new Retrofit.Builder()
                 .baseUrl(API_BASE_URL)
+                .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
                 .addConverterFactory(GsonConverterFactory.create());
 
         if (accessTokens != null) {
             ApiServiceGenerator.accessTokens = accessTokens;
             final AccessTokens token = accessTokens;
+
+            httpClient.addInterceptor(new HttpLoggingInterceptor().setLevel(Config.API_LOGGING_LEVEL));
+
             httpClient.addInterceptor(chain -> {
                 Request original = chain.request();
-
-                Request.Builder requestBuilder = original.newBuilder()
+                Request request = original.newBuilder()
                         .header("Accept", "application/json")
                         .header("Content-type", "application/json")
                         .header("Authorization",
                                 token.getTokenType() + " " + token.getAccessToken())
-                        .method(original.method(), original.body());
-
-                Request request = requestBuilder.build();
+                        .method(original.method(), original.body())
+                        .build();
                 return chain.proceed(request);
             });
 

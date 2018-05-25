@@ -5,9 +5,12 @@ public class AccessTokens {
     private String token_type;
     private Integer expires_in;
     private String refresh_token;
-    private String scope;
+    /* private String scope;
     private String client_id;
-    private String client_secret;
+    private String client_secret; */
+
+    private String error;
+    private String message;
 
     public String getAccessToken() {
         return access_token;
@@ -46,7 +49,15 @@ public class AccessTokens {
         this.refresh_token = refresh_token;
     }
 
-    public String getScope() {
+    public String getError() {
+        return error;
+    }
+
+    public String getMessage() {
+        return message;
+    }
+
+    /* public String getScope() {
         return scope;
     }
 
@@ -68,6 +79,5 @@ public class AccessTokens {
 
     public void setClientSecret(String client_secret) {
         this.client_secret = client_secret;
-    }
-
+    } */
 }
