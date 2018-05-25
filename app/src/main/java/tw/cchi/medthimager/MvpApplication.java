@@ -1,6 +1,11 @@
 package tw.cchi.medthimager;
 
 import android.app.Application;
+import android.app.Service;
+import android.content.ComponentName;
+import android.content.Intent;
+import android.content.ServiceConnection;
+import android.os.IBinder;
 import android.support.annotation.Nullable;
 
 import com.squareup.leakcanary.LeakCanary;
@@ -18,12 +23,17 @@ import tw.cchi.medthimager.helper.session.Session;
 import tw.cchi.medthimager.helper.session.SessionManager;
 import tw.cchi.medthimager.helper.pref.PreferencesHelper;
 import tw.cchi.medthimager.model.api.AccessTokens;
+import tw.cchi.medthimager.service.SyncService;
 
 /**
  * This is able to be access globally in whole app
  */
 public class MvpApplication extends Application {
     private ApplicationComponent mApplicationComponent;
+
+    private SyncService syncService;
+    protected ServiceConnection syncServiceConnection;
+    protected boolean syncServiceBounded = false;
 
     // Null if access tokens not exists in shared preferences
     @Nullable public ApiClient authedApiClient;
@@ -50,6 +60,7 @@ public class MvpApplication extends Application {
         this.mApplicationComponent.inject(this);
 
         createAuthedAPIClient(getSession().getAccessTokens());
+        startService(SyncService.getStartIntent(this));
 
         // copyDatabaseToSDCard();
     }
@@ -75,6 +86,41 @@ public class MvpApplication extends Application {
     public Session getSession() {
         return sessionManager.getSession();
     }
+
+    public synchronized void getSyncService(final OnServiceBoundedListener listener) {
+        if (syncServiceBounded) {
+            listener.onServiceBounded(syncService);
+        } else {
+            syncServiceConnection = new ServiceConnection() {
+                @Override
+                public void onServiceConnected(ComponentName componentName, IBinder service) {
+                    syncService = ((SyncService.ServiceBinder) service).getService();
+                    listener.onServiceBounded(syncService);
+                }
+
+                @Override
+                public void onServiceDisconnected(ComponentName componentName) {
+                    syncService = null;
+                    syncServiceBounded = false;
+                }
+            };
+            syncServiceBounded = bindService(
+                    new Intent(this, SyncService.class), syncServiceConnection, BIND_AUTO_CREATE);
+        }
+    }
+
+    @Override
+    public void onTerminate() {
+        if (syncServiceBounded)
+            unbindService(syncServiceConnection);
+
+        super.onTerminate();
+    }
+
+    public interface OnServiceBoundedListener {
+        void onServiceBounded(Service service);
+    }
+
 
 //    /**
 //     * copyDatabaseToSDCard: Copy db file to sdcard for development purpose.
@@ -103,5 +149,4 @@ public class MvpApplication extends Application {
 //            e.printStackTrace();
 //        }
 //    }
-
 }
