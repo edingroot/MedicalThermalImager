@@ -33,6 +33,8 @@ public interface MvpView {
 
     void showToast(@StringRes int resId, Object... formatArgs);
 
+    boolean isNetworkConnected();
+
     void hideKeyboard();
 
 }

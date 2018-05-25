@@ -13,7 +13,11 @@ import io.reactivex.Observable;
 import tw.cchi.medthimager.R;
 import tw.cchi.medthimager.thermalproc.RawThermalDump;
 
-public class ThermalDumpUtils {
+public final class ThermalDumpUtils {
+
+    private ThermalDumpUtils() {
+        // This utility class is not publicly instantiable
+    }
 
     public static String generateCaptureFilename() {
         SimpleDateFormat sdf = new SimpleDateFormat("MMdd-HHmmss-SSS", Locale.getDefault());

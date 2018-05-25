@@ -25,10 +25,11 @@ import tw.cchi.medthimager.R;
 import tw.cchi.medthimager.di.component.ActivityComponent;
 import tw.cchi.medthimager.di.component.DaggerActivityComponent;
 import tw.cchi.medthimager.di.module.ActivityModule;
-import tw.cchi.medthimager.helper.session.SessionManager;
 import tw.cchi.medthimager.helper.pref.PreferencesHelper;
+import tw.cchi.medthimager.helper.session.SessionManager;
 import tw.cchi.medthimager.ui.auth.LoginActivity;
 import tw.cchi.medthimager.util.AppUtils;
+import tw.cchi.medthimager.util.NetworkUtils;
 
 public abstract class BaseActivity extends AppCompatActivity
         implements MvpView, BaseFragment.Callback, SessionManager.AuthEventListener {
@@ -137,6 +138,11 @@ public abstract class BaseActivity extends AppCompatActivity
     @Override
     public void showToast(@StringRes int resId, Object... formatArgs) {
         showToast(getString(resId, formatArgs));
+    }
+
+    @Override
+    public boolean isNetworkConnected() {
+        return NetworkUtils.isNetworkConnected(getApplicationContext());
     }
 
     @Override

@@ -42,6 +42,11 @@ public class LoginPresenter<V extends LoginMvpView> extends BasePresenter<V> imp
         if (email.isEmpty() || password.isEmpty())
             return;
 
+        if (!getMvpView().isNetworkConnected()) {
+            getMvpView().showSnackBar(R.string.no_network_access);
+            return;
+        }
+
         getMvpView().setLoggingIn(true);
 
         AtomicReference<AccessTokens> accessTokensRef = new AtomicReference<>();

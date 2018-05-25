@@ -48,6 +48,7 @@ public class LoginActivity extends BaseActivity implements LoginMvpView {
     @Override
     public void setLoggingIn(boolean loggingIn) {
         if (loggingIn) {
+            hideKeyboard();
             btnLogin.setEnabled(false);
             showLoading();
         } else {

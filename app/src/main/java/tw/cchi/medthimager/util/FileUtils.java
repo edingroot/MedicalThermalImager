@@ -3,7 +3,11 @@ package tw.cchi.medthimager.util;
 import java.io.File;
 import java.util.ArrayList;
 
-public class FileUtils {
+public final class FileUtils {
+
+    private FileUtils() {
+        // This utility class is not publicly instantiable
+    }
 
     public static ArrayList<File> getAllFiles(String rootDir) {
         ArrayList<File> files = new ArrayList<>();

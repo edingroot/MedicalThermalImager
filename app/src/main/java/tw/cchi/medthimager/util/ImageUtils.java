@@ -17,7 +17,11 @@ import java.util.ArrayList;
 import static org.opencv.core.Core.FILLED;
 import static org.opencv.imgproc.Imgproc.drawContours;
 
-public class ImageUtils {
+public final class ImageUtils {
+
+    private ImageUtils() {
+        // This utility class is not publicly instantiable
+    }
 
     /**
      * [Android] Save bitmap to PNG file.
