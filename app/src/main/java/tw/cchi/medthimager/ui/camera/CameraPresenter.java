@@ -37,7 +37,7 @@ import io.reactivex.schedulers.Schedulers;
 import tw.cchi.medthimager.Config;
 import tw.cchi.medthimager.R;
 import tw.cchi.medthimager.db.AppDatabase;
-import tw.cchi.medthimager.db.Patient;
+import tw.cchi.medthimager.db.model.Patient;
 import tw.cchi.medthimager.db.helper.PatientThermalDumpsHelper;
 import tw.cchi.medthimager.util.annotation.BgThreadCapable;
 import tw.cchi.medthimager.util.annotation.NewThread;

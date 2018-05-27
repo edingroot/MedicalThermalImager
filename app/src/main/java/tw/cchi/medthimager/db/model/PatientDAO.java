@@ -1,4 +1,4 @@
-package tw.cchi.medthimager.db;
+package tw.cchi.medthimager.db.model;
 
 import android.arch.persistence.room.Dao;
 import android.arch.persistence.room.Delete;
@@ -21,11 +21,14 @@ public abstract class PatientDAO {
         return patient == null ? get(Patient.DEFAULT_PATIENT_CUID) : patient;
     }
 
-    @Query("select * from patients where cuid in (:cuids)")
-    public abstract List<Patient> findAllByCUIDs(String[] cuids);
-
     @Query("select * from patients where name like :name limit 1")
     public abstract Patient findByName(String name);
+
+    @Query("select * from patients where uuid is null")
+    public abstract List<Patient> findNullUuids();
+
+    @Query("select * from patients where cuid in (:cuids)")
+    public abstract List<Patient> findAllByCUIDs(String[] cuids);
 
     @Insert
     public abstract void insertAll(Patient... patients);

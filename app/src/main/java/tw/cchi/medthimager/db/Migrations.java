@@ -7,6 +7,8 @@ import android.support.annotation.NonNull;
 import java.util.ArrayList;
 import java.util.List;
 
+import tw.cchi.medthimager.db.model.Patient;
+
 final class Migrations {
 
 //    static final Migration MIGRATION_2_3 = new Migration(2, 3) {

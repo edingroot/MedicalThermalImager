@@ -10,6 +10,10 @@ import android.support.annotation.NonNull;
 import android.util.Log;
 
 import tw.cchi.medthimager.db.converter.DateConverter;
+import tw.cchi.medthimager.db.model.CaptureRecord;
+import tw.cchi.medthimager.db.model.CaptureRecordDAO;
+import tw.cchi.medthimager.db.model.Patient;
+import tw.cchi.medthimager.db.model.PatientDAO;
 
 @Database(entities = {
         Patient.class,

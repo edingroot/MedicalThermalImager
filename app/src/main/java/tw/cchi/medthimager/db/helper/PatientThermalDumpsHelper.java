@@ -6,7 +6,7 @@ import javax.inject.Inject;
 import io.reactivex.Observable;
 import io.reactivex.schedulers.Schedulers;
 import tw.cchi.medthimager.db.AppDatabase;
-import tw.cchi.medthimager.db.CaptureRecord;
+import tw.cchi.medthimager.db.model.CaptureRecord;
 
 public class PatientThermalDumpsHelper {
     private AppDatabase database;

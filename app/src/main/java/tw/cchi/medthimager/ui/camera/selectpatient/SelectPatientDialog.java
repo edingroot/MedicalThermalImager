@@ -23,7 +23,7 @@ import butterknife.ButterKnife;
 import tw.cchi.medthimager.R;
 import tw.cchi.medthimager.ui.camera.selectpatient.adapter.PatientSelectsRecyclerAdapter;
 import tw.cchi.medthimager.db.AppDatabase;
-import tw.cchi.medthimager.db.Patient;
+import tw.cchi.medthimager.db.model.Patient;
 
 public class SelectPatientDialog {
     private static final int UPDATE_PATIENTS = 1;
