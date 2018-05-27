@@ -40,11 +40,11 @@ public interface CameraMvpPresenter<V extends CameraMvpView> extends MvpPresente
 
     // --------------------------------- Getter / Setter / Updates ------------------------------- //
 
-    String getCurrentPatientUuid();
+    String getCurrentPatientCuid();
 
     String getCurrentPatientName();
 
-    void setCurrentPatient(String patientUUID);
+    void setCurrentPatient(String patientCuid);
 
     boolean isDeviceAttached();
 

@@ -11,12 +11,12 @@ import java.util.UUID;
 
 @Entity(tableName = "patients")
 public class Patient {
-    public static final String DEFAULT_PATIENT_UUID = "AAAAAAAA-BBBB-CCCC-DDDD-123456789012";
+    public static final String DEFAULT_PATIENT_CUID = "AAAAAAAA-BBBB-CCCC-DDDD-123456789012";
     public static final String DEFAULT_PATIENT_NAME = "Not Specified";
 
     @PrimaryKey
-    @ColumnInfo(name = "uuid")
-    @NonNull private String uuid;
+    @ColumnInfo(name = "cuid")
+    @NonNull private String cuid;
 
     @ColumnInfo(name = "name")
     private String name;
@@ -25,31 +25,31 @@ public class Patient {
     private Date createdAt;
 
     @Ignore
-    public Patient(@NonNull String uuid, String name) {
-        this.uuid = uuid;
+    public Patient(@NonNull String cuid, String name) {
+        this.cuid = cuid;
         this.name = name;
         this.createdAt = new Date();
     }
 
     @Ignore
     public Patient(String name) {
-        this.uuid = UUID.randomUUID().toString();
+        this.cuid = UUID.randomUUID().toString();
         this.name = name;
         this.createdAt = new Date();
     }
 
-    public Patient(@NonNull String uuid, String name, Date createdAt) {
-        this.uuid = uuid;
+    public Patient(@NonNull String cuid, String name, Date createdAt) {
+        this.cuid = cuid;
         this.name = name;
         this.createdAt = createdAt;
     }
 
-    public String getUuid() {
-        return uuid;
+    public String getCuid() {
+        return cuid;
     }
 
-    public void setUuid(@NonNull String uuid) {
-        this.uuid = uuid;
+    public void setCuid(@NonNull String cuid) {
+        this.cuid = cuid;
     }
 
     public String getName() {

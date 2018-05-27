@@ -17,11 +17,11 @@ public class PatientThermalDumpsHelper {
     }
 
     /**
-     * @param patientUUID null if no patient selected
+     * @param patientCuid null if no patient selected
      */
-    public Observable addCaptureRecord(final String patientUUID, final String title, final String filenamePrefix) {
+    public Observable addCaptureRecord(final String patientCuid, final String title, final String filenamePrefix) {
         return Observable.create(emitter ->
-            database.captureRecordDAO().insertAll(new CaptureRecord(patientUUID, title, filenamePrefix)))
+            database.captureRecordDAO().insertAll(new CaptureRecord(patientCuid, title, filenamePrefix)))
             .subscribeOn(Schedulers.io());
     }
 

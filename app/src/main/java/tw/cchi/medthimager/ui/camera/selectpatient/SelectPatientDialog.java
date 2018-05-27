@@ -36,7 +36,7 @@ public class SelectPatientDialog {
     private PatientSelectsRecyclerAdapter patientRecyclerAdapter;
 
     private List<Patient> patients;
-    private String selectedPatientUUID;
+    private String selectedPatientCuid;
 
     @BindView(R.id.editPatientName) EditText editPatientName;
     @BindView(R.id.btnAddPatient) Button btnAddPatient;
@@ -57,7 +57,7 @@ public class SelectPatientDialog {
                         patientRecyclerAdapter.setPatients((ArrayList<Patient>) patients);
                         progressBarLoading.setVisibility(View.INVISIBLE);
                         recyclerPatientList.setVisibility(View.VISIBLE);
-                        updateSelectedPatientByUUID(selectedPatientUUID);
+                        updateSelectedPatientByCuid(selectedPatientCuid);
                         break;
                 }
             }
@@ -65,16 +65,16 @@ public class SelectPatientDialog {
     }
 
     /**
-     * @param patientUUID null if no patient selected
+     * @param patientCuid null if no patient selected
      */
-    public void setSelectedPatientUUID(@Nullable String patientUUID) {
-        if (patientUUID == null)
-            selectedPatientUUID = Patient.DEFAULT_PATIENT_UUID;
+    public void setSelectedPatientCuid(@Nullable String patientCuid) {
+        if (patientCuid == null)
+            selectedPatientCuid = Patient.DEFAULT_PATIENT_CUID;
         else
-            selectedPatientUUID = patientUUID;
+            selectedPatientCuid = patientCuid;
 
         if (patientRecyclerAdapter != null)
-            updateSelectedPatientByUUID(patientUUID);
+            updateSelectedPatientByCuid(patientCuid);
     }
 
     public SelectPatientDialog show() {
@@ -109,7 +109,7 @@ public class SelectPatientDialog {
         btnAddPatient.setOnClickListener(v -> handleAddPatient());
 
         btnOk.setOnClickListener(v -> {
-            onInteractionListener.onOkClicked(selectedPatientUUID);
+            onInteractionListener.onOkClicked(selectedPatientCuid);
             dismiss();
         });
 
@@ -118,7 +118,7 @@ public class SelectPatientDialog {
             public void onSelected(View v, int position) {
                 // Check if there isn't only the default patient: "Not Specified"
                 if (patients.size() != 1) {
-                    selectedPatientUUID = patients.get(position).getUuid();
+                    selectedPatientCuid = patients.get(position).getCuid();
                 }
             }
 
@@ -135,7 +135,7 @@ public class SelectPatientDialog {
                             // Remove patient data from database
                             setUILoading();
                             new Thread(() -> {
-                                if (selectedPatientUUID != null && selectedPatientUUID.equals(patientRemoving.getUuid()))
+                                if (selectedPatientCuid != null && selectedPatientCuid.equals(patientRemoving.getCuid()))
                                     patientRecyclerAdapter.setSelectedPosition(-1);
 
                                 database.patientDAO().delete(patientRemoving);
@@ -153,13 +153,13 @@ public class SelectPatientDialog {
         );
     }
 
-    private void updateSelectedPatientByUUID(String patientUUID) {
+    private void updateSelectedPatientByCuid(String patientCuid) {
         if (patientRecyclerAdapter == null) return;
 
         int selectedPatientIndex = -1;
-        if (patientUUID != null) {
+        if (patientCuid != null) {
             for (int i = 0; i < patients.size(); i++) {
-                if (patients.get(i).getUuid().equals(patientUUID)) {
+                if (patients.get(i).getCuid().equals(patientCuid)) {
                     selectedPatientIndex = i;
                     break;
                 }
@@ -191,6 +191,6 @@ public class SelectPatientDialog {
     }
 
     public interface OnInteractionListener {
-        void onOkClicked(String selectedPatientUUID);
+        void onOkClicked(String selectedPatientCuid);
     }
 }

@@ -37,14 +37,13 @@ public abstract class AppDatabase extends RoomDatabase {
     private static AppDatabase buildDatabase(Context context) {
         Log.i(TAG, "Building database: " + context.getDatabasePath(DATABASE_NAME));
 
-        return Room.databaseBuilder(context,
-            AppDatabase.class, DATABASE_NAME)
+        return Room.databaseBuilder(context, AppDatabase.class, DATABASE_NAME)
             .addCallback(new RoomDatabase.Callback() {
                 @Override
                 public void onCreate (@NonNull SupportSQLiteDatabase db){
                     String sql = String.format(
-                        "insert into patients (`uuid`, `name`, `created_at`) values ('%s', '%s', '2000-1-1 00:00:00')",
-                        Patient.DEFAULT_PATIENT_UUID,
+                        "insert into patients (`cuid`, `name`, `created_at`) values ('%s', '%s', '2000-1-1 00:00:00')",
+                        Patient.DEFAULT_PATIENT_CUID,
                         Patient.DEFAULT_PATIENT_NAME);
                     db.execSQL(sql);
                 }
@@ -53,6 +52,7 @@ public abstract class AppDatabase extends RoomDatabase {
                 public void onOpen (@NonNull SupportSQLiteDatabase db){
                     // Do something every time database is open
                 }
-            }).build();
+            })
+            .build();
     }
 }

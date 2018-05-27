@@ -17,8 +17,8 @@ public abstract class CaptureRecordDAO {
     @Query("select * from capture_records where uuid in (:uuids)")
     public abstract List<CaptureRecord> loadAllByUUIDs(String[] uuids);
 
-    @Query("select * from capture_records where patient_uuid = :patientUUID order by created_at desc")
-    public abstract List<CaptureRecord> findByPatientUUID(String patientUUID);
+    @Query("select * from capture_records where patient_cuid = :patientCuid order by created_at desc")
+    public abstract List<CaptureRecord> findByPatientCuid(String patientCuid);
 
     @Query("select * from capture_records where title like :title limit 1")
     public abstract CaptureRecord findByTitle(String title);
@@ -31,18 +31,18 @@ public abstract class CaptureRecordDAO {
 
     @Transaction
     public void insertAndAutoCreatePatient(PatientDAO patientDAO, CaptureRecord captureRecord) {
-        String patientUUID = captureRecord.getPatientUuid();
+        String patientCuid = captureRecord.getPatientCuid();
 
-        if (patientUUID == null || patientUUID.length() == 0) {
+        if (patientCuid == null || patientCuid.length() == 0) {
             // Patient not specified
-            patientUUID = Patient.DEFAULT_PATIENT_UUID;
-            captureRecord.setPatientUuid(patientUUID);
+            patientCuid = Patient.DEFAULT_PATIENT_CUID;
+            captureRecord.setPatientCuid(patientCuid);
         } else {
-            if (patientDAO.get(patientUUID) == null) {
+            if (patientDAO.get(patientCuid) == null) {
                 // Patient not found in app database
                 // TODO: get patient name from server?
-                String patientName = patientUUID;
-                patientDAO.insertAll(new Patient(patientUUID, patientName));
+                String patientName = patientCuid;
+                patientDAO.insertAll(new Patient(patientCuid, patientName));
             }
         }
 

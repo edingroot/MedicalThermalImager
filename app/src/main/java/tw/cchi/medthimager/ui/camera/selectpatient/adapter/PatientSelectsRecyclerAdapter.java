@@ -64,7 +64,7 @@ public class PatientSelectsRecyclerAdapter extends RecyclerView.Adapter<PatientS
             onInteractionListener.onSelected(v, positionToSet);
         });
 
-        if (!patient.getUuid().equals(Patient.DEFAULT_PATIENT_UUID)) {
+        if (!patient.getCuid().equals(Patient.DEFAULT_PATIENT_CUID)) {
             holder.txtRemove.setOnClickListener(v -> onInteractionListener.onRemoveClicked(v, holderPosition));
         } else {
             holder.txtRemove.setVisibility(View.INVISIBLE);

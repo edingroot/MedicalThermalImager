@@ -2,15 +2,15 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "a4b1636b318d5807fe0e7ce25595606c",
+    "identityHash": "0054b95d660359c616b5d9175ce1c173",
     "entities": [
       {
         "tableName": "patients",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`uuid` TEXT NOT NULL, `name` TEXT, `created_at` INTEGER, PRIMARY KEY(`uuid`))",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`cuid` TEXT NOT NULL, `name` TEXT, `created_at` INTEGER, PRIMARY KEY(`cuid`))",
         "fields": [
           {
-            "fieldPath": "uuid",
-            "columnName": "uuid",
+            "fieldPath": "cuid",
+            "columnName": "cuid",
             "affinity": "TEXT",
             "notNull": true
           },
@@ -29,7 +29,7 @@
         ],
         "primaryKey": {
           "columnNames": [
-            "uuid"
+            "cuid"
           ],
           "autoGenerate": false
         },
@@ -38,7 +38,7 @@
       },
       {
         "tableName": "capture_records",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`uuid` TEXT NOT NULL, `patient_uuid` TEXT, `title` TEXT, `filename_prefix` TEXT, `created_at` INTEGER, PRIMARY KEY(`uuid`), FOREIGN KEY(`patient_uuid`) REFERENCES `patients`(`uuid`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`uuid` TEXT NOT NULL, `patient_cuid` TEXT, `title` TEXT, `filename_prefix` TEXT, `created_at` INTEGER, PRIMARY KEY(`uuid`), FOREIGN KEY(`patient_cuid`) REFERENCES `patients`(`cuid`) ON UPDATE NO ACTION ON DELETE CASCADE )",
         "fields": [
           {
             "fieldPath": "uuid",
@@ -47,8 +47,8 @@
             "notNull": true
           },
           {
-            "fieldPath": "patientUuid",
-            "columnName": "patient_uuid",
+            "fieldPath": "patientCuid",
+            "columnName": "patient_cuid",
             "affinity": "TEXT",
             "notNull": false
           },
@@ -79,12 +79,12 @@
         },
         "indices": [
           {
-            "name": "index_capture_records_patient_uuid",
+            "name": "index_capture_records_patient_cuid",
             "unique": false,
             "columnNames": [
-              "patient_uuid"
+              "patient_cuid"
             ],
-            "createSql": "CREATE  INDEX `index_capture_records_patient_uuid` ON `${TABLE_NAME}` (`patient_uuid`)"
+            "createSql": "CREATE  INDEX `index_capture_records_patient_cuid` ON `${TABLE_NAME}` (`patient_cuid`)"
           }
         ],
         "foreignKeys": [
@@ -93,10 +93,10 @@
             "onDelete": "CASCADE",
             "onUpdate": "NO ACTION",
             "columns": [
-              "patient_uuid"
+              "patient_cuid"
             ],
             "referencedColumns": [
-              "uuid"
+              "cuid"
             ]
           }
         ]
@@ -104,7 +104,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, \"a4b1636b318d5807fe0e7ce25595606c\")"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, \"0054b95d660359c616b5d9175ce1c173\")"
     ]
   }
 }

@@ -51,7 +51,7 @@ import tw.cchi.medthimager.util.CommonUtils;
  *  (M+3) ~ (M+4)    visible image alignment Y offset (dump pixel offset * 10)
  *  (M+5) ~ (M+10)   -
  *  (M+11) ~ (M+50)  title tag (up to 40 ascii chars)
- *  (M+51) ~ (M+82)  patient UUID (32 ascii chars, no '-')
+ *  (M+51) ~ (M+82)  patient CUID (32 ascii chars, no '-')
  *  (M+83) ~ (M+90)  -
  *  (M+91)           number of thermal spot markers (up to 20 spot markers)
  *  (M+92) ~ (M+171) thermal spot marker #1 ~ #20, (x: 2 bytes, y: 2 bytes)
@@ -62,7 +62,7 @@ public class RawThermalDump implements Disposable {
 
     private int formatVersion = 3;
     private String title = null;
-    private String patientUUID = null;
+    private String patientCuid = null;
     private int width;
     private int height;
     private int[] thermalValues; // 0.01K = 1, (C = val/100 - 273.15)
@@ -139,9 +139,9 @@ public class RawThermalDump implements Disposable {
                 rawThermalDump.title = new String(Arrays.copyOfRange(bytes, M + 11, eofIndex));
             }
 
-            // Read patient UUID
+            // Read patient CUID
             if (bytes[M + 51] != 0) {
-                rawThermalDump.patientUUID = new String(Arrays.copyOfRange(bytes, M + 51, M + 82 + 1));
+                rawThermalDump.patientCuid = new String(Arrays.copyOfRange(bytes, M + 51, M + 82 + 1));
             }
 
             // Read spot marker positions
@@ -215,11 +215,11 @@ public class RawThermalDump implements Disposable {
                 bytes[M + 11] = 0;
             }
 
-            // Patient UUID
-            if (patientUUID != null) {
-                byte[] patientUUIDBytes = this.patientUUID.getBytes();
+            // Patient CUID
+            if (patientCuid != null) {
+                byte[] patientCuidBytes = this.patientCuid.getBytes();
                 for (int i = 0; i < 32; i++) {
-                    bytes[M + 51 + i] = patientUUIDBytes[i];
+                    bytes[M + 51 + i] = patientCuidBytes[i];
                 }
             } else {
                 // Set the first char as NULL
@@ -357,17 +357,17 @@ public class RawThermalDump implements Disposable {
         return true;
     }
 
-    public String getPatientUUID() {
-        return patientUUID;
+    public String getPatientCuid() {
+        return patientCuid;
     }
 
-    public boolean setPatientUUID(String patientUUID) {
-        patientUUID = patientUUID.replace("-", "");
-        if (patientUUID.length() != 32)
+    public boolean setPatientCuid(String patientCuid) {
+        patientCuid = patientCuid.replace("-", "");
+        if (patientCuid.length() != 32)
             return false;
 
         if (formatVersion < 3) formatVersion = 3;
-        this.patientUUID = patientUUID;
+        this.patientCuid = patientCuid;
         return true;
     }
 

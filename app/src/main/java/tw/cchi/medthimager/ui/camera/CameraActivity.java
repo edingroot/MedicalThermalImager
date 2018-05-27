@@ -214,7 +214,7 @@ public class CameraActivity extends BaseActivity implements
         if (selectPatientDialog == null) {
             selectPatientDialog = new SelectPatientDialog(this, presenter::setCurrentPatient);
         }
-        selectPatientDialog.setSelectedPatientUUID(presenter.getCurrentPatientUuid());
+        selectPatientDialog.setSelectedPatientCuid(presenter.getCurrentPatientCuid());
         selectPatientDialog.show();
     }
 

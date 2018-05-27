@@ -3,6 +3,7 @@ package tw.cchi.medthimager.helper.fanalytics;
 public class Param {
 
     public static final String STATE = "state";
+    public static final String CUID = "cuid";
     public static final String UUID = "uuid";
     public static final String ENABLED = "enabled";
 

@@ -24,7 +24,7 @@ public class AppPreferencesHelper implements PreferencesHelper {
     private static final String KEY_USER = "KEY_USER";
 
     // States
-    private static final String KEY_SELECTED_PATIENT_UUID = "KEY_SELECTED_PATIENT_UUID";
+    private static final String KEY_SELECTED_PATIENT_CUID = "KEY_SELECTED_PATIENT_CUID";
 
     // Settings
     private static final String KEY_DEFAULT_VISIBLE_OFFSET_ENABLED = "KEY_DEFAULT_VISIBLE_OFFSET_ENABLED";
@@ -78,13 +78,13 @@ public class AppPreferencesHelper implements PreferencesHelper {
 
     @Nullable
     @Override
-    public String getSelectedPatientUuid() {
-        return mPrefs.getString(KEY_SELECTED_PATIENT_UUID, null);
+    public String getSelectedPatientCuid() {
+        return mPrefs.getString(KEY_SELECTED_PATIENT_CUID, null);
     }
 
     @Override
-    public void setSelectedPatientUuid(String selectedPatientUuid) {
-        mPrefs.edit().putString(KEY_SELECTED_PATIENT_UUID, selectedPatientUuid).apply();
+    public void setSelectedPatientCuid(String selectedPatientCuid) {
+        mPrefs.edit().putString(KEY_SELECTED_PATIENT_CUID, selectedPatientCuid).apply();
     }
 
     @Override

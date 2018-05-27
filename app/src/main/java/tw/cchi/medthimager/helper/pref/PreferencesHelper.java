@@ -28,9 +28,9 @@ public interface PreferencesHelper {
     // ------------------------- States ------------------------- //
 
     @Nullable
-    String getSelectedPatientUuid();
+    String getSelectedPatientCuid();
 
-    void setSelectedPatientUuid(String selectedPatientUuid);
+    void setSelectedPatientCuid(String selectedPatientCuid);
 
 
     // ------------------------- Settings ------------------------- //

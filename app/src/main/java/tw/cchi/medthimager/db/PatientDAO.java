@@ -13,16 +13,16 @@ public abstract class PatientDAO {
     @Query("select * from patients")
     public abstract List<Patient> getAll();
 
-    @Query("select * from patients where uuid = :uuid")
-    public abstract Patient get(String uuid);
+    @Query("select * from patients where cuid = :cuid")
+    public abstract Patient get(String cuid);
 
-    public Patient getOrDefault(String uuid) {
-        Patient patient = get(uuid);
-        return patient == null ? get(Patient.DEFAULT_PATIENT_UUID) : patient;
+    public Patient getOrDefault(String cuid) {
+        Patient patient = get(cuid);
+        return patient == null ? get(Patient.DEFAULT_PATIENT_CUID) : patient;
     }
 
-    @Query("select * from patients where uuid in (:uuids)")
-    public abstract List<Patient> findAllByUUIDs(String[] uuids);
+    @Query("select * from patients where cuid in (:cuids)")
+    public abstract List<Patient> findAllByCUIDs(String[] cuids);
 
     @Query("select * from patients where name like :name limit 1")
     public abstract Patient findByName(String name);

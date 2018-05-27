@@ -134,9 +134,9 @@ public class FirebaseAnalyticsHelper {
     }
 
 
-    public void logSetCurrentPatient(String patientUuid) {
+    public void logSetCurrentPatient(String patientCuid) {
         Bundle params = new Bundle();
-        params.putString(Param.UUID, patientUuid);
+        params.putString(Param.CUID, patientCuid);
         logEvent(Event.SET_CURRENT_PATIENT, params);
     }
 

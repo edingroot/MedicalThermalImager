@@ -40,7 +40,7 @@ public class CSVExportHelper {
             for (CaptureRecord captureRecord : database.captureRecordDAO().getAll()) {
                 StringBuilder rowBuilder = new StringBuilder();
 
-                Patient patient = patientMap.get(captureRecord.getPatientUuid());
+                Patient patient = patientMap.get(captureRecord.getPatientCuid());
                 if (patient == null) {
                     rowBuilder.append(String.format("%s,%s,%s,%s,%s",
                         "-", "-", captureRecord.getFilenamePrefix(),
@@ -48,7 +48,7 @@ public class CSVExportHelper {
                     ));
                 } else {
                     rowBuilder.append(String.format("%s,%s,%s,%s,%s",
-                        patient.getUuid(), patient.getName(), captureRecord.getFilenamePrefix(),
+                        patient.getCuid(), patient.getName(), captureRecord.getFilenamePrefix(),
                         captureRecord.getCreatedAt(), captureRecord.getTitle()
                     ));
                 }
@@ -75,7 +75,7 @@ public class CSVExportHelper {
             }
 
             // Title row
-            StringBuilder titleRowBuilder = new StringBuilder("patientUUID,patientName,filenamePrefix,takenAt,title");
+            StringBuilder titleRowBuilder = new StringBuilder("patientCuid,patientName,filenamePrefix,takenAt,title");
             for (int i = 1; i <= maxSpotCount; i++) {
                 titleRowBuilder.append(",spot").append(i);
             }
@@ -122,7 +122,7 @@ public class CSVExportHelper {
                         }
 
                         CaptureRecord captureRecord = new CaptureRecord(
-                            rawThermalDump.getPatientUUID(), rawThermalDump.getTitle(),
+                            rawThermalDump.getPatientCuid(), rawThermalDump.getTitle(),
                             FileUtils.removeExtension(file.getName())
                         );
 
@@ -142,7 +142,7 @@ public class CSVExportHelper {
     private Map<String, Patient> getPatientMap() {
         Map<String, Patient> patientMap = new HashMap<>();
         for (Patient patient : database.patientDAO().getAll()) {
-            patientMap.put(patient.getUuid(), patient);
+            patientMap.put(patient.getCuid(), patient);
         }
         return patientMap;
     }

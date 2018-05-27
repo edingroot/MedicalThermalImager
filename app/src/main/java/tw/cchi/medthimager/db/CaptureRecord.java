@@ -15,20 +15,20 @@ import java.util.UUID;
         foreignKeys = {
             @ForeignKey(
                 entity = Patient.class,
-                parentColumns = "uuid",
-                childColumns = "patient_uuid",
+                parentColumns = "cuid",
+                childColumns = "patient_cuid",
                 onDelete = ForeignKey.CASCADE)
         },
         indices = {
-            @Index(value = "patient_uuid")
+            @Index(value = "patient_cuid")
         })
 public class CaptureRecord {
     @PrimaryKey
     @ColumnInfo(name = "uuid")
     @NonNull private String uuid;
 
-    @ColumnInfo(name = "patient_uuid")
-    private String patientUuid;
+    @ColumnInfo(name = "patient_cuid")
+    private String patientCuid;
 
     @ColumnInfo(name = "title")
     private String title;
@@ -40,17 +40,17 @@ public class CaptureRecord {
     private Date createdAt;
 
     @Ignore
-    public CaptureRecord(String patientUuid, String title, String filenamePrefix) {
+    public CaptureRecord(String patientCuid, String title, String filenamePrefix) {
         this.uuid = UUID.randomUUID().toString();
-        this.patientUuid = patientUuid;
+        this.patientCuid = patientCuid;
         this.title = title;
         this.filenamePrefix = filenamePrefix;
         this.createdAt = new Date();
     }
 
-    public CaptureRecord(@NonNull String uuid, String patientUuid, String title, String filenamePrefix, Date createdAt) {
+    public CaptureRecord(@NonNull String uuid, String patientCuid, String title, String filenamePrefix, Date createdAt) {
         this.uuid = uuid;
-        this.patientUuid = patientUuid;
+        this.patientCuid = patientCuid;
         this.title = title;
         this.filenamePrefix = filenamePrefix;
         this.createdAt = createdAt;
@@ -64,12 +64,12 @@ public class CaptureRecord {
         this.uuid = uuid;
     }
 
-    public String getPatientUuid() {
-        return patientUuid;
+    public String getPatientCuid() {
+        return patientCuid;
     }
 
-    public void setPatientUuid(String patientUuid) {
-        this.patientUuid = patientUuid;
+    public void setPatientCuid(String patientCuid) {
+        this.patientCuid = patientCuid;
     }
 
     public String getTitle() {

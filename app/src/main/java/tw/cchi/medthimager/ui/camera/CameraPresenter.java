@@ -103,7 +103,7 @@ public class CameraPresenter<V extends CameraMvpView> extends BasePresenter<V>
         // Query and display last selected patient name
         Observable.<String>create(emitter -> {
             // Load saved values from shared preferences
-            patient = database.patientDAO().getOrDefault(preferencesHelper.getSelectedPatientUuid());
+            patient = database.patientDAO().getOrDefault(preferencesHelper.getSelectedPatientCuid());
             emitter.onNext(patient.getName());
         }).subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
@@ -402,7 +402,7 @@ public class CameraPresenter<V extends CameraMvpView> extends BasePresenter<V>
                 captureRawThermalDump(renderedImage, captureProcessInfo.getDumpFilepath());
                 captureFLIRImage(renderedImage, captureProcessInfo.getFlirFilepath());
 
-                dbPatientDumpsHelper.addCaptureRecord(getCurrentPatientUuid(),
+                dbPatientDumpsHelper.addCaptureRecord(getCurrentPatientCuid(),
                     captureProcessInfo.getTitle(), captureProcessInfo.getFilepathPrefix()).subscribe();
                 captureProcessInfo = null;
             }
@@ -432,8 +432,8 @@ public class CameraPresenter<V extends CameraMvpView> extends BasePresenter<V>
     // --------------------------------- Getter / Setter / Updates ------------------------------- //
 
     @Override
-    public String getCurrentPatientUuid() {
-        return patient != null ? patient.getUuid() : Patient.DEFAULT_PATIENT_UUID;
+    public String getCurrentPatientCuid() {
+        return patient != null ? patient.getCuid() : Patient.DEFAULT_PATIENT_CUID;
     }
 
     @Override
@@ -442,14 +442,14 @@ public class CameraPresenter<V extends CameraMvpView> extends BasePresenter<V>
     }
 
     @Override
-    public void setCurrentPatient(final String patientUuid) {
+    public void setCurrentPatient(final String patientCuid) {
         // Log event
-        firebaseAnalyticsHelper.logSetCurrentPatient(patientUuid);
+        firebaseAnalyticsHelper.logSetCurrentPatient(patientCuid);
 
         // Query and display last selected patient name
         Observable.<String>create(emitter -> {
-            preferencesHelper.setSelectedPatientUuid(patientUuid);
-            patient = database.patientDAO().getOrDefault(patientUuid);
+            preferencesHelper.setSelectedPatientCuid(patientCuid);
+            patient = database.patientDAO().getOrDefault(patientCuid);
             emitter.onNext(patient.getName());
         }).subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
