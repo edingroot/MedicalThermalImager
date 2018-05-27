@@ -1,5 +1,7 @@
 package tw.cchi.medthimager.ui.auth;
 
+import java.io.IOException;
+import java.net.ConnectException;
 import java.net.UnknownHostException;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -81,7 +83,7 @@ public class LoginPresenter<V extends LoginMvpView> extends BasePresenter<V> imp
 
                     if (isViewAttached()) {
                         getMvpView().setLoggingIn(false);
-                        if (e instanceof UnknownHostException || e instanceof HttpException)
+                        if (e instanceof IOException || e instanceof HttpException)
                             getMvpView().showSnackBar(R.string.login_failed_comm_err);
                         else
                             getMvpView().showSnackBar(R.string.login_failed);
