@@ -18,6 +18,9 @@ public class Patient {
     @ColumnInfo(name = "cuid")
     @NonNull private String cuid;
 
+    @ColumnInfo(name = "uuid")
+    private String uuid = null;
+
     @ColumnInfo(name = "name")
     private String name;
 
@@ -44,12 +47,21 @@ public class Patient {
         this.createdAt = createdAt;
     }
 
+    @NonNull
     public String getCuid() {
         return cuid;
     }
 
     public void setCuid(@NonNull String cuid) {
         this.cuid = cuid;
+    }
+
+    public String getUuid() {
+        return uuid;
+    }
+
+    public void setUuid(String uuid) {
+        this.uuid = uuid;
     }
 
     public String getName() {

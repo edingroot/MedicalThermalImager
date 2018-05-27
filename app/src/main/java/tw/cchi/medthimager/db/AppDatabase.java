@@ -14,7 +14,7 @@ import tw.cchi.medthimager.db.converter.DateConverter;
 @Database(entities = {
         Patient.class,
         CaptureRecord.class
-}, version = 1)
+}, version = 2)
 @TypeConverters(DateConverter.class)
 public abstract class AppDatabase extends RoomDatabase {
     private static final String TAG = AppDatabase.class.getSimpleName();
@@ -38,21 +38,22 @@ public abstract class AppDatabase extends RoomDatabase {
         Log.i(TAG, "Building database: " + context.getDatabasePath(DATABASE_NAME));
 
         return Room.databaseBuilder(context, AppDatabase.class, DATABASE_NAME)
-            .addCallback(new RoomDatabase.Callback() {
-                @Override
-                public void onCreate (@NonNull SupportSQLiteDatabase db){
-                    String sql = String.format(
-                        "insert into patients (`cuid`, `name`, `created_at`) values ('%s', '%s', '2000-1-1 00:00:00')",
-                        Patient.DEFAULT_PATIENT_CUID,
-                        Patient.DEFAULT_PATIENT_NAME);
-                    db.execSQL(sql);
-                }
+                .addCallback(new RoomDatabase.Callback() {
+                    @Override
+                    public void onCreate (@NonNull SupportSQLiteDatabase db){
+                        // Called when the database is created for the first time.
+                        // This is called after all the ables are created.
+                        Migrations.checkAndInsertDefaultPatient(db);
+                    }
 
-                @Override
-                public void onOpen (@NonNull SupportSQLiteDatabase db){
-                    // Do something every time database is open
-                }
-            })
-            .build();
+                    @Override
+                    public void onOpen (@NonNull SupportSQLiteDatabase db){
+                        // Do something every time database is open
+                        Migrations.checkAndInsertDefaultPatient(db);
+                    }
+                })
+                .addMigrations()
+                .fallbackToDestructiveMigration()
+                .build();
     }
 }
