@@ -14,7 +14,9 @@ import tw.cchi.medthimager.Config;
 import tw.cchi.medthimager.R;
 import tw.cchi.medthimager.helper.api.ApiHelper;
 import tw.cchi.medthimager.helper.session.Session;
+import tw.cchi.medthimager.service.sync.SyncService;
 import tw.cchi.medthimager.ui.base.BasePresenter;
+import tw.cchi.medthimager.util.NetworkUtils;
 
 public class SettingsPresenter<V extends SettingsMvpView> extends BasePresenter<V> implements SettingsMvpPresenter<V> {
     private final String TAG = Config.TAGPRE + getClass().getSimpleName();
@@ -95,6 +97,21 @@ public class SettingsPresenter<V extends SettingsMvpView> extends BasePresenter<
     @Override
     public void setAutoSetVisibleOffset(boolean enable) {
         preferencesHelper.setAutoApplyVisibleOffsetEnabled(enable);
+    }
+
+    @Override
+    public void syncPatients() {
+        application.getSyncService(syncService -> {
+            if (!NetworkUtils.isNetworkConnected(application)) {
+                if (isViewAttached())
+                    getMvpView().showSnackBar(R.string.no_network_access);
+            } else if (!application.getSession().isActive()) {
+                if (isViewAttached())
+                    getMvpView().showSnackBar(R.string.unauthenticated);
+            } else {
+                syncService.syncPatients();
+            }
+        });
     }
 
     @Override

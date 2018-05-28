@@ -48,6 +48,15 @@ public class SettingsActivity extends BaseActivity implements SettingsMvpView {
         }
     }
 
+    @OnClick(R.id.btnSyncPatients)
+    void onSyncPatientsClick() {
+        if (authenticated) {
+            presenter.syncPatients();
+        } else {
+            // TODO
+        }
+    }
+
     @OnCheckedChanged(R.id.swClearSpotsOnDisconn)
     void onSwClearSpotsOnDisconnChanged(SwitchCompat sw) {
         presenter.setClearSpotsOnDisconnect(sw.isChecked());

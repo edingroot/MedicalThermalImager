@@ -1,4 +1,4 @@
-package tw.cchi.medthimager.service;
+package tw.cchi.medthimager.service.sync;
 
 import android.app.Service;
 import android.content.BroadcastReceiver;
@@ -13,27 +13,36 @@ import android.util.Log;
 
 import javax.inject.Inject;
 
+import io.reactivex.Observable;
+import io.reactivex.schedulers.Schedulers;
 import tw.cchi.medthimager.Config;
 import tw.cchi.medthimager.MvpApplication;
+import tw.cchi.medthimager.db.AppDatabase;
 import tw.cchi.medthimager.di.component.DaggerServiceComponent;
 import tw.cchi.medthimager.di.component.ServiceComponent;
+import tw.cchi.medthimager.service.sync.task.SyncPatientsTask;
 import tw.cchi.medthimager.util.NetworkUtils;
 
 public class SyncService extends Service {
     private final String TAG = Config.TAGPRE + getClass().getSimpleName();
 
+    private IBinder mBinder;
     private NetworkStateBroadcastReceiver networkStateReceiver;
+    private SyncPatientsTask syncPatientsTask;
 
     @Inject MvpApplication application;
+    @Inject AppDatabase database;
 
     @Override
     public void onCreate() {
         super.onCreate();
+
         ServiceComponent component = DaggerServiceComponent.builder()
                 .applicationComponent(((MvpApplication) getApplication()).getComponent())
                 .build();
         component.inject(this);
 
+        mBinder = new SyncServiceBinder();
         networkStateReceiver = new NetworkStateBroadcastReceiver();
         registerReceiver(networkStateReceiver,
                 new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION));
@@ -48,7 +57,7 @@ public class SyncService extends Service {
     @Nullable
     @Override
     public IBinder onBind(Intent intent) {
-        return null;
+        return mBinder;
     }
 
     @Override
@@ -59,17 +68,28 @@ public class SyncService extends Service {
     }
 
 
-    public static Intent getStartIntent(Context context) {
-        return new Intent(context, SyncService.class);
-    }
-
     public static void start(Context context) {
-        Intent starter = new Intent(context, SyncService.class);
-        context.startService(starter);
+        context.startService(new Intent(context, SyncService.class));
     }
 
     public static void stop(Context context) {
         context.stopService(new Intent(context, SyncService.class));
+    }
+
+    /**
+     * @return false if sync is currently in progress
+     */
+    public synchronized boolean syncPatients() {
+        if (syncPatientsTask != null && !syncPatientsTask.isFinished()) {
+            return false;
+        }
+
+        syncPatientsTask = new SyncPatientsTask(application, database);
+        Observable.create(emitter -> syncPatientsTask.run())
+                .subscribeOn(Schedulers.io())
+                .subscribe();
+
+        return true;
     }
 
 
@@ -86,7 +106,7 @@ public class SyncService extends Service {
         }
     }
 
-    public class ServiceBinder extends Binder {
+    public class SyncServiceBinder extends Binder {
         public SyncService getService() {
             return SyncService.this;
         }

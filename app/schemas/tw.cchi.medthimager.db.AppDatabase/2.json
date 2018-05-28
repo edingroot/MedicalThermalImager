@@ -2,11 +2,11 @@
   "formatVersion": 1,
   "database": {
     "version": 2,
-    "identityHash": "0054b95d660359c616b5d9175ce1c173",
+    "identityHash": "a01fdd6223e308732cdfd5a8a8b5dd55",
     "entities": [
       {
         "tableName": "patients",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`cuid` TEXT NOT NULL, `name` TEXT, `created_at` INTEGER, PRIMARY KEY(`cuid`))",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`cuid` TEXT NOT NULL, `uuid` TEXT, `caseid` TEXT, `name` TEXT, `bed` TEXT, `created_at` INTEGER, PRIMARY KEY(`cuid`))",
         "fields": [
           {
             "fieldPath": "cuid",
@@ -15,8 +15,26 @@
             "notNull": true
           },
           {
+            "fieldPath": "uuid",
+            "columnName": "uuid",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "caseid",
+            "columnName": "caseid",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
             "fieldPath": "name",
             "columnName": "name",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "bed",
+            "columnName": "bed",
             "affinity": "TEXT",
             "notNull": false
           },
@@ -104,7 +122,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, \"0054b95d660359c616b5d9175ce1c173\")"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, \"a01fdd6223e308732cdfd5a8a8b5dd55\")"
     ]
   }
 }

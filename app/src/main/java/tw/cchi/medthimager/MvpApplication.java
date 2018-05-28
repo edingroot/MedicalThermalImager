@@ -6,12 +6,15 @@ import android.content.ComponentName;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.os.IBinder;
+import android.os.SystemClock;
 import android.support.annotation.Nullable;
 
 import com.squareup.leakcanary.LeakCanary;
 
 import javax.inject.Inject;
 
+import io.reactivex.Observable;
+import io.reactivex.schedulers.Schedulers;
 import tw.cchi.medthimager.di.component.ApplicationComponent;
 import tw.cchi.medthimager.di.component.DaggerApplicationComponent;
 import tw.cchi.medthimager.di.module.ApplicationModule;
@@ -23,7 +26,7 @@ import tw.cchi.medthimager.helper.session.Session;
 import tw.cchi.medthimager.helper.session.SessionManager;
 import tw.cchi.medthimager.helper.pref.PreferencesHelper;
 import tw.cchi.medthimager.model.api.AccessTokens;
-import tw.cchi.medthimager.service.SyncService;
+import tw.cchi.medthimager.service.sync.SyncService;
 
 /**
  * This is able to be access globally in whole app
@@ -31,14 +34,14 @@ import tw.cchi.medthimager.service.SyncService;
 public class MvpApplication extends Application {
     private ApplicationComponent mApplicationComponent;
 
-    private SyncService syncService;
+    protected SyncService syncService;
     protected ServiceConnection syncServiceConnection;
-    protected boolean syncServiceBounded = false;
+    protected volatile boolean syncServiceBounded = false;
 
-    // Null if access tokens not exists in shared preferences
-    @Nullable public ApiClient authedApiClient;
     @Inject public SessionManager sessionManager;
     @Inject public PreferencesHelper preferencesHelper;
+    // null if access tokens not exists in shared preferences
+    @Nullable public ApiClient authedApiClient;
 
     // This is used to avoid memory leak due to (flir) Device.cachedDelegate is a static field
     @Inject public FlirDeviceDelegate flirDeviceDelegate;
@@ -60,7 +63,7 @@ public class MvpApplication extends Application {
         this.mApplicationComponent.inject(this);
 
         createAuthedAPIClient(getSession().getAccessTokens());
-        startService(SyncService.getStartIntent(this));
+        SyncService.start(this);
 
         // copyDatabaseToSDCard();
     }
@@ -87,26 +90,28 @@ public class MvpApplication extends Application {
         return sessionManager.getSession();
     }
 
-    public synchronized void getSyncService(final OnServiceBoundedListener listener) {
-        if (syncServiceBounded) {
-            listener.onServiceBounded(syncService);
-        } else {
-            syncServiceConnection = new ServiceConnection() {
-                @Override
-                public void onServiceConnected(ComponentName componentName, IBinder service) {
-                    syncService = ((SyncService.ServiceBinder) service).getService();
-                    listener.onServiceBounded(syncService);
-                }
+    public synchronized void getSyncService(final OnSyncServiceBoundedListener listener) {
+        Observable.create(emitter -> {
+            if (syncServiceBounded) {
+                listener.onServiceBounded(syncService);
+            } else {
+                syncServiceConnection = new ServiceConnection() {
+                    @Override
+                    public void onServiceConnected(ComponentName componentName, IBinder service) {
+                        syncService = ((SyncService.SyncServiceBinder) service).getService();
+                        listener.onServiceBounded(syncService);
+                    }
 
-                @Override
-                public void onServiceDisconnected(ComponentName componentName) {
-                    syncService = null;
-                    syncServiceBounded = false;
-                }
-            };
-            syncServiceBounded = bindService(
-                    new Intent(this, SyncService.class), syncServiceConnection, BIND_AUTO_CREATE);
-        }
+                    @Override
+                    public void onServiceDisconnected(ComponentName componentName) {
+                        syncService = null;
+                        syncServiceBounded = false;
+                    }
+                };
+                syncServiceBounded = bindService(
+                        new Intent(this, SyncService.class), syncServiceConnection, BIND_AUTO_CREATE);
+            }
+        }).subscribeOn(Schedulers.io()).subscribe();
     }
 
     @Override
@@ -117,8 +122,8 @@ public class MvpApplication extends Application {
         super.onTerminate();
     }
 
-    public interface OnServiceBoundedListener {
-        void onServiceBounded(Service service);
+    public interface OnSyncServiceBoundedListener {
+        void onServiceBounded(SyncService service);
     }
 
 

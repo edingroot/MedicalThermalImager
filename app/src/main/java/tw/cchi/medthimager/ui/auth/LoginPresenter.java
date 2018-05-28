@@ -83,7 +83,7 @@ public class LoginPresenter<V extends LoginMvpView> extends BasePresenter<V> imp
 
                     if (isViewAttached()) {
                         getMvpView().setLoggingIn(false);
-                        if (e instanceof IOException || e instanceof HttpException)
+                        if (e instanceof IOException)
                             getMvpView().showSnackBar(R.string.login_failed_comm_err);
                         else
                             getMvpView().showSnackBar(R.string.login_failed);

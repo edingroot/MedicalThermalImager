@@ -2,6 +2,9 @@ package tw.cchi.medthimager.helper.api;
 
 import android.util.Log;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
@@ -13,6 +16,7 @@ import retrofit2.converter.gson.GsonConverterFactory;
 import tw.cchi.medthimager.Config;
 import tw.cchi.medthimager.MvpApplication;
 import tw.cchi.medthimager.model.api.AccessTokens;
+import tw.cchi.medthimager.util.CommonUtils;
 
 import static tw.cchi.medthimager.Config.API_BASE_URL;
 
@@ -29,7 +33,7 @@ public class ApiServiceGenerator {
         builder = new Retrofit.Builder()
                 .baseUrl(API_BASE_URL)
                 .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
-                .addConverterFactory(GsonConverterFactory.create());
+                .addConverterFactory(GsonConverterFactory.create(CommonUtils.getGsonInstance()));
 
         httpClient.addInterceptor(new HttpLoggingInterceptor().setLevel(Config.API_LOGGING_LEVEL));
 
@@ -53,7 +57,7 @@ public class ApiServiceGenerator {
         builder = new Retrofit.Builder()
                 .baseUrl(API_BASE_URL)
                 .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
-                .addConverterFactory(GsonConverterFactory.create());
+                .addConverterFactory(GsonConverterFactory.create(CommonUtils.getGsonInstance()));
 
         if (accessTokens != null) {
             ApiServiceGenerator.accessTokens = accessTokens;

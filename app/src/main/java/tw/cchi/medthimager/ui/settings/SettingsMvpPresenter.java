@@ -12,4 +12,6 @@ public interface SettingsMvpPresenter<V extends SettingsMvpView> extends MvpPres
 
     void setAutoSetVisibleOffset(boolean enable);
 
+    void syncPatients();
+
 }

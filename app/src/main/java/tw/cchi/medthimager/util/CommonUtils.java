@@ -1,12 +1,30 @@
 package tw.cchi.medthimager.util;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+
 import java.util.ArrayList;
 import java.util.List;
 
 public final class CommonUtils {
+    private static Gson gson;
 
     private CommonUtils() {
         // This utility class is not publicly instantiable
+    }
+
+    public static Gson getGsonInstance() {
+        if (gson == null) {
+            synchronized (CommonUtils.class) {
+                if (gson == null) {
+                    gson = new GsonBuilder()
+                            .setDateFormat("yyyy-MM-dd HH:mm:ss")
+                            .create();
+                }
+            }
+        }
+
+        return gson;
     }
 
     public static <T> ArrayList<T> cloneArrayList(ArrayList<T> list) {
