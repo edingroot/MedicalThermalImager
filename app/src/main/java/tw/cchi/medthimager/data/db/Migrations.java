@@ -1,4 +1,4 @@
-package tw.cchi.medthimager.db;
+package tw.cchi.medthimager.data.db;
 
 import android.arch.persistence.db.SupportSQLiteDatabase;
 import android.database.Cursor;
@@ -7,7 +7,7 @@ import android.support.annotation.NonNull;
 import java.util.ArrayList;
 import java.util.List;
 
-import tw.cchi.medthimager.db.model.Patient;
+import tw.cchi.medthimager.data.db.model.Patient;
 
 final class Migrations {
 

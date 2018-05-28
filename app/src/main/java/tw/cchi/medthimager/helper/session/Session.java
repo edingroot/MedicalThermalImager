@@ -2,53 +2,54 @@ package tw.cchi.medthimager.helper.session;
 
 import android.util.Log;
 
-import java.lang.ref.WeakReference;
+import javax.inject.Inject;
 
 import tw.cchi.medthimager.Config;
-import tw.cchi.medthimager.MvpApplication;
-import tw.cchi.medthimager.helper.pref.PreferencesHelper;
+import tw.cchi.medthimager.data.DataManager;
+import tw.cchi.medthimager.data.network.ApiClient;
+import tw.cchi.medthimager.data.network.ApiServiceGenerator;
 import tw.cchi.medthimager.model.User;
 import tw.cchi.medthimager.model.api.AccessTokens;
 
 public class Session {
     private final String TAG = Config.TAGPRE + getClass().getSimpleName();
 
-    private final WeakReference<SessionManager> sessionManagerRef;
-    private PreferencesHelper preferencesHelper;
+    private final SessionManager sessionManager;
+    private final DataManager dataManager;
 
     private boolean active = false;
     private AccessTokens accessTokens;
     private User user;
+    private ApiClient apiClient;
 
-    Session(SessionManager sessionManager, PreferencesHelper preferencesHelper) {
-        this.sessionManagerRef = new WeakReference<>(sessionManager);
-        this.preferencesHelper = preferencesHelper;
+    Session(SessionManager sessionManager, DataManager dataManager) {
+        this.sessionManager = sessionManager;
+        this.dataManager = dataManager;
         restoreState();
     }
 
-    /**
-     * Note: make sure {@link MvpApplication#createAuthedAPIClient(AccessTokens)} has been called.
-     */
     public void activate(AccessTokens accessTokens, User user) {
-        if (sessionManagerRef.get() == null)
-            return;
-
         Log.i(TAG, "Activating session");
-        preferencesHelper.setAccessTokens(accessTokens);
-        preferencesHelper.setUser(user);
-        preferencesHelper.setAuthenticated(true);
-        sessionManagerRef.get().handleSessionActivate();
-        active = true;
+
+        apiClient = sessionManager.createAuthedAPIClient(accessTokens);
+
+        if (apiClient == null) {
+            invalidate();
+        } else {
+            dataManager.pref.setAccessTokens(accessTokens);
+            dataManager.pref.setUser(user);
+            dataManager.pref.setAuthenticated(true);
+            sessionManager.handleSessionActivate();
+            active = true;
+        }
     }
 
     public void invalidate() {
-        if (sessionManagerRef.get() == null)
-            return;
-
-        preferencesHelper.setAuthenticated(false);
-        preferencesHelper.setAccessTokens(null);
-        preferencesHelper.setUser(null);
-        sessionManagerRef.get().handleSessionInvalidate();
+        dataManager.pref.setAuthenticated(false);
+        dataManager.pref.setAccessTokens(null);
+        dataManager.pref.setUser(null);
+        sessionManager.handleSessionInvalidate();
+        apiClient = null;
         active = false;
     }
 
@@ -62,7 +63,7 @@ public class Session {
 
     public void setAccessTokens(AccessTokens accessTokens) {
         this.accessTokens = accessTokens;
-        preferencesHelper.setAccessTokens(accessTokens);
+        dataManager.pref.setAccessTokens(accessTokens);
     }
 
     public User getUser() {
@@ -71,12 +72,22 @@ public class Session {
 
     public void setUser(User user) {
         this.user = user;
-        preferencesHelper.setUser(user);
+        dataManager.pref.setUser(user);
+    }
+
+    public ApiClient getApiClient() {
+        return apiClient;
     }
 
     private void restoreState() {
-        this.active = preferencesHelper.isAuthenticated();
-        this.accessTokens = preferencesHelper.getAccessTokens();
-        this.user = preferencesHelper.getUser();
+        this.accessTokens = dataManager.pref.getAccessTokens();
+        this.apiClient = sessionManager.createAuthedAPIClient(accessTokens);
+
+        if (apiClient == null) {
+            invalidate();
+        } else {
+            this.active = dataManager.pref.isAuthenticated();
+            this.user = dataManager.pref.getUser();
+        }
     }
 }

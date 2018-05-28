@@ -17,7 +17,6 @@ import io.reactivex.Observable;
 import io.reactivex.schedulers.Schedulers;
 import tw.cchi.medthimager.Config;
 import tw.cchi.medthimager.MvpApplication;
-import tw.cchi.medthimager.db.AppDatabase;
 import tw.cchi.medthimager.di.component.DaggerServiceComponent;
 import tw.cchi.medthimager.di.component.ServiceComponent;
 import tw.cchi.medthimager.service.sync.task.SyncPatientsTask;
@@ -31,7 +30,6 @@ public class SyncService extends Service {
     private SyncPatientsTask syncPatientsTask;
 
     @Inject MvpApplication application;
-    @Inject AppDatabase database;
 
     @Override
     public void onCreate() {
@@ -84,7 +82,7 @@ public class SyncService extends Service {
             return false;
         }
 
-        syncPatientsTask = new SyncPatientsTask(application, database);
+        syncPatientsTask = new SyncPatientsTask(application);
         Observable.create(emitter -> syncPatientsTask.run())
                 .subscribeOn(Schedulers.io())
                 .subscribe();

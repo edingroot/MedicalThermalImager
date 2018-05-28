@@ -1,4 +1,4 @@
-package tw.cchi.medthimager.db.model;
+package tw.cchi.medthimager.data.db.model;
 
 import android.arch.persistence.room.Dao;
 import android.arch.persistence.room.Delete;

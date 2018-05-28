@@ -7,11 +7,11 @@ import javax.inject.Singleton;
 
 import dagger.Component;
 import tw.cchi.medthimager.MvpApplication;
-import tw.cchi.medthimager.db.AppDatabase;
+import tw.cchi.medthimager.data.db.AppDatabase;
 import tw.cchi.medthimager.di.ApplicationContext;
 import tw.cchi.medthimager.di.module.ApplicationModule;
-import tw.cchi.medthimager.helper.fanalytics.FirebaseAnalyticsHelper;
-import tw.cchi.medthimager.helper.pref.PreferencesHelper;
+import tw.cchi.medthimager.data.fanalytics.FirebaseAnalyticsHelper;
+import tw.cchi.medthimager.data.pref.PreferencesHelper;
 
 @Singleton
 @Component(modules = ApplicationModule.class)

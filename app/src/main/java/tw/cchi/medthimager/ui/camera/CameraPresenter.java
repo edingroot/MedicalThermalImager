@@ -36,11 +36,8 @@ import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.schedulers.Schedulers;
 import tw.cchi.medthimager.Config;
 import tw.cchi.medthimager.R;
-import tw.cchi.medthimager.db.AppDatabase;
-import tw.cchi.medthimager.db.model.Patient;
-import tw.cchi.medthimager.db.helper.PatientThermalDumpsHelper;
-import tw.cchi.medthimager.util.annotation.BgThreadCapable;
-import tw.cchi.medthimager.util.annotation.NewThread;
+import tw.cchi.medthimager.data.db.helper.PatientThermalDumpsHelper;
+import tw.cchi.medthimager.data.db.model.Patient;
 import tw.cchi.medthimager.helper.CSVExportHelper;
 import tw.cchi.medthimager.helper.ThermalSpotsHelper;
 import tw.cchi.medthimager.model.CaptureProcessInfo;
@@ -48,6 +45,8 @@ import tw.cchi.medthimager.model.ContiShootParameters;
 import tw.cchi.medthimager.thermalproc.RawThermalDump;
 import tw.cchi.medthimager.ui.base.BasePresenter;
 import tw.cchi.medthimager.util.AppUtils;
+import tw.cchi.medthimager.util.annotation.BgThreadCapable;
+import tw.cchi.medthimager.util.annotation.NewThread;
 
 public class CameraPresenter<V extends CameraMvpView> extends BasePresenter<V>
     implements CameraMvpPresenter<V>, Device.Delegate, Device.StreamDelegate,
@@ -55,7 +54,6 @@ public class CameraPresenter<V extends CameraMvpView> extends BasePresenter<V>
     private final String TAG = Config.TAGPRE + getClass().getSimpleName();
 
     @Inject AppCompatActivity activity;
-    @Inject AppDatabase database;
     @Inject PatientThermalDumpsHelper dbPatientDumpsHelper;
     @Inject CSVExportHelper csvExportHelper;
 
@@ -103,7 +101,7 @@ public class CameraPresenter<V extends CameraMvpView> extends BasePresenter<V>
         // Query and display last selected patient name
         Observable.<String>create(emitter -> {
             // Load saved values from shared preferences
-            patient = database.patientDAO().getOrDefault(preferencesHelper.getSelectedPatientCuid());
+            patient = dataManager.db.patientDAO().getOrDefault(dataManager.pref.getSelectedPatientCuid());
             emitter.onNext(patient.getName());
         }).subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
@@ -113,7 +111,7 @@ public class CameraPresenter<V extends CameraMvpView> extends BasePresenter<V>
     }
 
     public void loadSettings() {
-        clearSpotsOnDisconnect = preferencesHelper.getClearSpotsOnDisconnectEnabled();
+        clearSpotsOnDisconnect = dataManager.pref.getClearSpotsOnDisconnectEnabled();
     }
 
     @Override
@@ -169,7 +167,7 @@ public class CameraPresenter<V extends CameraMvpView> extends BasePresenter<V>
     @Override
     public void performTune() {
         // Log event
-        firebaseAnalyticsHelper.logManuallyTune();
+        dataManager.analytics.logManuallyTune();
 
         // If device is connected and it's not a simulated device
         if (flirOneDevice != null) {
@@ -191,7 +189,7 @@ public class CameraPresenter<V extends CameraMvpView> extends BasePresenter<V>
     @Override
     public void startContiShooting(ContiShootParameters parameters) {
         // Log event
-        firebaseAnalyticsHelper.logContiShootStart(true, contiShootParams);
+        dataManager.analytics.logContiShootStart(true, contiShootParams);
 
         contiShooting = true;
         contiShootParams = parameters;
@@ -227,7 +225,7 @@ public class CameraPresenter<V extends CameraMvpView> extends BasePresenter<V>
     private void handleContiShootTick() {
         if (tuningState == Device.TuningState.InProgress) {
             // Log event
-            firebaseAnalyticsHelper.logTuningWhileContiShoot(contiShootParams);
+            dataManager.analytics.logTuningWhileContiShoot(contiShootParams);
 
             getMvpView().showSnackBar(
                 R.string.conti_shoot_tuning_skip,
@@ -256,7 +254,7 @@ public class CameraPresenter<V extends CameraMvpView> extends BasePresenter<V>
     @Override
     public void finishContiShooting(boolean success, boolean showMessageByDialog) {
         // Log event
-        firebaseAnalyticsHelper.logContiShootStart(false, contiShootParams);
+        dataManager.analytics.logContiShootStart(false, contiShootParams);
 
         contiShooting = false;
         contiShootTimer.cancel();
@@ -333,7 +331,7 @@ public class CameraPresenter<V extends CameraMvpView> extends BasePresenter<V>
     @Override
     public void onDeviceConnected(Device device) {
         // Log event
-        firebaseAnalyticsHelper.logCameraConnected(true);
+        dataManager.analytics.logCameraConnected(true);
 
         flirOneDevice = device;
         flirOneDevice.setPowerUpdateDelegate(this);
@@ -345,7 +343,7 @@ public class CameraPresenter<V extends CameraMvpView> extends BasePresenter<V>
     @Override
     public void onDeviceDisconnected(Device device) {
         // Log event
-        firebaseAnalyticsHelper.logCameraConnected(false);
+        dataManager.analytics.logCameraConnected(false);
 
         streamingFrame = false;
         flirOneDevice = null;
@@ -369,7 +367,7 @@ public class CameraPresenter<V extends CameraMvpView> extends BasePresenter<V>
     @Override
     public void onTuningStateChanged(Device.TuningState tuningState) {
         // Log event
-        firebaseAnalyticsHelper.logTuningStateChanged(tuningState);
+        dataManager.analytics.logTuningStateChanged(tuningState);
 
         this.tuningState = tuningState;
         activity.runOnUiThread(() -> getMvpView().setDeviceTuningState(tuningState));
@@ -378,7 +376,7 @@ public class CameraPresenter<V extends CameraMvpView> extends BasePresenter<V>
     @Override
     public void onAutomaticTuningChanged(boolean deviceWillTuneAutomatically) {
         // Log event
-        firebaseAnalyticsHelper.logAutomaticTuningChanged(deviceWillTuneAutomatically);
+        dataManager.analytics.logAutomaticTuningChanged(deviceWillTuneAutomatically);
     }
 
     @Override
@@ -419,7 +417,7 @@ public class CameraPresenter<V extends CameraMvpView> extends BasePresenter<V>
     @Override
     public void onBatteryChargingStateReceived(Device.BatteryChargingState batteryChargingState) {
         // Log event
-        firebaseAnalyticsHelper.logCameraChargingStateChanged(batteryChargingState);
+        dataManager.analytics.logCameraChargingStateChanged(batteryChargingState);
 
         activity.runOnUiThread(() -> getMvpView().setDeviceChargingState(batteryChargingState));
     }
@@ -444,12 +442,12 @@ public class CameraPresenter<V extends CameraMvpView> extends BasePresenter<V>
     @Override
     public void setCurrentPatient(final String patientCuid) {
         // Log event
-        firebaseAnalyticsHelper.logSetCurrentPatient(patientCuid);
+        dataManager.analytics.logSetCurrentPatient(patientCuid);
 
         // Query and display last selected patient name
         Observable.<String>create(emitter -> {
-            preferencesHelper.setSelectedPatientCuid(patientCuid);
-            patient = database.patientDAO().getOrDefault(patientCuid);
+            dataManager.pref.setSelectedPatientCuid(patientCuid);
+            patient = dataManager.db.patientDAO().getOrDefault(patientCuid);
             emitter.onNext(patient.getName());
         }).subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
@@ -526,7 +524,7 @@ public class CameraPresenter<V extends CameraMvpView> extends BasePresenter<V>
 
     private void connectSimulatedDevice() {
         // Log event
-        firebaseAnalyticsHelper.logConnectSimulatedDevice();
+        dataManager.analytics.logConnectSimulatedDevice();
 
         try {
             flirOneDevice = new SimulatedDevice(this, activity,
@@ -543,7 +541,7 @@ public class CameraPresenter<V extends CameraMvpView> extends BasePresenter<V>
     @NewThread
     private void captureFLIRImage(final RenderedImage renderedImage, final String filename) {
         // Log event
-        firebaseAnalyticsHelper.logCameraCapture(contiShooting, contiShootParams);
+        dataManager.analytics.logCameraCapture(contiShooting, contiShootParams);
 
         Observable.create(emitter -> {
             try {
@@ -577,8 +575,8 @@ public class CameraPresenter<V extends CameraMvpView> extends BasePresenter<V>
                     rawThermalDump.setSpotMarkers(preSelectedSpots);
 
                 // Auto set visible light image offset based on config in shared preferences
-                if (preferencesHelper.getAutoApplyVisibleOffsetEnabled()) {
-                    android.graphics.Point defaultOffset = preferencesHelper.getDefaultVisibleOffset();
+                if (dataManager.pref.getAutoApplyVisibleOffsetEnabled()) {
+                    android.graphics.Point defaultOffset = dataManager.pref.getDefaultVisibleOffset();
                     rawThermalDump.setVisibleOffsetX(defaultOffset.x);
                     rawThermalDump.setVisibleOffsetY(defaultOffset.y);
                 }
@@ -600,7 +598,7 @@ public class CameraPresenter<V extends CameraMvpView> extends BasePresenter<V>
 
     private void scanMediaStorage(String filename) {
         // Log event
-        firebaseAnalyticsHelper.logSimpleEvent("scanMediaStorage", "filename=" + filename);
+        dataManager.analytics.logSimpleEvent("scanMediaStorage", "filename=" + filename);
 
         // Call the system media scanner
         Log.i(TAG, "scanning media storage");

@@ -1,4 +1,4 @@
-package tw.cchi.medthimager.helper.pref;
+package tw.cchi.medthimager.data.pref;
 
 import android.content.Context;
 import android.content.SharedPreferences;

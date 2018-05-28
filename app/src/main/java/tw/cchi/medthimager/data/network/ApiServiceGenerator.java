@@ -1,9 +1,6 @@
-package tw.cchi.medthimager.helper.api;
+package tw.cchi.medthimager.data.network;
 
 import android.util.Log;
-
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -53,61 +50,62 @@ public class ApiServiceGenerator {
     }
 
     public static <S> S createService(Class<S> serviceClass, AccessTokens accessTokens, MvpApplication application) {
+        if (accessTokens == null)
+            return null;
+
+        ApiServiceGenerator.accessTokens = accessTokens;
+        final AccessTokens token = accessTokens;
+
         httpClient = new OkHttpClient.Builder();
         builder = new Retrofit.Builder()
                 .baseUrl(API_BASE_URL)
                 .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
                 .addConverterFactory(GsonConverterFactory.create(CommonUtils.getGsonInstance()));
 
-        if (accessTokens != null) {
-            ApiServiceGenerator.accessTokens = accessTokens;
-            final AccessTokens token = accessTokens;
+        httpClient.addInterceptor(new HttpLoggingInterceptor().setLevel(Config.API_LOGGING_LEVEL));
 
-            httpClient.addInterceptor(new HttpLoggingInterceptor().setLevel(Config.API_LOGGING_LEVEL));
+        httpClient.addInterceptor(chain -> {
+            Request original = chain.request();
+            Request request = original.newBuilder()
+                    .header("Accept", "application/json")
+                    .header("Content-type", "application/json")
+                    .header("Authorization",
+                            token.getTokenType() + " " + token.getAccessToken())
+                    .method(original.method(), original.body())
+                    .build();
+            return chain.proceed(request);
+        });
 
-            httpClient.addInterceptor(chain -> {
-                Request original = chain.request();
-                Request request = original.newBuilder()
-                        .header("Accept", "application/json")
-                        .header("Content-type", "application/json")
-                        .header("Authorization",
-                                token.getTokenType() + " " + token.getAccessToken())
-                        .method(original.method(), original.body())
-                        .build();
-                return chain.proceed(request);
-            });
+        httpClient.authenticator((route, response) -> {
+            if (responseCount(response) >= 2) {
+                // If both the original call and the call with refreshed token failed,
+                // it will probably keep failing, so don't try again.
+                return null;
+            }
 
-            httpClient.authenticator((route, response) -> {
-                if (responseCount(response) >= 2) {
-                    // If both the original call and the call with refreshed token failed,
-                    // it will probably keep failing, so don't try again.
-                    return null;
-                }
+            // We need a new client, since we don't want to make another call using our client with access token
+            ApiClient tokenClient = createService(ApiClient.class);
+            Call<AccessTokens> call = tokenClient.getRefreshAccessToken(ApiServiceGenerator.accessTokens.getRefreshToken());
+            try {
+                retrofit2.Response<AccessTokens> tokenResponse = call.execute();
+                if (tokenResponse.code() == 200) {
+                    AccessTokens newTokens = tokenResponse.body();
+                    ApiServiceGenerator.accessTokens = newTokens;
 
-                // We need a new client, since we don't want to make another call using our client with access token
-                ApiClient tokenClient = createService(ApiClient.class);
-                Call<AccessTokens> call = tokenClient.getRefreshAccessToken(ApiServiceGenerator.accessTokens.getRefreshToken());
-                try {
-                    retrofit2.Response<AccessTokens> tokenResponse = call.execute();
-                    if (tokenResponse.code() == 200) {
-                        AccessTokens newTokens = tokenResponse.body();
-                        ApiServiceGenerator.accessTokens = newTokens;
+                    application.getSession().setAccessTokens(newTokens);
 
-                        application.getSession().setAccessTokens(newTokens);
-
-                        return response.request().newBuilder()
-                                .header("Authorization", newTokens.getTokenType() + " " + newTokens.getAccessToken())
-                                .build();
-                    } else {
-                        application.getSession().invalidate();
-                        return null;
-                    }
-                } catch (Exception e) {
+                    return response.request().newBuilder()
+                            .header("Authorization", newTokens.getTokenType() + " " + newTokens.getAccessToken())
+                            .build();
+                } else {
                     application.getSession().invalidate();
                     return null;
                 }
-            });
-        }
+            } catch (Exception e) {
+                application.getSession().invalidate();
+                return null;
+            }
+        });
 
         OkHttpClient client = httpClient.build();
         Retrofit retrofit = builder.client(client).build();

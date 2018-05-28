@@ -25,7 +25,6 @@ import tw.cchi.medthimager.R;
 import tw.cchi.medthimager.di.component.ActivityComponent;
 import tw.cchi.medthimager.di.component.DaggerActivityComponent;
 import tw.cchi.medthimager.di.module.ActivityModule;
-import tw.cchi.medthimager.helper.pref.PreferencesHelper;
 import tw.cchi.medthimager.helper.session.SessionManager;
 import tw.cchi.medthimager.ui.auth.LoginActivity;
 import tw.cchi.medthimager.util.AppUtils;
@@ -39,7 +38,6 @@ public abstract class BaseActivity extends AppCompatActivity
     private ProgressDialog loadingDialog;
 
     protected MvpApplication application;
-    protected PreferencesHelper preferencesHelper;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -53,9 +51,6 @@ public abstract class BaseActivity extends AppCompatActivity
 
         application = (MvpApplication) getApplication();
         application.sessionManager.addAuthEventListener(this);
-
-        // Sugar
-        preferencesHelper = application.preferencesHelper;
 
         finishIfNotAuthorized();
     }

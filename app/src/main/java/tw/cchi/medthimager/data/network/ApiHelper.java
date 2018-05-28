@@ -1,4 +1,4 @@
-package tw.cchi.medthimager.helper.api;
+package tw.cchi.medthimager.data.network;
 
 import javax.inject.Inject;
 
@@ -19,12 +19,12 @@ public class ApiHelper {
 
     public Observable<Boolean> refreshUserProfile() {
         Session currentSession = application.getSession();
-        if (application.authedApiClient == null || !currentSession.isActive()) {
+        if (!currentSession.isActive()) {
             return Observable.just(false);
         }
 
         return Observable.create(emitter -> {
-            application.authedApiClient.getProfile()
+            currentSession.getApiClient().getProfile()
                 .subscribeOn(Schedulers.io())
                 .subscribe(
                     (Response<User> response) -> {
@@ -44,5 +44,4 @@ public class ApiHelper {
                 );
         });
     }
-
 }

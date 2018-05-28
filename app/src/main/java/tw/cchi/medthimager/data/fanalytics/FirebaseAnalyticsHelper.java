@@ -1,4 +1,4 @@
-package tw.cchi.medthimager.helper.fanalytics;
+package tw.cchi.medthimager.data.fanalytics;
 
 import android.content.Context;
 import android.os.Bundle;

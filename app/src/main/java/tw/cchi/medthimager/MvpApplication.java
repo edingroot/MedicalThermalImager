@@ -1,13 +1,10 @@
 package tw.cchi.medthimager;
 
 import android.app.Application;
-import android.app.Service;
 import android.content.ComponentName;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.os.IBinder;
-import android.os.SystemClock;
-import android.support.annotation.Nullable;
 
 import com.squareup.leakcanary.LeakCanary;
 
@@ -15,17 +12,14 @@ import javax.inject.Inject;
 
 import io.reactivex.Observable;
 import io.reactivex.schedulers.Schedulers;
+import tw.cchi.medthimager.data.DataManager;
 import tw.cchi.medthimager.di.component.ApplicationComponent;
 import tw.cchi.medthimager.di.component.DaggerApplicationComponent;
 import tw.cchi.medthimager.di.module.ApplicationModule;
 import tw.cchi.medthimager.helper.FlirDeviceDelegate;
 import tw.cchi.medthimager.helper.FlirFrameProcessorDelegate;
-import tw.cchi.medthimager.helper.api.ApiClient;
-import tw.cchi.medthimager.helper.api.ApiServiceGenerator;
 import tw.cchi.medthimager.helper.session.Session;
 import tw.cchi.medthimager.helper.session.SessionManager;
-import tw.cchi.medthimager.helper.pref.PreferencesHelper;
-import tw.cchi.medthimager.model.api.AccessTokens;
 import tw.cchi.medthimager.service.sync.SyncService;
 
 /**
@@ -38,10 +32,8 @@ public class MvpApplication extends Application {
     protected ServiceConnection syncServiceConnection;
     protected volatile boolean syncServiceBounded = false;
 
+    @Inject public DataManager dataManager;
     @Inject public SessionManager sessionManager;
-    @Inject public PreferencesHelper preferencesHelper;
-    // null if access tokens not exists in shared preferences
-    @Nullable public ApiClient authedApiClient;
 
     // This is used to avoid memory leak due to (flir) Device.cachedDelegate is a static field
     @Inject public FlirDeviceDelegate flirDeviceDelegate;
@@ -62,7 +54,6 @@ public class MvpApplication extends Application {
                 .applicationModule(new ApplicationModule(this)).build();
         this.mApplicationComponent.inject(this);
 
-        createAuthedAPIClient(getSession().getAccessTokens());
         SyncService.start(this);
 
         // copyDatabaseToSDCard();
@@ -75,15 +66,6 @@ public class MvpApplication extends Application {
     // Needed to replace the component with a test specific one
     public void setComponent(ApplicationComponent applicationComponent) {
         mApplicationComponent = applicationComponent;
-    }
-
-    public boolean createAuthedAPIClient(AccessTokens accessTokens) {
-        if (accessTokens != null) {
-            authedApiClient = ApiServiceGenerator.createService(ApiClient.class, accessTokens, this);
-            return true;
-        } else {
-            return false;
-        }
     }
 
     public Session getSession() {

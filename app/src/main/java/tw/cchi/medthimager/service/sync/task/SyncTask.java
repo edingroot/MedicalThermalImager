@@ -5,12 +5,16 @@ import android.os.Looper;
 import android.support.annotation.Nullable;
 import android.widget.Toast;
 
+import javax.inject.Inject;
+
 import io.reactivex.disposables.Disposable;
 import tw.cchi.medthimager.MvpApplication;
+import tw.cchi.medthimager.data.DataManager;
 import tw.cchi.medthimager.util.annotation.BgThreadCapable;
 
 abstract class SyncTask implements Runnable, Disposable {
     protected MvpApplication application;
+    protected DataManager dataManager;
     protected volatile boolean disposed = false;
 
     private Handler mainHandler;
@@ -19,6 +23,7 @@ abstract class SyncTask implements Runnable, Disposable {
 
     SyncTask(MvpApplication application) {
         this.application = application;
+        this.dataManager = application.dataManager;
         this.mainHandler = new Handler(Looper.getMainLooper());
     }
 

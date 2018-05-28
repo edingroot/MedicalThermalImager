@@ -27,8 +27,6 @@ import io.reactivex.schedulers.Schedulers;
 import tw.cchi.medthimager.Config;
 import tw.cchi.medthimager.Constants;
 import tw.cchi.medthimager.R;
-import tw.cchi.medthimager.util.annotation.BgThreadCapable;
-import tw.cchi.medthimager.util.annotation.NewThread;
 import tw.cchi.medthimager.helper.ThermalSpotsHelper;
 import tw.cchi.medthimager.model.ChartParameter;
 import tw.cchi.medthimager.model.ViewerTabResources;
@@ -40,6 +38,8 @@ import tw.cchi.medthimager.util.AppUtils;
 import tw.cchi.medthimager.util.CommonUtils;
 import tw.cchi.medthimager.util.ImageUtils;
 import tw.cchi.medthimager.util.ThermalDumpUtils;
+import tw.cchi.medthimager.util.annotation.BgThreadCapable;
+import tw.cchi.medthimager.util.annotation.NewThread;
 
 public class DumpViewerPresenter<V extends DumpViewerMvpView> extends BasePresenter<V> implements DumpViewerMvpPresenter<V> {
     private final String TAG = Config.TAGPRE + getClass().getSimpleName();
@@ -382,7 +382,7 @@ public class DumpViewerPresenter<V extends DumpViewerMvpView> extends BasePresen
             rawThermalDump.setVisibleOffsetY(dumpPixelOffsetY);
             rawThermalDump.save();
 
-            preferencesHelper.setDefaultVisibleOffset(
+            dataManager.pref.setDefaultVisibleOffset(
                     new android.graphics.Point(dumpPixelOffsetX, dumpPixelOffsetY));
 
         }).subscribeOn(Schedulers.io()).subscribe();

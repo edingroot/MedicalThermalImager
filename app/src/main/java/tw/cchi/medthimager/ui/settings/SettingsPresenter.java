@@ -12,9 +12,8 @@ import retrofit2.Callback;
 import retrofit2.Response;
 import tw.cchi.medthimager.Config;
 import tw.cchi.medthimager.R;
-import tw.cchi.medthimager.helper.api.ApiHelper;
+import tw.cchi.medthimager.data.network.ApiHelper;
 import tw.cchi.medthimager.helper.session.Session;
-import tw.cchi.medthimager.service.sync.SyncService;
 import tw.cchi.medthimager.ui.base.BasePresenter;
 import tw.cchi.medthimager.util.NetworkUtils;
 
@@ -41,8 +40,8 @@ public class SettingsPresenter<V extends SettingsMvpView> extends BasePresenter<
         currentSession = application.getSession();
 
         getMvpView().setAuthState(currentSession.isActive(), currentSession.getUser());
-        getMvpView().setSwClearSpotsOnDisconn(preferencesHelper.getClearSpotsOnDisconnectEnabled());
-        getMvpView().setSwAutoApplyVisibleOffset(preferencesHelper.getAutoApplyVisibleOffsetEnabled());
+        getMvpView().setSwClearSpotsOnDisconn(dataManager.pref.getClearSpotsOnDisconnectEnabled());
+        getMvpView().setSwAutoApplyVisibleOffset(dataManager.pref.getAutoApplyVisibleOffsetEnabled());
 
         // Refresh data asynchronously
         apiHelper.refreshUserProfile().observeOn(AndroidSchedulers.mainThread()).subscribe(success -> {
@@ -63,12 +62,11 @@ public class SettingsPresenter<V extends SettingsMvpView> extends BasePresenter<
 
     @Override
     public void logout() {
-        if (application.authedApiClient == null) {
-            getMvpView().showSnackBar(R.string.error_occurred);
+        if (!currentSession.isActive()) {
             return;
         }
 
-        application.authedApiClient.logout().enqueue(new Callback<Void>() {
+        currentSession.getApiClient().logout().enqueue(new Callback<Void>() {
             @Override
             public void onResponse(Call<Void> call, Response<Void> response) {
                 Log.i(TAG, "onLogout: got status code " + response.code());
@@ -91,12 +89,12 @@ public class SettingsPresenter<V extends SettingsMvpView> extends BasePresenter<
 
     @Override
     public void setClearSpotsOnDisconnect(boolean enable) {
-        preferencesHelper.setClearSpotsOnDisconnect(enable);
+        dataManager.pref.setClearSpotsOnDisconnect(enable);
     }
 
     @Override
     public void setAutoSetVisibleOffset(boolean enable) {
-        preferencesHelper.setAutoApplyVisibleOffsetEnabled(enable);
+        dataManager.pref.setAutoApplyVisibleOffsetEnabled(enable);
     }
 
     @Override

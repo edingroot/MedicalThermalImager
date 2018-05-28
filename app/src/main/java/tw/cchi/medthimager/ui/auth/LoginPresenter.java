@@ -1,8 +1,6 @@
 package tw.cchi.medthimager.ui.auth;
 
 import java.io.IOException;
-import java.net.ConnectException;
-import java.net.UnknownHostException;
 import java.util.concurrent.atomic.AtomicReference;
 
 import javax.inject.Inject;
@@ -11,12 +9,11 @@ import io.reactivex.Observable;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.schedulers.Schedulers;
-import retrofit2.HttpException;
 import retrofit2.Response;
 import tw.cchi.medthimager.Config;
 import tw.cchi.medthimager.R;
-import tw.cchi.medthimager.helper.api.ApiClient;
-import tw.cchi.medthimager.helper.api.ApiServiceGenerator;
+import tw.cchi.medthimager.data.network.ApiClient;
+import tw.cchi.medthimager.data.network.ApiServiceGenerator;
 import tw.cchi.medthimager.model.User;
 import tw.cchi.medthimager.model.api.AccessTokens;
 import tw.cchi.medthimager.ui.base.BasePresenter;
@@ -59,11 +56,15 @@ public class LoginPresenter<V extends LoginMvpView> extends BasePresenter<V> imp
             // Log.i(TAG, "[onLogin] " + call.request().method() + " " + call.request().url());
             // Log.i(TAG, "[onLogin] AccessTokens: got status code " + response.code());
 
-            if (response.code() == 200 &&
-                    application.createAuthedAPIClient(response.body()) &&
-                    application.authedApiClient != null) {
-                accessTokensRef.set(response.body());
-                return application.authedApiClient.getProfile();
+            if (response.code() == 200) {
+                AccessTokens accessTokens = response.body();
+                accessTokensRef.set(accessTokens);
+
+                ApiClient authedApiClient = application.sessionManager.createAuthedAPIClient(accessTokens);
+                if (authedApiClient != null)
+                    return authedApiClient.getProfile();
+                else
+                    throw new Error();
             } else {
                 throw new Error();
             }

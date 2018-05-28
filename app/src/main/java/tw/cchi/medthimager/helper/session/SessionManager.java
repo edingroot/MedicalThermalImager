@@ -9,20 +9,22 @@ import javax.inject.Inject;
 
 import tw.cchi.medthimager.Config;
 import tw.cchi.medthimager.MvpApplication;
-import tw.cchi.medthimager.helper.pref.PreferencesHelper;
+import tw.cchi.medthimager.data.network.ApiClient;
+import tw.cchi.medthimager.data.network.ApiServiceGenerator;
+import tw.cchi.medthimager.model.api.AccessTokens;
 import tw.cchi.medthimager.ui.auth.LoginActivity;
 
 public class SessionManager {
     private final String TAG = Config.TAGPRE + getClass().getSimpleName();
 
-    private MvpApplication application;
+    protected MvpApplication application;
     private final ArrayList<AuthEventListener> authEventListeners = new ArrayList<>();
     private Session session;
 
     @Inject
-    public SessionManager(MvpApplication application, PreferencesHelper preferencesHelper) {
+    public SessionManager(MvpApplication application) {
         this.application = application;
-        this.session = new Session(this, preferencesHelper);
+        this.session = new Session(this, application.dataManager);
     }
 
     public Session getSession() {
@@ -41,6 +43,11 @@ public class SessionManager {
         }
     }
 
+    public ApiClient createAuthedAPIClient(AccessTokens accessTokens) {
+        return ApiServiceGenerator.createService(ApiClient.class, accessTokens, application);
+    }
+
+
     synchronized void handleSessionActivate() {
         Log.i(TAG, "Activating session");
         notifyLogin();
@@ -48,7 +55,6 @@ public class SessionManager {
 
     synchronized void handleSessionInvalidate() {
         Log.i(TAG, "Invalidating session");
-        application.authedApiClient = null;
         notifyLogout();
 
         // Ask to login

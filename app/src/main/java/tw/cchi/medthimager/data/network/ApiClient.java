@@ -1,4 +1,4 @@
-package tw.cchi.medthimager.helper.api;
+package tw.cchi.medthimager.data.network;
 
 import io.reactivex.Observable;
 import retrofit2.Call;

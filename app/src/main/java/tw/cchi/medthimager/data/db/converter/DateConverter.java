@@ -1,4 +1,4 @@
-package tw.cchi.medthimager.db.converter;
+package tw.cchi.medthimager.data.db.converter;
 
 import android.arch.persistence.room.TypeConverter;
 

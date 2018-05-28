@@ -4,7 +4,7 @@ import android.support.annotation.Nullable;
 
 import java.util.Date;
 
-import tw.cchi.medthimager.db.model.Patient;
+import tw.cchi.medthimager.data.db.model.Patient;
 
 /**
  * Server-side patient object

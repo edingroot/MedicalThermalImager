@@ -13,8 +13,7 @@ import retrofit2.Response;
 import tw.cchi.medthimager.Config;
 import tw.cchi.medthimager.MvpApplication;
 import tw.cchi.medthimager.R;
-import tw.cchi.medthimager.db.AppDatabase;
-import tw.cchi.medthimager.db.model.Patient;
+import tw.cchi.medthimager.data.db.model.Patient;
 import tw.cchi.medthimager.model.api.PatientResponse;
 import tw.cchi.medthimager.model.api.SSPatient;
 import tw.cchi.medthimager.util.CommonUtils;
@@ -26,21 +25,19 @@ import tw.cchi.medthimager.util.NetworkUtils;
 public class SyncPatientsTask extends SyncTask {
     private final String TAG = Config.TAGPRE + getClass().getSimpleName();
 
-    private AppDatabase database;
     private Disposable uploadTask;
 
     private static final Gson gson = CommonUtils.getGsonInstance();
 
-    public SyncPatientsTask(MvpApplication application, AppDatabase database) {
+    public SyncPatientsTask(MvpApplication application) {
         super(application);
-        this.database = database;
     }
 
     @Override
     public void run() {
         if (!NetworkUtils.isNetworkConnected(application)) {
             finish(new NetworkLostError());
-        } else if (application.authedApiClient == null) {
+        } else if (!application.getSession().isActive()) {
             finish(new UnauthenticatedError());
         } else {
             showToast(application.getString(R.string.syncing_patient_list));
@@ -49,7 +46,7 @@ public class SyncPatientsTask extends SyncTask {
     }
 
     private void syncPatients() {
-        List<Patient> patients = database.patientDAO().findNullUuids();
+        List<Patient> patients = dataManager.db.patientDAO().findNullUuids();
 
         uploadTask = Observable.fromIterable(patients)
             .subscribe(
@@ -66,12 +63,13 @@ public class SyncPatientsTask extends SyncTask {
     }
 
     private void handleCreatePatient(Patient patient) {
-        if (application.authedApiClient == null) {
+        if (!application.getSession().isActive()) {
             uploadTask.dispose();
+            return;
         }
 
         SSPatient ssPatient = SSPatient.fromLocalPatient(patient);
-        application.authedApiClient.createPatient(ssPatient)
+        application.getSession().getApiClient().createPatient(ssPatient)
             .subscribeOn(Schedulers.io())
             .observeOn(Schedulers.io())
             .subscribe(
@@ -118,7 +116,7 @@ public class SyncPatientsTask extends SyncTask {
 
     private void updateAfterCreated(Patient patient, SSPatient ssPatient) {
         patient.setUuid(ssPatient.getUuid());
-        database.patientDAO().updateAll(patient);
+        dataManager.db.patientDAO().updateAll(patient);
     }
 
     @Override

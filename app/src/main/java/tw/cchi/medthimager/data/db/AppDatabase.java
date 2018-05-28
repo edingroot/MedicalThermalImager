@@ -1,4 +1,4 @@
-package tw.cchi.medthimager.db;
+package tw.cchi.medthimager.data.db;
 
 import android.arch.persistence.db.SupportSQLiteDatabase;
 import android.arch.persistence.room.Database;
@@ -9,11 +9,11 @@ import android.content.Context;
 import android.support.annotation.NonNull;
 import android.util.Log;
 
-import tw.cchi.medthimager.db.converter.DateConverter;
-import tw.cchi.medthimager.db.model.CaptureRecord;
-import tw.cchi.medthimager.db.model.CaptureRecordDAO;
-import tw.cchi.medthimager.db.model.Patient;
-import tw.cchi.medthimager.db.model.PatientDAO;
+import tw.cchi.medthimager.data.db.converter.DateConverter;
+import tw.cchi.medthimager.data.db.model.CaptureRecord;
+import tw.cchi.medthimager.data.db.model.CaptureRecordDAO;
+import tw.cchi.medthimager.data.db.model.Patient;
+import tw.cchi.medthimager.data.db.model.PatientDAO;
 
 @Database(entities = {
         Patient.class,

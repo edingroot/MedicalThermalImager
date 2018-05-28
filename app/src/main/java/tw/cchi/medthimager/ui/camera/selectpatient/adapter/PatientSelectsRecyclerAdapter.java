@@ -14,7 +14,7 @@ import java.util.Locale;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import tw.cchi.medthimager.R;
-import tw.cchi.medthimager.db.model.Patient;
+import tw.cchi.medthimager.data.db.model.Patient;
 
 public class PatientSelectsRecyclerAdapter extends RecyclerView.Adapter<PatientSelectsRecyclerAdapter.ViewHolder> {
     private final Context context;
