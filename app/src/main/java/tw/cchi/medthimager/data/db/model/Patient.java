@@ -4,23 +4,26 @@ import android.arch.persistence.room.ColumnInfo;
 import android.arch.persistence.room.Entity;
 import android.arch.persistence.room.Ignore;
 import android.arch.persistence.room.PrimaryKey;
+import android.os.Parcel;
+import android.os.Parcelable;
 import android.support.annotation.NonNull;
 
 import java.util.Date;
 import java.util.UUID;
 
 @Entity(tableName = "patients")
-public class Patient {
+public class Patient implements Parcelable {
     public static final String DEFAULT_PATIENT_CUID = "AAAAAAAA-BBBB-CCCC-DDDD-123456789012";
     public static final String DEFAULT_PATIENT_UUID = "UAAAAAAA-BBBB-CCCC-DDDD-123456789012";
     public static final String DEFAULT_PATIENT_NAME = "Not Specified";
+    public static final String DEFAULT_PATIENT_BED = "00-00";
 
     @PrimaryKey
     @ColumnInfo(name = "cuid")
     @NonNull private String cuid;
 
-    @ColumnInfo(name = "uuid")
-    private String uuid = null;
+    @ColumnInfo(name = "ssuuid")
+    private String ssuuid = null;
 
     @ColumnInfo(name = "caseid")
     private String caseid = null;
@@ -30,6 +33,9 @@ public class Patient {
 
     @ColumnInfo(name = "bed")
     private String bed = null;
+
+    @ColumnInfo(name = "sync_enabled")
+    private boolean syncEnabled = true;
 
     @ColumnInfo(name = "created_at")
     private Date createdAt;
@@ -48,9 +54,13 @@ public class Patient {
         this.createdAt = new Date();
     }
 
-    public Patient(@NonNull String cuid, String name, Date createdAt) {
+    public Patient(@NonNull String cuid, String ssuuid, String caseid, String name, String bed, boolean syncEnabled, Date createdAt) {
         this.cuid = cuid;
+        this.ssuuid = ssuuid;
+        this.caseid = caseid;
         this.name = name;
+        this.bed = bed;
+        this.syncEnabled = syncEnabled;
         this.createdAt = createdAt;
     }
 
@@ -63,12 +73,12 @@ public class Patient {
         this.cuid = cuid;
     }
 
-    public String getUuid() {
-        return uuid;
+    public String getSsuuid() {
+        return ssuuid;
     }
 
-    public void setUuid(String uuid) {
-        this.uuid = uuid;
+    public void setSsuuid(String ssuuid) {
+        this.ssuuid = ssuuid;
     }
 
     public String getCaseid() {
@@ -95,7 +105,55 @@ public class Patient {
         this.bed = bed;
     }
 
+    public boolean isSyncEnabled() {
+        return syncEnabled;
+    }
+
+    public void setSyncEnabled(boolean syncEnabled) {
+        this.syncEnabled = syncEnabled;
+    }
+
     public Date getCreatedAt() {
         return createdAt;
     }
+
+
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        dest.writeString(this.cuid);
+        dest.writeString(this.ssuuid);
+        dest.writeString(this.caseid);
+        dest.writeString(this.name);
+        dest.writeString(this.bed);
+        dest.writeByte(this.syncEnabled ? (byte) 1 : (byte) 0);
+        dest.writeLong(this.createdAt != null ? this.createdAt.getTime() : -1);
+    }
+
+    protected Patient(Parcel in) {
+        this.cuid = in.readString();
+        this.ssuuid = in.readString();
+        this.caseid = in.readString();
+        this.name = in.readString();
+        this.bed = in.readString();
+        this.syncEnabled = in.readByte() != 0;
+        long tmpCreatedAt = in.readLong();
+        this.createdAt = tmpCreatedAt == -1 ? null : new Date(tmpCreatedAt);
+    }
+
+    public static final Parcelable.Creator<Patient> CREATOR = new Parcelable.Creator<Patient>() {
+        @Override
+        public Patient createFromParcel(Parcel source) {
+            return new Patient(source);
+        }
+
+        @Override
+        public Patient[] newArray(int size) {
+            return new Patient[size];
+        }
+    };
 }

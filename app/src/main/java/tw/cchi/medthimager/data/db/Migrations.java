@@ -29,8 +29,8 @@ final class Migrations {
 
         // Create record
         String sql = String.format(
-                "insert into patients (`cuid`, `uuid`, `name`, `created_at`) values ('%s', '%s', '%s', '2000-1-1 00:00:00')",
-                Patient.DEFAULT_PATIENT_CUID, Patient.DEFAULT_PATIENT_UUID, Patient.DEFAULT_PATIENT_NAME);
+                "insert into patients (`cuid`, `ssuuid`, `name`, `bed`, `sync_enabled`, `created_at`) values ('%s', '%s', '%s', '%s', 0, '2000-1-1 00:00:00')",
+                Patient.DEFAULT_PATIENT_CUID, Patient.DEFAULT_PATIENT_UUID, Patient.DEFAULT_PATIENT_NAME, Patient.DEFAULT_PATIENT_BED);
         db.execSQL(sql);
     }
 

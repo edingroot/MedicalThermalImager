@@ -32,6 +32,10 @@ public interface PreferencesHelper {
 
     void setSelectedPatientCuid(String selectedPatientCuid);
 
+    int getSyncPatientConflictCount();
+
+    void setSyncPatientConflictCount(int count);
+
 
     // ------------------------- Settings ------------------------- //
 

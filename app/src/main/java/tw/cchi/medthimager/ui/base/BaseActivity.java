@@ -1,9 +1,11 @@
 package tw.cchi.medthimager.ui.base;
 
 import android.app.ProgressDialog;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -13,28 +15,38 @@ import android.support.design.widget.Snackbar;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.util.List;
+
 import butterknife.Unbinder;
 import tw.cchi.medthimager.Config;
+import tw.cchi.medthimager.Constants;
 import tw.cchi.medthimager.MvpApplication;
 import tw.cchi.medthimager.R;
+import tw.cchi.medthimager.data.db.model.Patient;
 import tw.cchi.medthimager.di.component.ActivityComponent;
 import tw.cchi.medthimager.di.component.DaggerActivityComponent;
 import tw.cchi.medthimager.di.module.ActivityModule;
 import tw.cchi.medthimager.helper.session.SessionManager;
+import tw.cchi.medthimager.model.api.SSPatient;
+import tw.cchi.medthimager.service.sync.SyncBroadcastSender;
 import tw.cchi.medthimager.ui.auth.LoginActivity;
 import tw.cchi.medthimager.util.AppUtils;
 import tw.cchi.medthimager.util.NetworkUtils;
 
 public abstract class BaseActivity extends AppCompatActivity
         implements MvpView, BaseFragment.Callback, SessionManager.AuthEventListener {
+    private final String TAG = Config.TAGPRE + BaseActivity.class.getSimpleName();
+
     private ActivityComponent mActivityComponent;
     private Unbinder mUnBinder;
     private Handler mainLooperHandler;
+    private InternalBroadcastReceiver internalBroadcastReceiver;
     private ProgressDialog loadingDialog;
 
     protected MvpApplication application;
@@ -53,6 +65,12 @@ public abstract class BaseActivity extends AppCompatActivity
         application.sessionManager.addAuthEventListener(this);
 
         finishIfNotAuthorized();
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        registerBroadcastReceivers();
     }
 
     public ActivityComponent getActivityComponent() {
@@ -175,6 +193,14 @@ public abstract class BaseActivity extends AppCompatActivity
         }
     }
 
+    private void registerBroadcastReceivers() {
+        internalBroadcastReceiver = new InternalBroadcastReceiver();
+        IntentFilter intentFilter = new IntentFilter();
+        intentFilter.addAction(SyncBroadcastSender.Actions.SYNC_PATIENT_CONFLICT);
+        registerReceiver(internalBroadcastReceiver, intentFilter,
+                Constants.INTERNAL_BROADCAST_PERMISSION, null);
+    }
+
     @Override
     public void onLogin() {
     }
@@ -189,17 +215,46 @@ public abstract class BaseActivity extends AppCompatActivity
     }
 
     @Override
-    protected void onDestroy() {
-        application.sessionManager.removeAuthEventListener(this);
+    protected void onStop() {
+        try {
+            unregisterReceiver(internalBroadcastReceiver);
+        } catch (Exception ignored) {}
 
+        application.sessionManager.removeAuthEventListener(this);
+        super.onStop();
+    }
+
+    @Override
+    protected void onDestroy() {
         if (mUnBinder != null)
             mUnBinder.unbind();
-
         super.onDestroy();
     }
 
 
-    /* @TargetApi(Build.VERSION_CODES.M)
+    private class InternalBroadcastReceiver extends BroadcastReceiver {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if (intent.getAction() == null)
+                return;
+
+            if (intent.getAction().equals(SyncBroadcastSender.Actions.SYNC_PATIENT_CONFLICT)) {
+                SyncBroadcastSender.ConflictType conflictType =
+                        (SyncBroadcastSender.ConflictType) intent.getSerializableExtra(SyncBroadcastSender.Extras.EXTRA_CONFLICT_TYPE);
+                Patient patient = intent.getParcelableExtra(SyncBroadcastSender.Extras.EXTRA_PATIENT);
+                List<SSPatient> conflictPatients = intent.getParcelableArrayListExtra(SyncBroadcastSender.Extras.EXTRA_SSPATIENT_LIST);
+
+                Log.d(TAG, "Received internal broadcast event: SYNC_PATIENT_CONFLICT; patient.name=" + patient.getName());
+                // TODO
+            }
+        }
+    }
+
+
+
+}
+
+/* @TargetApi(Build.VERSION_CODES.M)
     public void requestPermissionsSafely(String[] permissions, int requestCode) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             requestPermissions(permissions, requestCode);
@@ -211,4 +266,3 @@ public abstract class BaseActivity extends AppCompatActivity
         return Build.VERSION.SDK_INT < Build.VERSION_CODES.M ||
                 checkSelfPermission(permission) == PackageManager.PERMISSION_GRANTED;
     } */
-}

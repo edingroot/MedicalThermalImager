@@ -42,12 +42,12 @@
         <item name="android:colorForeground">@color/colorSwitchTrackColor</item>
     </style>
 
-    <style name="DialogTheme" parent="@android:style/Theme.Holo.Dialog">
-        <item name="android:textSize">16sp</item>
-    </style>
-
     <style name="MyPopupMenu" parent="@android:style/Widget.Holo.ListPopupWindow">
         <item name="android:popupBackground">@color/menuBackground</item>
+    </style>
+
+    <style name="DialogTheme" parent="@android:style/Theme.Holo.Dialog">
+        <item name="android:textSize">16sp</item>
     </style>
 
     <style name="MyAlertDialog" parent="Theme.AppCompat.Dialog.Alert">
@@ -59,6 +59,18 @@
         <item name="cardElevation">4dp</item>
         <item name="android:layout_margin">10dp</item>
         <item name="cardBackgroundColor">@color/colorBackground</item>
+    </style>
+
+    <style name="AppTheme.MaterialDialogTheme" parent="Theme.AppCompat.Light.Dialog">
+        <item name="colorPrimary">@color/colorPrimary</item>
+        <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
+        <item name="colorAccent">@color/colorAccent</item>
+
+        <!--<item name="android:windowBackground">@drawable/dialog_background_light</item>-->
+
+        <item name="android:textColorPrimary">@color/contentText</item>
+        <item name="android:textColorSecondary">@color/contentTextSecondary</item>
+        <item name="android:textColorTertiary">@color/contentTextSecondary</item>
     </style>
 
     <style name="FilePickerTheme" parent="LibAppTheme">

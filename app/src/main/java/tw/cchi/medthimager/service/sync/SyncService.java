@@ -82,14 +82,13 @@ public class SyncService extends Service {
             return false;
         }
 
-        syncPatientsTask = new SyncPatientsTask(application);
+        syncPatientsTask = new SyncPatientsTask(this, application);
         Observable.create(emitter -> syncPatientsTask.run())
                 .subscribeOn(Schedulers.io())
                 .subscribe();
 
         return true;
     }
-
 
     private class NetworkStateBroadcastReceiver extends BroadcastReceiver {
         public NetworkStateBroadcastReceiver() {

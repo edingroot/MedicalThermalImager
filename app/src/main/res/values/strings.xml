@@ -52,7 +52,15 @@
     <!-- SyncService -->
     <string name="syncing_patient_list">Syncing patient list</string>
     <string name="syncing_patient_list_done">Patient list synced</string>
-
+    <string name="conflict_found_1">Conflict found:</string>
+    <string name="conflict_found_2">Local: %1$s %2$s (Last updated: %3$s)</string>
+    <string name="conflict_found_3">Remote: %1$s %2$s (Last updated: %3$s)</string>
+    <string name="conflict_found_force_4">Merge is needed due to duplicate name &amp; bed / case id.</string>
+    <string name="conflict_found_force_5">Merge two patient records or disable sync of this patient?</string>
+    <string name="conflict_found_check_4">Merge two patient records or create a new one?</string>
+    <string name="merge_records">Merge Records</string>
+    <string name="create_new">Create New</string>
+    <string name="disable_sync">Disable sync</string>
 
     <!-- Dialogs -->
     <string name="conti_shot_setting">Continuous Shooting Settings</string>

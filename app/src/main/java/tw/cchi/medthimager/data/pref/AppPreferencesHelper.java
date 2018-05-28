@@ -25,6 +25,7 @@ public class AppPreferencesHelper implements PreferencesHelper {
 
     // States
     private static final String KEY_SELECTED_PATIENT_CUID = "KEY_SELECTED_PATIENT_CUID";
+    private static final String KEY_SYNC_PATIENT_CONFLICTS = "KEY_SYNC_PATIENT_CONFLICTS";
 
     // Settings
     private static final String KEY_DEFAULT_VISIBLE_OFFSET_ENABLED = "KEY_DEFAULT_VISIBLE_OFFSET_ENABLED";
@@ -85,6 +86,16 @@ public class AppPreferencesHelper implements PreferencesHelper {
     @Override
     public void setSelectedPatientCuid(String selectedPatientCuid) {
         mPrefs.edit().putString(KEY_SELECTED_PATIENT_CUID, selectedPatientCuid).apply();
+    }
+
+    @Override
+    public int getSyncPatientConflictCount() {
+        return mPrefs.getInt(KEY_SYNC_PATIENT_CONFLICTS, 0);
+    }
+
+    @Override
+    public void setSyncPatientConflictCount(int count) {
+        mPrefs.edit().putInt(KEY_SYNC_PATIENT_CONFLICTS, count).apply();
     }
 
     @Override

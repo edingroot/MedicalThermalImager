@@ -1,22 +1,18 @@
 package tw.cchi.medthimager.service.sync.task;
 
-import android.util.Log;
-
-import com.google.gson.Gson;
-
 import java.util.List;
 
 import io.reactivex.Observable;
 import io.reactivex.disposables.Disposable;
-import io.reactivex.schedulers.Schedulers;
-import retrofit2.Response;
 import tw.cchi.medthimager.Config;
+import tw.cchi.medthimager.Errors;
 import tw.cchi.medthimager.MvpApplication;
 import tw.cchi.medthimager.R;
 import tw.cchi.medthimager.data.db.model.Patient;
-import tw.cchi.medthimager.model.api.PatientResponse;
+import tw.cchi.medthimager.data.network.ApiHelper;
 import tw.cchi.medthimager.model.api.SSPatient;
-import tw.cchi.medthimager.util.CommonUtils;
+import tw.cchi.medthimager.service.sync.SyncBroadcastSender;
+import tw.cchi.medthimager.service.sync.SyncService;
 import tw.cchi.medthimager.util.NetworkUtils;
 
 /**
@@ -25,20 +21,21 @@ import tw.cchi.medthimager.util.NetworkUtils;
 public class SyncPatientsTask extends SyncTask {
     private final String TAG = Config.TAGPRE + getClass().getSimpleName();
 
+    private ApiHelper apiHelper;
+    private int conflictCount = 0;
     private Disposable uploadTask;
 
-    private static final Gson gson = CommonUtils.getGsonInstance();
-
-    public SyncPatientsTask(MvpApplication application) {
-        super(application);
+    public SyncPatientsTask(SyncService syncService, MvpApplication application) {
+        super(syncService, application);
+        this.apiHelper = new ApiHelper(application);
     }
 
     @Override
     public void run() {
         if (!NetworkUtils.isNetworkConnected(application)) {
-            finish(new NetworkLostError());
+            finish(new Errors.NetworkLostError());
         } else if (!application.getSession().isActive()) {
-            finish(new UnauthenticatedError());
+            finish(new Errors.UnauthenticatedError());
         } else {
             showToast(application.getString(R.string.syncing_patient_list));
             syncPatients();
@@ -46,7 +43,10 @@ public class SyncPatientsTask extends SyncTask {
     }
 
     private void syncPatients() {
-        List<Patient> patients = dataManager.db.patientDAO().findNullUuids();
+        conflictCount = 0;
+        dataManager.pref.setSyncPatientConflictCount(0);
+
+        List<Patient> patients = dataManager.db.patientDAO().getSyncList();
 
         uploadTask = Observable.fromIterable(patients)
             .subscribe(
@@ -56,6 +56,7 @@ public class SyncPatientsTask extends SyncTask {
                 },
                 Throwable::printStackTrace,
                 () -> {
+                    dataManager.pref.setSyncPatientConflictCount(conflictCount);
                     showToast(application.getString(R.string.syncing_patient_list_done));
                     finish();
                 }
@@ -69,54 +70,30 @@ public class SyncPatientsTask extends SyncTask {
         }
 
         SSPatient ssPatient = SSPatient.fromLocalPatient(patient);
-        application.getSession().getApiClient().createPatient(ssPatient)
-            .subscribeOn(Schedulers.io())
-            .observeOn(Schedulers.io())
-            .subscribe(
-                (Response<PatientResponse> response) -> {
-                    if ((response.code() == 200 || response.code() == 201) && response.body() != null) {
-                        Log.i(TAG, "Patient " + patient.getName() + ", 200: " + response.body());
-                        updateAfterCreated(patient, response.body().patient);
-                    } else {
-                        handleErrorResponse(patient, response);
-                    }
-                },
-                Throwable::printStackTrace,
-                () -> {}
-            );
-    }
+        apiHelper.syncPatient(ssPatient, new ApiHelper.OnPatientSyncListener() {
+            @Override
+            public void onSuccess(SSPatient ssPatient) {
+                patient.setSsuuid(ssPatient.getUuid());
+                dataManager.db.patientDAO().updateAll(patient);
+            }
 
-    private void handleErrorResponse(Patient patient, Response response) {
-        String responseString;
-        PatientResponse patientResponse;
+            @Override
+            public void onConflictStrict(List<SSPatient> conflictPatients, String message) {
+                conflictCount++;
+                broadcastSender.sendSyncPatientConflict(SyncBroadcastSender.ConflictType.STRICT, patient, conflictPatients);
+            }
 
-        try {
-            responseString = response.errorBody().string();
-            patientResponse = gson.fromJson(responseString, PatientResponse.class);
-        } catch (Exception e) {
-            e.printStackTrace();
-            return;
-        }
+            @Override
+            public void onConflictCheck(List<SSPatient> conflictPatients, String message) {
+                conflictCount++;
+                broadcastSender.sendSyncPatientConflict(SyncBroadcastSender.ConflictType.CHECK, patient, conflictPatients);
+            }
 
-        Log.i(TAG, String.format("Patient %s, %d: %s", patient.getName(), response.code(), responseString));
-
-        switch (response.code()) {
-            case 409:
-                // TODO
-                break;
-
-            case 412:
-                // TODO
-                break;
-
-            default:
+            @Override
+            public void onError(Throwable error) {
                 // ignore
-        }
-    }
-
-    private void updateAfterCreated(Patient patient, SSPatient ssPatient) {
-        patient.setUuid(ssPatient.getUuid());
-        dataManager.db.patientDAO().updateAll(patient);
+            }
+        });
     }
 
     @Override

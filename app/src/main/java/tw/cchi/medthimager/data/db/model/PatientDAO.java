@@ -25,8 +25,8 @@ public abstract class PatientDAO {
     @Query("select * from patients where name like :name limit 1")
     public abstract Patient findByName(String name);
 
-    @Query("select * from patients where uuid is null")
-    public abstract List<Patient> findNullUuids();
+    @Query("select * from patients where sync_enabled is 1 and ssuuid is null")
+    public abstract List<Patient> getSyncList();
 
     @Query("select * from patients where cuid in (:cuids)")
     public abstract List<Patient> findAllByCUIDs(String[] cuids);

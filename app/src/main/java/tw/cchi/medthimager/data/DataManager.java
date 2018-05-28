@@ -7,9 +7,9 @@ import tw.cchi.medthimager.data.fanalytics.FirebaseAnalyticsHelper;
 import tw.cchi.medthimager.data.pref.PreferencesHelper;
 
 public class DataManager {
-    @Inject public AppDatabase db;
-    @Inject public FirebaseAnalyticsHelper analytics;
-    @Inject public PreferencesHelper pref;
+    public AppDatabase db;
+    public FirebaseAnalyticsHelper analytics;
+    public PreferencesHelper pref;
 
     @Inject
     public DataManager(AppDatabase db, FirebaseAnalyticsHelper analytics, PreferencesHelper pref) {

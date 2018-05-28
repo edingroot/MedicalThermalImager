@@ -1,15 +1,29 @@
 package tw.cchi.medthimager.data.network;
 
+import android.support.annotation.NonNull;
+import android.util.Log;
+
+import com.google.gson.Gson;
+
+import java.util.List;
+
 import javax.inject.Inject;
 
 import io.reactivex.Observable;
 import io.reactivex.schedulers.Schedulers;
 import retrofit2.Response;
+import tw.cchi.medthimager.Config;
+import tw.cchi.medthimager.Errors;
 import tw.cchi.medthimager.MvpApplication;
-import tw.cchi.medthimager.helper.session.Session;
 import tw.cchi.medthimager.model.User;
+import tw.cchi.medthimager.model.api.PatientResponse;
+import tw.cchi.medthimager.model.api.SSPatient;
+import tw.cchi.medthimager.util.CommonUtils;
+import tw.cchi.medthimager.util.NetworkUtils;
 
 public class ApiHelper {
+    private final String TAG = Config.TAGPRE + getClass().getSimpleName();
+
     @Inject MvpApplication application;
 
     @Inject
@@ -18,13 +32,10 @@ public class ApiHelper {
     }
 
     public Observable<Boolean> refreshUserProfile() {
-        Session currentSession = application.getSession();
-        if (!currentSession.isActive()) {
-            return Observable.just(false);
-        }
+        checkNetworkAndAuthed();
 
         return Observable.create(emitter -> {
-            currentSession.getApiClient().getProfile()
+            application.getSession().getApiClient().getProfile()
                 .subscribeOn(Schedulers.io())
                 .subscribe(
                     (Response<User> response) -> {
@@ -43,5 +54,70 @@ public class ApiHelper {
                     () -> {}
                 );
         });
+    }
+
+    public void syncPatient(SSPatient ssPatient, @NonNull OnPatientSyncListener listener) {
+        checkNetworkAndAuthed();
+
+        application.getSession().getApiClient().createPatient(ssPatient)
+            .subscribeOn(Schedulers.io())
+            .observeOn(Schedulers.io())
+            .subscribe(
+                (Response<PatientResponse> response) -> {
+                    if ((response.code() == 200 || response.code() == 201) && response.body() != null) {
+                        Log.i(TAG, "Patient " + ssPatient.getName() + ", 200: " + response.body());
+                        listener.onSuccess(response.body().patient);
+                    } else if (response.errorBody() != null) {
+                        Gson gson = CommonUtils.getGsonInstance();
+                        String responseString;
+                        PatientResponse patientResponse;
+
+                        try {
+                            responseString = response.errorBody().string();
+                            patientResponse = gson.fromJson(responseString, PatientResponse.class);
+                        } catch (Exception e) {
+                            listener.onError(e);
+                            return;
+                        }
+
+                        Log.e(TAG, String.format("Patient %s, %d: %s", ssPatient.getName(), response.code(), responseString));
+
+                        switch (response.code()) {
+                            case 409:
+                                listener.onConflictStrict(patientResponse.conflicted_patients, patientResponse.message);
+                                break;
+
+                            case 412:
+                                listener.onConflictCheck(patientResponse.conflicted_patients, patientResponse.message);
+                                break;
+
+                            default:
+                                listener.onError(new Errors.UnhandledStateError());
+                        }
+                    }
+                },
+                listener::onError,
+                () -> {}
+            );
+    }
+
+    private void checkNetworkAndAuthed() {
+        if (!NetworkUtils.isNetworkConnected(application)) {
+            throw new Errors.NetworkLostError();
+        } else if (!application.getSession().isActive()) {
+            throw new Errors.UnauthenticatedError();
+        }
+    }
+
+    public interface OnPatientSyncListener {
+        void onSuccess(SSPatient ssPatient);
+
+        // 409
+        void onConflictStrict(List<SSPatient> conflictPatients, String message);
+
+        // 412
+        void onConflictCheck(List<SSPatient> conflictPatients, String message);
+
+        void onError(Throwable error);
     }
 }
