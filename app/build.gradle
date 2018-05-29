@@ -106,6 +106,15 @@ android {
     productFlavors {
     }
 
+    // Speed up development build
+    // Set "-PdevBuild" in compiler command-line options.
+    // Ref: https://medium.com/mindorks/lets-speed-up-your-gradle-build-6c0e401883e2
+    if (project.hasProperty("devBuild")) {
+        splits.abi.enable = false
+        splits.density.enable = false
+        aaptOptions.cruncherEnabled = false
+    }
+
     externalNativeBuild {
         ndkBuild {
             path 'src/main/jni/Android.mk'
