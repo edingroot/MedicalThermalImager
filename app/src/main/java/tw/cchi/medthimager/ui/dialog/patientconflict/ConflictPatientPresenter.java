@@ -11,7 +11,6 @@ import tw.cchi.medthimager.R;
 import tw.cchi.medthimager.data.db.model.Patient;
 import tw.cchi.medthimager.model.api.SSPatient;
 import tw.cchi.medthimager.service.sync.SyncBroadcastSender;
-import tw.cchi.medthimager.service.sync.task.SyncPatientsTask;
 import tw.cchi.medthimager.service.sync.task.SyncSinglePatientTask;
 import tw.cchi.medthimager.ui.base.BasePresenter;
 import tw.cchi.medthimager.util.DateTimeUtils;
@@ -63,7 +62,7 @@ public class ConflictPatientPresenter<V extends ConflictPatientMvpView> extends 
             return;
 
         SSPatient mergeTarget = conflictedPatients.get(selectedPosition);
-        application.getSyncService(syncService -> {
+        application.getSyncService().subscribe(syncService -> {
             if (application.checkNetworkAuthedAndAct()) {
                 syncService.scheduleNewTask(new SyncSinglePatientTask(
                         localPatient, mergeTarget.getUuid(), false));
@@ -79,7 +78,7 @@ public class ConflictPatientPresenter<V extends ConflictPatientMvpView> extends 
             return;
 
         SSPatient mergeTarget = conflictedPatients.get(selectedPosition);
-        application.getSyncService(syncService -> {
+        application.getSyncService().subscribe(syncService -> {
             if (application.checkNetworkAuthedAndAct()) {
                 syncService.scheduleNewTask(new SyncSinglePatientTask(
                         localPatient, mergeTarget.getUuid(), true));

@@ -11,12 +11,10 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 import tw.cchi.medthimager.Config;
-import tw.cchi.medthimager.R;
 import tw.cchi.medthimager.data.network.ApiHelper;
 import tw.cchi.medthimager.helper.session.Session;
 import tw.cchi.medthimager.service.sync.task.SyncPatientsTask;
 import tw.cchi.medthimager.ui.base.BasePresenter;
-import tw.cchi.medthimager.util.NetworkUtils;
 
 public class SettingsPresenter<V extends SettingsMvpView> extends BasePresenter<V> implements SettingsMvpPresenter<V> {
     private final String TAG = Config.TAGPRE + getClass().getSimpleName();
@@ -98,7 +96,7 @@ public class SettingsPresenter<V extends SettingsMvpView> extends BasePresenter<
 
     @Override
     public void syncPatients() {
-        application.getSyncService(syncService -> {
+        application.getSyncService().subscribe(syncService -> {
             if (application.checkNetworkAuthedAndAct()) {
                 syncService.scheduleNewTask(new SyncPatientsTask());
             }

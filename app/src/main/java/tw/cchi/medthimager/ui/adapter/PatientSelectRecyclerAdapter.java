@@ -78,20 +78,23 @@ public class PatientSelectRecyclerAdapter extends RecyclerView.Adapter<PatientSe
         final boolean selected = position == selectedPosition;
 
         boolean isDefaultPatient = false;
-        String patientName = "";
+        String bed = "";
+        String name = "";
 
         if (patients != null) {
             Patient patient = patients.get(position);
-            patientName = patient.getName();
+            bed = patient.getBed() == null ? "" : patient.getBed();
+            name = patient.getName();
             isDefaultPatient = patient.isDefualtPatient();
         } else if (ssPatients != null) {
             SSPatient ssPatient = ssPatients.get(position);
-            patientName = ssPatient.getName();
+            bed = ssPatient.getBed() == null ? "" : ssPatient.getBed();
+            name = ssPatient.getName();
         }
 
         holder.txtRemove.setVisibility(showRemove ? View.VISIBLE : View.INVISIBLE);
         holder.txtChecked.setVisibility(selected ? View.VISIBLE : View.INVISIBLE);
-        holder.txtPatientName.setText(patientName);
+        holder.txtPatientText.setText(String.format("%s - %s", bed, name));
 
         holder.layoutRoot.setOnClickListener(v -> {
             // If no patient selected, auto select the default patient
@@ -127,7 +130,7 @@ public class PatientSelectRecyclerAdapter extends RecyclerView.Adapter<PatientSe
 
         @BindView(R.id.layoutRoot) RelativeLayout layoutRoot;
         @BindView(R.id.txtChecked) TextView txtChecked;
-        @BindView(R.id.txtPatientName) TextView txtPatientName;
+        @BindView(R.id.txtPatientText) TextView txtPatientText;
         @BindView(R.id.txtRemove) TextView txtRemove;
 
         ViewHolder(View view) {
@@ -138,7 +141,7 @@ public class PatientSelectRecyclerAdapter extends RecyclerView.Adapter<PatientSe
 
         @Override
         public String toString() {
-            return String.format(Locale.getDefault(), "%s - %s", super.toString(), txtPatientName.getText());
+            return String.format(Locale.getDefault(), "%s: %s", super.toString(), txtPatientText.getText());
         }
     }
 

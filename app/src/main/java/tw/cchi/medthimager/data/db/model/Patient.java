@@ -16,7 +16,7 @@ public class Patient implements Parcelable {
     public static final String DEFAULT_PATIENT_CUID = "AAAAAAAA-BBBB-CCCC-DDDD-123456789012";
     public static final String DEFAULT_PATIENT_UUID = "UAAAAAAA-BBBB-CCCC-DDDD-123456789012";
     public static final String DEFAULT_PATIENT_NAME = "Not Specified";
-    public static final String DEFAULT_PATIENT_BED = "00-00";
+    public static final String DEFAULT_PATIENT_BED = "00J00";
 
     @PrimaryKey
     @ColumnInfo(name = "cuid")

@@ -85,30 +85,33 @@ public class MvpApplication extends Application {
         return true;
     }
 
-    public synchronized void getSyncService(final OnSyncServiceBoundedListener listener) {
-        Observable.create(emitter -> {
-            if (syncServiceBounded) {
-                listener.onServiceBounded(syncService);
-            } else {
-                syncServiceConnection = new ServiceConnection() {
-                    @Override
-                    public void onServiceConnected(ComponentName componentName, IBinder service) {
-                        syncService = ((SyncService.SyncServiceBinder) service).getService();
-                        listener.onServiceBounded(syncService);
-                    }
+    public Observable<SyncService> getSyncService() {
+        return Observable.<SyncService>create(emitter -> {
+            synchronized (MvpApplication.class) {
+                if (syncServiceBounded) {
+                    emitter.onNext(syncService);
+                    emitter.onComplete();
+                } else {
+                    syncServiceConnection = new ServiceConnection() {
+                        @Override
+                        public void onServiceConnected(ComponentName componentName, IBinder service) {
+                            syncService = ((SyncService.SyncServiceBinder) service).getService();
+                            emitter.onNext(syncService);
+                            emitter.onComplete();
+                        }
 
-                    @Override
-                    public void onServiceDisconnected(ComponentName componentName) {
-                        syncService = null;
-                        syncServiceBounded = false;
-                    }
-                };
-                syncServiceBounded = bindService(
-                        new Intent(this, SyncService.class), syncServiceConnection, BIND_AUTO_CREATE);
+                        @Override
+                        public void onServiceDisconnected(ComponentName componentName) {
+                            syncService = null;
+                            syncServiceBounded = false;
+                        }
+                    };
+                    syncServiceBounded = bindService(new Intent(this, SyncService.class),
+                            syncServiceConnection, BIND_AUTO_CREATE);
+                }
             }
-        }).subscribeOn(Schedulers.io()).subscribe();
+        }).subscribeOn(Schedulers.io());
     }
-
 
     @Override
     public void onTerminate() {
@@ -117,10 +120,7 @@ public class MvpApplication extends Application {
 
         super.onTerminate();
     }
-
-    public interface OnSyncServiceBoundedListener {
-        void onServiceBounded(SyncService service);
-    }
+}
 
 
 //    /**
@@ -150,4 +150,3 @@ public class MvpApplication extends Application {
 //            e.printStackTrace();
 //        }
 //    }
-}
