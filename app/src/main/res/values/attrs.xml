@@ -19,6 +19,11 @@
         </attr>
     </declare-styleable>
 
+    <!-- .view.ScrollViewWithMaxHeight -->
+    <declare-styleable name="ScrollViewWithMaxHeight">
+        <attr name="maxHeight" format="dimension" />
+    </declare-styleable>
+
     <!-- .view.ThermalSpotView -->
     <declare-styleable name="ThermalSpotView">
         <attr name="spotId" format="integer"/>
