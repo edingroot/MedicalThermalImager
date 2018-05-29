@@ -29,7 +29,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="20dp"
                 android:layout_marginTop="10dp"
-                android:text="@string/conti_shot_setting"
+                android:text="@string/continuous_shoot"
                 android:textAlignment="center"
                 android:textSize="@dimen/dialog_title_size"
                 android:textStyle="bold"/>
@@ -90,7 +90,7 @@
             <Button
                 android:id="@+id/btnStart"
                 android:layout_width="match_parent"
-                android:layout_height="38dp"
+                android:layout_height="@dimen/dialog_button_height"
                 android:layout_marginTop="10dp"
                 android:padding="0dp"
                 android:text="@string/start"/>

@@ -14,6 +14,7 @@ import tw.cchi.medthimager.service.sync.SyncService;
 
 /**
  * Sync all patients whose uuid field is null.
+ * // TODO: download remote patients
  */
 public class SyncPatientsTask extends SyncTask {
     private final String TAG = Config.TAGPRE + getClass().getSimpleName();

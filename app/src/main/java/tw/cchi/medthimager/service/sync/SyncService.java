@@ -67,14 +67,22 @@ public class SyncService extends Service {
 
     private void startTaskWorkers() {
         taskWorkerSubs.add(syncSinglePatientTaskPub
-                .subscribeOn(Schedulers.io())
-                .observeOn(Schedulers.io())
-                .subscribe(task -> task.run(this)));
+                .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
+                .subscribe(task -> {
+                    task.run(this);
+                    if (task.getError() != null) {
+                        // ignore
+                    }
+                }));
 
         taskWorkerSubs.add(syncPatientsTaskPub
-                .subscribeOn(Schedulers.io())
-                .observeOn(Schedulers.io())
-                .subscribe(task -> task.run(this)));
+                .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
+                .subscribe(task -> {
+                    task.run(this);
+                    if (task.getError() != null) {
+                        // ignore
+                    }
+                }));
     }
 
     public void scheduleNewTask(SyncTask syncTask) {

@@ -46,7 +46,6 @@ public abstract class SyncTask implements Disposable {
         dispose();
     }
 
-
     boolean checkNetworkAndAuthed() {
         if (!NetworkUtils.isNetworkConnected(application)) {
             finish(new Errors.NetworkLostError());
@@ -68,7 +67,7 @@ public abstract class SyncTask implements Disposable {
     }
 
 
-    Error getError() {
+    public Error getError() {
         return error;
     }
 

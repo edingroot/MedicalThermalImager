@@ -99,13 +99,7 @@ public class SettingsPresenter<V extends SettingsMvpView> extends BasePresenter<
     @Override
     public void syncPatients() {
         application.getSyncService(syncService -> {
-            if (!NetworkUtils.isNetworkConnected(application)) {
-                if (isViewAttached())
-                    getMvpView().showSnackBar(R.string.no_network_access);
-            } else if (!application.getSession().isActive()) {
-                if (isViewAttached())
-                    getMvpView().showSnackBar(R.string.unauthenticated);
-            } else {
+            if (application.checkNetworkAuthedAndAct()) {
                 syncService.scheduleNewTask(new SyncPatientsTask());
             }
         });

@@ -61,6 +61,10 @@ public class PatientSelectRecyclerAdapter extends RecyclerView.Adapter<PatientSe
         notifyDataSetChanged();
     }
 
+    public int getSelectedPosition() {
+        return selectedPosition;
+    }
+
     @Override
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         View view = LayoutInflater.from(parent.getContext())

@@ -5,6 +5,7 @@ import android.content.ComponentName;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.os.IBinder;
+import android.widget.Toast;
 
 import com.squareup.leakcanary.LeakCanary;
 
@@ -21,6 +22,7 @@ import tw.cchi.medthimager.helper.FlirFrameProcessorDelegate;
 import tw.cchi.medthimager.helper.session.Session;
 import tw.cchi.medthimager.helper.session.SessionManager;
 import tw.cchi.medthimager.service.sync.SyncService;
+import tw.cchi.medthimager.util.NetworkUtils;
 
 /**
  * This is able to be access globally in whole app
@@ -68,8 +70,19 @@ public class MvpApplication extends Application {
         mApplicationComponent = applicationComponent;
     }
 
+
     public Session getSession() {
         return sessionManager.getSession();
+    }
+
+    public boolean checkNetworkAuthedAndAct() {
+        if (!NetworkUtils.isNetworkConnected(this)) {
+            Toast.makeText(this, getString(R.string.no_network_access), Toast.LENGTH_SHORT).show();
+        } else if (!getSession().isActive()) {
+            Toast.makeText(this, getString(R.string.unauthenticated), Toast.LENGTH_SHORT).show();
+            getSession().invalidate();
+        }
+        return true;
     }
 
     public synchronized void getSyncService(final OnSyncServiceBoundedListener listener) {
@@ -95,6 +108,7 @@ public class MvpApplication extends Application {
             }
         }).subscribeOn(Schedulers.io()).subscribe();
     }
+
 
     @Override
     public void onTerminate() {

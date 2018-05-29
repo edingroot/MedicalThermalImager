@@ -2,6 +2,7 @@ package tw.cchi.medthimager.data.network;
 
 import android.support.annotation.NonNull;
 import android.util.Log;
+import android.widget.Toast;
 
 import com.google.gson.Gson;
 
@@ -15,6 +16,7 @@ import retrofit2.Response;
 import tw.cchi.medthimager.Config;
 import tw.cchi.medthimager.Errors;
 import tw.cchi.medthimager.MvpApplication;
+import tw.cchi.medthimager.R;
 import tw.cchi.medthimager.model.User;
 import tw.cchi.medthimager.model.api.PatientResponse;
 import tw.cchi.medthimager.model.api.SSPatient;
@@ -32,9 +34,7 @@ public class ApiHelper {
     }
 
     public Observable<Boolean> refreshUserProfile() {
-        try {
-            checkNetworkAndAuthed();
-        } catch (Errors.AppError ignore) {
+        if (!application.checkNetworkAuthedAndAct()) {
             return Observable.just(false);
         }
 
@@ -60,8 +60,9 @@ public class ApiHelper {
         });
     }
 
-    public void syncPatient(SSPatient ssPatient, @NonNull OnPatientSyncListener listener) throws Errors.AppError {
-        checkNetworkAndAuthed();
+    public boolean syncPatient(SSPatient ssPatient, @NonNull OnPatientSyncListener listener) {
+        if (!application.checkNetworkAuthedAndAct())
+            return false;
 
         application.getSession().getApiClient().createPatient(ssPatient)
             .subscribeOn(Schedulers.io())
@@ -103,14 +104,7 @@ public class ApiHelper {
                 listener::onError,
                 () -> {}
             );
-    }
 
-    private boolean checkNetworkAndAuthed() throws Errors.AppError {
-        if (!NetworkUtils.isNetworkConnected(application)) {
-            throw new Errors.NetworkLostError();
-        } else if (!application.getSession().isActive()) {
-            throw new Errors.UnauthenticatedError();
-        }
         return true;
     }
 

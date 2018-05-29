@@ -17,7 +17,7 @@ public class SyncSinglePatientTask extends SyncTask {
     private final String TAG = Config.TAGPRE + getClass().getSimpleName();
 
     private Patient targetPatient;
-    private String mergeWith;
+    private String mergeWithUuid;
     private boolean createNew = false;
 
     public SyncSinglePatientTask(Patient targetPatient) {
@@ -26,9 +26,9 @@ public class SyncSinglePatientTask extends SyncTask {
         this.apiHelper = new ApiHelper(application);
     }
 
-    public SyncSinglePatientTask(Patient targetPatient, String mergeWith, boolean createNew) {
+    public SyncSinglePatientTask(Patient targetPatient, String mergeWithUuid, boolean createNew) {
         super();
-        this.mergeWith = mergeWith;
+        this.mergeWithUuid = mergeWithUuid;
         this.createNew = createNew;
         this.targetPatient = targetPatient;
         this.apiHelper = new ApiHelper(application);
@@ -49,8 +49,8 @@ public class SyncSinglePatientTask extends SyncTask {
         }
 
         SSPatient ssPatient = SSPatient.fromLocalPatient(patient);
-        if (mergeWith != null) {
-            ssPatient.setMerge_with(mergeWith);
+        if (mergeWithUuid != null) {
+            ssPatient.setMerge_with(mergeWithUuid);
             ssPatient.setCreate_new(createNew);
         }
 

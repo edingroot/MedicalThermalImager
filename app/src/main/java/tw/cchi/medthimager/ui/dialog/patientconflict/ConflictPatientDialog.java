@@ -26,6 +26,7 @@ import tw.cchi.medthimager.model.api.SSPatient;
 import tw.cchi.medthimager.service.sync.SyncBroadcastSender;
 import tw.cchi.medthimager.ui.adapter.PatientSelectRecyclerAdapter;
 import tw.cchi.medthimager.ui.base.BaseDialog;
+import tw.cchi.medthimager.ui.camera.selectpatient.SelectPatientDialog;
 import tw.cchi.medthimager.util.DateTimeUtils;
 
 public class ConflictPatientDialog extends BaseDialog implements ConflictPatientMvpView {
@@ -36,9 +37,7 @@ public class ConflictPatientDialog extends BaseDialog implements ConflictPatient
 
     @Inject ConflictPatientMvpPresenter<ConflictPatientMvpView> presenter;
 
-    private SyncBroadcastSender.ConflictType conflictType;
-    private Patient localPatient;
-    private List<SSPatient> conflictedPatients;
+    PatientSelectRecyclerAdapter patientRecyclerAdapter;
 
     @BindView(R.id.txtLocalPatientInfo) TextView txtLocalPatientInfo;
     @BindView(R.id.recyclerConflictedPatients) RecyclerView recyclerConflictedPatients;
@@ -70,44 +69,32 @@ public class ConflictPatientDialog extends BaseDialog implements ConflictPatient
 
         // Get arguments
         if (getArguments() != null) {
-            this.conflictType = (SyncBroadcastSender.ConflictType) getArguments().getSerializable(ARG_CONFLICT_TYPE);
-            this.localPatient = getArguments().getParcelable(ARG_LOCAL_PATIENT);
-            this.conflictedPatients = getArguments().getParcelableArrayList(ARG_PATIENT_LIST);
+            presenter.setParams(
+                    (SyncBroadcastSender.ConflictType) getArguments().getSerializable(ARG_CONFLICT_TYPE),
+                    getArguments().getParcelable(ARG_LOCAL_PATIENT),
+                    getArguments().getParcelableArrayList(ARG_PATIENT_LIST));
         }
+
         getDialog().setCanceledOnTouchOutside(true);
-
-        PatientSelectRecyclerAdapter patientRecyclerAdapter = new PatientSelectRecyclerAdapter();
-        patientRecyclerAdapter.setShowRemove(false);
-        patientRecyclerAdapter.setSSPatients(conflictedPatients);
-
-        recyclerConflictedPatients.setLayoutManager(
-                new LinearLayoutManager(getContext(), LinearLayoutManager.VERTICAL, false));
-        recyclerConflictedPatients.setAdapter(patientRecyclerAdapter);
-
-        String createdAt = DateTimeUtils.timestampToDateString(localPatient.getCreatedAt().getTime());
-        String bed = localPatient.getBed() == null ? "-" : localPatient.getBed();
-        String name = localPatient.getName() == null ? "-" : localPatient.getName();
-        txtLocalPatientInfo.setText(getString(R.string.local_patient_info, bed, name, createdAt));
-
-        // Action buttons
-        if (conflictType == SyncBroadcastSender.ConflictType.FORCE_MERGE) {
-            btnKeepBoth.setVisibility(View.GONE);
-        }
 
         return view;
     }
 
+    public void show(FragmentManager fragmentManager) {
+        super.show(fragmentManager, FRAGMENT_TAG);
+    }
+
+
     @OnClick(R.id.btnMerge)
     void onMergeClick() {
-
+        if (patientRecyclerAdapter != null)
+            presenter.callMerge(patientRecyclerAdapter.getSelectedPosition());
     }
 
     @OnClick(R.id.btnKeepBoth)
     void onKeepBothClick() {
-        if (conflictType == SyncBroadcastSender.ConflictType.FORCE_MERGE)
-            return;
-
-        // TODO
+        if (patientRecyclerAdapter != null)
+            presenter.callKeepBoth(patientRecyclerAdapter.getSelectedPosition());
     }
 
     @OnClick(R.id.btnCancel)
@@ -115,8 +102,31 @@ public class ConflictPatientDialog extends BaseDialog implements ConflictPatient
         dismiss();
     }
 
-    public void show(FragmentManager fragmentManager) {
-        super.show(fragmentManager, FRAGMENT_TAG);
+
+    @Override
+    public void initConflictedPatientList(List<SSPatient> conflictedPatients) {
+        patientRecyclerAdapter = new PatientSelectRecyclerAdapter();
+        patientRecyclerAdapter.setShowRemove(false);
+        patientRecyclerAdapter.setSSPatients(conflictedPatients);
+
+        // Default selection
+        if (conflictedPatients.size() > 0) {
+            patientRecyclerAdapter.setSelectedPosition(0);
+        }
+
+        recyclerConflictedPatients.setLayoutManager(
+                new LinearLayoutManager(getContext(), LinearLayoutManager.VERTICAL, false));
+        recyclerConflictedPatients.setAdapter(patientRecyclerAdapter);
+    }
+
+    @Override
+    public void setLocalPatientInfo(String text) {
+        txtLocalPatientInfo.setText(text);
+    }
+
+    @Override
+    public void setBtnKeepBothVisible(boolean visible) {
+        btnKeepBoth.setVisibility(visible ? View.VISIBLE : View.GONE);
     }
 
     @Override
