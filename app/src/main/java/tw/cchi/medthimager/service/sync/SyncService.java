@@ -11,15 +11,16 @@ import android.os.IBinder;
 import android.support.annotation.Nullable;
 import android.util.Log;
 
-import javax.inject.Inject;
-
-import io.reactivex.Observable;
+import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.schedulers.Schedulers;
+import io.reactivex.subjects.PublishSubject;
 import tw.cchi.medthimager.Config;
 import tw.cchi.medthimager.MvpApplication;
 import tw.cchi.medthimager.di.component.DaggerServiceComponent;
 import tw.cchi.medthimager.di.component.ServiceComponent;
-import tw.cchi.medthimager.service.sync.task.SyncNewPatientsTask;
+import tw.cchi.medthimager.service.sync.task.SyncPatientsTask;
+import tw.cchi.medthimager.service.sync.task.SyncSinglePatientTask;
+import tw.cchi.medthimager.service.sync.task.SyncTask;
 import tw.cchi.medthimager.util.NetworkUtils;
 
 public class SyncService extends Service {
@@ -27,7 +28,19 @@ public class SyncService extends Service {
 
     private IBinder mBinder;
     private NetworkStateBroadcastReceiver networkStateReceiver;
-    private SyncNewPatientsTask syncNewPatientsTask;
+    private CompositeDisposable taskWorkerSubs = new CompositeDisposable();
+
+    // PublishSubject for worker of each sync task
+    private PublishSubject<SyncSinglePatientTask> syncSinglePatientTaskPub = PublishSubject.create();
+    private PublishSubject<SyncPatientsTask> syncPatientsTaskPub = PublishSubject.create();
+
+    public static void start(Context context) {
+        context.startService(new Intent(context, SyncService.class));
+    }
+
+    public static void stop(Context context) {
+        context.stopService(new Intent(context, SyncService.class));
+    }
 
     @Override
     public void onCreate() {
@@ -44,18 +57,31 @@ public class SyncService extends Service {
                 new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION));
     }
 
-    public static void start(Context context) {
-        context.startService(new Intent(context, SyncService.class));
-    }
-
-    public static void stop(Context context) {
-        context.stopService(new Intent(context, SyncService.class));
-    }
-
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         Log.i(TAG, "SyncService started");
+
+        startTaskWorkers();
         return START_STICKY;
+    }
+
+    private void startTaskWorkers() {
+        taskWorkerSubs.add(syncSinglePatientTaskPub
+                .subscribeOn(Schedulers.io())
+                .observeOn(Schedulers.io())
+                .subscribe(task -> task.run(this)));
+
+        taskWorkerSubs.add(syncPatientsTaskPub
+                .subscribeOn(Schedulers.io())
+                .observeOn(Schedulers.io())
+                .subscribe(task -> task.run(this)));
+    }
+
+    public void scheduleNewTask(SyncTask syncTask) {
+        if (syncTask instanceof SyncSinglePatientTask)
+            syncSinglePatientTaskPub.onNext((SyncSinglePatientTask) syncTask);
+        else if (syncTask instanceof SyncPatientsTask)
+            syncPatientsTaskPub.onNext((SyncPatientsTask) syncTask);
     }
 
     @Nullable
@@ -67,27 +93,11 @@ public class SyncService extends Service {
     @Override
     public void onDestroy() {
         Log.i(TAG, "SyncService stopped");
+
         unregisterReceiver(networkStateReceiver);
+        taskWorkerSubs.dispose();
         super.onDestroy();
     }
-
-
-    /**
-     * @return false if sync is currently in progress
-     */
-    public synchronized boolean syncPatients() {
-        if (syncNewPatientsTask != null && !syncNewPatientsTask.isFinished()) {
-            return false;
-        }
-
-        syncNewPatientsTask = new SyncNewPatientsTask(this);
-        Observable.create(emitter -> syncNewPatientsTask.run())
-                .subscribeOn(Schedulers.io())
-                .subscribe();
-
-        return true;
-    }
-
 
     private class NetworkStateBroadcastReceiver extends BroadcastReceiver {
         public NetworkStateBroadcastReceiver() {

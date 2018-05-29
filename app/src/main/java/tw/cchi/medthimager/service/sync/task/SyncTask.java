@@ -9,26 +9,31 @@ import io.reactivex.disposables.Disposable;
 import tw.cchi.medthimager.Errors;
 import tw.cchi.medthimager.MvpApplication;
 import tw.cchi.medthimager.data.DataManager;
+import tw.cchi.medthimager.data.network.ApiHelper;
 import tw.cchi.medthimager.service.sync.SyncBroadcastSender;
 import tw.cchi.medthimager.service.sync.SyncService;
 import tw.cchi.medthimager.util.NetworkUtils;
 import tw.cchi.medthimager.util.annotation.BgThreadCapable;
 
-abstract class SyncTask implements Runnable, Disposable {
+public abstract class SyncTask implements Disposable {
     MvpApplication application;
-    DataManager dataManager;
     SyncBroadcastSender broadcastSender;
+    DataManager dataManager;
+    ApiHelper apiHelper;
     volatile boolean disposed = false;
 
-    private Handler mainHandler;
+    private Handler mainHandler = new Handler(Looper.getMainLooper());
     private volatile boolean finished = false;
     private Error error = null;
 
-    SyncTask(SyncService syncService) {
+    SyncTask() {
+    }
+
+    public void run(SyncService syncService) {
         this.application = (MvpApplication) syncService.getApplication();
-        this.dataManager = application.dataManager;
         this.broadcastSender = new SyncBroadcastSender(syncService);
-        this.mainHandler = new Handler(Looper.getMainLooper());
+        this.dataManager = application.dataManager;
+        this.apiHelper = new ApiHelper(application);
     }
 
     void finish() {

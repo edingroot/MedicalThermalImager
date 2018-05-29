@@ -5,38 +5,31 @@ import java.util.List;
 import io.reactivex.Observable;
 import io.reactivex.disposables.Disposable;
 import tw.cchi.medthimager.Config;
-import tw.cchi.medthimager.Errors;
-import tw.cchi.medthimager.MvpApplication;
 import tw.cchi.medthimager.R;
 import tw.cchi.medthimager.data.db.model.Patient;
 import tw.cchi.medthimager.data.network.ApiHelper;
 import tw.cchi.medthimager.model.api.SSPatient;
 import tw.cchi.medthimager.service.sync.SyncBroadcastSender;
 import tw.cchi.medthimager.service.sync.SyncService;
-import tw.cchi.medthimager.util.NetworkUtils;
 
 /**
  * Sync all patients whose uuid field is null.
  */
-public class SyncNewPatientsTask extends SyncTask {
+public class SyncPatientsTask extends SyncTask {
     private final String TAG = Config.TAGPRE + getClass().getSimpleName();
 
-    private ApiHelper apiHelper;
     private int conflictCount = 0;
     private Disposable uploadTask;
 
-    public SyncNewPatientsTask(SyncService syncService) {
-        super(syncService);
-        this.apiHelper = new ApiHelper(application);
+    public SyncPatientsTask() {
+        super();
     }
 
     @Override
-    public void run() {
-        if (!NetworkUtils.isNetworkConnected(application)) {
-            finish(new Errors.NetworkLostError());
-        } else if (!application.getSession().isActive()) {
-            finish(new Errors.UnauthenticatedError());
-        } else {
+    public void run(SyncService syncService) {
+        super.run(syncService);
+
+        if (checkNetworkAndAuthed()) {
             syncPatients();
         }
     }
@@ -50,13 +43,14 @@ public class SyncNewPatientsTask extends SyncTask {
         uploadTask = Observable.fromIterable(patients)
             .subscribe(
                 patient -> {
-                    SyncNewPatientsTask.this.handleCreatePatient(patient);
+                    SyncPatientsTask.this.handleCreatePatient(patient);
                     Thread.sleep(500);
                 },
                 Throwable::printStackTrace,
                 () -> {
                     dataManager.pref.setSyncPatientConflictCount(conflictCount);
-                    showToast(application.getString(R.string.syncing_patient_list_done));
+                    if (conflictCount == 0)
+                        showToast(application.getString(R.string.syncing_patient_list_done));
                     finish();
                 }
             );

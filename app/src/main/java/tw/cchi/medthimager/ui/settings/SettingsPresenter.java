@@ -14,6 +14,7 @@ import tw.cchi.medthimager.Config;
 import tw.cchi.medthimager.R;
 import tw.cchi.medthimager.data.network.ApiHelper;
 import tw.cchi.medthimager.helper.session.Session;
+import tw.cchi.medthimager.service.sync.task.SyncPatientsTask;
 import tw.cchi.medthimager.ui.base.BasePresenter;
 import tw.cchi.medthimager.util.NetworkUtils;
 
@@ -105,7 +106,7 @@ public class SettingsPresenter<V extends SettingsMvpView> extends BasePresenter<
                 if (isViewAttached())
                     getMvpView().showSnackBar(R.string.unauthenticated);
             } else {
-                syncService.syncPatients();
+                syncService.scheduleNewTask(new SyncPatientsTask());
             }
         });
     }

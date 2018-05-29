@@ -26,7 +26,7 @@
     <color name="buttonBgTintHighlight">#1b60b1</color>
     <color name="buttonBgTintWarning">#b6681a</color>
 
-    <color name="metaButtonPrimary">#4195ea</color>
+    <color name="metaButtonPrimary">#54aeed</color>
     <color name="metaButtonCancel">#b1b1b1</color>
     <color name="metaButtonWarning">#de6b19</color>
     <color name="metaButtonDanger">#ed4c2f</color>

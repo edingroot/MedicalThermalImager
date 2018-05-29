@@ -13,22 +13,21 @@ import tw.cchi.medthimager.service.sync.SyncService;
 /**
  * Sync information of a patient.
  */
-public class SyncPatientTask extends SyncTask {
+public class SyncSinglePatientTask extends SyncTask {
     private final String TAG = Config.TAGPRE + getClass().getSimpleName();
 
-    private ApiHelper apiHelper;
     private Patient targetPatient;
     private String mergeWith;
     private boolean createNew = false;
 
-    public SyncPatientTask(SyncService syncService, Patient targetPatient) {
-        super(syncService);
+    public SyncSinglePatientTask(Patient targetPatient) {
+        super();
         this.targetPatient = targetPatient;
         this.apiHelper = new ApiHelper(application);
     }
 
-    public SyncPatientTask(SyncService syncService, Patient targetPatient, String mergeWith, boolean createNew) {
-        super(syncService);
+    public SyncSinglePatientTask(Patient targetPatient, String mergeWith, boolean createNew) {
+        super();
         this.mergeWith = mergeWith;
         this.createNew = createNew;
         this.targetPatient = targetPatient;
@@ -36,11 +35,12 @@ public class SyncPatientTask extends SyncTask {
     }
 
     @Override
-    public void run() {
-        if (!checkNetworkAndAuthed())
-            return;
+    public void run(SyncService syncService) {
+        super.run(syncService);
 
-        SyncPatientTask.this.handleCreatePatient(targetPatient);
+        if (checkNetworkAndAuthed()) {
+            SyncSinglePatientTask.this.handleCreatePatient(targetPatient);
+        }
     }
 
     private void handleCreatePatient(Patient patient) {

@@ -246,15 +246,11 @@ public abstract class BaseActivity extends AppCompatActivity
                 List<SSPatient> conflictPatients = intent.getParcelableArrayListExtra(SyncBroadcastSender.Extras.EXTRA_SSPATIENT_LIST);
 
                 Log.d(TAG, "Received internal broadcast event: SYNC_PATIENT_CONFLICT; patient.name=" + patient.getName());
-                // TODO
                 ConflictPatientDialog dialog = ConflictPatientDialog.newInstance(conflictType, patient, conflictPatients);
                 dialog.show(getSupportFragmentManager());
             }
         }
     }
-
-
-
 }
 
 /* @TargetApi(Build.VERSION_CODES.M)
