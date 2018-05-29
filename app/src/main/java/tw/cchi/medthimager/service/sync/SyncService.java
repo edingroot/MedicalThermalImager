@@ -85,6 +85,9 @@ public class SyncService extends Service {
                 }));
     }
 
+    /**
+     * Errors such like network or authentication error will be caught and ignored.
+     */
     public void scheduleNewTask(SyncTask syncTask) {
         if (syncTask instanceof SyncSinglePatientTask)
             syncSinglePatientTaskPub.onNext((SyncSinglePatientTask) syncTask);

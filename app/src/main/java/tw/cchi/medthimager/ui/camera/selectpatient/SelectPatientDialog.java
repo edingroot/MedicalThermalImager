@@ -1,5 +1,6 @@
 package tw.cchi.medthimager.ui.camera.selectpatient;
 
+import android.app.Activity;
 import android.app.Dialog;
 import android.content.Context;
 import android.os.Handler;
@@ -20,15 +21,17 @@ import java.util.List;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import tw.cchi.medthimager.MvpApplication;
 import tw.cchi.medthimager.R;
 import tw.cchi.medthimager.data.db.AppDatabase;
 import tw.cchi.medthimager.data.db.model.Patient;
+import tw.cchi.medthimager.service.sync.task.SyncSinglePatientTask;
 import tw.cchi.medthimager.ui.adapter.PatientSelectRecyclerAdapter;
 
 public class SelectPatientDialog {
     private static final int UPDATE_PATIENTS = 1;
 
-    private final Context context;
+    private final Activity activity;
     private OnInteractionListener onInteractionListener;
     private Dialog dialog;
     private Handler handler;
@@ -44,10 +47,10 @@ public class SelectPatientDialog {
     @BindView(R.id.recyclerPatientList) RecyclerView recyclerPatientList;
     @BindView(R.id.btnStart) Button btnOk;
 
-    public SelectPatientDialog(Context context, OnInteractionListener onInteractionListener) {
-        this.context = context;
+    public SelectPatientDialog(Activity activity, OnInteractionListener onInteractionListener) {
+        this.activity = activity;
         this.onInteractionListener = onInteractionListener;
-        this.database = AppDatabase.getInstance(context);
+        this.database = AppDatabase.getInstance(activity.getApplicationContext());
 
         this.handler = new Handler(Looper.getMainLooper()) {
             @Override
@@ -78,10 +81,10 @@ public class SelectPatientDialog {
     }
 
     public SelectPatientDialog show() {
-        dialog = new Dialog(context, R.style.DialogTheme);
+        dialog = new Dialog(activity, R.style.DialogTheme);
         dialog.setContentView(R.layout.dialog_select_patient);
         ButterKnife.bind(this, dialog);
-        dialog.setTitle(context.getString(R.string.select_patient));
+        dialog.setTitle(activity.getString(R.string.select_patient));
         initComponents();
 
         // Load data from database
@@ -100,7 +103,7 @@ public class SelectPatientDialog {
             handleAddPatient();
 
             // Hide virtual keyboard
-            InputMethodManager imm = (InputMethodManager) context.getSystemService(Context.INPUT_METHOD_SERVICE);
+            InputMethodManager imm = (InputMethodManager) activity.getSystemService(Context.INPUT_METHOD_SERVICE);
             if (imm != null)
                 imm.hideSoftInputFromWindow(editPatientName.getWindowToken(), 0);
             return true;
@@ -127,7 +130,7 @@ public class SelectPatientDialog {
             public void onRemoveClicked(View v, final int position) {
                 // Confirm before removal
                 final Patient patientRemoving = patients.get(position);
-                new AlertDialog.Builder(context, R.style.MyAlertDialog)
+                new AlertDialog.Builder(activity, R.style.MyAlertDialog)
                         .setTitle("Confirm")
                         .setMessage(
                                 "Confirm to remove " + patientRemoving.getName() +
@@ -149,7 +152,7 @@ public class SelectPatientDialog {
             }
         });
         recyclerPatientList.setLayoutManager(
-                new LinearLayoutManager(context, LinearLayoutManager.VERTICAL, false));
+                new LinearLayoutManager(activity, LinearLayoutManager.VERTICAL, false));
         recyclerPatientList.setAdapter(patientRecyclerAdapter);
     }
 
@@ -174,10 +177,21 @@ public class SelectPatientDialog {
 
         setUILoading();
         new Thread(() -> {
-            database.patientDAO().insertAll(new Patient(patientName));
+            Patient patient = new Patient(patientName);
+            database.patientDAO().insertAll(patient);
             patients = database.patientDAO().getAll();
+
+            syncPatient(patient);
             handler.sendEmptyMessage(UPDATE_PATIENTS);
         }).start();
+    }
+
+    private void syncPatient(Patient patient) {
+        MvpApplication application = (MvpApplication) activity.getApplication();
+
+        application.getSyncService(syncService -> {
+            syncService.scheduleNewTask(new SyncSinglePatientTask(patient));
+        });
     }
 
     private void setUILoading() {
