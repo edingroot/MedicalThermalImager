@@ -54,13 +54,12 @@ public class ApiHelper {
                     e -> {
                         emitter.onNext(false);
                         emitter.onComplete();
-                    },
-                    () -> {}
+                    }
                 );
         });
     }
 
-    public boolean syncPatient(SSPatient ssPatient, @NonNull OnPatientSyncListener listener) {
+    public boolean upSyncPatient(SSPatient ssPatient, @NonNull OnPatientSyncListener listener) {
         if (!application.checkNetworkAuthedAndAct())
             return false;
 
@@ -101,8 +100,7 @@ public class ApiHelper {
                         }
                     }
                 },
-                listener::onError,
-                () -> {}
+                listener::onError
             );
 
         return true;

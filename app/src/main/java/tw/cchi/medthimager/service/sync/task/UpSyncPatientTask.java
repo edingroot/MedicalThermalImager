@@ -13,20 +13,20 @@ import tw.cchi.medthimager.service.sync.SyncService;
 /**
  * Sync information of a patient.
  */
-public class SyncSinglePatientTask extends SyncTask {
+public class UpSyncPatientTask extends SyncTask {
     private final String TAG = Config.TAGPRE + getClass().getSimpleName();
 
     private Patient targetPatient;
     private String mergeWithUuid;
     private boolean createNew = false;
 
-    public SyncSinglePatientTask(Patient targetPatient) {
+    public UpSyncPatientTask(Patient targetPatient) {
         super();
         this.targetPatient = targetPatient;
         this.apiHelper = new ApiHelper(application);
     }
 
-    public SyncSinglePatientTask(Patient targetPatient, String mergeWithUuid, boolean createNew) {
+    public UpSyncPatientTask(Patient targetPatient, String mergeWithUuid, boolean createNew) {
         super();
         this.mergeWithUuid = mergeWithUuid;
         this.createNew = createNew;
@@ -39,7 +39,7 @@ public class SyncSinglePatientTask extends SyncTask {
         super.run(syncService);
 
         if (checkNetworkAndAuthed()) {
-            SyncSinglePatientTask.this.handleCreatePatient(targetPatient);
+            UpSyncPatientTask.this.handleCreatePatient(targetPatient);
         }
     }
 
@@ -48,13 +48,13 @@ public class SyncSinglePatientTask extends SyncTask {
             return;
         }
 
-        SSPatient ssPatient = SSPatient.fromLocalPatient(patient);
+        SSPatient ssPatient = new SSPatient(patient);
         if (mergeWithUuid != null) {
             ssPatient.setMerge_with(mergeWithUuid);
             ssPatient.setCreate_new(createNew);
         }
 
-        apiHelper.syncPatient(ssPatient, new ApiHelper.OnPatientSyncListener() {
+        apiHelper.upSyncPatient(ssPatient, new ApiHelper.OnPatientSyncListener() {
             @Override
             public void onSuccess(SSPatient ssPatient) {
                 patient.setSsuuid(ssPatient.getUuid());

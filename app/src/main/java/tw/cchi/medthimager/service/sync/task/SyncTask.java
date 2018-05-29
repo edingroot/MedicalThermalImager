@@ -36,16 +36,6 @@ public abstract class SyncTask implements Disposable {
         this.apiHelper = new ApiHelper(application);
     }
 
-    void finish() {
-        finish(null);
-    }
-
-    void finish(@Nullable Error error) {
-        this.error = error;
-        finished = true;
-        dispose();
-    }
-
     boolean checkNetworkAndAuthed() {
         if (!NetworkUtils.isNetworkConnected(application)) {
             finish(new Errors.NetworkLostError());
@@ -64,6 +54,16 @@ public abstract class SyncTask implements Disposable {
     void showToast(String message) {
         mainHandler.post(() ->
                 Toast.makeText(application, message, Toast.LENGTH_SHORT).show());
+    }
+
+    void finish() {
+        finish(null);
+    }
+
+    void finish(@Nullable Error error) {
+        this.error = error;
+        finished = true;
+        dispose();
     }
 
 

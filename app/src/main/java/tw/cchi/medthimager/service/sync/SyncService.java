@@ -19,7 +19,7 @@ import tw.cchi.medthimager.MvpApplication;
 import tw.cchi.medthimager.di.component.DaggerServiceComponent;
 import tw.cchi.medthimager.di.component.ServiceComponent;
 import tw.cchi.medthimager.service.sync.task.SyncPatientsTask;
-import tw.cchi.medthimager.service.sync.task.SyncSinglePatientTask;
+import tw.cchi.medthimager.service.sync.task.UpSyncPatientTask;
 import tw.cchi.medthimager.service.sync.task.SyncTask;
 import tw.cchi.medthimager.util.NetworkUtils;
 
@@ -31,7 +31,7 @@ public class SyncService extends Service {
     private CompositeDisposable taskWorkerSubs = new CompositeDisposable();
 
     // PublishSubject for worker of each sync task
-    private PublishSubject<SyncSinglePatientTask> syncSinglePatientTaskPub = PublishSubject.create();
+    private PublishSubject<UpSyncPatientTask> syncSinglePatientTaskPub = PublishSubject.create();
     private PublishSubject<SyncPatientsTask> syncPatientsTaskPub = PublishSubject.create();
 
     public static void start(Context context) {
@@ -89,8 +89,8 @@ public class SyncService extends Service {
      * Errors such like network or authentication error will be caught and ignored.
      */
     public void scheduleNewTask(SyncTask syncTask) {
-        if (syncTask instanceof SyncSinglePatientTask)
-            syncSinglePatientTaskPub.onNext((SyncSinglePatientTask) syncTask);
+        if (syncTask instanceof UpSyncPatientTask)
+            syncSinglePatientTaskPub.onNext((UpSyncPatientTask) syncTask);
         else if (syncTask instanceof SyncPatientsTask)
             syncPatientsTaskPub.onNext((SyncPatientsTask) syncTask);
     }

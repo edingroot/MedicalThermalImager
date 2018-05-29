@@ -85,7 +85,7 @@ public class PatientSelectRecyclerAdapter extends RecyclerView.Adapter<PatientSe
             Patient patient = patients.get(position);
             bed = patient.getBed() == null ? "" : patient.getBed();
             name = patient.getName();
-            isDefaultPatient = patient.isDefualtPatient();
+            isDefaultPatient = patient.isDefaultPatient();
         } else if (ssPatients != null) {
             SSPatient ssPatient = ssPatients.get(position);
             bed = ssPatient.getBed() == null ? "" : ssPatient.getBed();

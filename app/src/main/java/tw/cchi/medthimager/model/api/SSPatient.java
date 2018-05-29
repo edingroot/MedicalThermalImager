@@ -24,13 +24,14 @@ public class SSPatient implements Parcelable {
     private String merge_with;
     private boolean create_new = false;
 
-    public static SSPatient fromLocalPatient(Patient patient) {
-        SSPatient ssPatient = new SSPatient();
-        ssPatient.uuid = patient.getSsuuid();
-        ssPatient.caseid = patient.getCaseid();
-        ssPatient.name = patient.getName();
-        ssPatient.bed = patient.getBed();
-        return ssPatient;
+    /**
+     * Convert from local Patient model.
+     */
+    public SSPatient(Patient patient) {
+        this.uuid = patient.getSsuuid();
+        this.caseid = patient.getCaseid();
+        this.name = patient.getName();
+        this.bed = patient.getBed();
     }
 
     public String getUuid() {

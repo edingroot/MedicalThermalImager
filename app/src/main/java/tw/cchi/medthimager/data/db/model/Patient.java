@@ -11,6 +11,8 @@ import android.support.annotation.NonNull;
 import java.util.Date;
 import java.util.UUID;
 
+import tw.cchi.medthimager.model.api.SSPatient;
+
 @Entity(tableName = "patients")
 public class Patient implements Parcelable {
     public static final String DEFAULT_PATIENT_CUID = "AAAAAAAA-BBBB-CCCC-DDDD-123456789012";
@@ -54,6 +56,21 @@ public class Patient implements Parcelable {
         this.createdAt = new Date();
     }
 
+    /**
+     * Convert from (remote) SSPatient model.
+     *
+     * Note: cuid is regenerated.
+     */
+    @Ignore
+    public Patient(SSPatient ssPatient) {
+        this.cuid = UUID.randomUUID().toString();
+        this.ssuuid = ssPatient.getUuid();
+        this.caseid = ssPatient.getCaseid();
+        this.name = ssPatient.getName();
+        this.bed = ssPatient.getBed();
+        this.createdAt = ssPatient.getCreated_at();
+    }
+
     public Patient(@NonNull String cuid, String ssuuid, String caseid, String name, String bed, boolean syncEnabled, Date createdAt) {
         this.cuid = cuid;
         this.ssuuid = ssuuid;
@@ -64,7 +81,7 @@ public class Patient implements Parcelable {
         this.createdAt = createdAt;
     }
 
-    public boolean isDefualtPatient() {
+    public boolean isDefaultPatient() {
         return cuid.equals(DEFAULT_PATIENT_CUID);
     }
 

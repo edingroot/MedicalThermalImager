@@ -25,7 +25,8 @@ import tw.cchi.medthimager.MvpApplication;
 import tw.cchi.medthimager.R;
 import tw.cchi.medthimager.data.db.AppDatabase;
 import tw.cchi.medthimager.data.db.model.Patient;
-import tw.cchi.medthimager.service.sync.task.SyncSinglePatientTask;
+import tw.cchi.medthimager.service.sync.task.SyncPatientsTask;
+import tw.cchi.medthimager.service.sync.task.UpSyncPatientTask;
 import tw.cchi.medthimager.ui.adapter.PatientSelectRecyclerAdapter;
 
 public class SelectPatientDialog {
@@ -181,17 +182,9 @@ public class SelectPatientDialog {
             database.patientDAO().insertAll(patient);
             patients = database.patientDAO().getAll();
 
-            syncPatient(patient);
+            upSyncPatient(patient);
             handler.sendEmptyMessage(UPDATE_PATIENTS);
         }).start();
-    }
-
-    private void syncPatient(Patient patient) {
-        MvpApplication application = (MvpApplication) activity.getApplication();
-
-        application.getSyncService().subscribe(syncService -> {
-            syncService.scheduleNewTask(new SyncSinglePatientTask(patient));
-        });
     }
 
     private void setUILoading() {
@@ -199,7 +192,23 @@ public class SelectPatientDialog {
         recyclerPatientList.setVisibility(View.GONE);
     }
 
+
+    private void upSyncPatient(Patient patient) {
+        MvpApplication application = (MvpApplication) activity.getApplication();
+        application.getSyncService().subscribe(syncService ->
+                syncService.scheduleNewTask(new UpSyncPatientTask(patient)));
+    }
+
+    private void syncPatients() {
+        MvpApplication application = (MvpApplication) activity.getApplication();
+        application.getSyncService().subscribe(syncService ->
+                syncService.scheduleNewTask(new SyncPatientsTask()));
+    }
+
+
     public void dismiss() {
+        syncPatients();
+
         if (dialog != null)
             dialog.dismiss();
     }

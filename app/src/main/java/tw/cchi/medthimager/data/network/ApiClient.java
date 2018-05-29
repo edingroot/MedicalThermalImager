@@ -1,5 +1,7 @@
 package tw.cchi.medthimager.data.network;
 
+import java.util.List;
+
 import io.reactivex.Observable;
 import retrofit2.Call;
 import retrofit2.Response;
@@ -35,6 +37,10 @@ public interface ApiClient {
     @RequireAuth
     @GET("profile")
     Observable<Response<User>> getProfile();
+
+    @RequireAuth
+    @GET("patients")
+    Observable<Response<List<SSPatient>>> getAllPatients();
 
     @RequireAuth
     @POST("patients")
