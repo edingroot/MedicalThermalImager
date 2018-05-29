@@ -118,6 +118,8 @@ public class SelectPatientDialog {
         });
 
         patientRecyclerAdapter = new PatientSelectRecyclerAdapter();
+        // TODO: temporary disable the remove function
+        patientRecyclerAdapter.setShowRemove(false);
         patientRecyclerAdapter.setOnInteractionListener(new PatientSelectRecyclerAdapter.OnInteractionListener() {
             @Override
             public void onSelected(View v, int position) {

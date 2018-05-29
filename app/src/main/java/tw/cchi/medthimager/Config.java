@@ -8,8 +8,8 @@ public final class Config {
 
     public static final boolean ENABLE_ANALYTICS_COLLECTION = true;
 
-//    public static final String API_BASE_URL = "https://medthimager.cchi.tw/api/";
-    public static final String API_BASE_URL = "http://192.168.0.201/thermal-imager-console/public/api/";
+    public static final String API_BASE_URL = "https://medthimager.cchi.tw/api/";
+//    public static final String API_BASE_URL = "http://192.168.0.201/thermal-imager-console/public/api/";
     public static final String PREFILLED_LOGIN_EMAIL = "test1@example.com";
     public static final String PREFILLED_LOGIN_PASSWORD = "example@test1";
     public static final Level API_LOGGING_LEVEL = Level.BASIC;

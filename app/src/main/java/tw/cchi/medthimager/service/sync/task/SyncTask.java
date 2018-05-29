@@ -39,8 +39,10 @@ public abstract class SyncTask implements Disposable {
     boolean checkNetworkAndAuthed() {
         if (!NetworkUtils.isNetworkConnected(application)) {
             finish(new Errors.NetworkLostError());
+            return false;
         } else if (!application.getSession().isActive()) {
             finish(new Errors.UnauthenticatedError());
+            return false;
         }
         return true;
     }
