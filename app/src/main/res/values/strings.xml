@@ -42,16 +42,13 @@
     <string name="sync_patient_list">Sync Patient List</string>
     <string name="last_sync">Last sync: %1$s</string>
     <string name="sync">Sync</string>
-    <string name="syncing">Syncing</string>
+    <string name="syncing">Syncing…</string>
 
     <string name="auto_clear_spots">Auto Clear Spots</string>
     <string name="auto_clear_spots_dscrp">Auto clear thermal spots on camera disconnect.</string>
     <string name="auto_apply_visible_image_offset">Auto Apply Visible Image Offset</string>
     <string name="auto_apply_visible_image_offset_dscrp">Auto align visible light image with thermal image based on the last adjusted offset.</string>
 
-
-    <!-- SyncService -->
-    <string name="syncing_patient_list_done">Patient list sync completed</string>
 
     <!-- Dialogs -->
     <string name="continuous_shoot">Continuous Shoot</string>

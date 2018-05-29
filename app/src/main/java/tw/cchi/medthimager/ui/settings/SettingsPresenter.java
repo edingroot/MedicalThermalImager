@@ -15,6 +15,7 @@ import tw.cchi.medthimager.data.network.ApiHelper;
 import tw.cchi.medthimager.helper.session.Session;
 import tw.cchi.medthimager.service.sync.task.SyncPatientsTask;
 import tw.cchi.medthimager.ui.base.BasePresenter;
+import tw.cchi.medthimager.util.DateTimeUtils;
 
 public class SettingsPresenter<V extends SettingsMvpView> extends BasePresenter<V> implements SettingsMvpPresenter<V> {
     private final String TAG = Config.TAGPRE + getClass().getSimpleName();
@@ -41,6 +42,7 @@ public class SettingsPresenter<V extends SettingsMvpView> extends BasePresenter<
         getMvpView().setAuthState(currentSession.isActive(), currentSession.getUser());
         getMvpView().setSwClearSpotsOnDisconn(dataManager.pref.getClearSpotsOnDisconnectEnabled());
         getMvpView().setSwAutoApplyVisibleOffset(dataManager.pref.getAutoApplyVisibleOffsetEnabled());
+        getMvpView().setSyncPatientsStatus(false, getLastSyncedPatients());
 
         // Refresh data asynchronously
         apiHelper.refreshUserProfile().observeOn(AndroidSchedulers.mainThread()).subscribe(success -> {
@@ -96,11 +98,24 @@ public class SettingsPresenter<V extends SettingsMvpView> extends BasePresenter<
 
     @Override
     public void syncPatients() {
+        getMvpView().setSyncPatientsStatus(true, "");
+
         application.getSyncService().subscribe(syncService -> {
             if (application.checkNetworkAuthedAndAct()) {
                 syncService.scheduleNewTask(new SyncPatientsTask());
             }
         });
+    }
+
+    @Override
+    public void onSyncPatientsDone() {
+        if (isViewAttached()) {
+            getMvpView().setSyncPatientsStatus(false, getLastSyncedPatients());
+        }
+    }
+
+    private String getLastSyncedPatients() {
+        return DateTimeUtils.timestampToString(dataManager.pref.getLastSyncPatients().getTime());
     }
 
     @Override

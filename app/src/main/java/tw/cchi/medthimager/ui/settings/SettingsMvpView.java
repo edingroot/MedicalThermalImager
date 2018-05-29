@@ -13,4 +13,6 @@ public interface SettingsMvpView extends MvpView {
 
     void setSwAutoApplyVisibleOffset(boolean checked);
 
+    void setSyncPatientsStatus(boolean syncing, String lastSynced);
+
 }

@@ -7,6 +7,8 @@ import android.support.annotation.Nullable;
 
 import com.google.gson.Gson;
 
+import java.util.Date;
+
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
@@ -24,6 +26,7 @@ public class AppPreferencesHelper implements PreferencesHelper {
     private static final String KEY_USER = "KEY_USER";
 
     // States
+    private static final String KEY_LAST_SYNCED_PATIENTS = "KEY_LAST_SYNCED_PATIENTS";
     private static final String KEY_SELECTED_PATIENT_CUID = "KEY_SELECTED_PATIENT_CUID";
     private static final String KEY_SYNC_PATIENT_CONFLICTS = "KEY_SYNC_PATIENT_CONFLICTS";
 
@@ -86,6 +89,17 @@ public class AppPreferencesHelper implements PreferencesHelper {
     @Override
     public void setSelectedPatientCuid(String selectedPatientCuid) {
         mPrefs.edit().putString(KEY_SELECTED_PATIENT_CUID, selectedPatientCuid).apply();
+    }
+
+    @Override
+    public Date getLastSyncPatients() {
+        long timestamp = mPrefs.getLong(KEY_LAST_SYNCED_PATIENTS, 0);
+        return timestamp == 0 ? new Date() : new Date(timestamp);
+    }
+
+    @Override
+    public void setLastSyncPatients(Date datetime) {
+        mPrefs.edit().putLong(KEY_LAST_SYNCED_PATIENTS, datetime.getTime()).apply();
     }
 
     @Override

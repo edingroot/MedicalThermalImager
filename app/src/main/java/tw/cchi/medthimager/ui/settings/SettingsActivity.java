@@ -12,9 +12,13 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnCheckedChanged;
 import butterknife.OnClick;
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.disposables.CompositeDisposable;
+import io.reactivex.schedulers.Schedulers;
 import tw.cchi.medthimager.Config;
 import tw.cchi.medthimager.R;
 import tw.cchi.medthimager.model.User;
+import tw.cchi.medthimager.service.sync.SyncBroadcastSender;
 import tw.cchi.medthimager.ui.base.BaseActivity;
 
 public class SettingsActivity extends BaseActivity implements SettingsMvpView {
@@ -22,10 +26,13 @@ public class SettingsActivity extends BaseActivity implements SettingsMvpView {
 
     @Inject SettingsMvpPresenter<SettingsMvpView> presenter;
 
+    private CompositeDisposable broadcastSubs = new CompositeDisposable();
+
     @BindView(R.id.txtAuthStatusDescription) TextView txtAuthStatusDescription;
     @BindView(R.id.btnAuth) Button btnAuth;
     @BindView(R.id.swClearSpotsOnDisconn) SwitchCompat swClearSpotsOnDisconn;
     @BindView(R.id.swAutoApplyVisibleOffset) SwitchCompat swAutoApplyVisibleOffset;
+    @BindView(R.id.txtSyncPatientsStatus) TextView txtSyncPatientsStatus;
 
     private boolean authenticated = false;
 
@@ -39,6 +46,19 @@ public class SettingsActivity extends BaseActivity implements SettingsMvpView {
         presenter.onAttach(this);
     }
 
+    @Override
+    protected void onStart() {
+        super.onStart();
+        broadcastSubs.add(internalBroadcastEvents
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(pair -> {
+                    if (pair.first.equals(SyncBroadcastSender.EventName.SYNC_PATIENT_DONE)) {
+                        presenter.onSyncPatientsDone();
+                    }
+                }));
+    }
+
     @OnClick(R.id.btnAuth)
     void onAuthClick() {
         if (authenticated) {
@@ -50,11 +70,7 @@ public class SettingsActivity extends BaseActivity implements SettingsMvpView {
 
     @OnClick(R.id.btnSyncPatients)
     void onSyncPatientsClick() {
-        if (authenticated) {
-            presenter.syncPatients();
-        } else {
-            // TODO
-        }
+        presenter.syncPatients();
     }
 
     @OnCheckedChanged(R.id.swClearSpotsOnDisconn)
@@ -94,6 +110,21 @@ public class SettingsActivity extends BaseActivity implements SettingsMvpView {
     @Override
     public void setSwAutoApplyVisibleOffset(boolean checked) {
         swAutoApplyVisibleOffset.setChecked(checked);
+    }
+
+    @Override
+    public void setSyncPatientsStatus(boolean syncing, String lastSynced) {
+        if (syncing) {
+            txtSyncPatientsStatus.setText(R.string.syncing);
+        } else {
+            txtSyncPatientsStatus.setText(getString(R.string.last_sync, lastSynced));
+        }
+    }
+
+    @Override
+    protected void onStop() {
+        broadcastSubs.dispose();
+        super.onStop();
     }
 
     @Override

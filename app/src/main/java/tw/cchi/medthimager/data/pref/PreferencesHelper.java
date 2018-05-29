@@ -3,6 +3,8 @@ package tw.cchi.medthimager.data.pref;
 import android.graphics.Point;
 import android.support.annotation.Nullable;
 
+import java.util.Date;
+
 import tw.cchi.medthimager.model.api.AccessTokens;
 import tw.cchi.medthimager.model.User;
 
@@ -31,6 +33,10 @@ public interface PreferencesHelper {
     String getSelectedPatientCuid();
 
     void setSelectedPatientCuid(String selectedPatientCuid);
+
+    Date getLastSyncPatients();
+
+    void setLastSyncPatients(Date datetime);
 
     int getSyncPatientConflictCount();
 

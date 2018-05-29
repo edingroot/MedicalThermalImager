@@ -8,6 +8,8 @@ public final class Constants {
     public static final String POSTFIX_VISIBLE_IMAGE = "_vis";
 
     public static final String PREF_NAME = "medthimager_pref";
+
+    public static final String ACTION_SERVICE_BROADCAST = "ACTION_SERVICE_BROADCAST";
     public static final String INTERNAL_BROADCAST_PERMISSION = "tw.cchi.medthimager.INTERNALBROADCAST";
 
 }

@@ -16,6 +16,7 @@ import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.util.Pair;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.TextView;
@@ -24,6 +25,7 @@ import android.widget.Toast;
 import java.util.List;
 
 import butterknife.Unbinder;
+import io.reactivex.subjects.PublishSubject;
 import tw.cchi.medthimager.Config;
 import tw.cchi.medthimager.Constants;
 import tw.cchi.medthimager.MvpApplication;
@@ -51,6 +53,8 @@ public abstract class BaseActivity extends AppCompatActivity
     private ProgressDialog loadingDialog;
 
     protected MvpApplication application;
+    // Pair<eventName, intent>
+    protected PublishSubject<Pair<String, Intent>> internalBroadcastEvents = PublishSubject.create();
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -196,9 +200,7 @@ public abstract class BaseActivity extends AppCompatActivity
 
     private void registerBroadcastReceivers() {
         internalBroadcastReceiver = new InternalBroadcastReceiver();
-        IntentFilter intentFilter = new IntentFilter();
-        intentFilter.addAction(SyncBroadcastSender.Actions.SYNC_PATIENT_CONFLICT);
-        registerReceiver(internalBroadcastReceiver, intentFilter,
+        registerReceiver(internalBroadcastReceiver, new IntentFilter(Constants.ACTION_SERVICE_BROADCAST),
                 Constants.INTERNAL_BROADCAST_PERMISSION, null);
     }
 
@@ -236,10 +238,11 @@ public abstract class BaseActivity extends AppCompatActivity
     private class InternalBroadcastReceiver extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
-            if (intent.getAction() == null)
-                return;
+            String eventName = intent.getStringExtra(SyncBroadcastSender.Extras.EXTRA_EVENT_NAME);
 
-            if (intent.getAction().equals(SyncBroadcastSender.Actions.SYNC_PATIENT_CONFLICT)) {
+            internalBroadcastEvents.onNext(new Pair<>(eventName, intent));
+
+            if (eventName.equals(SyncBroadcastSender.EventName.SYNC_PATIENT_CONFLICT)) {
                 SyncBroadcastSender.ConflictType conflictType =
                         (SyncBroadcastSender.ConflictType) intent.getSerializableExtra(SyncBroadcastSender.Extras.EXTRA_CONFLICT_TYPE);
                 Patient patient = intent.getParcelableExtra(SyncBroadcastSender.Extras.EXTRA_PATIENT);

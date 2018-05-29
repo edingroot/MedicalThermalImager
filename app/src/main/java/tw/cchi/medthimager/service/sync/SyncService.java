@@ -31,7 +31,7 @@ public class SyncService extends Service {
     private CompositeDisposable taskWorkerSubs = new CompositeDisposable();
 
     // PublishSubject for worker of each sync task
-    private PublishSubject<UpSyncPatientTask> syncSinglePatientTaskPub = PublishSubject.create();
+    private PublishSubject<UpSyncPatientTask> upSyncPatientsTaskPub = PublishSubject.create();
     private PublishSubject<SyncPatientsTask> syncPatientsTaskPub = PublishSubject.create();
 
     public static void start(Context context) {
@@ -66,22 +66,18 @@ public class SyncService extends Service {
     }
 
     private void startTaskWorkers() {
-        taskWorkerSubs.add(syncSinglePatientTaskPub
+        taskWorkerSubs.add(upSyncPatientsTaskPub
                 .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
                 .subscribe(task -> {
                     task.run(this);
-                    if (task.getError() != null) {
-                        // ignore
-                    }
+                    // if (task.getError() != null) {}
                 }));
 
         taskWorkerSubs.add(syncPatientsTaskPub
                 .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
                 .subscribe(task -> {
                     task.run(this);
-                    if (task.getError() != null) {
-                        // ignore
-                    }
+                    // if (task.getError() != null) {}
                 }));
     }
 
@@ -90,7 +86,7 @@ public class SyncService extends Service {
      */
     public void scheduleNewTask(SyncTask syncTask) {
         if (syncTask instanceof UpSyncPatientTask)
-            syncSinglePatientTaskPub.onNext((UpSyncPatientTask) syncTask);
+            upSyncPatientsTaskPub.onNext((UpSyncPatientTask) syncTask);
         else if (syncTask instanceof SyncPatientsTask)
             syncPatientsTaskPub.onNext((SyncPatientsTask) syncTask);
     }

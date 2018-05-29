@@ -1,5 +1,6 @@
 package tw.cchi.medthimager.service.sync.task;
 
+import java.util.Date;
 import java.util.List;
 
 import io.reactivex.Observable;
@@ -49,11 +50,11 @@ public class SyncPatientsTask extends SyncTask {
                     // Short sleep between each upload
                     Thread.sleep(500);
                 },
-                Throwable::printStackTrace,
+                e -> {},
                 () -> {
+                    dataManager.pref.setLastSyncPatients(new Date());
                     dataManager.pref.setSyncPatientConflictCount(conflictCount);
-                    if (conflictCount == 0)
-                        showToast(application.getString(R.string.syncing_patient_list_done));
+                    broadcastSender.sendSyncPatientDone();
                     finish();
                 }
             );

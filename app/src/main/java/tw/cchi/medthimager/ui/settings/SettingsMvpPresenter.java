@@ -14,4 +14,6 @@ public interface SettingsMvpPresenter<V extends SettingsMvpView> extends MvpPres
 
     void syncPatients();
 
+    void onSyncPatientsDone();
+
 }

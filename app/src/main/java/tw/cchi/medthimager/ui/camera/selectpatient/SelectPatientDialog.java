@@ -114,6 +114,7 @@ public class SelectPatientDialog {
 
         btnOk.setOnClickListener(v -> {
             onInteractionListener.onOkClicked(selectedPatientCuid);
+            syncPatients();
             dismiss();
         });
 
@@ -209,8 +210,6 @@ public class SelectPatientDialog {
 
 
     public void dismiss() {
-        syncPatients();
-
         if (dialog != null)
             dialog.dismiss();
     }

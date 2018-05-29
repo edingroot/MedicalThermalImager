@@ -9,11 +9,15 @@ import tw.cchi.medthimager.Constants;
 import tw.cchi.medthimager.data.db.model.Patient;
 import tw.cchi.medthimager.model.api.SSPatient;
 
+import static tw.cchi.medthimager.Constants.ACTION_SERVICE_BROADCAST;
+
 public final class SyncBroadcastSender {
-    public class Actions {
+    public class EventName {
+        public static final String SYNC_PATIENT_DONE = "SyncService/SYNC_PATIENT_DONE";
         public static final String SYNC_PATIENT_CONFLICT = "SyncService/SYNC_PATIENT_CONFLICT";
     }
     public class Extras {
+        public static final String EXTRA_EVENT_NAME = "SyncService/SYNC_PATIENT_CONFLICT";
         public static final String EXTRA_CONFLICT_TYPE = "SyncService/EXTRA_CONFLICT_TYPE";
         public static final String EXTRA_PATIENT = "SyncService/EXTRA_PATIENT";
         public static final String EXTRA_SSPATIENT_LIST = "SyncService/EXTRA_SSPATIENT_LIST";
@@ -26,12 +30,22 @@ public final class SyncBroadcastSender {
         this.syncService = syncService;
     }
 
+    public void sendSyncPatientDone() {
+        Intent intent = new Intent();
+        intent.setAction(ACTION_SERVICE_BROADCAST);
+        intent.putExtra(Extras.EXTRA_EVENT_NAME, EventName.SYNC_PATIENT_DONE);
+        syncService.sendBroadcast(intent, Constants.INTERNAL_BROADCAST_PERMISSION);
+    }
+
     public void sendSyncPatientConflict(ConflictType conflictType, Patient patient, List<SSPatient> conflictPatients) {
         Intent intent = new Intent();
-        intent.setAction(Actions.SYNC_PATIENT_CONFLICT);
+        intent.setAction(ACTION_SERVICE_BROADCAST);
+        intent.putExtra(Extras.EXTRA_EVENT_NAME, EventName.SYNC_PATIENT_CONFLICT);
+
         intent.putExtra(Extras.EXTRA_CONFLICT_TYPE, conflictType);
         intent.putExtra(Extras.EXTRA_PATIENT, patient);
         intent.putParcelableArrayListExtra(Extras.EXTRA_SSPATIENT_LIST, new ArrayList<>(conflictPatients));
+
         syncService.sendBroadcast(intent, Constants.INTERNAL_BROADCAST_PERMISSION);
     }
 
