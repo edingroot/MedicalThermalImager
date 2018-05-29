@@ -35,10 +35,7 @@
     public void print(...);
 }
 
-# Third party packages
--dontwarn droidninja.filepicker.**
--dontwarn com.github.mikephil.charting.**
-
+-dontnote **
 
 # FLIR SDK
 # Ref: https://stackoverflow.com/questions/36249005/minifyenabled-true-leads-to-crash-on-app-start
@@ -47,13 +44,23 @@
 -dontwarn org.jetbrains.annotations.Contract
 
 
-# Configs referenced from: https://stackoverflow.com/questions/7464035/how-to-tell-proguard-to-keep-everything-in-a-particular-package
+# Partial configs are referenced from: https://stackoverflow.com/questions/7464035/how-to-tell-proguard-to-keep-everything-in-a-particular-package
 -dontwarn javax.management.**
 -dontwarn java.lang.management.**
+-dontwarn com.google.android.gms.**
+-dontwarn com.google.gson.**
+-dontwarn com.google.firebase.**
 -dontwarn org.apache.log4j.**
 -dontwarn org.apache.commons.logging.**
 -dontwarn org.slf4j.**
 -dontwarn org.json.**
+-dontwarn droidninja.filepicker.**
+-dontwarn com.github.mikephil.charting.**
+-dontwarn okhttp3.internal.**
+-dontwarn okio.**
+-dontwarn retrofit2.Platform$Java8
+
+-keepattributes Signature,InnerClasses
 
 -keep public class * extends android.app.Activity
 -keep public class * extends android.app.Application
