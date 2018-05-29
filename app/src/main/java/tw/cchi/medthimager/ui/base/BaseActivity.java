@@ -36,6 +36,7 @@ import tw.cchi.medthimager.helper.session.SessionManager;
 import tw.cchi.medthimager.model.api.SSPatient;
 import tw.cchi.medthimager.service.sync.SyncBroadcastSender;
 import tw.cchi.medthimager.ui.auth.LoginActivity;
+import tw.cchi.medthimager.ui.dialog.patientconflict.ConflictPatientDialog;
 import tw.cchi.medthimager.util.AppUtils;
 import tw.cchi.medthimager.util.NetworkUtils;
 
@@ -246,6 +247,8 @@ public abstract class BaseActivity extends AppCompatActivity
 
                 Log.d(TAG, "Received internal broadcast event: SYNC_PATIENT_CONFLICT; patient.name=" + patient.getName());
                 // TODO
+                ConflictPatientDialog dialog = ConflictPatientDialog.newInstance(conflictType, patient, conflictPatients);
+                dialog.show(getSupportFragmentManager());
             }
         }
     }

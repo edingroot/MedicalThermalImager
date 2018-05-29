@@ -18,7 +18,7 @@ public final class SyncBroadcastSender {
         public static final String EXTRA_PATIENT = "SyncService/EXTRA_PATIENT";
         public static final String EXTRA_SSPATIENT_LIST = "SyncService/EXTRA_SSPATIENT_LIST";
     }
-    public enum ConflictType { STRICT, CHECK }
+    public enum ConflictType {FORCE_MERGE, CHECK }
 
     private SyncService syncService;
 

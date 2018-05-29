@@ -19,7 +19,7 @@ import tw.cchi.medthimager.Config;
 import tw.cchi.medthimager.MvpApplication;
 import tw.cchi.medthimager.di.component.DaggerServiceComponent;
 import tw.cchi.medthimager.di.component.ServiceComponent;
-import tw.cchi.medthimager.service.sync.task.SyncPatientsTask;
+import tw.cchi.medthimager.service.sync.task.SyncNewPatientsTask;
 import tw.cchi.medthimager.util.NetworkUtils;
 
 public class SyncService extends Service {
@@ -27,9 +27,7 @@ public class SyncService extends Service {
 
     private IBinder mBinder;
     private NetworkStateBroadcastReceiver networkStateReceiver;
-    private SyncPatientsTask syncPatientsTask;
-
-    @Inject MvpApplication application;
+    private SyncNewPatientsTask syncNewPatientsTask;
 
     @Override
     public void onCreate() {
@@ -44,6 +42,14 @@ public class SyncService extends Service {
         networkStateReceiver = new NetworkStateBroadcastReceiver();
         registerReceiver(networkStateReceiver,
                 new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION));
+    }
+
+    public static void start(Context context) {
+        context.startService(new Intent(context, SyncService.class));
+    }
+
+    public static void stop(Context context) {
+        context.stopService(new Intent(context, SyncService.class));
     }
 
     @Override
@@ -66,29 +72,22 @@ public class SyncService extends Service {
     }
 
 
-    public static void start(Context context) {
-        context.startService(new Intent(context, SyncService.class));
-    }
-
-    public static void stop(Context context) {
-        context.stopService(new Intent(context, SyncService.class));
-    }
-
     /**
      * @return false if sync is currently in progress
      */
     public synchronized boolean syncPatients() {
-        if (syncPatientsTask != null && !syncPatientsTask.isFinished()) {
+        if (syncNewPatientsTask != null && !syncNewPatientsTask.isFinished()) {
             return false;
         }
 
-        syncPatientsTask = new SyncPatientsTask(this, application);
-        Observable.create(emitter -> syncPatientsTask.run())
+        syncNewPatientsTask = new SyncNewPatientsTask(this);
+        Observable.create(emitter -> syncNewPatientsTask.run())
                 .subscribeOn(Schedulers.io())
                 .subscribe();
 
         return true;
     }
+
 
     private class NetworkStateBroadcastReceiver extends BroadcastReceiver {
         public NetworkStateBroadcastReceiver() {

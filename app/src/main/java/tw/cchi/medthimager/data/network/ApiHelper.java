@@ -32,7 +32,11 @@ public class ApiHelper {
     }
 
     public Observable<Boolean> refreshUserProfile() {
-        checkNetworkAndAuthed();
+        try {
+            checkNetworkAndAuthed();
+        } catch (Errors.AppError ignore) {
+            return Observable.just(false);
+        }
 
         return Observable.create(emitter -> {
             application.getSession().getApiClient().getProfile()
@@ -56,7 +60,7 @@ public class ApiHelper {
         });
     }
 
-    public void syncPatient(SSPatient ssPatient, @NonNull OnPatientSyncListener listener) {
+    public void syncPatient(SSPatient ssPatient, @NonNull OnPatientSyncListener listener) throws Errors.AppError {
         checkNetworkAndAuthed();
 
         application.getSession().getApiClient().createPatient(ssPatient)
@@ -84,7 +88,7 @@ public class ApiHelper {
 
                         switch (response.code()) {
                             case 409:
-                                listener.onConflictStrict(patientResponse.conflicted_patients, patientResponse.message);
+                                listener.onConflictForceMerge(patientResponse.conflicted_patients, patientResponse.message);
                                 break;
 
                             case 412:
@@ -101,19 +105,20 @@ public class ApiHelper {
             );
     }
 
-    private void checkNetworkAndAuthed() {
+    private boolean checkNetworkAndAuthed() throws Errors.AppError {
         if (!NetworkUtils.isNetworkConnected(application)) {
             throw new Errors.NetworkLostError();
         } else if (!application.getSession().isActive()) {
             throw new Errors.UnauthenticatedError();
         }
+        return true;
     }
 
     public interface OnPatientSyncListener {
         void onSuccess(SSPatient ssPatient);
 
         // 409
-        void onConflictStrict(List<SSPatient> conflictPatients, String message);
+        void onConflictForceMerge(List<SSPatient> conflictPatients, String message);
 
         // 412
         void onConflictCheck(List<SSPatient> conflictPatients, String message);

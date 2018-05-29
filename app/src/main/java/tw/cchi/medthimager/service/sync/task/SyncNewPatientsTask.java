@@ -18,15 +18,15 @@ import tw.cchi.medthimager.util.NetworkUtils;
 /**
  * Sync all patients whose uuid field is null.
  */
-public class SyncPatientsTask extends SyncTask {
+public class SyncNewPatientsTask extends SyncTask {
     private final String TAG = Config.TAGPRE + getClass().getSimpleName();
 
     private ApiHelper apiHelper;
     private int conflictCount = 0;
     private Disposable uploadTask;
 
-    public SyncPatientsTask(SyncService syncService, MvpApplication application) {
-        super(syncService, application);
+    public SyncNewPatientsTask(SyncService syncService) {
+        super(syncService);
         this.apiHelper = new ApiHelper(application);
     }
 
@@ -37,7 +37,6 @@ public class SyncPatientsTask extends SyncTask {
         } else if (!application.getSession().isActive()) {
             finish(new Errors.UnauthenticatedError());
         } else {
-            showToast(application.getString(R.string.syncing_patient_list));
             syncPatients();
         }
     }
@@ -51,7 +50,7 @@ public class SyncPatientsTask extends SyncTask {
         uploadTask = Observable.fromIterable(patients)
             .subscribe(
                 patient -> {
-                    SyncPatientsTask.this.handleCreatePatient(patient);
+                    SyncNewPatientsTask.this.handleCreatePatient(patient);
                     Thread.sleep(500);
                 },
                 Throwable::printStackTrace,
@@ -78,9 +77,9 @@ public class SyncPatientsTask extends SyncTask {
             }
 
             @Override
-            public void onConflictStrict(List<SSPatient> conflictPatients, String message) {
+            public void onConflictForceMerge(List<SSPatient> conflictPatients, String message) {
                 conflictCount++;
-                broadcastSender.sendSyncPatientConflict(SyncBroadcastSender.ConflictType.STRICT, patient, conflictPatients);
+                broadcastSender.sendSyncPatientConflict(SyncBroadcastSender.ConflictType.FORCE_MERGE, patient, conflictPatients);
             }
 
             @Override

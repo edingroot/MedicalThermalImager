@@ -6,43 +6,58 @@ import android.support.annotation.Nullable;
 import android.widget.Toast;
 
 import io.reactivex.disposables.Disposable;
+import tw.cchi.medthimager.Errors;
 import tw.cchi.medthimager.MvpApplication;
 import tw.cchi.medthimager.data.DataManager;
 import tw.cchi.medthimager.service.sync.SyncBroadcastSender;
 import tw.cchi.medthimager.service.sync.SyncService;
+import tw.cchi.medthimager.util.NetworkUtils;
 import tw.cchi.medthimager.util.annotation.BgThreadCapable;
 
 abstract class SyncTask implements Runnable, Disposable {
-    protected SyncService syncService;
-    protected MvpApplication application;
-    protected DataManager dataManager;
-    protected SyncBroadcastSender broadcastSender;
-    protected volatile boolean disposed = false;
+    MvpApplication application;
+    DataManager dataManager;
+    SyncBroadcastSender broadcastSender;
+    volatile boolean disposed = false;
 
     private Handler mainHandler;
     private volatile boolean finished = false;
     private Error error = null;
 
-    SyncTask(SyncService syncService, MvpApplication application) {
-        this.syncService = syncService;
-        this.application = application;
+    SyncTask(SyncService syncService) {
+        this.application = (MvpApplication) syncService.getApplication();
         this.dataManager = application.dataManager;
         this.broadcastSender = new SyncBroadcastSender(syncService);
         this.mainHandler = new Handler(Looper.getMainLooper());
     }
 
-    protected void finish() {
+    void finish() {
         finish(null);
     }
 
-    protected void finish(@Nullable Error error) {
+    void finish(@Nullable Error error) {
         this.error = error;
         finished = true;
         dispose();
     }
 
+
+    boolean checkNetworkAndAuthed() {
+        if (!NetworkUtils.isNetworkConnected(application)) {
+            finish(new Errors.NetworkLostError());
+        } else if (!application.getSession().isActive()) {
+            finish(new Errors.UnauthenticatedError());
+        }
+        return true;
+    }
+
     @BgThreadCapable
-    protected void showToast(String message) {
+    void showToast(int stringRes) {
+        showToast(application.getString(stringRes));
+    }
+
+    @BgThreadCapable
+    void showToast(String message) {
         mainHandler.post(() ->
                 Toast.makeText(application, message, Toast.LENGTH_SHORT).show());
     }

@@ -48,8 +48,6 @@ public class SettingsPresenter<V extends SettingsMvpView> extends BasePresenter<
             if (isViewAttached()) {
                 if (success) {
                     getMvpView().setAuthState(currentSession.isActive(), currentSession.getUser());
-                } else {
-                    getMvpView().showSnackBar(R.string.error_refresh_profile);
                 }
             }
         });

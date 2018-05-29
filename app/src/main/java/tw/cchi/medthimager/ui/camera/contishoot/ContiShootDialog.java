@@ -13,13 +13,14 @@ import javax.inject.Inject;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
+import tw.cchi.medthimager.Config;
 import tw.cchi.medthimager.R;
 import tw.cchi.medthimager.di.component.ActivityComponent;
 import tw.cchi.medthimager.model.ContiShootParameters;
 import tw.cchi.medthimager.ui.base.BaseDialog;
 
 public class ContiShootDialog extends BaseDialog implements ContiShootMvpView {
-    private static final String TAG = "ContiShootDialog";
+    private final String FRAGMENT_TAG = "ContiShootDialog";
 
     public interface OnResultListener {
         void onResult(ContiShootDialog dialog, ContiShootParameters parameters);
@@ -56,7 +57,7 @@ public class ContiShootDialog extends BaseDialog implements ContiShootMvpView {
 
     public void show(FragmentManager fragmentManager, OnResultListener onResultListener) {
         this.onResultListener = onResultListener;
-        super.show(fragmentManager, TAG);
+        super.show(fragmentManager, FRAGMENT_TAG);
     }
 
     @OnClick(R.id.btnStart)
@@ -72,7 +73,7 @@ public class ContiShootDialog extends BaseDialog implements ContiShootMvpView {
 
     @Override
     public void dismiss() {
-        super.dismiss(TAG);
+        super.dismiss(FRAGMENT_TAG);
     }
 
     @Override

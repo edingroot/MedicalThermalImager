@@ -21,7 +21,7 @@
             android:layout_height="wrap_content"
             android:layout_centerVertical="true"
             android:text="@string/name"
-            android:textSize="18sp"/>
+            android:textSize="@dimen/dialog_title_size"/>
 
         <EditText
             android:id="@+id/editPatientName"

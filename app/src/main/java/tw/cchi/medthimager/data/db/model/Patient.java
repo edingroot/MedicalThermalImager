@@ -64,6 +64,10 @@ public class Patient implements Parcelable {
         this.createdAt = createdAt;
     }
 
+    public boolean isDefualtPatient() {
+        return cuid.equals(DEFAULT_PATIENT_CUID);
+    }
+
     @NonNull
     public String getCuid() {
         return cuid;

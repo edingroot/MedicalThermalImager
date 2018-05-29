@@ -18,6 +18,9 @@ import tw.cchi.medthimager.ui.camera.CameraPresenter;
 import tw.cchi.medthimager.ui.camera.contishoot.ContiShootMvpPresenter;
 import tw.cchi.medthimager.ui.camera.contishoot.ContiShootMvpView;
 import tw.cchi.medthimager.ui.camera.contishoot.ContiShootPresenter;
+import tw.cchi.medthimager.ui.dialog.patientconflict.ConflictPatientMvpPresenter;
+import tw.cchi.medthimager.ui.dialog.patientconflict.ConflictPatientMvpView;
+import tw.cchi.medthimager.ui.dialog.patientconflict.ConflictPatientPresenter;
 import tw.cchi.medthimager.ui.dumpviewer.DumpViewerMvpPresenter;
 import tw.cchi.medthimager.ui.dumpviewer.DumpViewerMvpView;
 import tw.cchi.medthimager.ui.dumpviewer.DumpViewerPresenter;
@@ -77,6 +80,14 @@ public class ActivityModule {
 
     @Provides
     DumpViewerMvpPresenter<DumpViewerMvpView> provideDumpViewerMvpPresenter(DumpViewerPresenter<DumpViewerMvpView> presenter) {
+        return presenter;
+    }
+
+
+    // --------------- Dialogs --------------- //
+
+    @Provides
+    ConflictPatientMvpPresenter<ConflictPatientMvpView> provideConflictPatientMvpPresenter(ConflictPatientPresenter<ConflictPatientMvpView> presenter) {
         return presenter;
     }
 

@@ -31,7 +31,8 @@
                 android:layout_marginTop="10dp"
                 android:text="@string/conti_shot_setting"
                 android:textAlignment="center"
-                android:textSize="18sp"/>
+                android:textSize="@dimen/dialog_title_size"
+                android:textStyle="bold"/>
 
             <RelativeLayout
                 android:id="@+id/layoutParams2"

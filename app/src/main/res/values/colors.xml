@@ -8,7 +8,11 @@
     <color name="colorBackground">#3a3b40</color>
     <color name="colorActivityBackground">@android:color/background_dark</color>
     <color name="colorControlGray">#b2b2b2</color>
+
+    <color name="black_effective">#2a2a2a</color>
+    <color name="black_overlay">#66000000</color>
     <color name="shadow">#d0d8dc</color>
+    <color name="tab_inactive">#404549</color>
 
     <!-- for v7.widget.SwitchCompat -->
     <color name="colorControlActivated">#4ed8da</color>
@@ -17,12 +21,17 @@
 
     <color name="contentText">#fff</color>
     <color name="contentTextSecondary">#c4c4c4</color>
-    <color name="buttonBackgroundTint">#262b31</color>
+
+    <color name="buttonBgTintDefault">#48596b</color>
+    <color name="buttonBgTintHighlight">#1b60b1</color>
+    <color name="buttonBgTintWarning">#b6681a</color>
+
+    <color name="metaButtonPrimary">#4195ea</color>
+    <color name="metaButtonCancel">#b1b1b1</color>
+    <color name="metaButtonWarning">#de6b19</color>
+    <color name="metaButtonDanger">#ed4c2f</color>
 
     <color name="menuBackground">#616161</color>
-
-    <color name="black_effective">#2a2a2a</color>
-    <color name="black_overlay">#66000000</color>
 
     <color name="spotsFab">#2196F3</color>
     <color name="spotsFabDisabled">#6292b9</color>

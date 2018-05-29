@@ -21,9 +21,9 @@ import java.util.List;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import tw.cchi.medthimager.R;
-import tw.cchi.medthimager.ui.camera.selectpatient.adapter.PatientSelectsRecyclerAdapter;
 import tw.cchi.medthimager.data.db.AppDatabase;
 import tw.cchi.medthimager.data.db.model.Patient;
+import tw.cchi.medthimager.ui.adapter.PatientSelectRecyclerAdapter;
 
 public class SelectPatientDialog {
     private static final int UPDATE_PATIENTS = 1;
@@ -33,7 +33,7 @@ public class SelectPatientDialog {
     private Dialog dialog;
     private Handler handler;
     private AppDatabase database;
-    private PatientSelectsRecyclerAdapter patientRecyclerAdapter;
+    private PatientSelectRecyclerAdapter patientRecyclerAdapter;
 
     private List<Patient> patients;
     private String selectedPatientCuid;
@@ -113,7 +113,8 @@ public class SelectPatientDialog {
             dismiss();
         });
 
-        patientRecyclerAdapter = new PatientSelectsRecyclerAdapter(context, new PatientSelectsRecyclerAdapter.OnInteractionListener() {
+        patientRecyclerAdapter = new PatientSelectRecyclerAdapter();
+        patientRecyclerAdapter.setOnInteractionListener(new PatientSelectRecyclerAdapter.OnInteractionListener() {
             @Override
             public void onSelected(View v, int position) {
                 // Check if there isn't only the default patient: "Not Specified"
@@ -147,10 +148,9 @@ public class SelectPatientDialog {
                         }).show();
             }
         });
-        recyclerPatientList.setAdapter(patientRecyclerAdapter);
         recyclerPatientList.setLayoutManager(
-                new LinearLayoutManager(context, LinearLayoutManager.VERTICAL, false)
-        );
+                new LinearLayoutManager(context, LinearLayoutManager.VERTICAL, false));
+        recyclerPatientList.setAdapter(patientRecyclerAdapter);
     }
 
     private void updateSelectedPatientByCuid(String patientCuid) {

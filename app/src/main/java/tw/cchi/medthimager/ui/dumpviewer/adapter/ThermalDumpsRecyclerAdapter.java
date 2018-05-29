@@ -78,7 +78,7 @@ public class ThermalDumpsRecyclerAdapter extends RecyclerView.Adapter<ThermalDum
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         final int holderPosition = position;
         final String holderTitle = titles.get(position);
-        int color = selectedPosition == position ? R.color.colorPrimaryDark : R.color.buttonBackgroundTint;
+        int color = selectedPosition == position ? R.color.colorPrimary : R.color.tab_inactive;
 
         holder.button.setText(holderTitle);
         holder.button.setBackground(

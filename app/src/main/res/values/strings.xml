@@ -42,6 +42,7 @@
     <string name="sync_patient_list">Sync Patient List</string>
     <string name="last_sync">Last sync: %1$s</string>
     <string name="sync">Sync</string>
+    <string name="syncing">Syncing</string>
 
     <string name="auto_clear_spots">Auto Clear Spots</string>
     <string name="auto_clear_spots_dscrp">Auto clear thermal spots on camera disconnect.</string>
@@ -50,17 +51,7 @@
 
 
     <!-- SyncService -->
-    <string name="syncing_patient_list">Syncing patient list</string>
-    <string name="syncing_patient_list_done">Patient list synced</string>
-    <string name="conflict_found_1">Conflict found:</string>
-    <string name="conflict_found_2">Local: %1$s %2$s (Last updated: %3$s)</string>
-    <string name="conflict_found_3">Remote: %1$s %2$s (Last updated: %3$s)</string>
-    <string name="conflict_found_force_4">Merge is needed due to duplicate name &amp; bed / case id.</string>
-    <string name="conflict_found_force_5">Merge two patient records or disable sync of this patient?</string>
-    <string name="conflict_found_check_4">Merge two patient records or create a new one?</string>
-    <string name="merge_records">Merge Records</string>
-    <string name="create_new">Create New</string>
-    <string name="disable_sync">Disable sync</string>
+    <string name="syncing_patient_list_done">Patient list sync completed</string>
 
     <!-- Dialogs -->
     <string name="conti_shot_setting">Continuous Shooting Settings</string>
@@ -77,6 +68,18 @@
     <string name="error">Error</string>
     <string name="completed">Completed</string>
 
+    <!-- PatientConflictDialog -->
+    <string name="sync_patient_info">Sync Patient Info</string>
+    <string name="conflict_found">Conflict found</string>
+    <string name="local_patient_info">Local: &#160; %1$s &#160; %2$s (added: %3$s)</string>
+    <string name="select_remote_merge">Select a merge target on remote: </string>
+    <!--<string name="conflict_found_force_1">Merge is needed due to duplicate name &amp; bed / case id.</string>-->
+    <!--<string name="conflict_found_force_2">Merge two patient records or disable sync of this patient?</string>-->
+    <!--<string name="conflict_found_check">Merge two patient records or create a new one?</string>-->
+    <string name="merge">Merge</string>
+    <string name="keep_both">Keep both</string>
+    <string name="cancel">Cancel</string>
+
     <!-- Messages -->
     <string name="error_occurred">Error occurred</string>
     <string name="invalid_input">Invalid input</string>
@@ -85,7 +88,6 @@
     <string name="login_failed">Login failed.</string>
     <string name="login_failed_comm_err">Login failed: error communicating with server.</string>
     <string name="please_login">Please login</string>
-    <string name="error_refresh_profile">Error refreshing profile information.</string>
 
     <string name="write_storage_required">Write storage permission is necessary for image capturing.</string>
     <string name="insert_flirone">Please insert FLIR One and select %1$s</string>

@@ -21,6 +21,9 @@ public class SSPatient implements Parcelable {
     private Date created_at;
     private Date updated_at;
 
+    private String merge_with;
+    private boolean create_new = false;
+
     public static SSPatient fromLocalPatient(Patient patient) {
         SSPatient ssPatient = new SSPatient();
         ssPatient.uuid = patient.getSsuuid();
@@ -61,6 +64,13 @@ public class SSPatient implements Parcelable {
         return updated_at;
     }
 
+    public void setMerge_with(String merge_with) {
+        this.merge_with = merge_with;
+    }
+
+    public void setCreate_new(boolean create_new) {
+        this.create_new = create_new;
+    }
 
     @Override
     public int describeContents() {

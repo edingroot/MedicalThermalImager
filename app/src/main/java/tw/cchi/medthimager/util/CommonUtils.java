@@ -43,11 +43,6 @@ public final class CommonUtils {
 
     /**
      * Effective range: min <= val < max
-     *
-     * @param val
-     * @param min
-     * @param max
-     * @return
      */
     public static int trimByRange(int val, int min, int max) {
         if (val < min)
