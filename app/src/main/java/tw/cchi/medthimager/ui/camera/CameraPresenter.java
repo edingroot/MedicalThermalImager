@@ -400,8 +400,9 @@ public class CameraPresenter<V extends CameraMvpView> extends BasePresenter<V>
                 captureRawThermalDump(renderedImage, captureProcessInfo.getDumpFilepath());
                 captureFLIRImage(renderedImage, captureProcessInfo.getFlirFilepath());
 
+                String contiShootUuid = contiShooting ? contiShootParams.groupUuid : null;
                 dbPatientDumpsHelper.addCaptureRecord(getCurrentPatientCuid(),
-                    captureProcessInfo.getTitle(), captureProcessInfo.getFilepathPrefix()).subscribe();
+                    captureProcessInfo.getTitle(), captureProcessInfo.getFilepathPrefix(), contiShootUuid).subscribe();
                 captureProcessInfo = null;
             }
         } else if (renderedImage.imageType() == RenderedImage.ImageType.ThermalRGBA8888Image) {

@@ -1,6 +1,8 @@
 package tw.cchi.medthimager.data.db.helper;
 
 
+import android.support.annotation.Nullable;
+
 import javax.inject.Inject;
 
 import io.reactivex.Observable;
@@ -19,10 +21,11 @@ public class PatientThermalDumpsHelper {
     /**
      * @param patientCuid null if no patient selected
      */
-    public Observable addCaptureRecord(final String patientCuid, final String title, final String filenamePrefix) {
-        return Observable.create(emitter ->
-            database.captureRecordDAO().insertAll(new CaptureRecord(patientCuid, title, filenamePrefix)))
-            .subscribeOn(Schedulers.io());
+    public Observable addCaptureRecord(final String patientCuid, final String title, final String filenamePrefix,@Nullable String contishootGroup) {
+        return Observable.create(emitter -> {
+                database.captureRecordDAO().insertAll(new CaptureRecord(patientCuid, title, filenamePrefix, contishootGroup));
+                emitter.onComplete();
+            }).subscribeOn(Schedulers.io());
     }
 
 }

@@ -123,8 +123,7 @@ public class CSVExportHelper {
 
                         CaptureRecord captureRecord = new CaptureRecord(
                             rawThermalDump.getPatientCuid(), rawThermalDump.getTitle(),
-                            FileUtils.removeExtension(file.getName())
-                        );
+                            FileUtils.removeExtension(file.getName()), null);
 
                         database.captureRecordDAO()
                             .insertAndAutoCreatePatient(database.patientDAO(), captureRecord);

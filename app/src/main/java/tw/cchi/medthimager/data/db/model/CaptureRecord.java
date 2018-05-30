@@ -7,6 +7,7 @@ import android.arch.persistence.room.Ignore;
 import android.arch.persistence.room.Index;
 import android.arch.persistence.room.PrimaryKey;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 
 import java.util.Date;
 import java.util.UUID;
@@ -36,23 +37,28 @@ public class CaptureRecord {
     @ColumnInfo(name = "filename_prefix")
     private String filenamePrefix;
 
+    @ColumnInfo(name = "contishoot_group")
+    private String contishootGroup;
+
     @ColumnInfo(name = "created_at")
     private Date createdAt;
 
     @Ignore
-    public CaptureRecord(String patientCuid, String title, String filenamePrefix) {
+    public CaptureRecord(String patientCuid, String title, String filenamePrefix, @Nullable String contishootGroup) {
         this.uuid = UUID.randomUUID().toString();
         this.patientCuid = patientCuid;
         this.title = title;
         this.filenamePrefix = filenamePrefix;
+        this.contishootGroup = contishootGroup;
         this.createdAt = new Date();
     }
 
-    public CaptureRecord(@NonNull String uuid, String patientCuid, String title, String filenamePrefix, Date createdAt) {
+    public CaptureRecord(@NonNull String uuid, String patientCuid, String title, String filenamePrefix, String contishootGroup, Date createdAt) {
         this.uuid = uuid;
         this.patientCuid = patientCuid;
         this.title = title;
         this.filenamePrefix = filenamePrefix;
+        this.contishootGroup = contishootGroup;
         this.createdAt = createdAt;
     }
 
@@ -82,6 +88,10 @@ public class CaptureRecord {
 
     public String getFilenamePrefix() {
         return filenamePrefix;
+    }
+
+    public String getContishootGroup() {
+        return contishootGroup;
     }
 
     public Date getCreatedAt() {

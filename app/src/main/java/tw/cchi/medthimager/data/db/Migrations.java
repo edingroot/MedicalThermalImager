@@ -1,6 +1,7 @@
 package tw.cchi.medthimager.data.db;
 
 import android.arch.persistence.db.SupportSQLiteDatabase;
+import android.arch.persistence.room.migration.Migration;
 import android.database.Cursor;
 import android.support.annotation.NonNull;
 
@@ -11,13 +12,14 @@ import tw.cchi.medthimager.data.db.model.Patient;
 
 final class Migrations {
 
-//    static final Migration MIGRATION_2_3 = new Migration(2, 3) {
-//        @Override
-//        public void migrate(@NonNull SupportSQLiteDatabase db) {
-//            // ...
-//            checkAndInsertDefaultPatient(db);
-//        }
-//    };
+    static final Migration MIGRATION_2_3 = new Migration(2, 3) {
+        @Override
+        public void migrate(@NonNull SupportSQLiteDatabase db) {
+            db.execSQL("alter table capture_records add contishoot_group text default null");
+
+            checkAndInsertDefaultPatient(db);
+        }
+    };
 
 
     static void checkAndInsertDefaultPatient(@NonNull SupportSQLiteDatabase db) {

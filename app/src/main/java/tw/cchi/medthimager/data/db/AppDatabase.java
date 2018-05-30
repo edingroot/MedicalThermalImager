@@ -18,7 +18,7 @@ import tw.cchi.medthimager.data.db.model.PatientDAO;
 @Database(entities = {
         Patient.class,
         CaptureRecord.class
-}, version = 2)
+}, version = 3)
 @TypeConverters(DateConverter.class)
 public abstract class AppDatabase extends RoomDatabase {
     private static final String TAG = AppDatabase.class.getSimpleName();
@@ -56,7 +56,7 @@ public abstract class AppDatabase extends RoomDatabase {
                         Migrations.checkAndInsertDefaultPatient(db);
                     }
                 })
-                .addMigrations()
+                .addMigrations(Migrations.MIGRATION_2_3)
                 .fallbackToDestructiveMigration()
                 .build();
     }
