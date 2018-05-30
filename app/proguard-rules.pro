@@ -44,6 +44,17 @@
 -dontwarn org.jetbrains.annotations.Contract
 
 
+# retrofit
+-dontwarn retrofit2.**
+-keep class retrofit2.** { *; }
+-keepattributes Signature
+-keepattributes Exceptions
+-keepclasseswithmembers class * {
+    @retrofit2.http.* <methods>;
+}
+-keepattributes Signature,InnerClasses
+
+
 # Partial configs are referenced from: https://stackoverflow.com/questions/7464035/how-to-tell-proguard-to-keep-everything-in-a-particular-package
 -dontwarn javax.management.**
 -dontwarn java.lang.management.**
@@ -58,9 +69,6 @@
 -dontwarn com.github.mikephil.charting.**
 -dontwarn okhttp3.internal.**
 -dontwarn okio.**
--dontwarn retrofit2.Platform$Java8
-
--keepattributes Signature,InnerClasses
 
 -keep public class * extends android.app.Activity
 -keep public class * extends android.app.Application
