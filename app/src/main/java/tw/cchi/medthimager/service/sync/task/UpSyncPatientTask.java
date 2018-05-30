@@ -37,6 +37,9 @@ public class UpSyncPatientTask extends SyncTask {
     @Override
     public void run(SyncService syncService) {
         super.run(syncService);
+        if (!checkNetworkAndAuthed()) {
+            return;
+        }
 
         if (checkNetworkAndAuthed()) {
             UpSyncPatientTask.this.handleCreatePatient(targetPatient);

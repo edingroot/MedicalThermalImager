@@ -4,7 +4,9 @@ import android.app.Application;
 import android.content.ComponentName;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.os.Handler;
 import android.os.IBinder;
+import android.os.Looper;
 import android.widget.Toast;
 
 import com.squareup.leakcanary.LeakCanary;
@@ -23,6 +25,7 @@ import tw.cchi.medthimager.helper.session.Session;
 import tw.cchi.medthimager.helper.session.SessionManager;
 import tw.cchi.medthimager.service.sync.SyncService;
 import tw.cchi.medthimager.util.NetworkUtils;
+import tw.cchi.medthimager.util.annotation.BgThreadCapable;
 
 /**
  * This is able to be access globally in whole app
@@ -30,9 +33,10 @@ import tw.cchi.medthimager.util.NetworkUtils;
 public class MvpApplication extends Application {
     private ApplicationComponent mApplicationComponent;
 
-    protected SyncService syncService;
-    protected ServiceConnection syncServiceConnection;
-    protected volatile boolean syncServiceBounded = false;
+    private SyncService syncService;
+    private ServiceConnection syncServiceConnection;
+    private volatile boolean syncServiceBounded = false;
+    private Handler mainLooperHandler;
 
     @Inject public DataManager dataManager;
     @Inject public SessionManager sessionManager;
@@ -56,9 +60,9 @@ public class MvpApplication extends Application {
                 .applicationModule(new ApplicationModule(this)).build();
         this.mApplicationComponent.inject(this);
 
-        SyncService.start(this);
+        mainLooperHandler = new Handler(getMainLooper());
 
-        // copyDatabaseToSDCard();
+        SyncService.start(this);
     }
 
     public ApplicationComponent getComponent() {
@@ -75,14 +79,20 @@ public class MvpApplication extends Application {
         return sessionManager.getSession();
     }
 
+    @BgThreadCapable
     public boolean checkNetworkAuthedAndAct() {
         if (!NetworkUtils.isNetworkConnected(this)) {
-            Toast.makeText(this, getString(R.string.no_network_access), Toast.LENGTH_SHORT).show();
+            mainLooperHandler.post(() ->
+                    Toast.makeText(this, getString(R.string.no_network_access), Toast.LENGTH_SHORT).show());
+            return false;
         } else if (!getSession().isActive()) {
-            Toast.makeText(this, getString(R.string.unauthenticated), Toast.LENGTH_SHORT).show();
+            mainLooperHandler.post(() ->
+                    Toast.makeText(this, getString(R.string.unauthenticated), Toast.LENGTH_SHORT).show());
             getSession().invalidate();
+            return false;
+        } else {
+            return true;
         }
-        return true;
     }
 
     public Observable<SyncService> getSyncService() {

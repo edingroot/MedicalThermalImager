@@ -101,7 +101,7 @@ public class SettingsPresenter<V extends SettingsMvpView> extends BasePresenter<
         getMvpView().setSyncPatientsStatus(true, "");
 
         application.getSyncService().subscribe(syncService -> {
-            if (application.checkNetworkAuthedAndAct()) {
+            if (application.checkNetworkAuthedAndAct() && !syncService.isTaskRunning(SyncPatientsTask.class)) {
                 syncService.scheduleNewTask(new SyncPatientsTask());
             }
         });

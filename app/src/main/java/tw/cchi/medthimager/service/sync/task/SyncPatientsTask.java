@@ -8,7 +8,6 @@ import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
 import retrofit2.Response;
 import tw.cchi.medthimager.Config;
-import tw.cchi.medthimager.R;
 import tw.cchi.medthimager.data.db.model.Patient;
 import tw.cchi.medthimager.data.network.ApiHelper;
 import tw.cchi.medthimager.model.api.SSPatient;
@@ -32,6 +31,10 @@ public class SyncPatientsTask extends SyncTask {
     @Override
     public void run(SyncService syncService) {
         super.run(syncService);
+        if (!checkNetworkAndAuthed()) {
+            broadcastSender.sendSyncPatientsDone();
+            return;
+        }
 
         upSyncPatients();
         downSyncPatients();
@@ -54,7 +57,7 @@ public class SyncPatientsTask extends SyncTask {
                 () -> {
                     dataManager.pref.setLastSyncPatients(new Date());
                     dataManager.pref.setSyncPatientConflictCount(conflictCount);
-                    broadcastSender.sendSyncPatientDone();
+                    broadcastSender.sendSyncPatientsDone();
                     finish();
                 }
             );

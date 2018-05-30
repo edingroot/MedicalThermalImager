@@ -6,6 +6,9 @@ import com.google.gson.GsonBuilder;
 import java.util.ArrayList;
 import java.util.List;
 
+import io.reactivex.Observable;
+import io.reactivex.schedulers.Schedulers;
+
 public final class CommonUtils {
     private static Gson gson;
 
@@ -60,4 +63,14 @@ public final class CommonUtils {
         return stringBuilder.toString();
     }
 
+    public static void delayExecute(Runnable runnable, long delayMillis) {
+        Observable.create(emitter -> {
+            try {
+                Thread.sleep(delayMillis);
+                runnable.run();
+            } catch (InterruptedException ignored) {
+            }
+            emitter.onComplete();
+        }).subscribeOn(Schedulers.io()).subscribe();
+    }
 }

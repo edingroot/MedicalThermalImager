@@ -68,7 +68,6 @@ public abstract class SyncTask implements Disposable {
         dispose();
     }
 
-
     public Error getError() {
         return error;
     }

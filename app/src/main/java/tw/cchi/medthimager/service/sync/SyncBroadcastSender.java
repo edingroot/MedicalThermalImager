@@ -30,7 +30,7 @@ public final class SyncBroadcastSender {
         this.syncService = syncService;
     }
 
-    public void sendSyncPatientDone() {
+    public void sendSyncPatientsDone() {
         Intent intent = new Intent();
         intent.setAction(ACTION_SERVICE_BROADCAST);
         intent.putExtra(Extras.EXTRA_EVENT_NAME, EventName.SYNC_PATIENT_DONE);

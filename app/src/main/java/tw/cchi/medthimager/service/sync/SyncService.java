@@ -11,6 +11,8 @@ import android.os.IBinder;
 import android.support.annotation.Nullable;
 import android.util.Log;
 
+import java.util.concurrent.ConcurrentHashMap;
+
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.schedulers.Schedulers;
 import io.reactivex.subjects.PublishSubject;
@@ -18,9 +20,10 @@ import tw.cchi.medthimager.Config;
 import tw.cchi.medthimager.MvpApplication;
 import tw.cchi.medthimager.di.component.DaggerServiceComponent;
 import tw.cchi.medthimager.di.component.ServiceComponent;
+import tw.cchi.medthimager.model.RecurrentRunningStatus;
 import tw.cchi.medthimager.service.sync.task.SyncPatientsTask;
-import tw.cchi.medthimager.service.sync.task.UpSyncPatientTask;
 import tw.cchi.medthimager.service.sync.task.SyncTask;
+import tw.cchi.medthimager.service.sync.task.UpSyncPatientTask;
 import tw.cchi.medthimager.util.NetworkUtils;
 
 public class SyncService extends Service {
@@ -29,6 +32,7 @@ public class SyncService extends Service {
     private IBinder mBinder;
     private NetworkStateBroadcastReceiver networkStateReceiver;
     private CompositeDisposable taskWorkerSubs = new CompositeDisposable();
+    private ConcurrentHashMap<Class<? extends SyncTask>, RecurrentRunningStatus> taskRunningStatus = new ConcurrentHashMap<>();
 
     // PublishSubject for worker of each sync task
     private PublishSubject<UpSyncPatientTask> upSyncPatientsTaskPub = PublishSubject.create();
@@ -66,18 +70,25 @@ public class SyncService extends Service {
     }
 
     private void startTaskWorkers() {
+        taskRunningStatus.put(UpSyncPatientTask.class, new RecurrentRunningStatus(false));
+        taskRunningStatus.put(SyncPatientsTask.class, new RecurrentRunningStatus(false));
+
         taskWorkerSubs.add(upSyncPatientsTaskPub
                 .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
                 .subscribe(task -> {
+                    taskRunningStatus.get(task.getClass()).setRunning(true);
                     task.run(this);
                     // if (task.getError() != null) {}
+                    taskRunningStatus.get(task.getClass()).setRunning(false);
                 }));
 
         taskWorkerSubs.add(syncPatientsTaskPub
                 .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
                 .subscribe(task -> {
+                    taskRunningStatus.get(task.getClass()).setRunning(true);
                     task.run(this);
                     // if (task.getError() != null) {}
+                    taskRunningStatus.get(task.getClass()).setRunning(false);
                 }));
     }
 
@@ -89,6 +100,11 @@ public class SyncService extends Service {
             upSyncPatientsTaskPub.onNext((UpSyncPatientTask) syncTask);
         else if (syncTask instanceof SyncPatientsTask)
             syncPatientsTaskPub.onNext((SyncPatientsTask) syncTask);
+    }
+
+    public boolean isTaskRunning(Class<? extends SyncTask> syncTaskClass) {
+        RecurrentRunningStatus runningStatus = taskRunningStatus.get(syncTaskClass);
+        return runningStatus != null && runningStatus.isRunning();
     }
 
     @Nullable
