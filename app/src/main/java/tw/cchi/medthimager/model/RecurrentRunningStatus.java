@@ -7,13 +7,13 @@ package tw.cchi.medthimager.model;
  *   1. [running] start Task A1, setRunning(true)
  *   2. [running] Task A1 is done
  *   3. [stopped] setRunning(false)
- *   4. [ ??? ]   client wants to know if task series A is running
+ *   4. [  ???  ] client wants to know if task series A is running (expect answer is yes)
  *   5. [running] start Task A2, setRunning(true)
  *   6. [running] Task A2 is done
  *   7. [stopped] setRunning(false)
  */
 public class RecurrentRunningStatus {
-    private static final long MAX_RESTART_GAP = 10; // ms
+    private static final long MAX_RESTART_GAP = 20; // ms
 
     private volatile boolean running;
     private volatile long lastStopCalled = 0;

@@ -41,9 +41,7 @@ public class UpSyncPatientTask extends SyncTask {
             return;
         }
 
-        if (checkNetworkAndAuthed()) {
-            UpSyncPatientTask.this.handleCreatePatient(targetPatient);
-        }
+        UpSyncPatientTask.this.handleCreatePatient(targetPatient);
     }
 
     private void handleCreatePatient(Patient patient) {

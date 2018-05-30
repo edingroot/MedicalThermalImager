@@ -13,6 +13,7 @@ import tw.cchi.medthimager.data.network.ApiHelper;
 import tw.cchi.medthimager.model.api.SSPatient;
 import tw.cchi.medthimager.service.sync.SyncBroadcastSender;
 import tw.cchi.medthimager.service.sync.SyncService;
+import tw.cchi.medthimager.util.CommonUtils;
 
 /**
  * Sync all patients whose uuid field is null.
@@ -38,6 +39,9 @@ public class SyncPatientsTask extends SyncTask {
 
         upSyncPatients();
         downSyncPatients();
+
+        CommonUtils.sleep(500);
+        broadcastSender.sendSyncPatientsDone();
     }
 
     private void upSyncPatients() {
@@ -57,7 +61,6 @@ public class SyncPatientsTask extends SyncTask {
                 () -> {
                     dataManager.pref.setLastSyncPatients(new Date());
                     dataManager.pref.setSyncPatientConflictCount(conflictCount);
-                    broadcastSender.sendSyncPatientsDone();
                     finish();
                 }
             );

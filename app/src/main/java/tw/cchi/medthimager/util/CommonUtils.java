@@ -63,6 +63,12 @@ public final class CommonUtils {
         return stringBuilder.toString();
     }
 
+    public static void sleep(long millis) {
+        try {
+            Thread.sleep(millis);
+        } catch (InterruptedException ignored) {}
+    }
+
     public static void delayExecute(Runnable runnable, long delayMillis) {
         Observable.create(emitter -> {
             try {
