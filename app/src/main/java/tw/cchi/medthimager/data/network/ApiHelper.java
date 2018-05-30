@@ -1,8 +1,6 @@
 package tw.cchi.medthimager.data.network;
 
 import android.support.annotation.NonNull;
-import android.util.Log;
-import android.widget.Toast;
 
 import com.google.gson.Gson;
 
@@ -16,12 +14,10 @@ import retrofit2.Response;
 import tw.cchi.medthimager.Config;
 import tw.cchi.medthimager.Errors;
 import tw.cchi.medthimager.MvpApplication;
-import tw.cchi.medthimager.R;
 import tw.cchi.medthimager.model.User;
 import tw.cchi.medthimager.model.api.PatientResponse;
 import tw.cchi.medthimager.model.api.SSPatient;
 import tw.cchi.medthimager.util.CommonUtils;
-import tw.cchi.medthimager.util.NetworkUtils;
 
 public class ApiHelper {
     private final String TAG = Config.TAGPRE + getClass().getSimpleName();
@@ -59,51 +55,54 @@ public class ApiHelper {
         });
     }
 
-    public boolean upSyncPatient(SSPatient ssPatient, @NonNull OnPatientSyncListener listener) {
+    public boolean upSyncPatient(SSPatient ssPatient, boolean blocking, @NonNull OnPatientSyncListener listener) {
         if (!application.checkNetworkAuthedAndAct())
             return false;
 
-        application.getSession().getApiClient().createPatient(ssPatient)
-            .subscribeOn(Schedulers.io())
-            .observeOn(Schedulers.io())
-            .subscribe(
-                (Response<PatientResponse> response) -> {
-                    if ((response.code() == 200 || response.code() == 201) && response.body() != null) {
-                        Log.i(TAG, "Patient " + ssPatient.getName() + ", 200: " + response.body());
-                        listener.onSuccess(response.body().patient);
-                    } else if (response.errorBody() != null) {
-                        Gson gson = CommonUtils.getGsonInstance();
-                        String responseString;
-                        PatientResponse patientResponse;
+        Observable<Response<PatientResponse>> observable =
+                application.getSession().getApiClient().createPatient(ssPatient);
 
-                        try {
-                            responseString = response.errorBody().string();
-                            patientResponse = gson.fromJson(responseString, PatientResponse.class);
-                        } catch (Exception e) {
-                            listener.onError(e);
-                            return;
-                        }
-
-                        Log.e(TAG, String.format("Patient %s, %d: %s", ssPatient.getName(), response.code(), responseString));
-
-                        switch (response.code()) {
-                            case 409:
-                                listener.onConflictForceMerge(patientResponse.conflicted_patients, patientResponse.message);
-                                break;
-
-                            case 412:
-                                listener.onConflictCheck(patientResponse.conflicted_patients, patientResponse.message);
-                                break;
-
-                            default:
-                                listener.onError(new Errors.UnhandledStateError());
-                        }
-                    }
-                },
-                listener::onError
-            );
+        if (blocking) {
+            observable.blockingSubscribe(r -> handleUpSyncPatientResponse(r, listener));
+        } else {
+            observable
+                    .subscribeOn(Schedulers.io())
+                    .observeOn(Schedulers.io())
+                    .subscribe(r -> handleUpSyncPatientResponse(r, listener));
+        }
 
         return true;
+    }
+
+    private void handleUpSyncPatientResponse(Response<PatientResponse> response, @NonNull OnPatientSyncListener listener) {
+        if ((response.code() == 200 || response.code() == 201) && response.body() != null) {
+            listener.onSuccess(response.body().patient);
+        } else if (response.errorBody() != null) {
+            Gson gson = CommonUtils.getGsonInstance();
+            String responseString;
+            PatientResponse patientResponse;
+
+            try {
+                responseString = response.errorBody().string();
+                patientResponse = gson.fromJson(responseString, PatientResponse.class);
+            } catch (Exception e) {
+                listener.onError(e);
+                return;
+            }
+
+            switch (response.code()) {
+                case 409:
+                    listener.onConflictForceMerge(patientResponse.conflicted_patients, patientResponse.message);
+                    break;
+
+                case 412:
+                    listener.onConflictCheck(patientResponse.conflicted_patients, patientResponse.message);
+                    break;
+
+                default:
+                    listener.onError(new Errors.UnhandledStateError());
+            }
+        }
     }
 
     public interface OnPatientSyncListener {

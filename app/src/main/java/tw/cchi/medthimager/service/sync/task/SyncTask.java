@@ -29,12 +29,20 @@ public abstract class SyncTask implements Disposable {
     SyncTask() {
     }
 
+    /**
+     * This method should be designed as a thread-blocking worker.
+     */
     public void run(SyncService syncService) {
         this.application = (MvpApplication) syncService.getApplication();
         this.broadcastSender = new SyncBroadcastSender(syncService);
         this.dataManager = application.dataManager;
         this.apiHelper = new ApiHelper(application);
+
+        doWork();
+        finish(null);
     }
+
+    abstract void doWork();
 
     boolean checkNetworkAndAuthed() {
         if (!NetworkUtils.isNetworkConnected(application)) {
@@ -58,14 +66,14 @@ public abstract class SyncTask implements Disposable {
                 Toast.makeText(application, message, Toast.LENGTH_SHORT).show());
     }
 
-    void finish() {
-        finish(null);
-    }
-
-    void finish(@Nullable Error error) {
+    private void finish(@Nullable Error error) {
         this.error = error;
         finished = true;
         dispose();
+    }
+
+    void setError(@Nullable Error error) {
+        this.error = error;
     }
 
     public Error getError() {

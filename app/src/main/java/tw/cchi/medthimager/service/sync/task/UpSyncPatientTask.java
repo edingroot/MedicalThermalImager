@@ -2,20 +2,16 @@ package tw.cchi.medthimager.service.sync.task;
 
 import java.util.List;
 
-import tw.cchi.medthimager.Config;
 import tw.cchi.medthimager.R;
 import tw.cchi.medthimager.data.db.model.Patient;
 import tw.cchi.medthimager.data.network.ApiHelper;
 import tw.cchi.medthimager.model.api.SSPatient;
 import tw.cchi.medthimager.service.sync.SyncBroadcastSender;
-import tw.cchi.medthimager.service.sync.SyncService;
 
 /**
  * Sync information of a patient.
  */
 public class UpSyncPatientTask extends SyncTask {
-    private final String TAG = Config.TAGPRE + getClass().getSimpleName();
-
     private Patient targetPatient;
     private String mergeWithUuid;
     private boolean createNew = false;
@@ -35,27 +31,21 @@ public class UpSyncPatientTask extends SyncTask {
     }
 
     @Override
-    public void run(SyncService syncService) {
-        super.run(syncService);
-        if (!checkNetworkAndAuthed()) {
+    void doWork() {
+        if (!checkNetworkAndAuthed())
             return;
-        }
 
-        UpSyncPatientTask.this.handleCreatePatient(targetPatient);
+        handleCreatePatient(targetPatient);
     }
 
     private void handleCreatePatient(Patient patient) {
-        if (!application.getSession().isActive()) {
-            return;
-        }
-
         SSPatient ssPatient = new SSPatient(patient);
         if (mergeWithUuid != null) {
             ssPatient.setMerge_with(mergeWithUuid);
             ssPatient.setCreate_new(createNew);
         }
 
-        apiHelper.upSyncPatient(ssPatient, new ApiHelper.OnPatientSyncListener() {
+        apiHelper.upSyncPatient(ssPatient, true, new ApiHelper.OnPatientSyncListener() {
             @Override
             public void onSuccess(SSPatient ssPatient) {
                 patient.setSsuuid(ssPatient.getUuid());

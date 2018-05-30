@@ -3,35 +3,25 @@ package tw.cchi.medthimager.service.sync.task;
 import java.util.Date;
 import java.util.List;
 
-import io.reactivex.Observable;
-import io.reactivex.disposables.Disposable;
-import io.reactivex.schedulers.Schedulers;
 import retrofit2.Response;
-import tw.cchi.medthimager.Config;
 import tw.cchi.medthimager.data.db.model.Patient;
 import tw.cchi.medthimager.data.network.ApiHelper;
 import tw.cchi.medthimager.model.api.SSPatient;
 import tw.cchi.medthimager.service.sync.SyncBroadcastSender;
-import tw.cchi.medthimager.service.sync.SyncService;
 import tw.cchi.medthimager.util.CommonUtils;
 
 /**
  * Sync all patients whose uuid field is null.
  */
 public class SyncPatientsTask extends SyncTask {
-    private final String TAG = Config.TAGPRE + getClass().getSimpleName();
-
     private int conflictCount = 0;
-    private Disposable uploadTask;
-    private Disposable downloadTask;
 
     public SyncPatientsTask() {
         super();
     }
 
     @Override
-    public void run(SyncService syncService) {
-        super.run(syncService);
+    void doWork() {
         if (!checkNetworkAndAuthed()) {
             broadcastSender.sendSyncPatientsDone();
             return;
@@ -40,6 +30,7 @@ public class SyncPatientsTask extends SyncTask {
         upSyncPatients();
         downSyncPatients();
 
+        dataManager.pref.setLastSyncPatients(new Date());
         CommonUtils.sleep(500);
         broadcastSender.sendSyncPatientsDone();
     }
@@ -49,29 +40,22 @@ public class SyncPatientsTask extends SyncTask {
         dataManager.pref.setSyncPatientConflictCount(0);
 
         List<Patient> patients = dataManager.db.patientDAO().getSyncList();
+        for (Patient patient : patients) {
+            if (disposed) break;
+            handleCreatePatient(patient);
+            // Short sleep between each upload
+            CommonUtils.sleep(300);
+        }
 
-        uploadTask = Observable.fromIterable(patients)
-            .subscribe(
-                patient -> {
-                    SyncPatientsTask.this.handleCreatePatient(patient);
-                    // Short sleep between each upload
-                    Thread.sleep(500);
-                },
-                e -> {},
-                () -> {
-                    dataManager.pref.setLastSyncPatients(new Date());
-                    dataManager.pref.setSyncPatientConflictCount(conflictCount);
-                    finish();
-                }
-            );
+        dataManager.pref.setSyncPatientConflictCount(conflictCount);
     }
 
     private void handleCreatePatient(Patient patient) {
-        if (!checkNetworkAndAuthed())
+        if (disposed || !checkNetworkAndAuthed())
             return;
 
         SSPatient ssPatient = new SSPatient(patient);
-        apiHelper.upSyncPatient(ssPatient, new ApiHelper.OnPatientSyncListener() {
+        apiHelper.upSyncPatient(ssPatient, true, new ApiHelper.OnPatientSyncListener() {
             @Override
             public void onSuccess(SSPatient ssPatient) {
                 patient.setSsuuid(ssPatient.getUuid());
@@ -98,20 +82,17 @@ public class SyncPatientsTask extends SyncTask {
     }
 
     private void downSyncPatients() {
-        if (!checkNetworkAndAuthed())
+        if (disposed || !checkNetworkAndAuthed())
             return;
 
-        downloadTask = application.getSession().getApiClient().getAllPatients()
-                .subscribeOn(Schedulers.io())
-                .observeOn(Schedulers.io())
-                .subscribe(
-                    (Response<List<SSPatient>> response) -> {
-                        if (response.code() == 200 && response.body() != null) {
-                            handleRemotePatientList(response.body());
-                        }
-                    },
-                    e -> {}
-                );
+        application.getSession().getApiClient().getAllPatients()
+            .blockingSubscribe(
+                (Response<List<SSPatient>> response) -> {
+                    if (response.code() == 200 && response.body() != null) {
+                        handleRemotePatientList(response.body());
+                    }
+                },
+                e -> {});
     }
 
     private void handleRemotePatientList(List<SSPatient> ssPatients) {
@@ -124,12 +105,6 @@ public class SyncPatientsTask extends SyncTask {
 
     @Override
     public void dispose() {
-        if (uploadTask != null)
-            uploadTask.dispose();
-
-        if (downloadTask != null)
-            downloadTask.dispose();
-
         disposed = true;
     }
 }
