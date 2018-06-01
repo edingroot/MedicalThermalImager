@@ -21,9 +21,6 @@ public class SSPatient implements Parcelable {
     private Date created_at;
     private Date updated_at;
 
-    private String merge_with;
-    private boolean create_new = false;
-
     /**
      * Convert from local Patient model.
      */
@@ -63,14 +60,6 @@ public class SSPatient implements Parcelable {
 
     public Date getUpdated_at() {
         return updated_at;
-    }
-
-    public void setMerge_with(String merge_with) {
-        this.merge_with = merge_with;
-    }
-
-    public void setCreate_new(boolean create_new) {
-        this.create_new = create_new;
     }
 
     @Override

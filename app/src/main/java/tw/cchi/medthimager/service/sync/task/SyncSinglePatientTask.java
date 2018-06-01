@@ -11,18 +11,18 @@ import tw.cchi.medthimager.service.sync.SyncBroadcastSender;
 /**
  * Sync information of a patient.
  */
-public class UpSyncPatientTask extends SyncTask {
+public class SyncSinglePatientTask extends SyncTask {
     private Patient targetPatient;
     private String mergeWithUuid;
     private boolean createNew = false;
 
-    public UpSyncPatientTask(Patient targetPatient) {
+    public SyncSinglePatientTask(Patient targetPatient) {
         super();
         this.targetPatient = targetPatient;
         this.apiHelper = new ApiHelper(application);
     }
 
-    public UpSyncPatientTask(Patient targetPatient, String mergeWithUuid, boolean createNew) {
+    public SyncSinglePatientTask(Patient targetPatient, String mergeWithUuid, boolean createNew) {
         super();
         this.mergeWithUuid = mergeWithUuid;
         this.createNew = createNew;
@@ -40,12 +40,8 @@ public class UpSyncPatientTask extends SyncTask {
 
     private void handleCreatePatient(Patient patient) {
         SSPatient ssPatient = new SSPatient(patient);
-        if (mergeWithUuid != null) {
-            ssPatient.setMerge_with(mergeWithUuid);
-            ssPatient.setCreate_new(createNew);
-        }
 
-        apiHelper.upSyncPatient(ssPatient, true, new ApiHelper.OnPatientSyncListener() {
+        apiHelper.upSyncPatient(ssPatient, mergeWithUuid, createNew, true, new ApiHelper.OnPatientSyncListener() {
             @Override
             public void onSuccess(SSPatient ssPatient) {
                 patient.setSsuuid(ssPatient.getUuid());

@@ -15,6 +15,7 @@ import tw.cchi.medthimager.Config;
 import tw.cchi.medthimager.Errors;
 import tw.cchi.medthimager.MvpApplication;
 import tw.cchi.medthimager.model.User;
+import tw.cchi.medthimager.model.api.PatientCreateRequest;
 import tw.cchi.medthimager.model.api.PatientResponse;
 import tw.cchi.medthimager.model.api.SSPatient;
 import tw.cchi.medthimager.util.CommonUtils;
@@ -55,12 +56,13 @@ public class ApiHelper {
         });
     }
 
-    public boolean upSyncPatient(SSPatient ssPatient, boolean blocking, @NonNull OnPatientSyncListener listener) {
+    public boolean upSyncPatient(SSPatient ssPatient, String mergeWith, boolean createNew,
+                                 boolean blocking, @NonNull OnPatientSyncListener listener) {
         if (!application.checkNetworkAuthedAndAct())
             return false;
 
-        Observable<Response<PatientResponse>> observable =
-                application.getSession().getApiClient().createPatient(ssPatient);
+        Observable<Response<PatientResponse>> observable = application.getSession().getApiClient()
+                .createPatient(new PatientCreateRequest(ssPatient, mergeWith, createNew));
 
         if (blocking) {
             observable.blockingSubscribe(r -> handleUpSyncPatientResponse(r, listener));

@@ -26,7 +26,7 @@ import tw.cchi.medthimager.R;
 import tw.cchi.medthimager.data.db.AppDatabase;
 import tw.cchi.medthimager.data.db.model.Patient;
 import tw.cchi.medthimager.service.sync.task.SyncPatientsTask;
-import tw.cchi.medthimager.service.sync.task.UpSyncPatientTask;
+import tw.cchi.medthimager.service.sync.task.SyncSinglePatientTask;
 import tw.cchi.medthimager.ui.adapter.PatientSelectRecyclerAdapter;
 
 public class SelectPatientDialog {
@@ -199,7 +199,7 @@ public class SelectPatientDialog {
     private void upSyncPatient(Patient patient) {
         MvpApplication application = (MvpApplication) activity.getApplication();
         application.getSyncService().subscribe(syncService ->
-                syncService.scheduleNewTask(new UpSyncPatientTask(patient)));
+                syncService.scheduleNewTask(new SyncSinglePatientTask(patient)));
     }
 
     private void syncPatients() {

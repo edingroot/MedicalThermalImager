@@ -3,18 +3,24 @@ package tw.cchi.medthimager.data.network;
 import java.util.List;
 
 import io.reactivex.Observable;
+import okhttp3.MultipartBody;
 import retrofit2.Call;
 import retrofit2.Response;
 import retrofit2.http.Body;
 import retrofit2.http.Field;
 import retrofit2.http.FormUrlEncoded;
 import retrofit2.http.GET;
+import retrofit2.http.Multipart;
 import retrofit2.http.POST;
-import tw.cchi.medthimager.model.api.AccessTokens;
+import retrofit2.http.Part;
 import tw.cchi.medthimager.model.User;
+import tw.cchi.medthimager.model.api.AccessTokens;
+import tw.cchi.medthimager.model.api.PatientCreateRequest;
 import tw.cchi.medthimager.model.api.PatientResponse;
 import tw.cchi.medthimager.model.api.SSPatient;
-import tw.cchi.medthimager.util.annotation.RequireAuth;
+import tw.cchi.medthimager.model.api.ThImage;
+import tw.cchi.medthimager.model.api.ThImageResponse;
+import tw.cchi.medthimager.util.annotation.AuthRequired;
 
 public interface ApiClient {
 
@@ -24,27 +30,35 @@ public interface ApiClient {
             @Field("email") String email,
             @Field("password") String password);
 
-    @RequireAuth
+    @AuthRequired
     @FormUrlEncoded
     @POST("refreshToken")
     Call<AccessTokens> getRefreshAccessToken(
             @Field("refresh_token") String refreshToken);
 
-    @RequireAuth
+    @AuthRequired
     @POST("logout")
     Call<Void> logout();
 
-    @RequireAuth
+    @AuthRequired
     @GET("profile")
     Observable<Response<User>> getProfile();
 
-    @RequireAuth
+    @AuthRequired
     @GET("patients")
     Observable<Response<List<SSPatient>>> getAllPatients();
 
-    @RequireAuth
+    @AuthRequired
     @POST("patients")
-    Observable<Response<PatientResponse>> createPatient(@Body SSPatient patient);
+    Observable<Response<PatientResponse>> createPatient(@Body PatientCreateRequest patientCreateRequest);
+
+    @AuthRequired
+    @Multipart
+    @POST("thimages")
+    Observable<Response<ThImageResponse>> uploadThImage(
+            @Part("metadata") ThImage thImage,
+            @Part("dump_file") MultipartBody.Part dumpFile,
+            @Part("visible_file") MultipartBody.Part visibleFile);
 
 }
 

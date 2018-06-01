@@ -10,5 +10,5 @@ import javax.inject.Scope;
  */
 @Scope
 @Retention(RetentionPolicy.SOURCE)
-public @interface RequireAuth {
+public @interface AuthRequired {
 }

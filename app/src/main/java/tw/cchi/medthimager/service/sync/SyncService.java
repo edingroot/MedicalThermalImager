@@ -23,7 +23,7 @@ import tw.cchi.medthimager.di.component.ServiceComponent;
 import tw.cchi.medthimager.model.RecurrentRunningStatus;
 import tw.cchi.medthimager.service.sync.task.SyncPatientsTask;
 import tw.cchi.medthimager.service.sync.task.SyncTask;
-import tw.cchi.medthimager.service.sync.task.UpSyncPatientTask;
+import tw.cchi.medthimager.service.sync.task.SyncSinglePatientTask;
 import tw.cchi.medthimager.util.NetworkUtils;
 
 public class SyncService extends Service {
@@ -35,7 +35,7 @@ public class SyncService extends Service {
     private ConcurrentHashMap<Class<? extends SyncTask>, RecurrentRunningStatus> taskRunningStatus = new ConcurrentHashMap<>();
 
     // PublishSubject for worker of each sync task
-    private PublishSubject<UpSyncPatientTask> upSyncPatientsTaskPub = PublishSubject.create();
+    private PublishSubject<SyncSinglePatientTask> syncSinglePatientTaskPub = PublishSubject.create();
     private PublishSubject<SyncPatientsTask> syncPatientsTaskPub = PublishSubject.create();
 
     public static void start(Context context) {
@@ -70,10 +70,10 @@ public class SyncService extends Service {
     }
 
     private void startTaskWorkers() {
-        taskRunningStatus.put(UpSyncPatientTask.class, new RecurrentRunningStatus(false));
+        taskRunningStatus.put(SyncSinglePatientTask.class, new RecurrentRunningStatus(false));
         taskRunningStatus.put(SyncPatientsTask.class, new RecurrentRunningStatus(false));
 
-        taskWorkerSubs.add(upSyncPatientsTaskPub
+        taskWorkerSubs.add(syncSinglePatientTaskPub
                 .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
                 .subscribe(task -> {
                     taskRunningStatus.get(task.getClass()).setRunning(true);
@@ -96,8 +96,8 @@ public class SyncService extends Service {
      * Errors such like network or authentication error will be caught and ignored.
      */
     public void scheduleNewTask(SyncTask syncTask) {
-        if (syncTask instanceof UpSyncPatientTask)
-            upSyncPatientsTaskPub.onNext((UpSyncPatientTask) syncTask);
+        if (syncTask instanceof SyncSinglePatientTask)
+            syncSinglePatientTaskPub.onNext((SyncSinglePatientTask) syncTask);
         else if (syncTask instanceof SyncPatientsTask)
             syncPatientsTaskPub.onNext((SyncPatientsTask) syncTask);
     }

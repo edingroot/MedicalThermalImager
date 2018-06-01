@@ -55,7 +55,7 @@ public class SyncPatientsTask extends SyncTask {
             return;
 
         SSPatient ssPatient = new SSPatient(patient);
-        apiHelper.upSyncPatient(ssPatient, true, new ApiHelper.OnPatientSyncListener() {
+        apiHelper.upSyncPatient(ssPatient, null, false, true, new ApiHelper.OnPatientSyncListener() {
             @Override
             public void onSuccess(SSPatient ssPatient) {
                 patient.setSsuuid(ssPatient.getUuid());
