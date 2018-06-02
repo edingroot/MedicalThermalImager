@@ -6,7 +6,6 @@ import android.content.Intent;
 import android.content.ServiceConnection;
 import android.os.Handler;
 import android.os.IBinder;
-import android.os.Looper;
 import android.widget.Toast;
 
 import com.squareup.leakcanary.LeakCanary;
@@ -80,14 +79,18 @@ public class MvpApplication extends Application {
     }
 
     @BgThreadCapable
-    public boolean checkNetworkAuthedAndAct() {
+    public boolean checkNetworkAuthed(boolean showError) {
         if (!NetworkUtils.isNetworkConnected(this)) {
-            mainLooperHandler.post(() ->
-                    Toast.makeText(this, getString(R.string.no_network_access), Toast.LENGTH_SHORT).show());
+            if (showError) {
+                mainLooperHandler.post(() ->
+                        Toast.makeText(this, getString(R.string.no_network_access), Toast.LENGTH_SHORT).show());
+            }
             return false;
         } else if (!getSession().isActive()) {
-            mainLooperHandler.post(() ->
-                    Toast.makeText(this, getString(R.string.unauthenticated), Toast.LENGTH_SHORT).show());
+            if (showError) {
+                mainLooperHandler.post(() ->
+                        Toast.makeText(this, getString(R.string.unauthenticated), Toast.LENGTH_SHORT).show());
+            }
             getSession().invalidate();
             return false;
         } else {
@@ -95,7 +98,7 @@ public class MvpApplication extends Application {
         }
     }
 
-    public Observable<SyncService> getSyncService() {
+    public Observable<SyncService> connectSyncService() {
         return Observable.<SyncService>create(emitter -> {
             synchronized (MvpApplication.class) {
                 if (syncServiceBounded) {

@@ -5,14 +5,20 @@ import android.arch.persistence.room.Delete;
 import android.arch.persistence.room.Insert;
 import android.arch.persistence.room.Query;
 import android.arch.persistence.room.Transaction;
+import android.arch.persistence.room.Update;
 
 import java.util.List;
+
+import static android.arch.persistence.room.OnConflictStrategy.REPLACE;
 
 @Dao
 public abstract class CaptureRecordDAO {
 
     @Query("select * from capture_records order by created_at desc")
     public abstract List<CaptureRecord> getAll();
+
+    @Query("select * from capture_records where uuid = :uuid")
+    public abstract CaptureRecord get(String uuid);
 
     @Query("select * from capture_records where uuid in (:uuids)")
     public abstract List<CaptureRecord> loadAllByUUIDs(String[] uuids);
@@ -25,6 +31,9 @@ public abstract class CaptureRecordDAO {
 
     @Insert
     public abstract void insertAll(CaptureRecord... captureRecords);
+
+    @Update(onConflict = REPLACE)
+    public abstract void update(CaptureRecord captureRecord);
 
     @Delete
     public abstract void delete(CaptureRecord captureRecord);

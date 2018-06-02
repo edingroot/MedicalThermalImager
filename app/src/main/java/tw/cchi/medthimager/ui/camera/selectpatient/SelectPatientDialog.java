@@ -198,13 +198,13 @@ public class SelectPatientDialog {
 
     private void upSyncPatient(Patient patient) {
         MvpApplication application = (MvpApplication) activity.getApplication();
-        application.getSyncService().subscribe(syncService ->
+        application.connectSyncService().subscribe(syncService ->
                 syncService.scheduleNewTask(new SyncSinglePatientTask(patient)));
     }
 
     private void syncPatients() {
         MvpApplication application = (MvpApplication) activity.getApplication();
-        application.getSyncService().subscribe(syncService ->
+        application.connectSyncService().subscribe(syncService ->
                 syncService.scheduleNewTask(new SyncPatientsTask()));
     }
 

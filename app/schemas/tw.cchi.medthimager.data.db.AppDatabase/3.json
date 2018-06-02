@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 3,
-    "identityHash": "551f55a1888b6a01bf12573ed08d6c89",
+    "identityHash": "60243b98a1e10ff298f4fa01fd48f201",
     "entities": [
       {
         "tableName": "patients",
@@ -62,7 +62,7 @@
       },
       {
         "tableName": "capture_records",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`uuid` TEXT NOT NULL, `patient_cuid` TEXT, `title` TEXT, `filename_prefix` TEXT, `contishoot_group` TEXT, `created_at` INTEGER, PRIMARY KEY(`uuid`), FOREIGN KEY(`patient_cuid`) REFERENCES `patients`(`cuid`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`uuid` TEXT NOT NULL, `patient_cuid` TEXT, `title` TEXT, `filename_prefix` TEXT, `contishoot_group` TEXT, `created_at` INTEGER, `synced` INTEGER NOT NULL, PRIMARY KEY(`uuid`), FOREIGN KEY(`patient_cuid`) REFERENCES `patients`(`cuid`) ON UPDATE NO ACTION ON DELETE CASCADE )",
         "fields": [
           {
             "fieldPath": "uuid",
@@ -99,6 +99,12 @@
             "columnName": "created_at",
             "affinity": "INTEGER",
             "notNull": false
+          },
+          {
+            "fieldPath": "synced",
+            "columnName": "synced",
+            "affinity": "INTEGER",
+            "notNull": true
           }
         ],
         "primaryKey": {
@@ -134,7 +140,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, \"551f55a1888b6a01bf12573ed08d6c89\")"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, \"60243b98a1e10ff298f4fa01fd48f201\")"
     ]
   }
 }

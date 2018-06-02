@@ -25,6 +25,10 @@ public final class Errors {
         public UnhandledStateError() {
             super("Unhandled state error");
         }
+
+        public UnhandledStateError(String message) {
+            super(message);
+        }
     }
 
 }

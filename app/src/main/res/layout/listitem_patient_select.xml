@@ -14,7 +14,7 @@
         android:layout_centerVertical="true"
         android:layout_marginStart="5dp"
         android:text="✓"
-        android:textSize="20sp"
+        android:textSize="18sp"
         android:textStyle="bold"/>
 
     <TextView
@@ -26,7 +26,7 @@
         android:layout_toEndOf="@id/txtChecked"
         android:layout_toStartOf="@id/txtRemove"
         android:text="BedNum - Patient Name"
-        android:textSize="20sp"
+        android:textSize="17sp"
         android:textStyle="bold"/>
 
     <TextView

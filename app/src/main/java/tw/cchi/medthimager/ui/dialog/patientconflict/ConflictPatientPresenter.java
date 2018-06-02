@@ -62,8 +62,8 @@ public class ConflictPatientPresenter<V extends ConflictPatientMvpView> extends 
             return;
 
         SSPatient mergeTarget = conflictedPatients.get(selectedPosition);
-        application.getSyncService().subscribe(syncService -> {
-            if (application.checkNetworkAuthedAndAct()) {
+        application.connectSyncService().subscribe(syncService -> {
+            if (application.checkNetworkAuthed(true)) {
                 syncService.scheduleNewTask(new SyncSinglePatientTask(
                         localPatient, mergeTarget.getUuid(), false));
             }
@@ -78,8 +78,8 @@ public class ConflictPatientPresenter<V extends ConflictPatientMvpView> extends 
             return;
 
         SSPatient mergeTarget = conflictedPatients.get(selectedPosition);
-        application.getSyncService().subscribe(syncService -> {
-            if (application.checkNetworkAuthedAndAct()) {
+        application.connectSyncService().subscribe(syncService -> {
+            if (application.checkNetworkAuthed(true)) {
                 syncService.scheduleNewTask(new SyncSinglePatientTask(
                         localPatient, mergeTarget.getUuid(), true));
             }

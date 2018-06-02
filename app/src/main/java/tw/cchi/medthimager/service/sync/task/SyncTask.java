@@ -55,6 +55,10 @@ public abstract class SyncTask implements Disposable {
         return true;
     }
 
+    String getString(int stringRes) {
+        return application.getString(stringRes);
+    }
+
     @BgThreadCapable
     void showToast(int stringRes) {
         showToast(application.getString(stringRes));

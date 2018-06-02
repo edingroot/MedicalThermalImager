@@ -28,7 +28,8 @@ public abstract class PatientDAO {
     @Query("select * from patients where name like :name limit 1")
     public abstract Patient getByName(String name);
 
-    @Query("select * from patients where sync_enabled is 1 and ssuuid is null")
+    @Query("select * from patients where sync_enabled is 1 and ssuuid is null" +
+            " and cuid != '" + Patient.DEFAULT_PATIENT_CUID + "'")
     public abstract List<Patient> getSyncList();
 
     @Query("select * from patients where cuid in (:cuids)")

@@ -6,11 +6,15 @@ import android.arch.persistence.room.ForeignKey;
 import android.arch.persistence.room.Ignore;
 import android.arch.persistence.room.Index;
 import android.arch.persistence.room.PrimaryKey;
+import android.arch.persistence.room.Query;
+import android.arch.persistence.room.Update;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
 import java.util.Date;
 import java.util.UUID;
+
+import static android.arch.persistence.room.OnConflictStrategy.REPLACE;
 
 @Entity(tableName = "capture_records",
         foreignKeys = {
@@ -43,9 +47,12 @@ public class CaptureRecord {
     @ColumnInfo(name = "created_at")
     private Date createdAt;
 
+    @ColumnInfo(name = "synced")
+    private boolean synced = false;
+
     @Ignore
-    public CaptureRecord(String patientCuid, String title, String filenamePrefix, @Nullable String contishootGroup) {
-        this.uuid = UUID.randomUUID().toString();
+    public CaptureRecord(String uuid, String patientCuid, String title, String filenamePrefix, @Nullable String contishootGroup) {
+        this.uuid = uuid;
         this.patientCuid = patientCuid;
         this.title = title;
         this.filenamePrefix = filenamePrefix;
@@ -53,21 +60,18 @@ public class CaptureRecord {
         this.createdAt = new Date();
     }
 
-    public CaptureRecord(@NonNull String uuid, String patientCuid, String title, String filenamePrefix, String contishootGroup, Date createdAt) {
+    public CaptureRecord(@NonNull String uuid, String patientCuid, String title, String filenamePrefix, String contishootGroup, Date createdAt, boolean synced) {
         this.uuid = uuid;
         this.patientCuid = patientCuid;
         this.title = title;
         this.filenamePrefix = filenamePrefix;
         this.contishootGroup = contishootGroup;
         this.createdAt = createdAt;
+        this.synced = synced;
     }
 
     public String getUuid() {
         return uuid;
-    }
-
-    public void setUuid(@NonNull String uuid) {
-        this.uuid = uuid;
     }
 
     public String getPatientCuid() {
@@ -76,14 +80,11 @@ public class CaptureRecord {
 
     public void setPatientCuid(String patientCuid) {
         this.patientCuid = patientCuid;
+        this.synced = false;
     }
 
     public String getTitle() {
         return title;
-    }
-
-    public void setTitle(String title) {
-        this.title = title;
     }
 
     public String getFilenamePrefix() {
@@ -96,5 +97,13 @@ public class CaptureRecord {
 
     public Date getCreatedAt() {
         return createdAt;
+    }
+
+    public boolean isSynced() {
+        return synced;
+    }
+
+    public void setSynced(boolean synced) {
+        this.synced = synced;
     }
 }

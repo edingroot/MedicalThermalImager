@@ -8,6 +8,7 @@ import java.io.FileWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
 import javax.inject.Inject;
 
@@ -17,10 +18,10 @@ import tw.cchi.medthimager.Constants;
 import tw.cchi.medthimager.data.db.AppDatabase;
 import tw.cchi.medthimager.data.db.model.CaptureRecord;
 import tw.cchi.medthimager.data.db.model.Patient;
-import tw.cchi.medthimager.util.annotation.NewThread;
 import tw.cchi.medthimager.thermalproc.RawThermalDump;
 import tw.cchi.medthimager.util.AppUtils;
 import tw.cchi.medthimager.util.FileUtils;
+import tw.cchi.medthimager.util.annotation.NewThread;
 
 public class CSVExportHelper {
     private AppDatabase database;
@@ -122,8 +123,8 @@ public class CSVExportHelper {
                         }
 
                         CaptureRecord captureRecord = new CaptureRecord(
-                            rawThermalDump.getPatientCuid(), rawThermalDump.getTitle(),
-                            FileUtils.removeExtension(file.getName()), null);
+                                UUID.randomUUID().toString(), rawThermalDump.getPatientCuid(),
+                                rawThermalDump.getTitle(), FileUtils.removeExtension(file.getName()), null);
 
                         database.captureRecordDAO()
                             .insertAndAutoCreatePatient(database.patientDAO(), captureRecord);

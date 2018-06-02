@@ -1,8 +1,7 @@
 package tw.cchi.medthimager.model;
 
-import android.support.annotation.Nullable;
-
 import tw.cchi.medthimager.Constants;
+import tw.cchi.medthimager.data.db.model.Patient;
 import tw.cchi.medthimager.thermalproc.RawThermalDump;
 import tw.cchi.medthimager.util.AppUtils;
 import tw.cchi.medthimager.util.ThermalDumpUtils;
@@ -11,6 +10,7 @@ import tw.cchi.medthimager.util.ThermalDumpUtils;
  * New instance should be created every time when capture requested.
  */
 public class CaptureProcessInfo {
+    private Patient patient;
     private String title;
     private String filepathPrefix;
     private String flirFilepath;
@@ -18,10 +18,13 @@ public class CaptureProcessInfo {
 
     /**
      * Generate filenames based on system time and other parameters.
-     *
-     * @param subdir left null or empty if store in root of app (external) exports dir
      */
-    public CaptureProcessInfo(@Nullable String subdir) {
+    public CaptureProcessInfo(Patient patient) {
+        this.patient = patient;
+
+        String subdir = patient == null ? null : patient.getName();
+
+        // Store in root of app (external) exports dir if null or empty
         subdir = subdir == null || subdir.isEmpty() ? "" : subdir + "/";
 
         this.filepathPrefix = AppUtils.getExportsDir() + "/" +
@@ -31,6 +34,10 @@ public class CaptureProcessInfo {
         this.dumpFilepath = filepathPrefix + Constants.POSTFIX_THERMAL_DUMP + ".dat";
 
         this.title = RawThermalDump.generateTitleFromFilepath(dumpFilepath);
+    }
+
+    public Patient getPatient() {
+        return patient;
     }
 
     public String getTitle() {

@@ -22,8 +22,9 @@ import tw.cchi.medthimager.di.component.DaggerServiceComponent;
 import tw.cchi.medthimager.di.component.ServiceComponent;
 import tw.cchi.medthimager.model.RecurrentRunningStatus;
 import tw.cchi.medthimager.service.sync.task.SyncPatientsTask;
-import tw.cchi.medthimager.service.sync.task.SyncTask;
 import tw.cchi.medthimager.service.sync.task.SyncSinglePatientTask;
+import tw.cchi.medthimager.service.sync.task.SyncSingleThImageTask;
+import tw.cchi.medthimager.service.sync.task.SyncTask;
 import tw.cchi.medthimager.util.NetworkUtils;
 
 public class SyncService extends Service {
@@ -37,6 +38,7 @@ public class SyncService extends Service {
     // PublishSubject for worker of each sync task
     private PublishSubject<SyncSinglePatientTask> syncSinglePatientTaskPub = PublishSubject.create();
     private PublishSubject<SyncPatientsTask> syncPatientsTaskPub = PublishSubject.create();
+    private PublishSubject<SyncSingleThImageTask> syncSingleThImageTaskPub = PublishSubject.create();
 
     public static void start(Context context) {
         context.startService(new Intent(context, SyncService.class));
@@ -72,6 +74,7 @@ public class SyncService extends Service {
     private void startTaskWorkers() {
         taskRunningStatus.put(SyncSinglePatientTask.class, new RecurrentRunningStatus(false));
         taskRunningStatus.put(SyncPatientsTask.class, new RecurrentRunningStatus(false));
+        taskRunningStatus.put(SyncSingleThImageTask.class, new RecurrentRunningStatus(false));
 
         taskWorkerSubs.add(syncSinglePatientTaskPub
                 .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
@@ -90,6 +93,15 @@ public class SyncService extends Service {
                     // if (task.getError() != null) {}
                     taskRunningStatus.get(task.getClass()).setRunning(false);
                 }));
+
+        taskWorkerSubs.add(syncSingleThImageTaskPub
+                .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
+                .subscribe(task -> {
+                    taskRunningStatus.get(task.getClass()).setRunning(true);
+                    task.run(this);
+                    // if (task.getError() != null) {}
+                    taskRunningStatus.get(task.getClass()).setRunning(false);
+                }));
     }
 
     /**
@@ -100,6 +112,8 @@ public class SyncService extends Service {
             syncSinglePatientTaskPub.onNext((SyncSinglePatientTask) syncTask);
         else if (syncTask instanceof SyncPatientsTask)
             syncPatientsTaskPub.onNext((SyncPatientsTask) syncTask);
+        else if (syncTask instanceof SyncSingleThImageTask)
+            syncSingleThImageTaskPub.onNext((SyncSingleThImageTask) syncTask);
     }
 
     public boolean isTaskRunning(Class<? extends SyncTask> syncTaskClass) {

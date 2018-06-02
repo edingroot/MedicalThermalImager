@@ -16,9 +16,8 @@ import tw.cchi.medthimager.model.api.SSPatient;
 @Entity(tableName = "patients")
 public class Patient implements Parcelable {
     public static final String DEFAULT_PATIENT_CUID = "AAAAAAAA-BBBB-CCCC-DDDD-123456789012";
-    public static final String DEFAULT_PATIENT_UUID = "UAAAAAAA-BBBB-CCCC-DDDD-123456789012";
-    public static final String DEFAULT_PATIENT_NAME = "Not Specified";
-    public static final String DEFAULT_PATIENT_BED = "00J00";
+    public static final String DEFAULT_PATIENT_BED = "00J00A";
+    public static final String DEFAULT_PATIENT_NAME = "Unspecified";
 
     @PrimaryKey
     @ColumnInfo(name = "cuid")
