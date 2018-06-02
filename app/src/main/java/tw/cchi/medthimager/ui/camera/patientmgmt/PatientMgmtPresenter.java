@@ -30,9 +30,13 @@ public class PatientMgmtPresenter<V extends PatientMgmtMvpView> extends BasePres
     @Override
     public void onAttach(V mvpView) {
         super.onAttach(mvpView);
+        loadPatientListFromDB();
+        syncPatients();
+    }
 
-        // Load patient list
-        refreshPatientList();
+    @Override
+    public void onSyncPatientsDone() {
+        loadPatientListFromDB();
     }
 
     @Override
@@ -42,7 +46,7 @@ public class PatientMgmtPresenter<V extends PatientMgmtMvpView> extends BasePres
             dataManager.db.patientDAO().insertAll(patient);
             upSyncPatient(patient);
 
-            refreshPatientList();
+            loadPatientListFromDB();
             emitter.onComplete();
         }).subscribeOn(Schedulers.io()).subscribe();
     }
@@ -59,7 +63,7 @@ public class PatientMgmtPresenter<V extends PatientMgmtMvpView> extends BasePres
         }
 
         dataManager.db.patientDAO().delete(patient);
-        refreshPatientList();
+        loadPatientListFromDB();
     }
 
     @Override
@@ -88,9 +92,7 @@ public class PatientMgmtPresenter<V extends PatientMgmtMvpView> extends BasePres
 
     @Override
     public void processSelectPatient(Patient patient) {
-        // TODO: sync patients when opening dialog
         syncPatients();
-
         getMvpView().dismiss();
     }
 
@@ -99,7 +101,7 @@ public class PatientMgmtPresenter<V extends PatientMgmtMvpView> extends BasePres
         return patients.get(position);
     }
 
-    private void refreshPatientList() {
+    private void loadPatientListFromDB() {
         Observable.<List<Patient>>create(emitter -> {
             emitter.onNext(dataManager.db.patientDAO().getAll());
             emitter.onComplete();

@@ -46,15 +46,15 @@ public abstract class BaseActivity extends AppCompatActivity
         implements MvpView, BaseFragment.Callback, SessionManager.AuthEventListener {
     private final String TAG = Config.TAGPRE + BaseActivity.class.getSimpleName();
 
+    // Pair<eventName, intent>
+    public PublishSubject<Pair<String, Intent>> internalBroadcastEventPub = PublishSubject.create();
+    protected MvpApplication application;
+
     private ActivityComponent mActivityComponent;
     private Unbinder mUnBinder;
     private Handler mainLooperHandler;
     private InternalBroadcastReceiver internalBroadcastReceiver;
     private ProgressDialog loadingDialog;
-
-    protected MvpApplication application;
-    // Pair<eventName, intent>
-    protected PublishSubject<Pair<String, Intent>> internalBroadcastEvents = PublishSubject.create();
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -224,6 +224,7 @@ public abstract class BaseActivity extends AppCompatActivity
         } catch (Exception ignored) {}
 
         application.sessionManager.removeAuthEventListener(this);
+
         super.onStop();
     }
 
@@ -240,7 +241,7 @@ public abstract class BaseActivity extends AppCompatActivity
         public void onReceive(Context context, Intent intent) {
             String eventName = intent.getStringExtra(SyncBroadcastSender.Extras.EXTRA_EVENT_NAME);
 
-            internalBroadcastEvents.onNext(new Pair<>(eventName, intent));
+            internalBroadcastEventPub.onNext(new Pair<>(eventName, intent));
 
             if (eventName.equals(SyncBroadcastSender.EventName.SYNC_PATIENT_CONFLICT)) {
                 SyncBroadcastSender.ConflictType conflictType =
@@ -248,7 +249,6 @@ public abstract class BaseActivity extends AppCompatActivity
                 Patient patient = intent.getParcelableExtra(SyncBroadcastSender.Extras.EXTRA_PATIENT);
                 List<SSPatient> conflictPatients = intent.getParcelableArrayListExtra(SyncBroadcastSender.Extras.EXTRA_SSPATIENT_LIST);
 
-                Log.d(TAG, "Received internal broadcast event: SYNC_PATIENT_CONFLICT; patient.name=" + patient.getName());
                 ConflictPatientDialog dialog = ConflictPatientDialog.newInstance(conflictType, patient, conflictPatients);
                 dialog.show(getSupportFragmentManager());
             }

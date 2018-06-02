@@ -13,7 +13,7 @@ import static tw.cchi.medthimager.Constants.ACTION_SERVICE_BROADCAST;
 
 public final class SyncBroadcastSender {
     public class EventName {
-        public static final String SYNC_PATIENT_DONE = "SyncService/SYNC_PATIENT_DONE";
+        public static final String SYNC_PATIENTS_DONE = "SyncService/SYNC_PATIENTS_DONE";
         public static final String SYNC_PATIENT_CONFLICT = "SyncService/SYNC_PATIENT_CONFLICT";
     }
     public class Extras {
@@ -33,7 +33,7 @@ public final class SyncBroadcastSender {
     public void sendSyncPatientsDone() {
         Intent intent = new Intent();
         intent.setAction(ACTION_SERVICE_BROADCAST);
-        intent.putExtra(Extras.EXTRA_EVENT_NAME, EventName.SYNC_PATIENT_DONE);
+        intent.putExtra(Extras.EXTRA_EVENT_NAME, EventName.SYNC_PATIENTS_DONE);
         syncService.sendBroadcast(intent, Constants.INTERNAL_BROADCAST_PERMISSION);
     }
 

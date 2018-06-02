@@ -4,7 +4,6 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.FragmentManager;
-import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
@@ -20,9 +19,13 @@ import javax.inject.Inject;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.disposables.CompositeDisposable;
+import io.reactivex.schedulers.Schedulers;
 import tw.cchi.medthimager.R;
 import tw.cchi.medthimager.data.db.model.Patient;
 import tw.cchi.medthimager.di.component.ActivityComponent;
+import tw.cchi.medthimager.service.sync.SyncBroadcastSender;
 import tw.cchi.medthimager.ui.adapter.PatientSelectRecyclerAdapter;
 import tw.cchi.medthimager.ui.base.BaseDialog;
 
@@ -32,6 +35,7 @@ public class PatientMgmtDialog extends BaseDialog
 
     @Inject PatientMgmtMvpPresenter<PatientMgmtMvpView> presenter;
 
+    private CompositeDisposable broadcastSubs;
     private OnInteractionListener onInteractionListener;
     private String preSelectedPatientCuid;
     @Inject PatientSelectRecyclerAdapter patientRecyclerAdapter;
@@ -44,6 +48,7 @@ public class PatientMgmtDialog extends BaseDialog
     public static PatientMgmtDialog newInstance() {
         PatientMgmtDialog fragment = new PatientMgmtDialog();
         Bundle bundle = new Bundle();
+
         fragment.setArguments(bundle);
         return fragment;
     }
@@ -73,6 +78,21 @@ public class PatientMgmtDialog extends BaseDialog
             presenter.setSelected(preSelectedPatientCuid);
 
         return view;
+    }
+
+    @Override
+    public void onStart() {
+        super.onStart();
+
+        broadcastSubs = new CompositeDisposable();
+        broadcastSubs.add(getBaseActivity().internalBroadcastEventPub
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(pair -> {
+                    if (pair.first.equals(SyncBroadcastSender.EventName.SYNC_PATIENTS_DONE)) {
+                        presenter.onSyncPatientsDone();
+                    }
+                }));
     }
 
     public void show(FragmentManager fragmentManager, OnInteractionListener onResultListener) {
@@ -139,6 +159,11 @@ public class PatientMgmtDialog extends BaseDialog
         super.dismiss(FRAGMENT_TAG);
     }
 
+    @Override
+    public void onStop() {
+        broadcastSubs.dispose();
+        super.onStop();
+    }
 
     // PatientSelectRecyclerAdapter.OnInteractionListener
     @Override

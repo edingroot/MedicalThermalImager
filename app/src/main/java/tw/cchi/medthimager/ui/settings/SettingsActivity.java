@@ -26,7 +26,7 @@ public class SettingsActivity extends BaseActivity implements SettingsMvpView {
 
     @Inject SettingsMvpPresenter<SettingsMvpView> presenter;
 
-    private CompositeDisposable broadcastSubs = new CompositeDisposable();
+    private CompositeDisposable broadcastSubs;
 
     @BindView(R.id.txtAuthStatusDescription) TextView txtAuthStatusDescription;
     @BindView(R.id.btnAuth) Button btnAuth;
@@ -49,11 +49,13 @@ public class SettingsActivity extends BaseActivity implements SettingsMvpView {
     @Override
     protected void onStart() {
         super.onStart();
-        broadcastSubs.add(internalBroadcastEvents
+
+        broadcastSubs = new CompositeDisposable();
+        broadcastSubs.add(internalBroadcastEventPub
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(pair -> {
-                    if (pair.first.equals(SyncBroadcastSender.EventName.SYNC_PATIENT_DONE)) {
+                    if (pair.first.equals(SyncBroadcastSender.EventName.SYNC_PATIENTS_DONE)) {
                         presenter.onSyncPatientsDone();
                     }
                 }));
