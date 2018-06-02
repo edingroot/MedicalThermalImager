@@ -49,6 +49,7 @@ import tw.cchi.medthimager.thermalproc.RawThermalDump;
 import tw.cchi.medthimager.ui.base.BasePresenter;
 import tw.cchi.medthimager.util.AppUtils;
 import tw.cchi.medthimager.util.CommonUtils;
+import tw.cchi.medthimager.util.FileUtils;
 import tw.cchi.medthimager.util.annotation.BgThreadCapable;
 import tw.cchi.medthimager.util.annotation.NewThread;
 
@@ -559,8 +560,9 @@ public class CameraPresenter<V extends CameraMvpView> extends BasePresenter<V>
             .subscribe(
                 success -> {
                     if (success) {
-                        // Short delay for waiting flir image saved
-                        CommonUtils.sleep(500);
+                        // Wait until flir image saved
+                        FileUtils.waitUntilExists(currCaptureProcessInfo.getFlirFilepath());
+                        CommonUtils.sleep(100);
 
                         String contiShootUuid = currContiShooting ? currContiShootParams.groupUuid : null;
                         CaptureRecord captureRecord = new CaptureRecord(
@@ -615,6 +617,7 @@ public class CameraPresenter<V extends CameraMvpView> extends BasePresenter<V>
                 // Save the original thermal image
                 renderedImage.getFrame().save(new File(filename), frameProcessor);
                 getMvpView().animateFlash();
+
                 scanMediaStorage(filename);
                 emitter.onNext(true);
             } catch (Exception e) {

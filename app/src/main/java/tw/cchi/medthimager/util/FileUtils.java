@@ -44,4 +44,12 @@ public final class FileUtils {
         }
     }
 
+    public static void waitUntilExists(String filePath) {
+        while (!new File(filePath).exists()) {
+            try {
+                Thread.sleep(20);
+            } catch (InterruptedException ignored) {}
+        }
+    }
+
 }
