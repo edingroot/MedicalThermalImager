@@ -49,8 +49,10 @@ public class Patient implements Parcelable {
     }
 
     @Ignore
-    public Patient(String name) {
+    public Patient(String caseid, String bed, String name) {
         this.cuid = UUID.randomUUID().toString();
+        this.caseid = caseid;
+        this.bed = bed;
         this.name = name;
         this.createdAt = new Date();
     }

@@ -12,6 +12,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
+import javax.inject.Inject;
+
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import tw.cchi.medthimager.R;
@@ -29,6 +31,7 @@ public class PatientSelectRecyclerAdapter extends RecyclerView.Adapter<PatientSe
     private List<SSPatient> ssPatients = new ArrayList<>();
     private int selectedPosition = -1;
 
+    @Inject
     public PatientSelectRecyclerAdapter() {
     }
 

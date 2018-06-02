@@ -54,11 +54,11 @@
 
     <!-- Dialogs -->
     <string name="continuous_shoot">Continuous Shoot</string>
+    <string name="caseid">Case ID</string>
+    <string name="bed">Bed</string>
     <string name="name">Name</string>
     <string name="add">Add</string>
-    <string name="remove">Remove</string>
-    <string name="close">Close</string>
-    <string name="ok">OK</string>
+    <string name="select">Select</string>
     <string name="interval">Period</string>
     <string name="captures">Captures</string>
     <string name="start">Start</string>
@@ -66,6 +66,9 @@
     <string name="information">Information</string>
     <string name="error">Error</string>
     <string name="completed">Completed</string>
+
+    <!-- PatientMgmtDialog -->
+    <string name="confirm_remove_patient">Confirm to remove records of %1$s?</string>
 
     <!-- PatientConflictDialog -->
     <string name="sync_patient_info">Sync Patient Info</string>

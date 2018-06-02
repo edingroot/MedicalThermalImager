@@ -46,7 +46,7 @@ import tw.cchi.medthimager.component.SpotsControlView;
 import tw.cchi.medthimager.helper.ThermalSpotsHelper;
 import tw.cchi.medthimager.ui.base.BaseActivity;
 import tw.cchi.medthimager.ui.camera.contishoot.ContiShootDialog;
-import tw.cchi.medthimager.ui.camera.selectpatient.SelectPatientDialog;
+import tw.cchi.medthimager.ui.camera.patientmgmt.PatientMgmtDialog;
 import tw.cchi.medthimager.ui.dumpviewer.DumpViewerActivity;
 import tw.cchi.medthimager.ui.settings.SettingsActivity;
 import tw.cchi.medthimager.util.CommonUtils;
@@ -60,7 +60,6 @@ public class CameraActivity extends BaseActivity implements
 
     @Inject CameraMvpPresenter<CameraMvpView> presenter;
 
-    private SelectPatientDialog selectPatientDialog;
     private ScaleGestureDetector mScaleDetector;
     private ColorFilter originalChargingIndicatorColor;
     // private int thermalViewOnTouchMoves = 0;
@@ -133,9 +132,6 @@ public class CameraActivity extends BaseActivity implements
     @Override
     public void onPause() {
         super.onPause();
-
-        if (selectPatientDialog != null)
-            selectPatientDialog.dismiss();
 
         if (presenter.isContiShootingMode()) {
             presenter.finishContiShooting(true, false);
@@ -211,11 +207,11 @@ public class CameraActivity extends BaseActivity implements
         if (checkContiShootBlocking())
             return;
 
-        if (selectPatientDialog == null) {
-            selectPatientDialog = new SelectPatientDialog(this, presenter::setCurrentPatient);
-        }
-        selectPatientDialog.setSelectedPatientCuid(presenter.getCurrentPatientCuid());
-        selectPatientDialog.show();
+        PatientMgmtDialog patientMgmtDialog = PatientMgmtDialog.newInstance();
+        patientMgmtDialog.show(getSupportFragmentManager(), (patient) -> {
+            presenter.setCurrentPatient(patient.getCuid());
+        });
+        patientMgmtDialog.setSelectedPatient(presenter.getCurrentPatientCuid());
     }
 
     @OnClick(R.id.btnTools)

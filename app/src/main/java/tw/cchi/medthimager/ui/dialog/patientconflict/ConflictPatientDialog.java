@@ -26,8 +26,6 @@ import tw.cchi.medthimager.model.api.SSPatient;
 import tw.cchi.medthimager.service.sync.SyncBroadcastSender;
 import tw.cchi.medthimager.ui.adapter.PatientSelectRecyclerAdapter;
 import tw.cchi.medthimager.ui.base.BaseDialog;
-import tw.cchi.medthimager.ui.camera.selectpatient.SelectPatientDialog;
-import tw.cchi.medthimager.util.DateTimeUtils;
 
 public class ConflictPatientDialog extends BaseDialog implements ConflictPatientMvpView {
     private static final String FRAGMENT_TAG = "ConflictPatientDialog";
