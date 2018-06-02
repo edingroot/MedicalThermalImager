@@ -11,6 +11,8 @@ import android.os.IBinder;
 import android.support.annotation.Nullable;
 import android.util.Log;
 
+import java.util.HashSet;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import io.reactivex.disposables.CompositeDisposable;
@@ -33,12 +35,17 @@ public class SyncService extends Service {
     private IBinder mBinder;
     private NetworkStateBroadcastReceiver networkStateReceiver;
     private CompositeDisposable taskWorkerSubs = new CompositeDisposable();
+
+    private static final Set<Class<? extends SyncTask>> syncTaskClasses = new HashSet<>();
+    private ConcurrentHashMap<Class<? extends SyncTask>, PublishSubject<SyncTask>> taskPublishSubjects = new ConcurrentHashMap<>();
     private ConcurrentHashMap<Class<? extends SyncTask>, RecurrentRunningStatus> taskRunningStatus = new ConcurrentHashMap<>();
 
-    // PublishSubject for worker of each sync task
-    private PublishSubject<SyncSinglePatientTask> syncSinglePatientTaskPub = PublishSubject.create();
-    private PublishSubject<SyncPatientsTask> syncPatientsTaskPub = PublishSubject.create();
-    private PublishSubject<SyncSingleThImageTask> syncSingleThImageTaskPub = PublishSubject.create();
+    static {
+        // All sync tasks should be added here
+        syncTaskClasses.add(SyncSinglePatientTask.class);
+        syncTaskClasses.add(SyncPatientsTask.class);
+        syncTaskClasses.add(SyncSingleThImageTask.class);
+    }
 
     public static void start(Context context) {
         context.startService(new Intent(context, SyncService.class));
@@ -72,48 +79,26 @@ public class SyncService extends Service {
     }
 
     private void startTaskWorkers() {
-        taskRunningStatus.put(SyncSinglePatientTask.class, new RecurrentRunningStatus(false));
-        taskRunningStatus.put(SyncPatientsTask.class, new RecurrentRunningStatus(false));
-        taskRunningStatus.put(SyncSingleThImageTask.class, new RecurrentRunningStatus(false));
+        for (Class<? extends SyncTask> syncTaskClass : syncTaskClasses) {
+            taskRunningStatus.put(syncTaskClass, new RecurrentRunningStatus());
+            taskPublishSubjects.put(syncTaskClass, PublishSubject.create());
 
-        taskWorkerSubs.add(syncSinglePatientTaskPub
-                .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
-                .subscribe(task -> {
-                    taskRunningStatus.get(task.getClass()).setRunning(true);
-                    task.run(this);
-                    // if (task.getError() != null) {}
-                    taskRunningStatus.get(task.getClass()).setRunning(false);
-                }));
-
-        taskWorkerSubs.add(syncPatientsTaskPub
-                .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
-                .subscribe(task -> {
-                    taskRunningStatus.get(task.getClass()).setRunning(true);
-                    task.run(this);
-                    // if (task.getError() != null) {}
-                    taskRunningStatus.get(task.getClass()).setRunning(false);
-                }));
-
-        taskWorkerSubs.add(syncSingleThImageTaskPub
-                .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
-                .subscribe(task -> {
-                    taskRunningStatus.get(task.getClass()).setRunning(true);
-                    task.run(this);
-                    // if (task.getError() != null) {}
-                    taskRunningStatus.get(task.getClass()).setRunning(false);
-                }));
+            taskWorkerSubs.add(taskPublishSubjects.get(syncTaskClass)
+                    .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
+                    .subscribe(syncTask -> {
+                        taskRunningStatus.get(syncTask.getClass()).setRunning(true);
+                        syncTask.run(this);
+                        // if (syncTask.getError() != null) {}
+                        taskRunningStatus.get(syncTask.getClass()).setRunning(false);
+                    }));
+        }
     }
 
     /**
      * Errors such like network or authentication error will be caught and ignored.
      */
     public void scheduleNewTask(SyncTask syncTask) {
-        if (syncTask instanceof SyncSinglePatientTask)
-            syncSinglePatientTaskPub.onNext((SyncSinglePatientTask) syncTask);
-        else if (syncTask instanceof SyncPatientsTask)
-            syncPatientsTaskPub.onNext((SyncPatientsTask) syncTask);
-        else if (syncTask instanceof SyncSingleThImageTask)
-            syncSingleThImageTaskPub.onNext((SyncSingleThImageTask) syncTask);
+        taskPublishSubjects.get(syncTask.getClass()).onNext(syncTask);
     }
 
     public boolean isTaskRunning(Class<? extends SyncTask> syncTaskClass) {
@@ -144,7 +129,7 @@ public class SyncService extends Service {
         @Override
         public void onReceive(Context context, Intent intent) {
             if (NetworkUtils.isNetworkConnected(context)) {
-                // TODO
+                //
             }
         }
     }

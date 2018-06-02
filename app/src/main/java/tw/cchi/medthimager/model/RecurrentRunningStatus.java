@@ -15,11 +15,10 @@ package tw.cchi.medthimager.model;
 public class RecurrentRunningStatus {
     private static final long MAX_RESTART_GAP = 20; // ms
 
-    private volatile boolean running;
+    private volatile boolean running = false;
     private volatile long lastStopCalled = 0;
 
-    public RecurrentRunningStatus(boolean running) {
-        this.running = running;
+    public RecurrentRunningStatus() {
     }
 
     public boolean isRunning() {
