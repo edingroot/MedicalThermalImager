@@ -1,11 +1,9 @@
 package tw.cchi.medthimager.ui.auth;
 
-import java.io.IOException;
 import java.util.concurrent.atomic.AtomicReference;
 
 import javax.inject.Inject;
 
-import io.reactivex.Observable;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.schedulers.Schedulers;
@@ -14,7 +12,7 @@ import tw.cchi.medthimager.Config;
 import tw.cchi.medthimager.R;
 import tw.cchi.medthimager.data.network.ApiClient;
 import tw.cchi.medthimager.data.network.ApiServiceGenerator;
-import tw.cchi.medthimager.model.User;
+import tw.cchi.medthimager.model.api.User;
 import tw.cchi.medthimager.model.api.AccessTokens;
 import tw.cchi.medthimager.ui.base.BasePresenter;
 

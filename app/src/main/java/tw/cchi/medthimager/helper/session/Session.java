@@ -2,13 +2,10 @@ package tw.cchi.medthimager.helper.session;
 
 import android.util.Log;
 
-import javax.inject.Inject;
-
 import tw.cchi.medthimager.Config;
 import tw.cchi.medthimager.data.DataManager;
 import tw.cchi.medthimager.data.network.ApiClient;
-import tw.cchi.medthimager.data.network.ApiServiceGenerator;
-import tw.cchi.medthimager.model.User;
+import tw.cchi.medthimager.model.api.User;
 import tw.cchi.medthimager.model.api.AccessTokens;
 
 public class Session {

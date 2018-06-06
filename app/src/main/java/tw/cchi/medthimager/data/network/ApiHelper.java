@@ -2,7 +2,6 @@ package tw.cchi.medthimager.data.network;
 
 import android.support.annotation.NonNull;
 import android.util.Log;
-import android.widget.Toast;
 
 import com.google.gson.Gson;
 
@@ -16,12 +15,10 @@ import retrofit2.Response;
 import tw.cchi.medthimager.Config;
 import tw.cchi.medthimager.Errors;
 import tw.cchi.medthimager.MvpApplication;
-import tw.cchi.medthimager.R;
-import tw.cchi.medthimager.model.User;
+import tw.cchi.medthimager.model.api.User;
 import tw.cchi.medthimager.model.api.PatientResponse;
 import tw.cchi.medthimager.model.api.SSPatient;
 import tw.cchi.medthimager.util.CommonUtils;
-import tw.cchi.medthimager.util.NetworkUtils;
 
 public class ApiHelper {
     private final String TAG = Config.TAGPRE + getClass().getSimpleName();

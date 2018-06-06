@@ -11,7 +11,7 @@ import retrofit2.http.FormUrlEncoded;
 import retrofit2.http.GET;
 import retrofit2.http.POST;
 import tw.cchi.medthimager.model.api.AccessTokens;
-import tw.cchi.medthimager.model.User;
+import tw.cchi.medthimager.model.api.User;
 import tw.cchi.medthimager.model.api.PatientResponse;
 import tw.cchi.medthimager.model.api.SSPatient;
 import tw.cchi.medthimager.util.annotation.RequireAuth;

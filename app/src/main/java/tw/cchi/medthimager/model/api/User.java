@@ -1,4 +1,4 @@
-package tw.cchi.medthimager.model;
+package tw.cchi.medthimager.model.api;
 
 import tw.cchi.medthimager.util.annotation.ApiIntegration;
 
