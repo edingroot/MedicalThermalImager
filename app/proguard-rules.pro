@@ -56,7 +56,7 @@
 
 # Keep POJO classes for gson
 -keep class tw.cchi.medthimager.model.User
--keep class tw.cchi.medthimager.model.api.*
+-keep class tw.cchi.medthimager.model.api.**
 
 
 # Partial configs are referenced from: https://stackoverflow.com/questions/7464035/how-to-tell-proguard-to-keep-everything-in-a-particular-package

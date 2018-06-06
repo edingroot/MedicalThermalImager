@@ -52,63 +52,52 @@ public class LoginPresenter<V extends LoginMvpView> extends BasePresenter<V> imp
         AtomicReference<User> userRef = new AtomicReference<>();
 
         // Note: Only the 2xx responses will go to onNext
-        guestApiClient.getNewAccessToken(email, password)
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe((Response<AccessTokens> response) -> {
-                    // Log.i(TAG, "[onLogin] " + call.request().method() + " " + call.request().url());
-                    // Log.i(TAG, "[onLogin] AccessTokens: got status code " + response.code());
+        guestApiClient.getNewAccessToken(email, password).flatMap((Response<AccessTokens> response) -> {
+            // Log.i(TAG, "[onLogin] " + call.request().method() + " " + call.request().url());
+            // Log.i(TAG, "[onLogin] AccessTokens: got status code " + response.code());
 
-                    if (response.code() == 200) {
-                        AccessTokens accessTokens = response.body();
-                        accessTokensRef.set(accessTokens);
+            if (response.code() == 200) {
+                AccessTokens accessTokens = response.body();
+                accessTokensRef.set(accessTokens);
 
-                        ApiClient authedApiClient = application.sessionManager.createAuthedAPIClient(accessTokens);
-                        if (authedApiClient != null) {
-                            // return authedApiClient.getProfile();
-                            userRef.set(new User(1, "tmp@example.com", "temp-user"));
-                            application.getSession().activate(accessTokensRef.get(), userRef.get());
+                ApiClient authedApiClient = application.sessionManager.createAuthedAPIClient(accessTokens);
+                if (authedApiClient != null)
+                    return authedApiClient.getProfile();
+                else
+                    throw new Error();
+            } else {
+                throw new Error();
+            }
+        }).flatMap((Response<User> response) -> {
+            if (response.code() == 200) {
+                userRef.set(response.body());
+                return Observable.just(true);
+            } else {
+                throw new Error();
+            }
+        }).subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe(
+                o -> {},
+                e -> {
+                    e.printStackTrace();
 
-                            if (isViewAttached()) {
-                                getMvpView().startCameraActivityAndFinish();
-                            }
-                        } else {
-                            throw new Error();
-                        }
-                    } else {
-                        throw new Error();
+                    if (isViewAttached()) {
+                        getMvpView().setLoggingIn(false);
+                        if (e instanceof IOException)
+                            getMvpView().showSnackBar(R.string.login_failed_comm_err);
+                        else
+                            getMvpView().showSnackBar(R.string.login_failed);
                     }
-                });
-//        });.flatMap((Response<User> response) -> {
-//            if (response.code() == 200) {
-//                userRef.set(response.body());
-//                return Observable.just(true);
-//            } else {
-//                throw new Error();
-//            }
-//        }).subscribeOn(Schedulers.io())
-//            .observeOn(AndroidSchedulers.mainThread())
-//            .subscribe(
-//                o -> {},
-//                e -> {
-//                    e.printStackTrace();
-//
-//                    if (isViewAttached()) {
-//                        getMvpView().setLoggingIn(false);
-//                        if (e instanceof IOException)
-//                            getMvpView().showSnackBar(R.string.login_failed_comm_err);
-//                        else
-//                            getMvpView().showSnackBar(R.string.login_failed);
-//                    }
-//                },
-//                () -> {
-//                    application.getSession().activate(accessTokensRef.get(), userRef.get());
-//
-//                    if (isViewAttached()) {
-//                        getMvpView().startCameraActivityAndFinish();
-//                    }
-//                }
-//            );
+                },
+                () -> {
+                    application.getSession().activate(accessTokensRef.get(), userRef.get());
+
+                    if (isViewAttached()) {
+                        getMvpView().startCameraActivityAndFinish();
+                    }
+                }
+            );
     }
 
     @Override
