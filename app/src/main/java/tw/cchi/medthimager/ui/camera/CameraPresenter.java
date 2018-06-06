@@ -245,7 +245,7 @@ public class CameraPresenter<V extends CameraMvpView> extends BasePresenter<V>
             contiShootParams.capturedCount++;
 
             if (contiShootParams.capturedCount >= contiShootParams.totalCaptures) {
-                finishContiShooting(false, true);
+                finishContiShooting(true, true);
             } else {
                 getMvpView().setContinuousShootMode(
                         contiShootParams.capturedCount, contiShootParams.totalCaptures);
