@@ -201,6 +201,8 @@ public class CameraPresenter<V extends CameraMvpView> extends BasePresenter<V>
         contiShootParams.capturedCount = 0;
         contiShootParams.secondsToNextTick = Config.CONTI_SHOOT_START_DELAY;
 
+        flirOneDevice.setAutomaticTuning(false);
+
         getMvpView().setContinuousShootMode(
             contiShootParams.capturedCount, contiShootParams.totalCaptures);
         getMvpView().updateContinuousShootCountdown(contiShootParams.secondsToNextTick);
