@@ -14,7 +14,7 @@ import tw.cchi.medthimager.Config;
 import tw.cchi.medthimager.R;
 import tw.cchi.medthimager.data.network.ApiClient;
 import tw.cchi.medthimager.data.network.ApiServiceGenerator;
-import tw.cchi.medthimager.model.User;
+import tw.cchi.medthimager.model.api.User;
 import tw.cchi.medthimager.model.api.AccessTokens;
 import tw.cchi.medthimager.ui.base.BasePresenter;
 

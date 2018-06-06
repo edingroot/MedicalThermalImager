@@ -2,7 +2,7 @@ package tw.cchi.medthimager.ui.settings;
 
 import android.support.annotation.Nullable;
 
-import tw.cchi.medthimager.model.User;
+import tw.cchi.medthimager.model.api.User;
 import tw.cchi.medthimager.ui.base.MvpView;
 
 public interface SettingsMvpView extends MvpView {

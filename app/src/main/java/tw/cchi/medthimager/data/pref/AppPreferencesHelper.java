@@ -16,7 +16,7 @@ import tw.cchi.medthimager.Config;
 import tw.cchi.medthimager.di.ApplicationContext;
 import tw.cchi.medthimager.di.PreferenceInfo;
 import tw.cchi.medthimager.model.api.AccessTokens;
-import tw.cchi.medthimager.model.User;
+import tw.cchi.medthimager.model.api.User;
 
 @Singleton
 public class AppPreferencesHelper implements PreferencesHelper {

@@ -6,7 +6,7 @@ import android.support.annotation.Nullable;
 import java.util.Date;
 
 import tw.cchi.medthimager.model.api.AccessTokens;
-import tw.cchi.medthimager.model.User;
+import tw.cchi.medthimager.model.api.User;
 
 public interface PreferencesHelper {
 
