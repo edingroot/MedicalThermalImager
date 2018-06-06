@@ -44,7 +44,7 @@
 -dontwarn org.jetbrains.annotations.Contract
 
 
-# retrofit
+# Retrofit
 -dontwarn retrofit2.**
 -keep class retrofit2.** { *; }
 -keepattributes Signature
@@ -53,6 +53,9 @@
     @retrofit2.http.* <methods>;
 }
 -keepattributes Signature,InnerClasses
+
+# Keep POJO classes for gson
+-keep class tw.cchi.medthimager.model.api.** { *; }
 
 
 # Partial configs are referenced from: https://stackoverflow.com/questions/7464035/how-to-tell-proguard-to-keep-everything-in-a-particular-package
