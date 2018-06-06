@@ -14,28 +14,31 @@ import tw.cchi.medthimager.util.CommonUtils;
  * Sync all patients whose uuid field is null.
  */
 public class SyncPatientsTask extends SyncTask {
+    private static final long DEFAULT_TIMEOUT = 12 * 1000;
     private int conflictCount = 0;
+    private boolean doneBroadcastSent = false;
 
     public SyncPatientsTask() {
         super();
+        this.timeout = DEFAULT_TIMEOUT;
     }
 
     @Override
     void doWork() {
-        if (!checkNetworkAndAuthed()) {
-            broadcastSender.sendSyncPatientsDone();
-            return;
-        }
-
         upSyncPatients();
         downSyncPatients();
 
         dataManager.pref.setLastSyncPatients(new Date());
         CommonUtils.sleep(500);
-        broadcastSender.sendSyncPatientsDone();
+        sendSyncPatientsDone();
     }
 
     private void upSyncPatients() {
+        if (disposed || !checkNetworkAndAuthed()) {
+            dispose();
+            return;
+        }
+
         conflictCount = 0;
         dataManager.pref.setSyncPatientConflictCount(0);
 
@@ -51,8 +54,10 @@ public class SyncPatientsTask extends SyncTask {
     }
 
     private void handleCreatePatient(Patient patient) {
-        if (disposed || !checkNetworkAndAuthed())
+        if (disposed || !checkNetworkAndAuthed()) {
+            dispose();
             return;
+        }
 
         SSPatient ssPatient = new SSPatient(patient);
         apiHelper.upSyncPatient(ssPatient, null, false, true, new ApiHelper.OnPatientSyncListener() {
@@ -82,8 +87,10 @@ public class SyncPatientsTask extends SyncTask {
     }
 
     private void downSyncPatients() {
-        if (disposed || !checkNetworkAndAuthed())
+        if (disposed || !checkNetworkAndAuthed()) {
+            dispose();
             return;
+        }
 
         application.getSession().getApiClient().getAllPatients()
             .blockingSubscribe(
@@ -102,9 +109,17 @@ public class SyncPatientsTask extends SyncTask {
             }
         }
     }
+    
+    private void sendSyncPatientsDone() {
+        if (!doneBroadcastSent) {
+            broadcastSender.sendSyncPatientsDone();
+            doneBroadcastSent = true;
+        }
+    }
 
     @Override
     public void dispose() {
+        sendSyncPatientsDone();
         disposed = true;
     }
 }

@@ -63,10 +63,14 @@ public final class CommonUtils {
         return stringBuilder.toString();
     }
 
-    public static void sleep(long millis) {
+    public static boolean sleep(long millis) {
         try {
             Thread.sleep(millis);
-        } catch (InterruptedException ignored) {}
+            return true;
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+            return false;
+        }
     }
 
     public static void delayExecute(Runnable runnable, long delayMillis) {

@@ -14,7 +14,13 @@ import android.util.Log;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
+import io.reactivex.Observable;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.schedulers.Schedulers;
 import io.reactivex.subjects.PublishSubject;
@@ -27,6 +33,7 @@ import tw.cchi.medthimager.service.sync.task.SyncPatientsTask;
 import tw.cchi.medthimager.service.sync.task.SyncSinglePatientTask;
 import tw.cchi.medthimager.service.sync.task.SyncSingleThImageTask;
 import tw.cchi.medthimager.service.sync.task.SyncTask;
+import tw.cchi.medthimager.util.CommonUtils;
 import tw.cchi.medthimager.util.NetworkUtils;
 
 public class SyncService extends Service {
@@ -34,11 +41,12 @@ public class SyncService extends Service {
 
     private IBinder mBinder;
     private NetworkStateBroadcastReceiver networkStateReceiver;
-    private CompositeDisposable taskWorkerSubs = new CompositeDisposable();
+    private final CompositeDisposable taskWorkerSubs = new CompositeDisposable();
 
     private static final Set<Class<? extends SyncTask>> syncTaskClasses = new HashSet<>();
-    private ConcurrentHashMap<Class<? extends SyncTask>, PublishSubject<SyncTask>> taskPublishSubjects = new ConcurrentHashMap<>();
-    private ConcurrentHashMap<Class<? extends SyncTask>, RecurrentRunningStatus> taskRunningStatus = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<Class<? extends SyncTask>, PublishSubject<SyncTask>> taskPublishSubjects = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<Class<? extends SyncTask>, ExecutorService> taskExecutors = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<Class<? extends SyncTask>, RecurrentRunningStatus> taskRunningStatus = new ConcurrentHashMap<>();
 
     static {
         // All sync tasks should be added here
@@ -82,15 +90,42 @@ public class SyncService extends Service {
         for (Class<? extends SyncTask> syncTaskClass : syncTaskClasses) {
             taskRunningStatus.put(syncTaskClass, new RecurrentRunningStatus());
             taskPublishSubjects.put(syncTaskClass, PublishSubject.create());
+            taskExecutors.put(syncTaskClass, Executors.newSingleThreadExecutor());
 
-            taskWorkerSubs.add(taskPublishSubjects.get(syncTaskClass)
-                    .subscribeOn(Schedulers.io()).observeOn(Schedulers.io())
-                    .subscribe(syncTask -> {
+            // Only one task with same class is allowed to run at the same time
+            Observable<SyncTask> taskWorkerSub = taskPublishSubjects.get(syncTaskClass);
+            taskWorkerSubs.add(taskWorkerSub
+                .subscribeOn(Schedulers.io())
+                .observeOn(Schedulers.io())
+                .subscribe(
+                    syncTask -> {
                         taskRunningStatus.get(syncTask.getClass()).setRunning(true);
-                        syncTask.run(this);
-                        // if (syncTask.getError() != null) {}
+
+                        syncTask.setSyncService(this);
+                        Future<Void> future = taskExecutors.get(syncTask.getClass()).submit(syncTask);
+                        try {
+                            Log.i(TAG, "timeout=" + syncTask.getTimeout());
+                            if (syncTask.getTimeout() != 0)
+                                future.get(syncTask.getTimeout(), TimeUnit.MILLISECONDS);
+                            else
+                                future.get();
+                        } catch (Exception e) {
+                            if (e instanceof TimeoutException) {
+                                Log.w(TAG, "Timeout, canceling task: " + syncTask.getClass().getSimpleName());
+                                syncTask.dispose();
+
+                                // Interrupt and stop the underlying task after 100ms
+                                CommonUtils.sleep(500);
+                                future.cancel(true);
+                            } else {
+                                // The may be the exception thrown by the underlying task
+                                e.printStackTrace();
+                            }
+                        }
+
                         taskRunningStatus.get(syncTask.getClass()).setRunning(false);
-                    }));
+                    }
+                ));
         }
     }
 

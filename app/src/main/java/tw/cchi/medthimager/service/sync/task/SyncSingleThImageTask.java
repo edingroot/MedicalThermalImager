@@ -14,6 +14,7 @@ import tw.cchi.medthimager.model.api.SSPatient;
 import tw.cchi.medthimager.model.api.ThImage;
 
 public class SyncSingleThImageTask extends SyncTask {
+    private static final long DEFAULT_TIMEOUT = 30 * 1000;
     private ThImage metadata;
     private File dumpFile;
     private File flirFile;
@@ -21,6 +22,7 @@ public class SyncSingleThImageTask extends SyncTask {
 
     public SyncSingleThImageTask(ThImage metadata, File dumpFile, File flirFile, @Nullable File visibleFile) {
         super();
+        this.timeout = DEFAULT_TIMEOUT;
         this.metadata = metadata;
         this.dumpFile = dumpFile;
         this.flirFile = flirFile;
@@ -38,7 +40,7 @@ public class SyncSingleThImageTask extends SyncTask {
                     performUpload();
                 } else {
                     showToast(R.string.upload_conflict_syncing_patient);
-                    setError(new Error(getString(R.string.upload_conflict_syncing_patient)));
+                    throw new Error(getString(R.string.upload_conflict_syncing_patient));
                 }
             });
         } else {
@@ -81,6 +83,9 @@ public class SyncSingleThImageTask extends SyncTask {
     }
 
     private void performUpload() {
+        if (disposed)
+            return;
+
         apiHelper.uploadThImage(this.metadata, this.dumpFile, this.flirFile, this.visibleFile,
                 true, new ApiHelper.OnThImageUploadListener() {
                     @Override

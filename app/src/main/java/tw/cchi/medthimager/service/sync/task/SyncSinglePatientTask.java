@@ -12,12 +12,14 @@ import tw.cchi.medthimager.service.sync.SyncBroadcastSender;
  * Sync information of a patient.
  */
 public class SyncSinglePatientTask extends SyncTask {
+    private static final long DEFAULT_TIMEOUT = 8 * 1000;
     private Patient targetPatient;
     private String mergeWithUuid;
     private boolean createNew = false;
 
     public SyncSinglePatientTask(Patient targetPatient) {
         super();
+        this.timeout = DEFAULT_TIMEOUT;
         this.targetPatient = targetPatient;
         this.apiHelper = new ApiHelper(application);
     }

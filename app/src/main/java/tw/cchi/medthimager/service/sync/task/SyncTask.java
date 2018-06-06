@@ -2,8 +2,10 @@ package tw.cchi.medthimager.service.sync.task;
 
 import android.os.Handler;
 import android.os.Looper;
-import android.support.annotation.Nullable;
+import android.support.annotation.NonNull;
 import android.widget.Toast;
+
+import java.util.concurrent.Callable;
 
 import io.reactivex.disposables.Disposable;
 import tw.cchi.medthimager.Errors;
@@ -15,42 +17,57 @@ import tw.cchi.medthimager.service.sync.SyncService;
 import tw.cchi.medthimager.util.NetworkUtils;
 import tw.cchi.medthimager.util.annotation.BgThreadCapable;
 
-public abstract class SyncTask implements Disposable {
+public abstract class SyncTask implements Callable<Void>, Disposable {
     MvpApplication application;
     SyncBroadcastSender broadcastSender;
     DataManager dataManager;
     ApiHelper apiHelper;
+    long timeout = 0;
     volatile boolean disposed = false;
 
+    private SyncService syncService;
     private Handler mainHandler = new Handler(Looper.getMainLooper());
     private volatile boolean finished = false;
-    private Error error = null;
 
     SyncTask() {
     }
 
     /**
-     * This method should be designed as a thread-blocking worker.
+     * @param syncService SyncService instance that launches this task
      */
-    public void run(SyncService syncService) {
+    public void setSyncService(@NonNull SyncService syncService) {
+        this.syncService = syncService;
+    }
+
+    /**
+     * {@link #setSyncService(SyncService)} should have been called.
+     */
+    @Override
+    public Void call() throws Exception {
+        if (syncService == null) {
+            throw new RuntimeException("SyncService instance not set");
+        }
+
         this.application = (MvpApplication) syncService.getApplication();
         this.broadcastSender = new SyncBroadcastSender(syncService);
         this.dataManager = application.dataManager;
         this.apiHelper = new ApiHelper(application);
 
         doWork();
-        finish(null);
+        finish();
+        return null;
     }
 
+    /**
+     * This method should be designed as a thread-blocking worker.
+     */
     abstract void doWork();
 
     boolean checkNetworkAndAuthed() {
         if (!NetworkUtils.isNetworkConnected(application)) {
-            finish(new Errors.NetworkLostError());
-            return false;
+            throw new Errors.NetworkLostError();
         } else if (!application.getSession().isActive()) {
-            finish(new Errors.UnauthenticatedError());
-            return false;
+            throw new Errors.UnauthenticatedError();
         }
         return true;
     }
@@ -70,18 +87,20 @@ public abstract class SyncTask implements Disposable {
                 Toast.makeText(application, message, Toast.LENGTH_SHORT).show());
     }
 
-    private void finish(@Nullable Error error) {
-        this.error = error;
+    private void finish() {
         finished = true;
         dispose();
     }
 
-    void setError(@Nullable Error error) {
-        this.error = error;
+    /**
+     * @return 0 for unlimited
+     */
+    public long getTimeout() {
+        return timeout;
     }
 
-    public Error getError() {
-        return error;
+    public void setTimeout(long timeout) {
+        this.timeout = timeout;
     }
 
     public boolean isFinished() {

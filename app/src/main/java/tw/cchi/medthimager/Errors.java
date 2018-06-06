@@ -31,4 +31,13 @@ public final class Errors {
         }
     }
 
+    public static class TimeoutError extends AppError {
+        public TimeoutError() {
+            super("Timeout");
+        }
+
+        public TimeoutError(String message) {
+            super(message);
+        }
+    }
 }
