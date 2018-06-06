@@ -19,12 +19,12 @@ import okhttp3.RequestBody;
 import retrofit2.Response;
 import tw.cchi.medthimager.Errors;
 import tw.cchi.medthimager.MvpApplication;
-import tw.cchi.medthimager.model.api.User;
 import tw.cchi.medthimager.model.api.PatientCreateRequest;
 import tw.cchi.medthimager.model.api.PatientResponse;
 import tw.cchi.medthimager.model.api.SSPatient;
 import tw.cchi.medthimager.model.api.ThImage;
 import tw.cchi.medthimager.model.api.ThImageResponse;
+import tw.cchi.medthimager.model.api.User;
 import tw.cchi.medthimager.util.CommonUtils;
 
 public class ApiHelper {
@@ -76,12 +76,12 @@ public class ApiHelper {
                 .createPatient(new PatientCreateRequest(ssPatient, mergeWith, createNew));
 
         if (blocking) {
-            observable.blockingSubscribe(r -> handleUpSyncPatientResponse(r, listener));
+            observable.blockingSubscribe(r -> handleUpSyncPatientResponse(r, listener), listener::onError);
         } else {
             observable
                     .subscribeOn(Schedulers.io())
                     .observeOn(Schedulers.io())
-                    .subscribe(r -> handleUpSyncPatientResponse(r, listener));
+                    .subscribe(r -> handleUpSyncPatientResponse(r, listener), listener::onError);
         }
 
         return true;
@@ -105,12 +105,12 @@ public class ApiHelper {
                 application.getSession().getApiClient().uploadThImage(metadata, partMap);
 
         if (blocking) {
-            observable.blockingSubscribe(r -> handleUploadThImageResponse(r, listener));
+            observable.blockingSubscribe(r -> handleUploadThImageResponse(r, listener), listener::onError);
         } else {
             observable
                     .subscribeOn(Schedulers.io())
                     .observeOn(Schedulers.io())
-                    .subscribe(r -> handleUploadThImageResponse(r, listener));
+                    .subscribe(r -> handleUploadThImageResponse(r, listener), listener::onError);
         }
 
         return true;
