@@ -12,6 +12,7 @@ import tw.cchi.medthimager.di.ApplicationContext;
 import tw.cchi.medthimager.di.module.ApplicationModule;
 import tw.cchi.medthimager.data.fanalytics.FirebaseAnalyticsHelper;
 import tw.cchi.medthimager.data.pref.PreferencesHelper;
+import tw.cchi.medthimager.thermalproc.VisibleImageExtractor;
 
 @Singleton
 @Component(modules = ApplicationModule.class)
@@ -33,5 +34,7 @@ public interface ApplicationComponent {
     AppDatabase appDatabase();
 
     FirebaseAnalyticsHelper firebaseAnalyticsHelper();
+
+    VisibleImageExtractor visibleImageExtractor();
 
 }

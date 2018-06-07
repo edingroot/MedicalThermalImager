@@ -31,6 +31,16 @@ public final class Errors {
         }
     }
 
+    public static class FileSavingError extends AppError {
+        public FileSavingError() {
+            super("Error saving file");
+        }
+
+        public FileSavingError(String message) {
+            super(message);
+        }
+    }
+
     public static class TimeoutError extends AppError {
         public TimeoutError() {
             super("Timeout");

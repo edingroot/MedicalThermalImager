@@ -142,9 +142,11 @@ public abstract class BaseActivity extends AppCompatActivity
     @Override
     public void showToast(String message) {
         if (message != null) {
-            Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
+            mainLooperHandler.post(() -> Toast.makeText(this,
+                    message, Toast.LENGTH_SHORT).show());
         } else {
-            Toast.makeText(this, getString(R.string.error_occurred), Toast.LENGTH_SHORT).show();
+            mainLooperHandler.post(() -> Toast.makeText(this,
+                    getString(R.string.error_occurred), Toast.LENGTH_SHORT).show());
         }
     }
 
@@ -210,7 +212,7 @@ public abstract class BaseActivity extends AppCompatActivity
 
     @Override
     public void onLogout() {
-        mainLooperHandler.post(() -> showToast(R.string.please_login));
+        showToast(R.string.please_login);
 
         // Explicitly finish active activities
         // Login activity will be started by SessionManager

@@ -13,8 +13,9 @@ public class CaptureProcessInfo {
     private Patient patient;
     private String title;
     private String filepathPrefix;
-    private String flirFilepath;
     private String dumpFilepath;
+    private String flirFilepath;
+    private String visibleFilepath;
 
     /**
      * Generate filenames based on system time and other parameters.
@@ -32,6 +33,7 @@ public class CaptureProcessInfo {
 
         this.flirFilepath = filepathPrefix + Constants.POSTFIX_FLIR_IMAGE + ".jpg";
         this.dumpFilepath = filepathPrefix + Constants.POSTFIX_THERMAL_DUMP + ".dat";
+        this.visibleFilepath = filepathPrefix + Constants.POSTFIX_VISIBLE_IMAGE + ".png";
 
         this.title = RawThermalDump.generateTitleFromFilepath(dumpFilepath);
     }
@@ -48,11 +50,15 @@ public class CaptureProcessInfo {
         return filepathPrefix;
     }
 
+    public String getDumpFilepath() {
+        return dumpFilepath;
+    }
+
     public String getFlirFilepath() {
         return flirFilepath;
     }
 
-    public String getDumpFilepath() {
-        return dumpFilepath;
+    public String getVisibleFilepath() {
+        return visibleFilepath;
     }
 }

@@ -32,8 +32,8 @@ public class VisibleImageExtractor implements FrameProcessor.Delegate {
     private final AtomicInteger proceedTypeCount = new AtomicInteger(0);
     // private volatile Bitmap blendedMSXBitmap;
 
-    public VisibleImageExtractor(Context context) {
-        frameProcessor = new FrameProcessor(context, VisibleImageExtractor.this, IMAGE_TYPES);
+    public VisibleImageExtractor(Context applicationContext) {
+        frameProcessor = new FrameProcessor(applicationContext, VisibleImageExtractor.this, IMAGE_TYPES);
         // frameProcessor.setImagePalette(RenderedImage.Palette.Iron);
         frameProcessor.setEmissivity(0.98f); // human skin, water, frost
     }

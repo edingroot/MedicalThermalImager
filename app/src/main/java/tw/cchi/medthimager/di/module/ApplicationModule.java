@@ -12,12 +12,13 @@ import dagger.Provides;
 import tw.cchi.medthimager.Constants;
 import tw.cchi.medthimager.MvpApplication;
 import tw.cchi.medthimager.data.db.AppDatabase;
-import tw.cchi.medthimager.di.ApplicationContext;
-import tw.cchi.medthimager.di.PreferenceInfo;
-import tw.cchi.medthimager.data.network.ApiHelper;
 import tw.cchi.medthimager.data.fanalytics.FirebaseAnalyticsHelper;
+import tw.cchi.medthimager.data.network.ApiHelper;
 import tw.cchi.medthimager.data.pref.AppPreferencesHelper;
 import tw.cchi.medthimager.data.pref.PreferencesHelper;
+import tw.cchi.medthimager.di.ApplicationContext;
+import tw.cchi.medthimager.di.PreferenceInfo;
+import tw.cchi.medthimager.thermalproc.VisibleImageExtractor;
 
 @Module
 public class ApplicationModule {
@@ -73,6 +74,12 @@ public class ApplicationModule {
     @Singleton
     FirebaseAnalyticsHelper provideFirebaseAnalyticsHelper() {
         return new FirebaseAnalyticsHelper(mvpApplication, firebaseAnalytics);
+    }
+
+    @Provides
+    @Singleton
+    VisibleImageExtractor provideVisibleImageExtractor() {
+        return new VisibleImageExtractor(mvpApplication);
     }
 
 }

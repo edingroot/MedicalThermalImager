@@ -36,6 +36,7 @@ import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.schedulers.Schedulers;
 import tw.cchi.medthimager.Config;
+import tw.cchi.medthimager.Errors;
 import tw.cchi.medthimager.R;
 import tw.cchi.medthimager.data.db.model.CaptureRecord;
 import tw.cchi.medthimager.data.db.model.Patient;
@@ -46,10 +47,13 @@ import tw.cchi.medthimager.model.ContiShootParameters;
 import tw.cchi.medthimager.model.api.ThImage;
 import tw.cchi.medthimager.service.sync.task.SyncSingleThImageTask;
 import tw.cchi.medthimager.thermalproc.RawThermalDump;
+import tw.cchi.medthimager.thermalproc.VisibleImageExtractor;
+import tw.cchi.medthimager.thermalproc.VisibleImageMask;
 import tw.cchi.medthimager.ui.base.BasePresenter;
 import tw.cchi.medthimager.util.AppUtils;
 import tw.cchi.medthimager.util.CommonUtils;
 import tw.cchi.medthimager.util.FileUtils;
+import tw.cchi.medthimager.util.ImageUtils;
 import tw.cchi.medthimager.util.annotation.BgThreadCapable;
 import tw.cchi.medthimager.util.annotation.NewThread;
 
@@ -59,6 +63,7 @@ public class CameraPresenter<V extends CameraMvpView> extends BasePresenter<V>
     private final String TAG = Config.TAGPRE + getClass().getSimpleName();
 
     @Inject AppCompatActivity activity;
+    @Inject VisibleImageExtractor visibleImageExtractor;
     @Inject CSVExportHelper csvExportHelper;
 
     private volatile Device flirOneDevice;
@@ -546,44 +551,49 @@ public class CameraPresenter<V extends CameraMvpView> extends BasePresenter<V>
         Observable.zip(
             captureRawThermalDump(renderedImage, currCaptureProcessInfo.getDumpFilepath(), currCaptureProcessInfo.getTitle()),
             captureFLIRImage(renderedImage, currCaptureProcessInfo.getFlirFilepath()),
-            (dumpSuccess, captureSuccess) -> {
-                if (!dumpSuccess) {
+            (rawThermalDump, captureSuccess) -> {
+                if (!captureSuccess) {
                     getMvpView().showToast(R.string.dump_failed);
                 }
 
-                if (!captureSuccess) {
-                    getMvpView().showToast(R.string.error_occurred);
-                }
-
-                return dumpSuccess && captureSuccess;
+                return rawThermalDump;
             }
-        ).subscribeOn(AndroidSchedulers.mainThread())
+        ).subscribeOn(Schedulers.io())
             .observeOn(Schedulers.io())
+            .flatMap(rawThermalDump -> {
+                // Wait until flir image saved
+                FileUtils.waitUntilExists(currCaptureProcessInfo.getFlirFilepath());
+                CommonUtils.sleep(100);
+
+                // Extract visible light image
+                return extractVisibleImage(rawThermalDump, currCaptureProcessInfo.getVisibleFilepath());
+            })
             .subscribe(
-                success -> {
-                    if (success) {
-                        // Wait until flir image saved
-                        FileUtils.waitUntilExists(currCaptureProcessInfo.getFlirFilepath());
-                        CommonUtils.sleep(100);
+                extractVisibleSuccess -> {
+                    // Create record in local db
+                    String contiShootUuid = currContiShooting ? currContiShootParams.groupUuid : null;
+                    CaptureRecord captureRecord = new CaptureRecord(
+                            UUID.randomUUID().toString(),
+                            currCaptureProcessInfo.getPatient().getCuid(),
+                            currCaptureProcessInfo.getTitle(),
+                            currCaptureProcessInfo.getFilepathPrefix(), contiShootUuid);
 
-                        String contiShootUuid = currContiShooting ? currContiShootParams.groupUuid : null;
-                        CaptureRecord captureRecord = new CaptureRecord(
-                                UUID.randomUUID().toString(),
-                                currCaptureProcessInfo.getPatient().getCuid(),
-                                currCaptureProcessInfo.getTitle(),
-                                currCaptureProcessInfo.getFilepathPrefix(), contiShootUuid);
+                    dataManager.db.captureRecordDAO().insertAll(captureRecord);
 
-                        dataManager.db.captureRecordDAO().insertAll(captureRecord);
-                        uploadCapturedFiles(currCaptureProcessInfo.getPatient(), captureRecord, currCaptureProcessInfo);
-                    }
+                    // Upload to server if available
+                    uploadCapturedFiles(currCaptureProcessInfo.getPatient(), captureRecord,
+                                        currCaptureProcessInfo, extractVisibleSuccess);
                 },
-                Throwable::printStackTrace
+                e -> {
+                    if (isViewAttached()) {
+                        getMvpView().showToast(R.string.dump_failed);
+                    }
+                }
             );
     }
 
-    @NewThread
-    private Observable<Boolean> captureRawThermalDump(RenderedImage renderedImage, String filename, String title) {
-        return Observable.<Boolean>create(emitter -> {
+    private Observable<RawThermalDump> captureRawThermalDump(RenderedImage renderedImage, String filename, String title) {
+        return Observable.<RawThermalDump>create(emitter -> {
             RawThermalDump rawThermalDump = new RawThermalDump(renderedImage);
             if (thermalSpotsHelper != null) {
                 // Set preselected spots if exists
@@ -601,16 +611,15 @@ public class CameraPresenter<V extends CameraMvpView> extends BasePresenter<V>
 
             if (rawThermalDump.saveToFile(filename)) {
                 scanMediaStorage(filename);
-                emitter.onNext(true);
+                emitter.onNext(rawThermalDump);
             } else {
-                emitter.onNext(false);
+                emitter.onError(new Errors.FileSavingError());
             }
             emitter.onComplete();
         }).subscribeOn(Schedulers.computation());
     }
 
-    @NewThread
-    private Observable<Boolean> captureFLIRImage(final RenderedImage renderedImage, final String filename) {
+    private Observable<Boolean> captureFLIRImage(RenderedImage renderedImage, String filename) {
         // Log event
         dataManager.analytics.logCameraCapture(contiShooting, contiShootParams);
 
@@ -626,6 +635,28 @@ public class CameraPresenter<V extends CameraMvpView> extends BasePresenter<V>
                 emitter.onNext(false);
             }
             emitter.onComplete();
+        }).subscribeOn(Schedulers.io());
+    }
+
+    private Observable<Boolean> extractVisibleImage(RawThermalDump rawThermalDump, String filename) {
+        return Observable.<Boolean>create(emitter -> {
+            visibleImageExtractor.extractImage(rawThermalDump.getFlirImagePath(), visibleImage -> {
+                if (visibleImage != null) {
+                    rawThermalDump.attachVisibleImageMask(visibleImage, 0, 0);
+                    VisibleImageMask visibleImageMask = rawThermalDump.getVisibleImageMask();
+                    if (visibleImageMask != null &&
+                            ImageUtils.saveBitmap(visibleImageMask.getAlignedVisibleBitmap(), rawThermalDump.getVisibleImagePath())) {
+                        emitter.onNext(true);
+                        emitter.onComplete();
+                        return;
+                    }
+                } else {
+                    Log.e(TAG, "Failed to extract visible light image.");
+                }
+                emitter.onNext(false);
+                emitter.onComplete();
+
+            });
         }).subscribeOn(Schedulers.computation());
     }
 
@@ -639,14 +670,16 @@ public class CameraPresenter<V extends CameraMvpView> extends BasePresenter<V>
     }
 
     @NewThread
-    private void uploadCapturedFiles(Patient patient, CaptureRecord captureRecord, CaptureProcessInfo captureProcessInfo) {
+    private void uploadCapturedFiles(Patient patient, CaptureRecord captureRecord,
+                                     CaptureProcessInfo captureProcessInfo, boolean uploadVisibleImage) {
         application.connectSyncService().subscribe(syncService -> {
             ThImage thImage = new ThImage(captureRecord.getUuid(), patient,
                     captureRecord.getContishootGroup(), captureRecord.getTitle(), captureRecord.getCreatedAt());
 
             syncService.scheduleNewTask(new SyncSingleThImageTask(thImage,
                     new File(captureProcessInfo.getDumpFilepath()),
-                    new File(captureProcessInfo.getFlirFilepath()), null));
+                    new File(captureProcessInfo.getFlirFilepath()),
+                    uploadVisibleImage ? new File(captureProcessInfo.getVisibleFilepath()) : null));
         });
     }
 

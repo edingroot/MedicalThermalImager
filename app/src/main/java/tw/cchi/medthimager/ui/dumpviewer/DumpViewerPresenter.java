@@ -33,6 +33,7 @@ import tw.cchi.medthimager.model.ViewerTabResources;
 import tw.cchi.medthimager.thermalproc.RawThermalDump;
 import tw.cchi.medthimager.thermalproc.ThermalDumpProcessor;
 import tw.cchi.medthimager.thermalproc.VisibleImageExtractor;
+import tw.cchi.medthimager.thermalproc.VisibleImageMask;
 import tw.cchi.medthimager.ui.base.BasePresenter;
 import tw.cchi.medthimager.util.AppUtils;
 import tw.cchi.medthimager.util.CommonUtils;
@@ -48,10 +49,10 @@ public class DumpViewerPresenter<V extends DumpViewerMvpView> extends BasePresen
     private final CompositeDisposable disposables;
 
     // Data models & helpers
+    @Inject VisibleImageExtractor visibleImageExtractor;
     @Inject volatile ViewerTabResources tabResources;
     private volatile ChartParameter<Float> thermalChartParameter;
     private ArrayList<org.opencv.core.Point> copiedSpotMarkers;
-    private static VisibleImageExtractor visibleImageExtractor;
 
     // States
     private int contrastRatio = 1;
@@ -137,7 +138,7 @@ public class DumpViewerPresenter<V extends DumpViewerMvpView> extends BasePresen
                 e -> { // onError
                     e.printStackTrace();
                     getMvpView().hideLoading();
-                    activity.runOnUiThread(() -> getMvpView().showSnackBar(R.string.error_occurred));
+                    getMvpView().showSnackBar(R.string.error_occurred);
                 },
                 () -> { // onComplete
                     if (isViewAttached()) {
@@ -323,11 +324,6 @@ public class DumpViewerPresenter<V extends DumpViewerMvpView> extends BasePresen
         if (tabResources.getCount() == 0)
             return;
 
-        if (tabResources.getRawThermalDump().getVisibleImageMask() == null) {
-            getMvpView().showToast(R.string.error_occurred);
-            return;
-        }
-
         final boolean saveAllMode = savingAllVisibleImages;
         final int currentIndex = tabResources.getCurrentIndex();
         final int tabCount = tabResources.getCount();
@@ -336,10 +332,9 @@ public class DumpViewerPresenter<V extends DumpViewerMvpView> extends BasePresen
         String exportPath = dumpPath.substring(0, dumpPath.lastIndexOf("_")) + Constants.POSTFIX_VISIBLE_IMAGE + ".png";
 
         Observable.create(emitter -> {
-            Bitmap alignedVisibleImage = tabResources.getRawThermalDump()
-                .getVisibleImageMask().getAlignedVisibleBitmap();
-
-            if (alignedVisibleImage == null) {
+            VisibleImageMask visibleImageMask = tabResources.getRawThermalDump().getVisibleImageMask();
+            Bitmap alignedVisibleImage;
+            if (visibleImageMask == null || (alignedVisibleImage = visibleImageMask.getAlignedVisibleBitmap()) == null) {
                 emitter.onError(new Error());
                 return;
             }
@@ -692,7 +687,7 @@ public class DumpViewerPresenter<V extends DumpViewerMvpView> extends BasePresen
 
             visibleImageExtractor.extractImage(rawThermalDump.getFlirImagePath(), visibleImage -> {
                 if (visibleImage == null) {
-                    getMvpView().showSnackBar("Failed to read visible image. Does the jpg file with same name exist?");
+                    getMvpView().showSnackBar("Failed to extract visible light image.");
                     emitter.onNext(false);
                 } else {
                     rawThermalDump.attachVisibleImageMask(visibleImage, 0, 0);
