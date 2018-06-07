@@ -366,7 +366,9 @@ public class CameraPresenter<V extends CameraMvpView> extends BasePresenter<V>
                 thermalSpotsHelper = null;
             }
 
-            getMvpView().showSnackBar(R.string.flirone_disconnected);
+            if (!getMvpView().isActivityStopping())
+                getMvpView().showSnackBar(R.string.flirone_disconnected);
+
             activity.runOnUiThread(() -> getMvpView().setDeviceDisconnected());
         }
     }

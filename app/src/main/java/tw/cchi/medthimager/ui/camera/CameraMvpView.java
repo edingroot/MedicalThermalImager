@@ -15,6 +15,8 @@ public interface CameraMvpView extends MvpView {
 
     ThermalSpotsHelper createThermalSpotsHelper(RenderedImage renderedImage);
 
+    boolean isActivityStopping();
+
     void setPatientStatusText(String patientName);
 
     void setDeviceConnected();

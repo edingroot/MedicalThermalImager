@@ -62,6 +62,7 @@ public class CameraActivity extends BaseActivity implements
 
     private ScaleGestureDetector mScaleDetector;
     private ColorFilter originalChargingIndicatorColor;
+    private volatile boolean activityStopping = false;
     // private int thermalViewOnTouchMoves = 0;
 
     @BindView(R.id.topView) RelativeLayout topView;
@@ -121,6 +122,7 @@ public class CameraActivity extends BaseActivity implements
     @Override
     protected void onStart() {
         super.onStart();
+        activityStopping = false;
 
         if (Device.getSupportedDeviceClasses(this).contains(FlirUsbDevice.class)) {
             pleaseConnect.setVisibility(View.VISIBLE);
@@ -149,6 +151,7 @@ public class CameraActivity extends BaseActivity implements
 
     @Override
     public void onStop() {
+        activityStopping = true;
         presenter.unregisterFlir();
         super.onStop();
     }
@@ -393,6 +396,11 @@ public class CameraActivity extends BaseActivity implements
             thermalImageView.getTop() + topView.getTop()
         );
         return thermalSpotsHelper;
+    }
+
+    @Override
+    public boolean isActivityStopping() {
+        return activityStopping;
     }
 
     @Override
