@@ -3,15 +3,13 @@ package tw.cchi.medthimager.service.sync.task;
 import android.support.annotation.Nullable;
 
 import java.io.File;
-import java.util.List;
 
-import io.reactivex.Observable;
 import tw.cchi.medthimager.R;
 import tw.cchi.medthimager.data.db.model.CaptureRecord;
 import tw.cchi.medthimager.data.db.model.Patient;
 import tw.cchi.medthimager.data.network.ApiHelper;
-import tw.cchi.medthimager.model.api.SSPatient;
 import tw.cchi.medthimager.model.api.ThImage;
+import tw.cchi.medthimager.service.sync.helper.SyncPatientHelper;
 
 public class SyncSingleThImageTask extends SyncTask {
     private static final long DEFAULT_TIMEOUT = 30 * 1000;
@@ -35,8 +33,8 @@ public class SyncSingleThImageTask extends SyncTask {
             return;
 
         if (metadata.getPatient_uuid() == null && !metadata.getPatient_cuid().equals(Patient.DEFAULT_PATIENT_CUID)) {
-            syncPatient(metadata.getPatient_cuid()).blockingSubscribe(success -> {
-                if (success) {
+            new SyncPatientHelper(dataManager, apiHelper).syncPatient(metadata.getPatient_cuid()).blockingSubscribe(patientUuid -> {
+                if (!patientUuid.isEmpty()) {
                     performUpload();
                 } else {
                     showToast(R.string.upload_conflict_syncing_patient);
@@ -46,40 +44,6 @@ public class SyncSingleThImageTask extends SyncTask {
         } else {
             performUpload();
         }
-    }
-
-    private Observable<Boolean> syncPatient(String patientCuid) {
-        return Observable.create(emitter -> {
-            // Patient not yet synced
-            Patient patient = dataManager.db.patientDAO().get(patientCuid);
-            apiHelper.upSyncPatient(new SSPatient(patient), null, false,
-                true, new ApiHelper.OnPatientSyncListener() {
-                    @Override
-                    public void onSuccess(SSPatient ssPatient) {
-                        metadata.setPatient_uuid(ssPatient.getUuid());
-                        emitter.onNext(true);
-                        emitter.onComplete();
-                    }
-
-                    @Override
-                    public void onConflictForceMerge(List<SSPatient> conflictPatients, String message) {
-                        emitter.onNext(false);
-                        emitter.onComplete();
-                    }
-
-                    @Override
-                    public void onConflictCheck(List<SSPatient> conflictPatients, String message) {
-                        emitter.onNext(false);
-                        emitter.onComplete();
-                    }
-
-                    @Override
-                    public void onError(Throwable error) {
-                        emitter.onNext(false);
-                        emitter.onComplete();
-                    }
-                });
-        });
     }
 
     private void performUpload() {

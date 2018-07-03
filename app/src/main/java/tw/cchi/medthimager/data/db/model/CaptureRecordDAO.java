@@ -21,7 +21,10 @@ public abstract class CaptureRecordDAO {
     public abstract CaptureRecord get(String uuid);
 
     @Query("select * from capture_records where uuid in (:uuids)")
-    public abstract List<CaptureRecord> loadAllByUUIDs(String[] uuids);
+    public abstract List<CaptureRecord> getByUUIDs(String[] uuids);
+
+    @Query("select * from capture_records where synced is 0")
+    public abstract List<CaptureRecord> getSyncList();
 
     @Query("select * from capture_records where patient_cuid = :patientCuid order by created_at desc")
     public abstract List<CaptureRecord> findByPatientCuid(String patientCuid);
