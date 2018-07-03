@@ -80,10 +80,11 @@ public class RawThermalDump implements Disposable {
     /**
      * [Android]
      */
-    public RawThermalDump(RenderedImage renderedImage) {
+    public RawThermalDump(RenderedImage renderedImage, String title) {
         this.width = renderedImage.width();
         this.height = renderedImage.height();
         this.thermalValues = renderedImage.thermalPixelValues();
+        this.title = title;
     }
 
     public RawThermalDump(int formatVersion, int width, int height, int[] thermalValues) {
@@ -179,8 +180,6 @@ public class RawThermalDump implements Disposable {
     }
 
     public synchronized boolean saveToFile(String filepath) {
-        setFilepath(filepath);
-
         byte[] bytes = new byte[FileFormat.getByteLength(formatVersion, width, height)];
         int thermalPixelOffset = FileFormat.getThermalPixelOffset(formatVersion);
         int M = width * height * 2 + thermalPixelOffset - 1;
@@ -244,6 +243,7 @@ public class RawThermalDump implements Disposable {
             return false;
         }
 
+        setFilepath(filepath);
         return true;
     }
 
@@ -325,7 +325,7 @@ public class RawThermalDump implements Disposable {
 
     private void setFilepath(String filepath) {
         this.filepath = filepath;
-        this.title = generateTitleFromFilepath(filepath);
+        // this.title = generateTitleFromFilepath(filepath);
     }
 
     public String getTitle() {

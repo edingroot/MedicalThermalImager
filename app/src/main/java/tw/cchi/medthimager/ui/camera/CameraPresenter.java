@@ -568,7 +568,7 @@ public class CameraPresenter<V extends CameraMvpView> extends BasePresenter<V>
                 CommonUtils.sleep(100);
 
                 // Extract visible light image
-                return extractVisibleImage(rawThermalDump, currCaptureProcessInfo.getVisibleFilepath());
+                return extractVisibleImage(rawThermalDump);
             })
             .subscribe(
                 extractVisibleSuccess -> {
@@ -596,7 +596,8 @@ public class CameraPresenter<V extends CameraMvpView> extends BasePresenter<V>
 
     private Observable<RawThermalDump> captureRawThermalDump(RenderedImage renderedImage, String filename, String title) {
         return Observable.<RawThermalDump>create(emitter -> {
-            RawThermalDump rawThermalDump = new RawThermalDump(renderedImage);
+            RawThermalDump rawThermalDump = new RawThermalDump(renderedImage, title);
+
             if (thermalSpotsHelper != null) {
                 // Set preselected spots if exists
                 ArrayList<Point> preSelectedSpots = thermalSpotsHelper.getPreSelectedSpots();
@@ -640,7 +641,7 @@ public class CameraPresenter<V extends CameraMvpView> extends BasePresenter<V>
         }).subscribeOn(Schedulers.io());
     }
 
-    private Observable<Boolean> extractVisibleImage(RawThermalDump rawThermalDump, String filename) {
+    private Observable<Boolean> extractVisibleImage(RawThermalDump rawThermalDump) {
         return Observable.<Boolean>create(emitter -> {
             visibleImageExtractor.extractImage(rawThermalDump.getFlirImagePath(), visibleImage -> {
                 if (visibleImage != null) {
@@ -655,9 +656,9 @@ public class CameraPresenter<V extends CameraMvpView> extends BasePresenter<V>
                 } else {
                     Log.e(TAG, "Failed to extract visible light image.");
                 }
+
                 emitter.onNext(false);
                 emitter.onComplete();
-
             });
         }).subscribeOn(Schedulers.computation());
     }
