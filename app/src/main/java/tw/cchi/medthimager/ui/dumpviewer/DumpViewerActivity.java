@@ -53,7 +53,7 @@ public class DumpViewerActivity extends BaseActivity
     implements DumpViewerMvpView, SpotsControlView.OnControlSpotsListener {
     private final String TAG = Config.TAGPRE + getClass().getSimpleName();
 
-    private static final int MAX_OPEN_FILES = 24;
+    private static final int MAX_OPEN_FILES = 16;
 
     @Inject DumpViewerMvpPresenter<DumpViewerMvpView> presenter;
 

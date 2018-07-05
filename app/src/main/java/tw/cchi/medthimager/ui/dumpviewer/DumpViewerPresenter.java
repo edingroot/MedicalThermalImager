@@ -137,19 +137,23 @@ public class DumpViewerPresenter<V extends DumpViewerMvpView> extends BasePresen
                 this::addThermalDump, // onNext
                 e -> { // onError
                     e.printStackTrace();
-                    getMvpView().hideLoading();
-                    getMvpView().showSnackBar(R.string.error_occurred);
+                    if (isViewAttached()) {
+                        getMvpView().hideLoading();
+                        getMvpView().showSnackBar(R.string.error_occurred);
+                    }
                 },
                 () -> { // onComplete
                     if (isViewAttached()) {
-                        updateThermalChartAxis();
+                        try { // Avoid crash if activity stopped while calling updateThermalChartAxis()
+                            updateThermalChartAxis();
 
-                        Log.d(TAG, "updateDumpsAfterPick@complete");
+                            Log.d(TAG, "updateDumpsAfterPick@complete");
 
-                        // switchDumpTab() called by addThermalDump() may not yet finished
-                        if (tabResources.hasLoaded()) {
-                            getMvpView().hideLoading();
-                        }
+                            // switchDumpTab() called by addThermalDump() may not yet finished
+                            if (tabResources.hasLoaded()) {
+                                getMvpView().hideLoading();
+                            }
+                        } catch (NullPointerException ignored) {}
                     }
                 }
             );
