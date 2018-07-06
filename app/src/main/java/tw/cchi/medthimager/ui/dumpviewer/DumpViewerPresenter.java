@@ -49,7 +49,6 @@ public class DumpViewerPresenter<V extends DumpViewerMvpView> extends BasePresen
     private final String TAG = Config.TAGPRE + getClass().getSimpleName();
 
     @Inject AppCompatActivity activity;
-    private final CompositeDisposable disposables;
 
     // Data models & helpers
     @Inject VisibleImageExtractor visibleImageExtractor;
@@ -73,7 +72,6 @@ public class DumpViewerPresenter<V extends DumpViewerMvpView> extends BasePresen
     @Inject
     public DumpViewerPresenter(CompositeDisposable compositeDisposable) {
         super(compositeDisposable);
-        this.disposables = compositeDisposable;
     }
 
     @Override
@@ -821,11 +819,9 @@ public class DumpViewerPresenter<V extends DumpViewerMvpView> extends BasePresen
     @Override
     public void onDetach() {
         super.onDetach();
-
-        disposables.dispose();
         tabResources = null;
         thermalChartParameter = null;
-
+        
         upSyncThermalImages();
     }
 }

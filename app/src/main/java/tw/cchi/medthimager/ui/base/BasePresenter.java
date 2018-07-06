@@ -16,9 +16,9 @@ import tw.cchi.medthimager.data.DataManager;
  * can be accessed from the children classes by calling getMvpView().
  */
 public class BasePresenter<V extends MvpView> implements MvpPresenter<V> {
-    private final CompositeDisposable mCompositeDisposable;
     private V mMvpView;
 
+    protected final CompositeDisposable disposables;
     protected Handler mainLooperHandler;
 
     @Inject protected MvpApplication application;
@@ -26,7 +26,7 @@ public class BasePresenter<V extends MvpView> implements MvpPresenter<V> {
 
     @Inject
     public BasePresenter(CompositeDisposable compositeDisposable) {
-        this.mCompositeDisposable = compositeDisposable;
+        this.disposables = compositeDisposable;
         this.mainLooperHandler = new Handler(Looper.getMainLooper());
     }
 
@@ -37,7 +37,7 @@ public class BasePresenter<V extends MvpView> implements MvpPresenter<V> {
 
     @Override
     public void onDetach() {
-        mCompositeDisposable.dispose();
+        disposables.dispose();
         mMvpView = null;
     }
 
@@ -55,7 +55,7 @@ public class BasePresenter<V extends MvpView> implements MvpPresenter<V> {
     }
 
     public CompositeDisposable getCompositeDisposable() {
-        return mCompositeDisposable;
+        return disposables;
     }
 
     public static class MvpViewNotAttachedException extends RuntimeException {
