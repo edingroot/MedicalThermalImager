@@ -1,5 +1,7 @@
 package tw.cchi.medthimager.helper;
 
+import android.util.Log;
+
 import org.opencv.core.Point;
 
 import java.io.BufferedWriter;
@@ -8,22 +10,23 @@ import java.io.FileWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.UUID;
 
 import javax.inject.Inject;
 
 import io.reactivex.Observable;
 import io.reactivex.schedulers.Schedulers;
+import tw.cchi.medthimager.Config;
 import tw.cchi.medthimager.Constants;
 import tw.cchi.medthimager.data.db.AppDatabase;
 import tw.cchi.medthimager.data.db.model.CaptureRecord;
 import tw.cchi.medthimager.data.db.model.Patient;
 import tw.cchi.medthimager.thermalproc.RawThermalDump;
 import tw.cchi.medthimager.util.AppUtils;
-import tw.cchi.medthimager.util.FileUtils;
 import tw.cchi.medthimager.util.annotation.NewThread;
 
 public class CSVExportHelper {
+    private final String TAG = Config.TAGPRE + getClass().getSimpleName();
+
     private AppDatabase database;
 
     @Inject
@@ -37,6 +40,8 @@ public class CSVExportHelper {
             StringBuilder outputBuilder = new StringBuilder();
             int maxSpotCount = 0;
 
+            // TODO: call ThImagesHelper.updateRecordsFromDumpFiles before exporting?
+
             Map<String, Patient> patientMap = getPatientMap();
             for (CaptureRecord captureRecord : database.captureRecordDAO().getAll()) {
                 StringBuilder rowBuilder = new StringBuilder();
@@ -44,13 +49,13 @@ public class CSVExportHelper {
                 Patient patient = patientMap.get(captureRecord.getPatientCuid());
                 if (patient == null) {
                     rowBuilder.append(String.format("%s,%s,%s,%s,%s",
-                        "-", "-", captureRecord.getFilenamePrefix(),
-                        captureRecord.getCreatedAt(), captureRecord.getTitle()
+                            "-", "-", captureRecord.getFilenamePrefix(),
+                            captureRecord.getCreatedAt(), captureRecord.getTitle()
                     ));
                 } else {
                     rowBuilder.append(String.format("%s,%s,%s,%s,%s",
-                        patient.getCuid(), patient.getName(), captureRecord.getFilenamePrefix(),
-                        captureRecord.getCreatedAt(), captureRecord.getTitle()
+                            patient.getCuid(), patient.getName(), captureRecord.getFilenamePrefix(),
+                            captureRecord.getCreatedAt(), captureRecord.getTitle()
                     ));
                 }
 
@@ -62,7 +67,7 @@ public class CSVExportHelper {
                     for (double temp : spotValues)
                         rowBuilder.append(String.format(",%.2f", temp));
                 } else {
-                    System.out.println("Dump not found, skip reading spotValues of: " + captureRecord.getFilenamePrefix());
+                    Log.i(TAG, "Dump not found, skip reading spotValues of: " + captureRecord.getFilenamePrefix());
                     // TODO: remove this record from database?
                     continue;
                 }
@@ -104,41 +109,6 @@ public class CSVExportHelper {
         }).subscribeOn(Schedulers.computation());
     }
 
-    public Observable updateRecordsFromDumpFiles(String rootDir) {
-        return Observable.create(methodEmitter -> {
-
-            Observable.<File>create(emitter -> {
-                for (File file : FileUtils.getAllFiles(rootDir)) {
-                    if (FileUtils.getExtension(file.getName()).equals("dat"))
-                        emitter.onNext(file);
-                }
-            }).subscribeOn(Schedulers.io())
-                .observeOn(Schedulers.computation())
-                .subscribe(
-                    file -> {
-                        RawThermalDump rawThermalDump = RawThermalDump.readFromDumpFile(file.getAbsolutePath());
-                        if (rawThermalDump == null) {
-                            methodEmitter.onError(new Error("Error reading dump file: " + file.getAbsolutePath()));
-                            return;
-                        }
-
-                        CaptureRecord captureRecord = new CaptureRecord(
-                                UUID.randomUUID().toString(), rawThermalDump.getPatientCuid(),
-                                rawThermalDump.getTitle(), FileUtils.removeExtension(file.getName()), null);
-
-                        database.captureRecordDAO()
-                            .insertAndAutoCreatePatient(database.patientDAO(), captureRecord);
-                    },
-                    e -> {
-                        e.printStackTrace();
-                        methodEmitter.onError(e);
-                    },
-                    methodEmitter::onComplete
-                );
-
-        });
-    }
-
     private Map<String, Patient> getPatientMap() {
         Map<String, Patient> patientMap = new HashMap<>();
         for (Patient patient : database.patientDAO().getAll()) {
@@ -157,10 +127,8 @@ public class CSVExportHelper {
         ArrayList<Double> spotValues = new ArrayList<>();
         ArrayList<Point> spotMarkers = rawThermalDump.getSpotMarkers();
         if (spotMarkers != null) {
-            for (Point point : spotMarkers) {
-                System.out.printf("CSV Export (%.0f, %.0f) = %.2f\n", point.x, point.y, rawThermalDump.getTemperature9Average((int) point.x, (int) point.y));
+            for (Point point : spotMarkers)
                 spotValues.add(rawThermalDump.getTemperature9Average((int) point.x, (int) point.y));
-            }
         }
 
         return spotValues;

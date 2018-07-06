@@ -3,21 +3,41 @@ package tw.cchi.medthimager.service.sync.task;
 import java.io.File;
 import java.util.List;
 
+import javax.inject.Inject;
+
+import io.reactivex.Observable;
 import tw.cchi.medthimager.Constants;
+import tw.cchi.medthimager.MvpApplication;
 import tw.cchi.medthimager.data.db.model.CaptureRecord;
 import tw.cchi.medthimager.data.db.model.Patient;
 import tw.cchi.medthimager.data.network.ApiHelper;
+import tw.cchi.medthimager.di.component.DaggerServiceComponent;
+import tw.cchi.medthimager.di.component.ServiceComponent;
+import tw.cchi.medthimager.helper.ThImagesHelper;
 import tw.cchi.medthimager.model.api.ThImage;
 import tw.cchi.medthimager.service.sync.helper.SyncPatientHelper;
+import tw.cchi.medthimager.thermalproc.RawThermalDump;
+import tw.cchi.medthimager.util.AppUtils;
 import tw.cchi.medthimager.util.CommonUtils;
 
 public class UpSyncThImagesTask extends SyncTask {
     private static final long DEFAULT_TIMEOUT = 120 * 1000;
     private boolean doneBroadcastSent = false;
 
+    @Inject ThImagesHelper thImagesHelper;
+
     public UpSyncThImagesTask() {
         super();
         this.timeout = DEFAULT_TIMEOUT;
+    }
+
+    @Override
+    void inject() {
+        super.inject();
+        ServiceComponent component = DaggerServiceComponent.builder()
+                .applicationComponent(application.getComponent())
+                .build();
+        component.inject(this);
     }
 
     @Override
@@ -34,31 +54,45 @@ public class UpSyncThImagesTask extends SyncTask {
                     record.getTitle(), record.getCreatedAt());
 
             // Check if files exist, if not, skip upload and delete record
-            File dumpFile = new File(record.getFilenamePrefix() + Constants.POSTFIX_THERMAL_DUMP + ".dat");
-            File flirFile = new File(record.getFilenamePrefix() + Constants.POSTFIX_FLIR_IMAGE + ".jpg");
-            File visibleFile = new File(record.getFilenamePrefix() + Constants.POSTFIX_VISIBLE_IMAGE + ".png");
-            if (!dumpFile.exists() || !flirFile.exists() || !visibleFile.exists()) {
+            String filepathPrefix = String.format("%s/%s", AppUtils.getExportsDir(), record.getFilenamePrefix());
+            File dumpFile = new File(filepathPrefix + Constants.POSTFIX_THERMAL_DUMP + ".dat");
+            File flirFile = new File(filepathPrefix + Constants.POSTFIX_FLIR_IMAGE + ".jpg");
+            File visibleFile = new File(filepathPrefix + Constants.POSTFIX_VISIBLE_IMAGE + ".png");
+            if (!dumpFile.exists() || !flirFile.exists()) {
                 dataManager.db.captureRecordDAO().delete(record);
                 continue;
             }
 
-            // Sync patient if needed
-            if (metadata.getPatient_uuid() == null && !metadata.getPatient_cuid().equals(Patient.DEFAULT_PATIENT_CUID)) {
-                new SyncPatientHelper(dataManager, apiHelper).syncPatient(metadata.getPatient_cuid()).blockingSubscribe(patientUuid -> {
-                    if (!patientUuid.isEmpty()) {
-                        performUpload(metadata, dumpFile, flirFile, visibleFile);
+            Observable.<Boolean>create(emitter -> {
+                if (!visibleFile.exists()) {
+                    thImagesHelper.extractVisibleImage(RawThermalDump.readFromDumpFile(dumpFile.getAbsolutePath()))
+                        .blockingSubscribe(emitter::onNext);
+                } else {
+                    emitter.onNext(true);
+                }
+                emitter.onComplete();
+            }).blockingSubscribe(success -> {
+                if (success) {
+                    // Sync patient if needed
+                    if (metadata.getPatient_uuid() == null && !metadata.getPatient_cuid().equals(Patient.DEFAULT_PATIENT_CUID)) {
+                        new SyncPatientHelper(dataManager, apiHelper).syncPatient(metadata.getPatient_cuid()).blockingSubscribe(patientUuid -> {
+                            if (!patientUuid.isEmpty()) {
+                                performUpload(metadata, dumpFile, flirFile, visibleFile);
+                            }
+                            // Ignore error
+                            /* else {
+                                showToast(R.string.upload_conflict_syncing_patient);
+                                throw new Error(getString(R.string.upload_conflict_syncing_patient));
+                            } */
+                        });
                     } else {
-                        // Ignore error
-                        // showToast(R.string.upload_conflict_syncing_patient);
-                        // throw new Error(getString(R.string.upload_conflict_syncing_patient));
+                        performUpload(metadata, dumpFile, flirFile, visibleFile);
                     }
-                });
-            } else {
-                performUpload(metadata, dumpFile, flirFile, visibleFile);
-            }
-            
-            // Short sleep between each upload
-            CommonUtils.sleep(300);
+
+                    // Short sleep between each upload
+                    CommonUtils.sleep(300);
+                }
+            });
         }
 
         sendSyncDone();

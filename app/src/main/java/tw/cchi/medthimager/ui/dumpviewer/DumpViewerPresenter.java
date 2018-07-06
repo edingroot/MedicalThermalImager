@@ -27,9 +27,12 @@ import io.reactivex.schedulers.Schedulers;
 import tw.cchi.medthimager.Config;
 import tw.cchi.medthimager.Constants;
 import tw.cchi.medthimager.R;
+import tw.cchi.medthimager.data.db.model.CaptureRecord;
+import tw.cchi.medthimager.helper.ThImagesHelper;
 import tw.cchi.medthimager.helper.ThermalSpotsHelper;
 import tw.cchi.medthimager.model.ChartParameter;
 import tw.cchi.medthimager.model.ViewerTabResources;
+import tw.cchi.medthimager.service.sync.task.UpSyncThImagesTask;
 import tw.cchi.medthimager.thermalproc.RawThermalDump;
 import tw.cchi.medthimager.thermalproc.ThermalDumpProcessor;
 import tw.cchi.medthimager.thermalproc.VisibleImageExtractor;
@@ -50,6 +53,7 @@ public class DumpViewerPresenter<V extends DumpViewerMvpView> extends BasePresen
 
     // Data models & helpers
     @Inject VisibleImageExtractor visibleImageExtractor;
+    @Inject ThImagesHelper thImagesHelper;
     @Inject volatile ViewerTabResources tabResources;
     private volatile ChartParameter<Float> thermalChartParameter;
     private ArrayList<org.opencv.core.Point> copiedSpotMarkers;
@@ -223,10 +227,8 @@ public class DumpViewerPresenter<V extends DumpViewerMvpView> extends BasePresen
             },
             () -> {
                 tabResources.setHasLoaded(true);
-
-                if (isViewAttached()) {
+                if (isViewAttached())
                     getMvpView().hideLoading();
-                }
 
                 Log.d(TAG, "switchDumpTab(" + position + ")@unlocked");
 
@@ -271,6 +273,8 @@ public class DumpViewerPresenter<V extends DumpViewerMvpView> extends BasePresen
             if (showingVisibleImage) toggleVisibleImage(false);
             if (showingChart) toggleHorizonChart(false);
         }
+
+        upSyncThermalImages();
 
         return newIndex;
     }
@@ -380,6 +384,7 @@ public class DumpViewerPresenter<V extends DumpViewerMvpView> extends BasePresen
             rawThermalDump.setVisibleOffsetX(dumpPixelOffsetX);
             rawThermalDump.setVisibleOffsetY(dumpPixelOffsetY);
             rawThermalDump.save();
+            setThImageNotSynced(rawThermalDump);
 
             dataManager.pref.setDefaultVisibleOffset(
                     new android.graphics.Point(dumpPixelOffsetX, dumpPixelOffsetY));
@@ -467,6 +472,7 @@ public class DumpViewerPresenter<V extends DumpViewerMvpView> extends BasePresen
             RawThermalDump rawThermalDump = tabResources.getRawThermalDump();
             rawThermalDump.setSpotMarkers(CommonUtils.cloneArrayList(copiedSpotMarkers));
             rawThermalDump.save();
+            setThImageNotSynced(rawThermalDump);
 
             tabResources.setThermalSpotsHelper(
                 getMvpView().createThermalSpotsHelper(rawThermalDump)
@@ -585,34 +591,63 @@ public class DumpViewerPresenter<V extends DumpViewerMvpView> extends BasePresen
         return copiedSpotMarkers != null;
     }
 
+    /**
+     * @param rawThermalDump rawThermalDump.captureRecordUuid should be set before calling
+     */
+    @NewThread
+    @Override
+    public void setThImageNotSynced(RawThermalDump rawThermalDump) {
+        String uuid = rawThermalDump.getCaptureRecordUuid();
+        if (uuid == null)
+            throw new RuntimeException("rawThermalDump.captureRecordUuid is not set");
+
+        Observable.create(emitter -> {
+            CaptureRecord captureRecord = dataManager.db.captureRecordDAO().get(uuid);
+            captureRecord.setSynced(false);
+            dataManager.db.captureRecordDAO().update(captureRecord);
+        }).subscribeOn(Schedulers.io()).subscribe();
+    }
+
+    @NewThread
+    @Override
+    public void upSyncThermalImages() {
+        application.connectSyncService().subscribe(syncService ->
+                syncService.scheduleNewTask(new UpSyncThImagesTask()));
+    }
+
 
     @BgThreadCapable
     private synchronized void addThermalDump(final String filepath) {
         RawThermalDump thermalDump = RawThermalDump.readFromDumpFile(filepath);
-
-        if (thermalDump != null) {
-            ThermalDumpProcessor thermalDumpProcessor = new ThermalDumpProcessor(thermalDump);
-
-            if (horizontalLineY == -1) {
-                horizontalLineY = thermalDump.getHeight() / 2;
-            }
-            updateHorizontalLine(horizontalLineY);
-
-            tabResources.addResources(filepath, thermalDump, thermalDumpProcessor);
-            addDumpDataToChartParameter(thermalChartParameter, thermalDump, horizontalLineY);
-            getMvpView().updateThermalChart(thermalChartParameter);
-
-            activity.runOnUiThread(() -> {
-                final int newIndex = getMvpView().addDumpTab(thermalDump.getTitle());
-                if (tabResources.getCurrentIndex() != newIndex) {
-                    switchDumpTab(newIndex);
-                }
-            });
-
-            Log.d(TAG, "addThermalDump@end");
-        } else {
+        if (thermalDump == null) {
             getMvpView().showSnackBar("Failed reading thermal dump");
+            return;
         }
+
+        ThermalDumpProcessor thermalDumpProcessor = new ThermalDumpProcessor(thermalDump);
+        thImagesHelper.findOrInsertRecordFromThermalDump(thermalDump)
+            .observeOn(Schedulers.io())
+            .blockingSubscribe(captureRecord -> {
+                thermalDump.setCaptureRecordUuid(captureRecord.getUuid());
+
+                if (horizontalLineY == -1) {
+                    horizontalLineY = thermalDump.getHeight() / 2;
+                }
+                updateHorizontalLine(horizontalLineY);
+
+                tabResources.addResources(filepath, thermalDump, thermalDumpProcessor);
+                addDumpDataToChartParameter(thermalChartParameter, thermalDump, horizontalLineY);
+                getMvpView().updateThermalChart(thermalChartParameter);
+
+                activity.runOnUiThread(() -> {
+                    final int newIndex = getMvpView().addDumpTab(thermalDump.getTitle());
+                    if (tabResources.getCurrentIndex() != newIndex) {
+                        switchDumpTab(newIndex);
+                    }
+                });
+
+                Log.d(TAG, "addThermalDump@end");
+        });
     }
 
     /**
@@ -785,10 +820,12 @@ public class DumpViewerPresenter<V extends DumpViewerMvpView> extends BasePresen
 
     @Override
     public void onDetach() {
+        super.onDetach();
+
         disposables.dispose();
         tabResources = null;
         thermalChartParameter = null;
 
-        super.onDetach();
+        upSyncThermalImages();
     }
 }

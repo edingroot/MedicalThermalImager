@@ -40,6 +40,7 @@ public class ThermalSpotsHelper implements Disposable {
 
     private RawThermalDump rawThermalDump;
     private RenderedImage renderedImage;
+    private OnSpotsChangeListener spotsChangeListener;
     private final ArrayList<org.opencv.core.Point> preSelectedSpots = new ArrayList<>();
 
     private int tempSourceWidth;
@@ -58,12 +59,14 @@ public class ThermalSpotsHelper implements Disposable {
     private int spotDraggingDeltaY;
 
     @BgThreadCapable
-    public ThermalSpotsHelper(Context context, ViewGroup parentView, RawThermalDump rawThermalDump) {
+    public ThermalSpotsHelper(Context context, ViewGroup parentView, RawThermalDump rawThermalDump,
+                              OnSpotsChangeListener spotsChangeListener) {
         this.tempSource = TempSource.ThermalDump;
         this.context = context;
         this.parentView = parentView;
         this.rawThermalDump = rawThermalDump;
         this.tempSourceWidth = rawThermalDump.getWidth();
+        this.spotsChangeListener = spotsChangeListener;
 
         // Add thermal spots if exists
         ArrayList<org.opencv.core.Point> spotMarkers = rawThermalDump.getSpotMarkers();
@@ -80,12 +83,14 @@ public class ThermalSpotsHelper implements Disposable {
     }
 
     @BgThreadCapable
-    public ThermalSpotsHelper(Context context, ViewGroup parentView, RenderedImage renderedImage) {
+    public ThermalSpotsHelper(Context context, ViewGroup parentView, RenderedImage renderedImage,
+                              OnSpotsChangeListener spotsChangeListener) {
         this.tempSource = TempSource.RenderedImage;
         this.context = context;
         this.parentView = parentView;
         this.renderedImage = renderedImage;
         this.tempSourceWidth = renderedImage.width();
+        this.spotsChangeListener = spotsChangeListener;
     }
 
     public void setSpotsVisible(boolean spotsVisible) {
@@ -154,6 +159,7 @@ public class ThermalSpotsHelper implements Disposable {
 
         final ThermalSpotView thermalSpotView = new ThermalSpotView(context, spotId, true);
 
+        // Register event listener for handling spot moving
         thermalSpotView.setOnTouchListener((view, motionEvent) -> {
             int x1 = (int) motionEvent.getRawX();
             int y1 = (int) motionEvent.getRawY();
@@ -211,6 +217,7 @@ public class ThermalSpotsHelper implements Disposable {
                 if (tempSource == TempSource.ThermalDump) {
                     rawThermalDump.getSpotMarkers().add(thermalPositionCV);
                     rawThermalDump.saveAsync();
+                    spotsChangeListener.onChanged();
                 } else if (tempSource == TempSource.RenderedImage) {
                     synchronized (preSelectedSpots) {
                         preSelectedSpots.add(thermalPositionCV);
@@ -234,6 +241,7 @@ public class ThermalSpotsHelper implements Disposable {
             spotMarkers.remove(thermalSpotViews.indexOfKey(lastSpotId));
             rawThermalDump.setSpotMarkers(spotMarkers);
             rawThermalDump.saveAsync();
+            spotsChangeListener.onChanged();
         } else if (tempSource == TempSource.RenderedImage) {
             synchronized (preSelectedSpots) {
                 preSelectedSpots.remove(thermalSpotViews.indexOfKey(lastSpotId));
@@ -274,6 +282,7 @@ public class ThermalSpotsHelper implements Disposable {
             if (tempSource == TempSource.ThermalDump) {
                 rawThermalDump.getSpotMarkers().clear();
                 rawThermalDump.save();
+                spotsChangeListener.onChanged();
             } else if (tempSource == TempSource.RenderedImage) {
                 synchronized (preSelectedSpots) {
                     preSelectedSpots.clear();
@@ -303,6 +312,10 @@ public class ThermalSpotsHelper implements Disposable {
         synchronized (preSelectedSpots) {
             return preSelectedSpots;
         }
+    }
+
+    public RawThermalDump getRawThermalDump() {
+        return rawThermalDump;
     }
 
     @Override
@@ -348,14 +361,14 @@ public class ThermalSpotsHelper implements Disposable {
         Point rawPosition = view2thermalPosition(viewPosition.x, viewPosition.y);
 
         Log.d(TAG, String.format("storeSpotPosition(id=%d) BfConv=(%d, %d), AfConv=(%d, %d)\n",
-            spotView.getSpotId(), viewPosition.x, viewPosition.y, rawPosition.x, rawPosition.y
-        ));
+            spotView.getSpotId(), viewPosition.x, viewPosition.y, rawPosition.x, rawPosition.y));
 
         if (tempSource == TempSource.ThermalDump) {
             ArrayList<org.opencv.core.Point> spotMarkers = rawThermalDump.getSpotMarkers();
             spotMarkers.get(spotView.getSpotId() - 1).set(new double[]{rawPosition.x, rawPosition.y});
             rawThermalDump.setSpotMarkers(spotMarkers);
             rawThermalDump.saveAsync();
+            spotsChangeListener.onChanged();
         } else if (tempSource == TempSource.RenderedImage) {
             synchronized (preSelectedSpots) {
                 preSelectedSpots.get(spotView.getSpotId() - 1).set(new double[]{rawPosition.x, rawPosition.y});
@@ -392,9 +405,8 @@ public class ThermalSpotsHelper implements Disposable {
             Point viewPosition = spotView.getCenterPosition();
             final Point thermalPosition = view2thermalPosition(viewPosition.x, viewPosition.y);
 
-            Log.d(TAG, String.format("updateThermalValue, %d - viewPos=(%d, %d), dumpPos=(%d, %d)\n",
-                spotView.getSpotId(), viewPosition.x, viewPosition.y, thermalPosition.x, thermalPosition.y
-            ));
+            // Log.d(TAG, String.format("updateThermalValue, %d - viewPos=(%d, %d), dumpPos=(%d, %d)\n",
+            //     spotView.getSpotId(), viewPosition.x, viewPosition.y, thermalPosition.x, thermalPosition.y));
 
             // Run on UI thread
             new Handler(Looper.getMainLooper()).post(() -> {
@@ -443,4 +455,11 @@ public class ThermalSpotsHelper implements Disposable {
         }
     }
 
+
+    public interface OnSpotsChangeListener {
+        /**
+         * Triggered while spot is added/removed/moved.
+         */
+        void onChanged();
+    }
 }

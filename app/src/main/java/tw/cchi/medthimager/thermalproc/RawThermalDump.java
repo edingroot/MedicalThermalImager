@@ -74,6 +74,7 @@ public class RawThermalDump implements Disposable {
     private String filepath;
 
     // [Android Only]
+    private String captureRecordUuid; // for cache
     private VisibleImageMask visibleImageMask;
     private boolean disposed = false;
 
@@ -165,9 +166,10 @@ public class RawThermalDump implements Disposable {
         return rawThermalDump;
     }
 
-    public synchronized void saveAsync() {
+    public void saveAsync() {
         Observable.create(emitter -> this.save())
-            .subscribeOn(Schedulers.computation()).subscribe();
+            .subscribeOn(Schedulers.io())
+            .subscribe();
     }
 
     public synchronized boolean save() {
@@ -454,6 +456,13 @@ public class RawThermalDump implements Disposable {
         return (averageTemp / 100) - 273.15;
     }
 
+    @Override
+    public String toString() {
+        String filepath = getFilepath();
+        return filepath == null ? super.toString() : getClass().getName() + "@" + filepath;
+    }
+
+
     private static void signedInt2TwoBytes(int number, byte[] bytes, int startFrom) {
         bytes[startFrom] = (byte) (number & 0xff); // lsb
         bytes[startFrom + 1] = (byte) ((number & 0xff00) >> 8); // msb
@@ -514,6 +523,14 @@ public class RawThermalDump implements Disposable {
 
 
     // ---------------------- [Android] ---------------------- //
+
+    public String getCaptureRecordUuid() {
+        return captureRecordUuid;
+    }
+
+    public void setCaptureRecordUuid(String captureRecordUuid) {
+        this.captureRecordUuid = captureRecordUuid;
+    }
 
     public void attachVisibleImageMask(Bitmap visibleImage, int defaultOffsetX, int defaultOffsetY) {
         Log.i(TAG, String.format("[attachVisibleImageMask] offset=(%d, %d)", visibleOffsetX, visibleOffsetY));

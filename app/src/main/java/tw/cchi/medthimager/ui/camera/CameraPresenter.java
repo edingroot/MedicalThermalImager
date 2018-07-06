@@ -41,19 +41,17 @@ import tw.cchi.medthimager.R;
 import tw.cchi.medthimager.data.db.model.CaptureRecord;
 import tw.cchi.medthimager.data.db.model.Patient;
 import tw.cchi.medthimager.helper.CSVExportHelper;
+import tw.cchi.medthimager.helper.ThImagesHelper;
 import tw.cchi.medthimager.helper.ThermalSpotsHelper;
 import tw.cchi.medthimager.model.CaptureProcessInfo;
 import tw.cchi.medthimager.model.ContiShootParameters;
 import tw.cchi.medthimager.model.api.ThImage;
 import tw.cchi.medthimager.service.sync.task.SyncSingleThImageTask;
 import tw.cchi.medthimager.thermalproc.RawThermalDump;
-import tw.cchi.medthimager.thermalproc.VisibleImageExtractor;
-import tw.cchi.medthimager.thermalproc.VisibleImageMask;
 import tw.cchi.medthimager.ui.base.BasePresenter;
 import tw.cchi.medthimager.util.AppUtils;
 import tw.cchi.medthimager.util.CommonUtils;
 import tw.cchi.medthimager.util.FileUtils;
-import tw.cchi.medthimager.util.ImageUtils;
 import tw.cchi.medthimager.util.annotation.BgThreadCapable;
 import tw.cchi.medthimager.util.annotation.NewThread;
 
@@ -63,8 +61,8 @@ public class CameraPresenter<V extends CameraMvpView> extends BasePresenter<V>
     private final String TAG = Config.TAGPRE + getClass().getSimpleName();
 
     @Inject AppCompatActivity activity;
-    @Inject VisibleImageExtractor visibleImageExtractor;
     @Inject CSVExportHelper csvExportHelper;
+    @Inject ThImagesHelper thImagesHelper;
 
     private volatile Device flirOneDevice;
     private Device.TuningState tuningState = Device.TuningState.Unknown;
@@ -568,7 +566,7 @@ public class CameraPresenter<V extends CameraMvpView> extends BasePresenter<V>
                 CommonUtils.sleep(100);
 
                 // Extract visible light image
-                return extractVisibleImage(rawThermalDump);
+                return thImagesHelper.extractVisibleImage(rawThermalDump);
             })
             .subscribe(
                 extractVisibleSuccess -> {
@@ -578,7 +576,8 @@ public class CameraPresenter<V extends CameraMvpView> extends BasePresenter<V>
                             UUID.randomUUID().toString(),
                             currCaptureProcessInfo.getPatient().getCuid(),
                             currCaptureProcessInfo.getTitle(),
-                            currCaptureProcessInfo.getFilepathPrefix(), contiShootUuid);
+                            currentPatient.getName() + "/" + currCaptureProcessInfo.getFilepathPrefix(),
+                            contiShootUuid);
 
                     dataManager.db.captureRecordDAO().insertAll(captureRecord);
 
@@ -639,28 +638,6 @@ public class CameraPresenter<V extends CameraMvpView> extends BasePresenter<V>
             }
             emitter.onComplete();
         }).subscribeOn(Schedulers.io());
-    }
-
-    private Observable<Boolean> extractVisibleImage(RawThermalDump rawThermalDump) {
-        return Observable.<Boolean>create(emitter -> {
-            visibleImageExtractor.extractImage(rawThermalDump.getFlirImagePath(), visibleImage -> {
-                if (visibleImage != null) {
-                    rawThermalDump.attachVisibleImageMask(visibleImage, 0, 0);
-                    VisibleImageMask visibleImageMask = rawThermalDump.getVisibleImageMask();
-                    if (visibleImageMask != null &&
-                            ImageUtils.saveBitmap(visibleImageMask.getAlignedVisibleBitmap(), rawThermalDump.getVisibleImagePath())) {
-                        emitter.onNext(true);
-                        emitter.onComplete();
-                        return;
-                    }
-                } else {
-                    Log.e(TAG, "Failed to extract visible light image.");
-                }
-
-                emitter.onNext(false);
-                emitter.onComplete();
-            });
-        }).subscribeOn(Schedulers.computation());
     }
 
     private void scanMediaStorage(String filename) {

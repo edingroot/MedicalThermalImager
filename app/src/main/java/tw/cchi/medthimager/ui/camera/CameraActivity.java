@@ -389,12 +389,12 @@ public class CameraActivity extends BaseActivity implements
         Log.i(TAG, String.format("[createThermalSpotsHelper] thermalImageView.getMeasuredHeight()=%d, thermalImageView.getTop()=%d, layoutThermalViews.getTop()=%d\n",
             thermalImageView.getMeasuredHeight(), thermalImageView.getTop(), topView.getTop()));
 
-        final ThermalSpotsHelper thermalSpotsHelper = new ThermalSpotsHelper(this, topView, renderedImage);
+        final ThermalSpotsHelper thermalSpotsHelper = new ThermalSpotsHelper(this, topView,
+                renderedImage, () -> {});
         thermalSpotsHelper.setImageViewMetrics(
             thermalImageView.getMeasuredWidth(),
             thermalImageView.getMeasuredHeight(),
-            thermalImageView.getTop() + topView.getTop()
-        );
+            thermalImageView.getTop() + topView.getTop());
         return thermalSpotsHelper;
     }
 

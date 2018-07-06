@@ -32,6 +32,9 @@ public abstract class CaptureRecordDAO {
     @Query("select * from capture_records where title like :title limit 1")
     public abstract CaptureRecord findByTitle(String title);
 
+    @Query("select * from capture_records where patient_cuid = :patientCuid and title = :title limit 1")
+    public abstract CaptureRecord findByProps(String patientCuid, String title);
+
     @Insert
     public abstract void insertAll(CaptureRecord... captureRecords);
 

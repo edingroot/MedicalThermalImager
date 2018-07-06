@@ -4,6 +4,7 @@ import android.support.annotation.UiThread;
 
 import java.util.ArrayList;
 
+import tw.cchi.medthimager.thermalproc.RawThermalDump;
 import tw.cchi.medthimager.util.annotation.BgThreadCapable;
 import tw.cchi.medthimager.util.annotation.NewThread;
 import tw.cchi.medthimager.ui.base.MvpPresenter;
@@ -66,5 +67,12 @@ public interface DumpViewerMvpPresenter<V extends DumpViewerMvpView> extends Mvp
     boolean isVisibleImageAlignMode();
 
     boolean existCopiedSpots();
+
+
+    @NewThread
+    void setThImageNotSynced(RawThermalDump rawThermalDump);
+
+    @NewThread
+    void upSyncThermalImages();
 
 }

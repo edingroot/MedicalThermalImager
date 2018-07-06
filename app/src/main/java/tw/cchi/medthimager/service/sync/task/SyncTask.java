@@ -53,10 +53,16 @@ public abstract class SyncTask implements Callable<Void>, Disposable {
         this.dataManager = application.dataManager;
         this.apiHelper = new ApiHelper(application);
 
+        inject();
         doWork();
         finish();
         return null;
     }
+
+    /**
+     * Can be override for Dagger injection for child class.
+     */
+    void inject() {}
 
     /**
      * This method should be designed as a thread-blocking worker.

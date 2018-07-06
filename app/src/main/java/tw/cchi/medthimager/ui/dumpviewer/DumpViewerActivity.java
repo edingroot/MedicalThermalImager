@@ -40,13 +40,13 @@ import tw.cchi.medthimager.Config;
 import tw.cchi.medthimager.R;
 import tw.cchi.medthimager.component.MultiChartView;
 import tw.cchi.medthimager.component.SpotsControlView;
-import tw.cchi.medthimager.util.annotation.BgThreadCapable;
 import tw.cchi.medthimager.helper.ThermalSpotsHelper;
 import tw.cchi.medthimager.model.ChartParameter;
 import tw.cchi.medthimager.thermalproc.RawThermalDump;
 import tw.cchi.medthimager.thermalproc.VisibleImageMask;
 import tw.cchi.medthimager.ui.base.BaseActivity;
 import tw.cchi.medthimager.ui.dumpviewer.adapter.ThermalDumpsRecyclerAdapter;
+import tw.cchi.medthimager.util.annotation.BgThreadCapable;
 
 @RuntimePermissions
 public class DumpViewerActivity extends BaseActivity
@@ -332,8 +332,8 @@ public class DumpViewerActivity extends BaseActivity
         Log.i(TAG, String.format("[createThermalSpotsHelper] thermalImageView.getMeasuredHeight()=%d, thermalImageView.getTop()=%d, layoutThermalViews.getTop()=%d\n",
             thermalImageView.getMeasuredHeight(), thermalImageView.getTop(), layoutThermalViews.getTop()));
 
-        final ThermalSpotsHelper thermalSpotsHelper = new ThermalSpotsHelper(
-                DumpViewerActivity.this, topView, rawThermalDump);
+        final ThermalSpotsHelper thermalSpotsHelper = new ThermalSpotsHelper(DumpViewerActivity.this,
+                topView, rawThermalDump, () -> presenter.setThImageNotSynced(rawThermalDump));
         thermalSpotsHelper.setImageViewMetrics(
                 thermalImageView.getMeasuredWidth(),
                 thermalImageView.getMeasuredHeight(),
