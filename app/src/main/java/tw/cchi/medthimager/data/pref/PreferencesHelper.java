@@ -38,6 +38,10 @@ public interface PreferencesHelper {
 
     void setLastSyncPatients(Date datetime);
 
+    Date getLastSyncThImages();
+
+    void setLastSyncThImages(Date datetime);
+
     int getSyncPatientConflictCount();
 
     void setSyncPatientConflictCount(int count);

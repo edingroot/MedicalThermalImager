@@ -15,4 +15,6 @@ public interface SettingsMvpView extends MvpView {
 
     void setSyncPatientsStatus(boolean syncing, String lastSynced);
 
+    void setSyncThImagesStatus(boolean syncing, String lastSynced);
+
 }

@@ -15,6 +15,7 @@ public final class SyncBroadcastSender {
     public class EventName {
         public static final String SYNC_PATIENTS_DONE = "SyncService/SYNC_PATIENTS_DONE";
         public static final String SYNC_PATIENT_CONFLICT = "SyncService/SYNC_PATIENT_CONFLICT";
+        public static final String SYNC_THIMAGES_DONE = "SyncService/SYNC_THIMAGES_DONE";
     }
     public class Extras {
         public static final String EXTRA_EVENT_NAME = "SyncService/SYNC_PATIENT_CONFLICT";
@@ -46,6 +47,13 @@ public final class SyncBroadcastSender {
         intent.putExtra(Extras.EXTRA_PATIENT, patient);
         intent.putParcelableArrayListExtra(Extras.EXTRA_SSPATIENT_LIST, new ArrayList<>(conflictPatients));
 
+        syncService.sendBroadcast(intent, Constants.INTERNAL_BROADCAST_PERMISSION);
+    }
+
+    public void sendSyncThImagesDone() {
+        Intent intent = new Intent();
+        intent.setAction(ACTION_SERVICE_BROADCAST);
+        intent.putExtra(Extras.EXTRA_EVENT_NAME, EventName.SYNC_THIMAGES_DONE);
         syncService.sendBroadcast(intent, Constants.INTERNAL_BROADCAST_PERMISSION);
     }
 

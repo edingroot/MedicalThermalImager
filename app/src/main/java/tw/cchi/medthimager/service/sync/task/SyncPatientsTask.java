@@ -30,7 +30,7 @@ public class SyncPatientsTask extends SyncTask {
 
         dataManager.pref.setLastSyncPatients(new Date());
         CommonUtils.sleep(500);
-        sendSyncPatientsDone();
+        sendSyncDone();
     }
 
     private void upSyncPatients() {
@@ -40,7 +40,6 @@ public class SyncPatientsTask extends SyncTask {
         }
 
         conflictCount = 0;
-        dataManager.pref.setSyncPatientConflictCount(0);
 
         List<Patient> patients = dataManager.db.patientDAO().getSyncList();
         for (Patient patient : patients) {
@@ -110,7 +109,7 @@ public class SyncPatientsTask extends SyncTask {
         }
     }
     
-    private void sendSyncPatientsDone() {
+    private void sendSyncDone() {
         if (!doneBroadcastSent) {
             broadcastSender.sendSyncPatientsDone();
             doneBroadcastSent = true;
@@ -119,7 +118,7 @@ public class SyncPatientsTask extends SyncTask {
 
     @Override
     public void dispose() {
-        sendSyncPatientsDone();
+        sendSyncDone();
         disposed = true;
     }
 }

@@ -14,6 +14,7 @@ import tw.cchi.medthimager.Config;
 import tw.cchi.medthimager.data.network.ApiHelper;
 import tw.cchi.medthimager.helper.session.Session;
 import tw.cchi.medthimager.service.sync.task.SyncPatientsTask;
+import tw.cchi.medthimager.service.sync.task.UpSyncThImagesTask;
 import tw.cchi.medthimager.ui.base.BasePresenter;
 import tw.cchi.medthimager.util.DateTimeUtils;
 
@@ -42,7 +43,8 @@ public class SettingsPresenter<V extends SettingsMvpView> extends BasePresenter<
         getMvpView().setAuthState(currentSession.isActive(), currentSession.getUser());
         getMvpView().setSwClearSpotsOnDisconn(dataManager.pref.getClearSpotsOnDisconnectEnabled());
         getMvpView().setSwAutoApplyVisibleOffset(dataManager.pref.getAutoApplyVisibleOffsetEnabled());
-        getMvpView().setSyncPatientsStatus(false, getLastSyncedPatients());
+        getMvpView().setSyncPatientsStatus(false, getLastSyncPatients());
+        getMvpView().setSyncThImagesStatus(false, getLastSyncThImages());
 
         // Refresh data asynchronously
         apiHelper.refreshUserProfile().observeOn(AndroidSchedulers.mainThread()).subscribe(success -> {
@@ -108,14 +110,36 @@ public class SettingsPresenter<V extends SettingsMvpView> extends BasePresenter<
     }
 
     @Override
+    public void syncThImages() {
+        getMvpView().setSyncThImagesStatus(true, "");
+
+        application.connectSyncService().subscribe(syncService -> {
+            if (application.checkNetworkAuthed(true) && !syncService.isTaskRunning(UpSyncThImagesTask.class)) {
+                syncService.scheduleNewTask(new UpSyncThImagesTask());
+            }
+        });
+    }
+
+    @Override
     public void onSyncPatientsDone() {
         if (isViewAttached()) {
-            getMvpView().setSyncPatientsStatus(false, getLastSyncedPatients());
+            getMvpView().setSyncPatientsStatus(false, getLastSyncPatients());
         }
     }
 
-    private String getLastSyncedPatients() {
+    @Override
+    public void onSyncThImagesDone() {
+        if (isViewAttached()) {
+            getMvpView().setSyncThImagesStatus(false, getLastSyncThImages());
+        }
+    }
+
+    private String getLastSyncPatients() {
         return DateTimeUtils.timestampToString(dataManager.pref.getLastSyncPatients().getTime());
+    }
+
+    private String getLastSyncThImages() {
+        return DateTimeUtils.timestampToString(dataManager.pref.getLastSyncThImages().getTime());
     }
 
     @Override

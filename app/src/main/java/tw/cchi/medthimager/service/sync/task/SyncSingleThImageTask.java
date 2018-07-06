@@ -35,22 +35,22 @@ public class SyncSingleThImageTask extends SyncTask {
         if (metadata.getPatient_uuid() == null && !metadata.getPatient_cuid().equals(Patient.DEFAULT_PATIENT_CUID)) {
             new SyncPatientHelper(dataManager, apiHelper).syncPatient(metadata.getPatient_cuid()).blockingSubscribe(patientUuid -> {
                 if (!patientUuid.isEmpty()) {
-                    performUpload();
+                    performUpload(this.metadata, this.dumpFile, this.flirFile, this.visibleFile);
                 } else {
                     showToast(R.string.upload_conflict_syncing_patient);
                     throw new Error(getString(R.string.upload_conflict_syncing_patient));
                 }
             });
         } else {
-            performUpload();
+            performUpload(this.metadata, this.dumpFile, this.flirFile, this.visibleFile);
         }
     }
 
-    private void performUpload() {
+    private void performUpload(ThImage metadata, File dumpFile, File flirFile, File visibleFile) {
         if (disposed)
             return;
 
-        apiHelper.uploadThImage(this.metadata, this.dumpFile, this.flirFile, this.visibleFile,
+        apiHelper.uploadThImage(metadata, dumpFile, flirFile, visibleFile,
                 true, new ApiHelper.OnThImageUploadListener() {
                     @Override
                     public void onSuccess(ThImage thImage) {

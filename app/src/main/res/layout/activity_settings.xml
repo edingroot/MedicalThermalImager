@@ -202,6 +202,45 @@
 
                 </android.support.constraint.ConstraintLayout>
 
+                <android.support.constraint.ConstraintLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="16dp">
+
+                    <TextView
+                        android:id="@+id/txtSyncThImages"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/sync_thermal_images"
+                        android:textSize="16sp"
+                        android:textStyle="bold"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toTopOf="parent"/>
+
+                    <TextView
+                        android:id="@+id/txtSyncThImagesStatus"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginEnd="8dp"
+                        android:layout_marginTop="2dp"
+                        android:text="@string/last_sync"
+                        android:textColor="@color/contentTextSecondary"
+                        app:layout_constraintEnd_toStartOf="@id/btnSyncThImages"
+                        app:layout_constraintHorizontal_bias="0.0"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toBottomOf="@+id/txtSyncThImages"/>
+
+                    <Button
+                        android:id="@+id/btnSyncThImages"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/sync"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintTop_toTopOf="parent"/>
+
+                </android.support.constraint.ConstraintLayout>
+
             </LinearLayout>
 
         </ScrollView>

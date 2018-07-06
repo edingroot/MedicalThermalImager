@@ -33,6 +33,7 @@ public class SettingsActivity extends BaseActivity implements SettingsMvpView {
     @BindView(R.id.swClearSpotsOnDisconn) SwitchCompat swClearSpotsOnDisconn;
     @BindView(R.id.swAutoApplyVisibleOffset) SwitchCompat swAutoApplyVisibleOffset;
     @BindView(R.id.txtSyncPatientsStatus) TextView txtSyncPatientsStatus;
+    @BindView(R.id.txtSyncThImagesStatus) TextView txtSyncThImagesStatus;
 
     private boolean authenticated = false;
 
@@ -57,6 +58,8 @@ public class SettingsActivity extends BaseActivity implements SettingsMvpView {
                 .subscribe(pair -> {
                     if (pair.first.equals(SyncBroadcastSender.EventName.SYNC_PATIENTS_DONE)) {
                         presenter.onSyncPatientsDone();
+                    } else if (pair.first.equals(SyncBroadcastSender.EventName.SYNC_THIMAGES_DONE)) {
+                        presenter.onSyncThImagesDone();
                     }
                 }));
     }
@@ -73,6 +76,11 @@ public class SettingsActivity extends BaseActivity implements SettingsMvpView {
     @OnClick(R.id.btnSyncPatients)
     void onSyncPatientsClick() {
         presenter.syncPatients();
+    }
+
+    @OnClick(R.id.btnSyncThImages)
+    void onSyncThImagesClick() {
+        presenter.syncThImages();
     }
 
     @OnCheckedChanged(R.id.swClearSpotsOnDisconn)
@@ -120,6 +128,15 @@ public class SettingsActivity extends BaseActivity implements SettingsMvpView {
             txtSyncPatientsStatus.setText(R.string.syncing);
         } else {
             txtSyncPatientsStatus.setText(getString(R.string.last_sync, lastSynced));
+        }
+    }
+
+    @Override
+    public void setSyncThImagesStatus(boolean syncing, String lastSynced) {
+        if (syncing) {
+            txtSyncThImagesStatus.setText(R.string.syncing);
+        } else {
+            txtSyncThImagesStatus.setText(getString(R.string.last_sync, lastSynced));
         }
     }
 

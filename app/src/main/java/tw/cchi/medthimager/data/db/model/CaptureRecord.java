@@ -38,6 +38,9 @@ public class CaptureRecord {
     @ColumnInfo(name = "title")
     private String title;
 
+    /**
+     * See {@link tw.cchi.medthimager.model.CaptureProcessInfo#CaptureProcessInfo(Patient)}
+     */
     @ColumnInfo(name = "filename_prefix")
     private String filenamePrefix;
 

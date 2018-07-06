@@ -33,6 +33,7 @@ import tw.cchi.medthimager.service.sync.task.SyncPatientsTask;
 import tw.cchi.medthimager.service.sync.task.SyncSinglePatientTask;
 import tw.cchi.medthimager.service.sync.task.SyncSingleThImageTask;
 import tw.cchi.medthimager.service.sync.task.SyncTask;
+import tw.cchi.medthimager.service.sync.task.UpSyncThImagesTask;
 import tw.cchi.medthimager.util.CommonUtils;
 import tw.cchi.medthimager.util.NetworkUtils;
 
@@ -53,6 +54,7 @@ public class SyncService extends Service {
         syncTaskClasses.add(SyncSinglePatientTask.class);
         syncTaskClasses.add(SyncPatientsTask.class);
         syncTaskClasses.add(SyncSingleThImageTask.class);
+        syncTaskClasses.add(UpSyncThImagesTask.class);
     }
 
     public static void start(Context context) {
@@ -133,7 +135,11 @@ public class SyncService extends Service {
      * Errors such like network or authentication error will be caught and ignored.
      */
     public void scheduleNewTask(SyncTask syncTask) {
-        taskPublishSubjects.get(syncTask.getClass()).onNext(syncTask);
+        PublishSubject<SyncTask> publishSubject = taskPublishSubjects.get(syncTask.getClass());
+        if (publishSubject == null)
+            throw new RuntimeException("Target sync task not found / not added to this.syncTaskClasses");
+        else
+            publishSubject.onNext(syncTask);
     }
 
     public boolean isTaskRunning(Class<? extends SyncTask> syncTaskClass) {

@@ -41,6 +41,7 @@
 
     <!-- Sync -->
     <string name="sync_patient_list">Sync Patient List</string>
+    <string name="sync_thermal_images">Sync Thermal Images</string>
     <string name="last_sync">Last sync: %1$s</string>
     <string name="sync">Sync</string>
     <string name="syncing">Syncing…</string>
