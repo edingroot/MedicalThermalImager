@@ -89,7 +89,7 @@ public class UpSyncThImagesTask extends SyncTask {
                     }
 
                     // Short sleep between each upload
-                    CommonUtils.sleep(300);
+                    CommonUtils.sleep(200);
                 }
             });
         }

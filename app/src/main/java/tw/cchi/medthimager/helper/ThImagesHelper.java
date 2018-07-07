@@ -4,11 +4,13 @@ import android.support.annotation.NonNull;
 import android.util.Log;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.UUID;
 
 import javax.inject.Inject;
 
+import io.reactivex.Flowable;
 import io.reactivex.Observable;
 import io.reactivex.schedulers.Schedulers;
 import tw.cchi.medthimager.Config;
@@ -19,6 +21,7 @@ import tw.cchi.medthimager.thermalproc.RawThermalDump;
 import tw.cchi.medthimager.thermalproc.VisibleImageExtractor;
 import tw.cchi.medthimager.thermalproc.VisibleImageMask;
 import tw.cchi.medthimager.util.AppUtils;
+import tw.cchi.medthimager.util.CommonUtils;
 import tw.cchi.medthimager.util.FileUtils;
 import tw.cchi.medthimager.util.ImageUtils;
 
@@ -52,29 +55,41 @@ public class ThImagesHelper {
     }
 
     public Observable updateRecordsFromDumpFiles() {
-        String rootDir = AppUtils.getExportsDir();
+        return Observable.create(mEmitter -> {
+            String rootDir = AppUtils.getExportsDir();
 
-        return Observable.create(emitter -> {
+            ArrayList<File> files = new ArrayList<>();
             for (File file : FileUtils.getAllFiles(rootDir)) {
-                if (FileUtils.getExtension(file.getName()).equals("dat")) {
+                if (FileUtils.getExtension(file.getName()).equals("dat"))
+                    files.add(file);
+            }
+            Flowable<File> filesFlowable = Flowable.fromArray(files.toArray(new File[files.size()]));
+
+            filesFlowable.parallel()
+                .runOn(Schedulers.io())
+                .map(file -> {
                     Log.i(TAG, "Checking file: " + file.getAbsolutePath());
 
                     RawThermalDump rawThermalDump = RawThermalDump.readFromDumpFile(file.getAbsolutePath());
                     if (rawThermalDump == null) {
                         Log.e(TAG, "Error reading dump file: " + file.getAbsolutePath());
-                        continue;
+                    } else {
+                        try {
+                            findOrInsertRecordFromThermalDump(rawThermalDump).blockingSubscribe();
+                        } catch (Error e) {
+                            // Ignore error
+                            e.printStackTrace();
+                        }
                     }
 
-                    try {
-                        findOrInsertRecordFromThermalDump(rawThermalDump).blockingSubscribe();
-                    } catch (Error e) {
-                        // Ignore error
-                        e.printStackTrace();
-                    }
-                }
-            }
-
-            emitter.onComplete();
+                    return Observable.just(true);
+                })
+                .sequential()
+                .subscribe(
+                    o -> {},
+                    e -> {},
+                    mEmitter::onComplete
+                );
         }).subscribeOn(Schedulers.io());
     }
 
@@ -89,16 +104,14 @@ public class ThImagesHelper {
                 return;
             }
 
+            CaptureRecord captureRecord;
             if (thermalDump.getRecordUuid() != null) {
-                CaptureRecord captureRecord = db.captureRecordDAO().get(thermalDump.getRecordUuid());
-                if (captureRecord != null) {
-                    emitter.onNext(captureRecord);
-                    emitter.onComplete();
-                }
+                captureRecord = db.captureRecordDAO().get(thermalDump.getRecordUuid());
+            } else {
+                captureRecord = db.captureRecordDAO()
+                        .findByProps(thermalDump.getPatientCuid(), thermalDump.getTitle());
             }
 
-            CaptureRecord captureRecord = db.captureRecordDAO()
-                    .findByProps(thermalDump.getPatientCuid(), thermalDump.getTitle());
             if (captureRecord == null) {
                 String filenamePrefix = extractFilenamePrefix(thermalDump.getFilepath());
                 Date capturedAt = thermalDump.getCaptureTimestamp();
@@ -132,11 +145,11 @@ public class ThImagesHelper {
                         emitter.onNext(true);
                         emitter.onComplete();
                     }
+                } else {
+                    Log.e(TAG, "Failed to extract visible light image.");
+                    emitter.onNext(false);
+                    emitter.onComplete();
                 }
-
-                Log.e(TAG, "Failed to extract visible light image.");
-                emitter.onNext(false);
-                emitter.onComplete();
             });
         }).subscribeOn(Schedulers.computation());
     }
