@@ -30,7 +30,6 @@ public class SyncPatientsTask extends SyncTask {
         upSyncPatients();
         downSyncPatients();
 
-        CommonUtils.sleep(500);
         dataManager.pref.setLastSyncPatients(new Date());
         sendSyncDone();
     }
@@ -105,6 +104,10 @@ public class SyncPatientsTask extends SyncTask {
 
     private void handleRemotePatientList(List<SSPatient> ssPatients) {
         for (SSPatient ssPatient : ssPatients) {
+            // Skip the default patient on the list
+            if (ssPatient.getUuid() == null)
+                continue;
+
             if (dataManager.db.patientDAO().getCuidBySsuuid(ssPatient.getUuid()) == null) {
                 dataManager.db.patientDAO().insertAll(new Patient(ssPatient));
             }
