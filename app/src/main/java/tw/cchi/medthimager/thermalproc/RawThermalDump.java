@@ -18,6 +18,7 @@ import java.nio.charset.Charset;
 import java.nio.charset.CharsetEncoder;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 
 import io.reactivex.Observable;
 import io.reactivex.disposables.Disposable;
@@ -56,13 +57,32 @@ import tw.cchi.medthimager.util.CommonUtils;
  *  (M+91)           number of thermal spot markers (up to 20 spot markers)
  *  (M+92) ~ (M+171) thermal spot marker #1 ~ #20, (x: 2 bytes, y: 2 bytes)
  *  (M+172)          EOF
+ *
+ * File format v4:
+ *  0 ~ 1              width (number of columns)
+ *  2 ~ 3              height (number of rows)
+ *  4                  file format version (=4)
+ *  5 ~ M              each thermal pixel is stored by 2 bytes (M=2*width*height + 5 - 1)
+ *  (M+1)   ~ (M+2)    visible image alignment X offset (dump pixel offset * 10)
+ *  (M+3)   ~ (M+4)    visible image alignment Y offset (dump pixel offset * 10)
+ *  (M+5)   ~ (M+10)   -
+ *  (M+11)  ~ (M+50)   title tag (up to 40 ascii chars)
+ *  (M+51)  ~ (M+82)   patient CUID (32 ascii chars, no '-')
+ *  (M+83)  ~ (M+86)   capture timestamp (unix timestamp as 4 bytes number; int in java, long in C)
+ *  (M+87)  ~ (M+90)   -
+ *  (M+91)             number of thermal spot markers (up to 20 spot markers)
+ *  (M+92)  ~ (M+171)  thermal spot marker #1 ~ #20, (x: 2 bytes, y: 2 bytes)
+ *  (M+172)            -
+ *  (M+173) ~ (M+202)  record UUID (32 ascii chars, no '-')
+ *  (M+203)            EOF
  */
 public class RawThermalDump implements Disposable {
     private final String TAG = Config.TAGPRE + getClass().getSimpleName();
 
-    private int formatVersion = 3;
-    private String title = null;
+    private int formatVersion = 4;
+    private String recordUuid = null;
     private String patientCuid = null;
+    private String title = null;
     private int width;
     private int height;
     private int[] thermalValues; // 0.01K = 1, (C = val/100 - 273.15)
@@ -72,6 +92,7 @@ public class RawThermalDump implements Disposable {
     private int maxValue = -1;
     private int minValue = -1;
     private String filepath;
+    private int captureTimestamp;
 
     // [Android Only]
     private String captureRecordUuid; // for cache
@@ -102,12 +123,12 @@ public class RawThermalDump implements Disposable {
             return null;
         }
 
-        int width = twoBytes2SignedInt(bytes[0], bytes[1]);
-        int height = twoBytes2SignedInt(bytes[2], bytes[3]);
+        int width = bytes2SignedInt(bytes, 0, 2);
+        int height = bytes2SignedInt(bytes, 2, 2);
 
         // Validate and identify file format version
         boolean versionMatched = false;
-        for (int i = 1; i <= 3; i++) {
+        for (int i = 1; i <= 4; i++) {
             if (bytes.length == FileFormat.getByteLength(i, width, height)) {
                 formatVersion = i;
                 thermalPixelOffset = FileFormat.getThermalPixelOffset(formatVersion);
@@ -122,15 +143,15 @@ public class RawThermalDump implements Disposable {
         int[] thermalValues = new int[width * height];
         for (int i = 0; i < width * height; i++) {
             int byteIndex = thermalPixelOffset + i * 2;
-            thermalValues[i] = twoBytes2SignedInt(bytes[byteIndex], bytes[byteIndex + 1]);
+            thermalValues[i] = bytes2SignedInt(bytes, byteIndex, 2);
         }
 
         RawThermalDump rawThermalDump = new RawThermalDump(formatVersion, width, height, thermalValues);
         rawThermalDump.setFilepath(filepath);
 
         if (formatVersion >= 2) {
-            rawThermalDump.visibleOffsetX = twoBytes2SignedInt(bytes[M + 1], bytes[M + 2]);
-            rawThermalDump.visibleOffsetY = twoBytes2SignedInt(bytes[M + 3], bytes[M + 4]);
+            rawThermalDump.visibleOffsetX = bytes2SignedInt(bytes, M + 1, 2);
+            rawThermalDump.visibleOffsetY = bytes2SignedInt(bytes, M + 3, 2);
         }
 
         if (formatVersion >= 3) {
@@ -155,11 +176,20 @@ public class RawThermalDump implements Disposable {
                 for (int i = 0; i < numberOfSpots; i++) {
                     int index = M + 92 + 4 * i;
                     Point point = new Point(
-                            twoBytes2SignedInt(bytes[index], bytes[index + 1]),
-                            twoBytes2SignedInt(bytes[index + 2], bytes[index + 3])
-                    );
+                            bytes2SignedInt(bytes, index, 2),
+                            bytes2SignedInt(bytes, index + 2, 2));
                     rawThermalDump.spotMarkers.add(point);
                 }
+            }
+        }
+
+        if (formatVersion >= 4) {
+            // Read capture timestamp
+            rawThermalDump.captureTimestamp = bytes2SignedInt(bytes, M + 83, 4);
+
+            // Read record UUID
+            if (bytes[M + 173] != 0) {
+                rawThermalDump.recordUuid = new String(Arrays.copyOfRange(bytes, M + 173, M + 202 + 1));
             }
         }
 
@@ -186,21 +216,21 @@ public class RawThermalDump implements Disposable {
         int thermalPixelOffset = FileFormat.getThermalPixelOffset(formatVersion);
         int M = width * height * 2 + thermalPixelOffset - 1;
 
-        signedInt2TwoBytes(width, bytes, 0);
-        signedInt2TwoBytes(height, bytes, 2);
+        signedInt2Bytes(width, bytes, 0, 2);
+        signedInt2Bytes(height, bytes, 2, 2);
 
         if (formatVersion >= 3) {
             bytes[4] = (byte) formatVersion;
         }
 
         for (int i = 0; i < width * height; i++) {
-            signedInt2TwoBytes(thermalValues[i], bytes, thermalPixelOffset + i * 2);
+            signedInt2Bytes(thermalValues[i], bytes, thermalPixelOffset + i * 2, 2);
         }
 
         // Visible image offset
         if (formatVersion >= 2) {
-            signedInt2TwoBytes(visibleOffsetX, bytes, M + 1);
-            signedInt2TwoBytes(visibleOffsetY, bytes, M + 3);
+            signedInt2Bytes(visibleOffsetX, bytes, M + 1, 2);
+            signedInt2Bytes(visibleOffsetY, bytes, M + 3, 2);
         }
 
         if (formatVersion >= 3) {
@@ -218,7 +248,7 @@ public class RawThermalDump implements Disposable {
 
             // Patient CUID
             if (patientCuid != null) {
-                byte[] patientCuidBytes = this.patientCuid.getBytes();
+                byte[] patientCuidBytes = patientCuid.getBytes();
                 for (int i = 0; i < 32; i++) {
                     bytes[M + 51 + i] = patientCuidBytes[i];
                 }
@@ -233,8 +263,24 @@ public class RawThermalDump implements Disposable {
             for (int i = 0; i < spotMarkers.size(); i++) {
                 Point point = spotMarkers.get(i);
                 int index = M + 92 + 4 * i;
-                signedInt2TwoBytes((int) point.x, bytes, index);
-                signedInt2TwoBytes((int) point.y, bytes, index + 2);
+                signedInt2Bytes((int) point.x, bytes, index, 2);
+                signedInt2Bytes((int) point.y, bytes, index + 2, 2);
+            }
+        }
+
+        if (formatVersion >= 4) {
+            // Capture timestamp
+            signedInt2Bytes(captureTimestamp, bytes, M + 83, 4);
+
+            // Record UUID
+            if (recordUuid != null) {
+                byte[] recordUuidBytes = recordUuid.getBytes();
+                for (int i = 0; i < 32; i++) {
+                    bytes[M + 173 + i] = recordUuidBytes[i];
+                }
+            } else {
+                // Set the first char as NULL
+                bytes[M + 173] = 0;
             }
         }
 
@@ -360,17 +406,39 @@ public class RawThermalDump implements Disposable {
     }
 
     public String getPatientCuid() {
-        return patientCuid;
+        return patientCuid == null ? null : dashUuid(patientCuid);
     }
 
     public boolean setPatientCuid(String patientCuid) {
-        patientCuid = patientCuid.replace("-", "");
+        patientCuid = undashUuid(patientCuid);
         if (patientCuid.length() != 32)
             return false;
 
         if (formatVersion < 3) formatVersion = 3;
         this.patientCuid = patientCuid;
         return true;
+    }
+
+    public String getRecordUuid() {
+        return recordUuid == null ? null : dashUuid(recordUuid);
+    }
+
+    public boolean setRecordUuid(String recordUuid) {
+        recordUuid = undashUuid(recordUuid);
+        if (recordUuid.length() != 32)
+            return false;
+
+        if (formatVersion < 4) formatVersion = 4;
+        this.recordUuid = recordUuid;
+        return true;
+    }
+
+    public Date getCaptureTimestamp() {
+        return new Date(captureTimestamp * 1000L);
+    }
+
+    public void setCaptureTimestamp(Date date) {
+        this.captureTimestamp = (int) (date.getTime() / 1000L);
     }
 
     public float getMaxTemperature() {
@@ -463,22 +531,64 @@ public class RawThermalDump implements Disposable {
     }
 
 
-    private static void signedInt2TwoBytes(int number, byte[] bytes, int startFrom) {
-        bytes[startFrom] = (byte) (number & 0xff); // lsb
-        bytes[startFrom + 1] = (byte) ((number & 0xff00) >> 8); // msb
+    private static void signedInt2Bytes(int number, byte[] bytes, int startFrom, int bytesN) {
+        switch (bytesN) {
+            case 2:
+                bytes[startFrom] = (byte) (number & 0xff); // lsb
+                bytes[startFrom + 1] = (byte) ((number & 0xff00) >> 8); // msb
+                break;
+
+            case 4:
+                bytes[startFrom] = (byte) (number & 0xff); // lsb
+                bytes[startFrom + 1] = (byte) ((number & 0xff00) >> 8);
+                bytes[startFrom + 2] = (byte) ((number & 0xff00) >> 16);
+                bytes[startFrom + 3] = (byte) ((number & 0xff00) >> 24); // msb
+                break;
+
+            default:
+                throw new RuntimeException("Unsupported number of bytes: " + bytesN);
+        }
     }
 
-    private static int twoBytes2SignedInt(byte lsb, byte msb) {
-        int result = (msb & 0xff) << 8 | (lsb & 0xff);
-        // negative number
-        if ((msb & 0x80) == 0x80)
-            result = -1 * ((~result & 0xffff) + 1); // 2's complement
+    private static int bytes2SignedInt(byte[] bytes, int startFrom, int bytesN) {
+        int result = 0;
+
+        switch (bytesN) {
+            case 2:
+                result = (bytes[startFrom + 1] & 0xff) << 8 | (bytes[startFrom] & 0xff);
+                // negative number
+                if ((bytes[startFrom + 1] & 0x80) == 0x80)
+                    result = -1 * ((~result & 0xffff) + 1); // 2's complement
+                break;
+
+            case 4:
+                result = (bytes[startFrom + 3] & 0xff) << 24 | (bytes[startFrom + 2] & 0xff) << 16 |
+                        (bytes[startFrom + 1] & 0xff) << 8 | (bytes[startFrom] & 0xff);
+                // negative number
+                if ((bytes[startFrom + 1] & 0x8000) == 0x8000)
+                    result = -1 * (~result + 1); // 2's complement
+                break;
+
+            default:
+                throw new RuntimeException("Unsupported number of bytes: " + bytesN);
+        }
+
         return result;
     }
 
     private static boolean isPureAscii(String v) {
         CharsetEncoder asciiEncoder = Charset.forName("US-ASCII").newEncoder(); // or "ISO-8859-1" for ISO Latin 1
         return asciiEncoder.canEncode(v);
+    }
+
+    private static String dashUuid(String uuid) {
+        return uuid.substring(0, 8) + '-' + uuid.substring(8, 12) + '-' +
+                uuid.substring(12, 16) + '-' + uuid.substring(16, 20) + '-' +
+                uuid.substring(20);
+    }
+
+    private static String undashUuid(String uuid) {
+        return uuid.replace("-", "");
     }
 
     private static byte[] readAllBytesFromFile(String filepath) {
@@ -502,9 +612,10 @@ public class RawThermalDump implements Disposable {
     private static class FileFormat {
         private static int getByteLength(int formatVersion, int width, int height) {
             final int[] lengths = new int[]{
-                    4   + width * height * 2,
-                    8   + width * height * 2,
-                    176 + width * height * 2
+                    4   + width * height * 2, // v1
+                    8   + width * height * 2, // v2
+                    176 + width * height * 2, // v3
+                    207 + width * height * 2  // v4
             };
             if (formatVersion < 1 || formatVersion > lengths.length)
                 return -1;
