@@ -15,6 +15,7 @@ import retrofit2.http.Multipart;
 import retrofit2.http.POST;
 import retrofit2.http.Part;
 import retrofit2.http.PartMap;
+import retrofit2.http.Path;
 import tw.cchi.medthimager.model.api.User;
 import tw.cchi.medthimager.model.api.AccessTokens;
 import tw.cchi.medthimager.model.api.PatientCreateRequest;
@@ -58,6 +59,10 @@ public interface ApiClient {
     @POST("patients")
     Observable<Response<PatientResponse>> createPatient(@Body PatientCreateRequest patientCreateRequest);
 
+
+    @AuthRequired
+    @GET("thimages/{uuid}")
+    Observable<Response<ThImage>> getThImage(@Path("uuid") String uuid);
 
     @AuthRequired
     @Multipart

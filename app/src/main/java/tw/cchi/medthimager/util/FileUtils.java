@@ -27,6 +27,15 @@ public final class FileUtils {
             return "";
     }
 
+    public static void waitUntilExists(String filePath) {
+        while (!new File(filePath).exists()) {
+            try {
+                Thread.sleep(20);
+            } catch (InterruptedException ignored) {}
+        }
+    }
+
+
     public static String removeExtension(String filename) {
         int index = filename.lastIndexOf('.');
         if (index > 0)
@@ -43,13 +52,4 @@ public final class FileUtils {
                 result.add(file);
         }
     }
-
-    public static void waitUntilExists(String filePath) {
-        while (!new File(filePath).exists()) {
-            try {
-                Thread.sleep(20);
-            } catch (InterruptedException ignored) {}
-        }
-    }
-
 }

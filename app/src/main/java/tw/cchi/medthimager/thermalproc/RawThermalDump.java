@@ -434,7 +434,7 @@ public class RawThermalDump implements Disposable {
     }
 
     public Date getCaptureTimestamp() {
-        return new Date(captureTimestamp * 1000L);
+        return captureTimestamp == 0 ? null : new Date(captureTimestamp * 1000L);
     }
 
     public void setCaptureTimestamp(Date date) {

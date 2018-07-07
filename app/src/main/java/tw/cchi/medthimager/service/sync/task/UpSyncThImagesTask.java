@@ -7,7 +7,6 @@ import javax.inject.Inject;
 
 import io.reactivex.Observable;
 import tw.cchi.medthimager.Constants;
-import tw.cchi.medthimager.MvpApplication;
 import tw.cchi.medthimager.data.db.model.CaptureRecord;
 import tw.cchi.medthimager.data.db.model.Patient;
 import tw.cchi.medthimager.data.network.ApiHelper;
@@ -21,7 +20,7 @@ import tw.cchi.medthimager.util.AppUtils;
 import tw.cchi.medthimager.util.CommonUtils;
 
 public class UpSyncThImagesTask extends SyncTask {
-    private static final long DEFAULT_TIMEOUT = 120 * 1000;
+    private static final long DEFAULT_TIMEOUT = 10 * 60 * 1000;
     private boolean doneBroadcastSent = false;
 
     @Inject ThImagesHelper thImagesHelper;
@@ -54,7 +53,7 @@ public class UpSyncThImagesTask extends SyncTask {
                     record.getTitle(), record.getCreatedAt());
 
             // Check if files exist, if not, skip upload and delete record
-            String filepathPrefix = String.format("%s/%s", AppUtils.getExportsDir(), record.getFilenamePrefix());
+            String filepathPrefix = AppUtils.getExportsDir() + "/" + record.getFilenamePrefix();
             File dumpFile = new File(filepathPrefix + Constants.POSTFIX_THERMAL_DUMP + ".dat");
             File flirFile = new File(filepathPrefix + Constants.POSTFIX_FLIR_IMAGE + ".jpg");
             File visibleFile = new File(filepathPrefix + Constants.POSTFIX_VISIBLE_IMAGE + ".png");

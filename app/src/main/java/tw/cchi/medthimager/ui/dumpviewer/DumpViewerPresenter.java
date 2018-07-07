@@ -622,30 +622,33 @@ public class DumpViewerPresenter<V extends DumpViewerMvpView> extends BasePresen
             return;
         }
 
-        ThermalDumpProcessor thermalDumpProcessor = new ThermalDumpProcessor(thermalDump);
-        thImagesHelper.findOrInsertRecordFromThermalDump(thermalDump)
-            .observeOn(Schedulers.io())
-            .blockingSubscribe(captureRecord -> {
-                thermalDump.setCaptureRecordUuid(captureRecord.getUuid());
-
-                if (horizontalLineY == -1) {
-                    horizontalLineY = thermalDump.getHeight() / 2;
-                }
-                updateHorizontalLine(horizontalLineY);
-
-                tabResources.addResources(filepath, thermalDump, thermalDumpProcessor);
-                addDumpDataToChartParameter(thermalChartParameter, thermalDump, horizontalLineY);
-                getMvpView().updateThermalChart(thermalChartParameter);
-
-                activity.runOnUiThread(() -> {
-                    final int newIndex = getMvpView().addDumpTab(thermalDump.getTitle());
-                    if (tabResources.getCurrentIndex() != newIndex) {
-                        switchDumpTab(newIndex);
-                    }
+        if (thermalDump.getRecordUuid() == null) {
+            thImagesHelper.findOrInsertRecordFromThermalDump(thermalDump)
+                .observeOn(Schedulers.io())
+                .blockingSubscribe(captureRecord -> {
+                    thermalDump.setCaptureRecordUuid(captureRecord.getUuid());
                 });
+            thermalDump.saveAsync();
+        }
 
-                Log.d(TAG, "addThermalDump@end");
+        if (horizontalLineY == -1) {
+            horizontalLineY = thermalDump.getHeight() / 2;
+        }
+        updateHorizontalLine(horizontalLineY);
+
+        ThermalDumpProcessor thermalDumpProcessor = new ThermalDumpProcessor(thermalDump);
+        tabResources.addResources(filepath, thermalDump, thermalDumpProcessor);
+        addDumpDataToChartParameter(thermalChartParameter, thermalDump, horizontalLineY);
+        getMvpView().updateThermalChart(thermalChartParameter);
+
+        activity.runOnUiThread(() -> {
+            final int newIndex = getMvpView().addDumpTab(thermalDump.getTitle());
+            if (tabResources.getCurrentIndex() != newIndex) {
+                switchDumpTab(newIndex);
+            }
         });
+
+        Log.d(TAG, "addThermalDump@end");
     }
 
     /**

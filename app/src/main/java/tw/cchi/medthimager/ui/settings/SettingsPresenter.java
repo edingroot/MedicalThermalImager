@@ -5,13 +5,16 @@ import android.util.Log;
 
 import javax.inject.Inject;
 
+import io.reactivex.Observable;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
+import io.reactivex.schedulers.Schedulers;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 import tw.cchi.medthimager.Config;
 import tw.cchi.medthimager.data.network.ApiHelper;
+import tw.cchi.medthimager.helper.ThImagesHelper;
 import tw.cchi.medthimager.helper.session.Session;
 import tw.cchi.medthimager.service.sync.task.SyncPatientsTask;
 import tw.cchi.medthimager.service.sync.task.UpSyncThImagesTask;
@@ -23,6 +26,7 @@ public class SettingsPresenter<V extends SettingsMvpView> extends BasePresenter<
 
     @Inject AppCompatActivity activity;
     @Inject ApiHelper apiHelper;
+    @Inject ThImagesHelper thImagesHelper;
 
     private Session currentSession;
 
@@ -113,11 +117,16 @@ public class SettingsPresenter<V extends SettingsMvpView> extends BasePresenter<
     public void syncThImages() {
         getMvpView().setSyncThImagesStatus(true, "");
 
-        application.connectSyncService().subscribe(syncService -> {
-            if (application.checkNetworkAuthed(true) && !syncService.isTaskRunning(UpSyncThImagesTask.class)) {
-                syncService.scheduleNewTask(new UpSyncThImagesTask());
-            }
-        });
+        Observable.create(emitter -> {
+            thImagesHelper.deleteInvalidCaptureRecords().blockingSubscribe();
+            thImagesHelper.updateRecordsFromDumpFiles().blockingSubscribe();
+
+            application.connectSyncService().subscribe(syncService -> {
+                if (application.checkNetworkAuthed(true) && !syncService.isTaskRunning(UpSyncThImagesTask.class)) {
+                    syncService.scheduleNewTask(new UpSyncThImagesTask());
+                }
+            });
+        }).subscribeOn(Schedulers.io()).subscribe();
     }
 
     @Override

@@ -573,7 +573,7 @@ public class CameraPresenter<V extends CameraMvpView> extends BasePresenter<V>
                     // Create record in local db
                     String contiShootUuid = currContiShooting ? currContiShootParams.groupUuid : null;
                     CaptureRecord captureRecord = new CaptureRecord(
-                            UUID.randomUUID().toString(),
+                            captureProcessInfo.getRecordUuid(),
                             currCaptureProcessInfo.getPatient().getCuid(),
                             currCaptureProcessInfo.getTitle(),
                             currentPatient.getName() + "/" + currCaptureProcessInfo.getFilepathPrefix(),
@@ -596,6 +596,7 @@ public class CameraPresenter<V extends CameraMvpView> extends BasePresenter<V>
     private Observable<RawThermalDump> captureRawThermalDump(RenderedImage renderedImage, String filename, String title) {
         return Observable.<RawThermalDump>create(emitter -> {
             RawThermalDump rawThermalDump = new RawThermalDump(renderedImage, title);
+            rawThermalDump.setRecordUuid(UUID.randomUUID().toString());
 
             if (thermalSpotsHelper != null) {
                 // Set preselected spots if exists
@@ -656,7 +657,8 @@ public class CameraPresenter<V extends CameraMvpView> extends BasePresenter<V>
             ThImage thImage = new ThImage(captureRecord.getUuid(), patient,
                     captureRecord.getContishootGroup(), captureRecord.getTitle(), captureRecord.getCreatedAt());
 
-            syncService.scheduleNewTask(new SyncSingleThImageTask(thImage,
+            syncService.scheduleNewTask(new SyncSingleThImageTask(
+                    thImage,
                     new File(captureProcessInfo.getDumpFilepath()),
                     new File(captureProcessInfo.getFlirFilepath()),
                     uploadVisibleImage ? new File(captureProcessInfo.getVisibleFilepath()) : null));
