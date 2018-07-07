@@ -1,6 +1,7 @@
 package tw.cchi.medthimager.service.sync.task;
 
 import java.io.File;
+import java.util.Date;
 import java.util.List;
 
 import javax.inject.Inject;
@@ -43,6 +44,8 @@ public class UpSyncThImagesTask extends SyncTask {
     void doWork() {
         if (!checkNetworkAndAuthed())
             return;
+
+        dataManager.pref.setLastSyncThImages(new Date());
 
         List<CaptureRecord> captureRecords = dataManager.db.captureRecordDAO().getSyncList();
         for (CaptureRecord record : captureRecords) {
@@ -94,6 +97,7 @@ public class UpSyncThImagesTask extends SyncTask {
             });
         }
 
+        dataManager.pref.setLastSyncThImages(new Date());
         sendSyncDone();
     }
 

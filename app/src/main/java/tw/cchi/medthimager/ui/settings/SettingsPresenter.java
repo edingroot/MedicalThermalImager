@@ -47,8 +47,11 @@ public class SettingsPresenter<V extends SettingsMvpView> extends BasePresenter<
         getMvpView().setAuthState(currentSession.isActive(), currentSession.getUser());
         getMvpView().setSwClearSpotsOnDisconn(dataManager.pref.getClearSpotsOnDisconnectEnabled());
         getMvpView().setSwAutoApplyVisibleOffset(dataManager.pref.getAutoApplyVisibleOffsetEnabled());
-        getMvpView().setSyncPatientsStatus(false, getLastSyncPatients());
-        getMvpView().setSyncThImagesStatus(false, getLastSyncThImages());
+
+        application.connectSyncService().subscribe(syncService -> {
+            getMvpView().setSyncPatientsStatus(syncService.isTaskRunning(SyncPatientsTask.class), getLastSyncPatients());
+            getMvpView().setSyncThImagesStatus(syncService.isTaskRunning(UpSyncThImagesTask.class), getLastSyncThImages());
+        });
 
         // Refresh data asynchronously
         apiHelper.refreshUserProfile().observeOn(AndroidSchedulers.mainThread()).subscribe(success -> {

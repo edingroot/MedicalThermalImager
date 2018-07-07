@@ -25,11 +25,13 @@ public class SyncPatientsTask extends SyncTask {
 
     @Override
     void doWork() {
+        dataManager.pref.setLastSyncPatients(new Date());
+
         upSyncPatients();
         downSyncPatients();
 
-        dataManager.pref.setLastSyncPatients(new Date());
         CommonUtils.sleep(500);
+        dataManager.pref.setLastSyncPatients(new Date());
         sendSyncDone();
     }
 
