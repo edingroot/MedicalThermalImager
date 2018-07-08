@@ -726,7 +726,7 @@ public class DumpViewerPresenter<V extends DumpViewerMvpView> extends BasePresen
 
             visibleImageExtractor.extractImage(rawThermalDump.getFlirImagePath(), visibleImage -> {
                 if (visibleImage == null) {
-                    getMvpView().showSnackBar("Failed to extract visible light image.");
+                    getMvpView().showSnackBar(R.string.failed_extract_visible);
                     emitter.onNext(false);
                 } else {
                     rawThermalDump.attachVisibleImageMask(visibleImage, 0, 0);

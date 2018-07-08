@@ -406,7 +406,7 @@ public class CameraPresenter<V extends CameraMvpView> extends BasePresenter<V>
             if (thermalSpotsHelper != null)
                 thermalSpotsHelper.updateThermalValuesFromImage(renderedImage);
 
-            // If image capture in progress
+            // If image capture is requested
             if (captureProcessInfo != null) {
                 processCaptures(renderedImage, captureProcessInfo, contiShooting, contiShootParams);
                 captureProcessInfo = null;
@@ -547,6 +547,8 @@ public class CameraPresenter<V extends CameraMvpView> extends BasePresenter<V>
 
     private void processCaptures(RenderedImage renderedImage, CaptureProcessInfo currCaptureProcessInfo,
                                  boolean currContiShooting, ContiShootParameters currContiShootParams) {
+        getMvpView().animateFlash();
+
         // Async capture & upload
         Observable.zip(
             captureRawThermalDump(renderedImage, currCaptureProcessInfo.getDumpFilepath(), currCaptureProcessInfo.getTitle()),
@@ -629,13 +631,18 @@ public class CameraPresenter<V extends CameraMvpView> extends BasePresenter<V>
 
         return Observable.<Boolean>create(emitter -> {
             try {
-                // Save the original thermal image
-                renderedImage.getFrame().save(new File(filename), frameProcessor);
-                getMvpView().animateFlash();
+                File imageFile = new File(filename);
 
+                // Make intermediate dirs
+                imageFile.getParentFile().mkdirs();
+
+                // Save the original thermal image
+                renderedImage.getFrame().save(imageFile, frameProcessor);
                 scanMediaStorage(filename);
+
                 emitter.onNext(true);
             } catch (Exception e) {
+                e.printStackTrace();
                 emitter.onNext(false);
             }
             emitter.onComplete();

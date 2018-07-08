@@ -1,5 +1,7 @@
 package tw.cchi.medthimager.service.sync.task;
 
+import android.util.Log;
+
 import java.io.File;
 import java.util.Date;
 import java.util.List;
@@ -7,6 +9,7 @@ import java.util.List;
 import javax.inject.Inject;
 
 import io.reactivex.Observable;
+import tw.cchi.medthimager.Config;
 import tw.cchi.medthimager.Constants;
 import tw.cchi.medthimager.data.db.model.CaptureRecord;
 import tw.cchi.medthimager.data.db.model.Patient;
@@ -21,7 +24,9 @@ import tw.cchi.medthimager.util.AppUtils;
 import tw.cchi.medthimager.util.CommonUtils;
 
 public class UpSyncThImagesTask extends SyncTask {
+    private final String TAG = Config.TAGPRE + getClass().getSimpleName();
     private static final long DEFAULT_TIMEOUT = 10 * 60 * 1000;
+
     private boolean doneBroadcastSent = false;
 
     @Inject ThImagesHelper thImagesHelper;
@@ -61,6 +66,8 @@ public class UpSyncThImagesTask extends SyncTask {
             File flirFile = new File(filepathPrefix + Constants.POSTFIX_FLIR_IMAGE + ".jpg");
             File visibleFile = new File(filepathPrefix + Constants.POSTFIX_VISIBLE_IMAGE + ".png");
             if (!dumpFile.exists() || !flirFile.exists()) {
+                Log.e(TAG, "Dump record: " + record.getFilenamePrefix() +
+                        ", either dump file or flir file not exist, delete record from local database.");
                 dataManager.db.captureRecordDAO().delete(record);
                 continue;
             }
