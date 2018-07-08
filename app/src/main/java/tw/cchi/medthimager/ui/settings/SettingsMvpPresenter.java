@@ -1,6 +1,7 @@
 package tw.cchi.medthimager.ui.settings;
 
 import tw.cchi.medthimager.ui.base.MvpPresenter;
+import tw.cchi.medthimager.util.annotation.BgThreadCapable;
 
 public interface SettingsMvpPresenter<V extends SettingsMvpView> extends MvpPresenter<V> {
 
@@ -16,8 +17,10 @@ public interface SettingsMvpPresenter<V extends SettingsMvpView> extends MvpPres
 
     void syncThImages();
 
+    @BgThreadCapable
     void onSyncPatientsDone();
 
+    @BgThreadCapable
     void onSyncThImagesDone();
 
 }

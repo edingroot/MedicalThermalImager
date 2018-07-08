@@ -20,6 +20,7 @@ import tw.cchi.medthimager.service.sync.task.SyncPatientsTask;
 import tw.cchi.medthimager.service.sync.task.UpSyncThImagesTask;
 import tw.cchi.medthimager.ui.base.BasePresenter;
 import tw.cchi.medthimager.util.DateTimeUtils;
+import tw.cchi.medthimager.util.annotation.BgThreadCapable;
 
 public class SettingsPresenter<V extends SettingsMvpView> extends BasePresenter<V> implements SettingsMvpPresenter<V> {
     private final String TAG = Config.TAGPRE + getClass().getSimpleName();
@@ -112,6 +113,8 @@ public class SettingsPresenter<V extends SettingsMvpView> extends BasePresenter<
         application.connectSyncService().subscribe(syncService -> {
             if (application.checkNetworkAuthed(true) && !syncService.isTaskRunning(SyncPatientsTask.class)) {
                 syncService.scheduleNewTask(new SyncPatientsTask());
+            } else {
+                onSyncPatientsDone();
             }
         });
     }
@@ -127,22 +130,28 @@ public class SettingsPresenter<V extends SettingsMvpView> extends BasePresenter<
             application.connectSyncService().subscribe(syncService -> {
                 if (application.checkNetworkAuthed(true) && !syncService.isTaskRunning(UpSyncThImagesTask.class)) {
                     syncService.scheduleNewTask(new UpSyncThImagesTask());
+                } else {
+                    onSyncThImagesDone();
                 }
             });
         }).subscribeOn(Schedulers.io()).subscribe();
     }
 
+    @BgThreadCapable
     @Override
     public void onSyncPatientsDone() {
         if (isViewAttached()) {
-            getMvpView().setSyncPatientsStatus(false, getLastSyncPatients());
+            activity.runOnUiThread(() ->
+                    getMvpView().setSyncPatientsStatus(false, getLastSyncPatients()));
         }
     }
 
+    @BgThreadCapable
     @Override
     public void onSyncThImagesDone() {
         if (isViewAttached()) {
-            getMvpView().setSyncThImagesStatus(false, getLastSyncThImages());
+            activity.runOnUiThread(() ->
+                    getMvpView().setSyncThImagesStatus(false, getLastSyncThImages()));
         }
     }
 

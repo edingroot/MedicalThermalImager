@@ -87,9 +87,9 @@
     <string name="error_occurred">Error occurred</string>
     <string name="invalid_input">Invalid input</string>
 
-    <string name="no_network_access">No network access.</string>
-    <string name="login_failed">Login failed.</string>
-    <string name="login_failed_comm_err">Login failed: error communicating with server.</string>
+    <string name="no_network_access">No network access</string>
+    <string name="login_failed">Login failed</string>
+    <string name="login_failed_comm_err">Login failed: error communicating with server</string>
     <string name="please_login">Please login</string>
 
     <string name="write_storage_required">Write storage permission is necessary for image capturing.</string>
