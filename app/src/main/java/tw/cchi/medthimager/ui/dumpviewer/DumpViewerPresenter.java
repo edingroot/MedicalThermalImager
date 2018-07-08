@@ -595,7 +595,7 @@ public class DumpViewerPresenter<V extends DumpViewerMvpView> extends BasePresen
     @NewThread
     @Override
     public void setThImageNotSynced(RawThermalDump rawThermalDump) {
-        String uuid = rawThermalDump.getCaptureRecordUuid();
+        String uuid = rawThermalDump.getRecordUuid();
         if (uuid == null)
             throw new RuntimeException("rawThermalDump.captureRecordUuid is not set");
 
@@ -622,14 +622,13 @@ public class DumpViewerPresenter<V extends DumpViewerMvpView> extends BasePresen
             return;
         }
 
-        if (thermalDump.getRecordUuid() == null) {
-            thImagesHelper.findOrInsertRecordFromThermalDump(thermalDump)
-                .observeOn(Schedulers.io())
-                .blockingSubscribe(captureRecord -> {
-                    thermalDump.setCaptureRecordUuid(captureRecord.getUuid());
-                });
-            thermalDump.saveAsync();
-        }
+        // Check and find uuid of the thermal dump
+        thImagesHelper.findOrInsertRecordFromThermalDump(thermalDump)
+            .observeOn(Schedulers.io())
+            .blockingSubscribe(captureRecord -> {
+                thermalDump.setRecordUuid(captureRecord.getUuid());
+                thermalDump.saveAsync();
+            });
 
         if (horizontalLineY == -1) {
             horizontalLineY = thermalDump.getHeight() / 2;

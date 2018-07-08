@@ -21,7 +21,6 @@ import tw.cchi.medthimager.thermalproc.RawThermalDump;
 import tw.cchi.medthimager.thermalproc.VisibleImageExtractor;
 import tw.cchi.medthimager.thermalproc.VisibleImageMask;
 import tw.cchi.medthimager.util.AppUtils;
-import tw.cchi.medthimager.util.CommonUtils;
 import tw.cchi.medthimager.util.FileUtils;
 import tw.cchi.medthimager.util.ImageUtils;
 
@@ -98,13 +97,8 @@ public class ThImagesHelper {
      */
     public Observable<CaptureRecord> findOrInsertRecordFromThermalDump(@NonNull RawThermalDump thermalDump) {
         return Observable.<CaptureRecord>create(emitter -> {
-            File flirImg = new File(extractFilepathPrefix(thermalDump.getFilepath()) + Constants.POSTFIX_FLIR_IMAGE + ".jpg");
-            if (!flirImg.exists()) {
-                emitter.onError(new Error("Flir image not exist"));
-                return;
-            }
-
             CaptureRecord captureRecord;
+
             if (thermalDump.getRecordUuid() != null) {
                 captureRecord = db.captureRecordDAO().get(thermalDump.getRecordUuid());
             } else {
@@ -116,8 +110,18 @@ public class ThImagesHelper {
                 String filenamePrefix = extractFilenamePrefix(thermalDump.getFilepath());
                 Date capturedAt = thermalDump.getCaptureTimestamp();
 
-                if (capturedAt == null)
-                    capturedAt = new Date(flirImg.lastModified());
+                if (capturedAt == null) {
+                    capturedAt = thermalDump.getCaptureTimestamp();
+                    if (capturedAt == null) {
+                        File flirImg = new File(extractFilepathPrefix(thermalDump.getFilepath()) + Constants.POSTFIX_FLIR_IMAGE + ".jpg");
+                        if (flirImg.exists()) {
+                            capturedAt = new Date(flirImg.lastModified());
+                        } else {
+                            File dumpFile = new File(thermalDump.getFilepath());
+                            capturedAt = new Date(dumpFile.lastModified());
+                        }
+                    }
+                }
 
                 captureRecord = new CaptureRecord(
                         UUID.randomUUID().toString(),

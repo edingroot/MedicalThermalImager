@@ -10,7 +10,6 @@ import tw.cchi.medthimager.util.ThermalDumpUtils;
  * New instance should be created every time when capture requested.
  */
 public class CaptureProcessInfo {
-    private String recordUuid;
     private Patient patient;
     private String title;
     private String filepathPrefix;
@@ -37,14 +36,6 @@ public class CaptureProcessInfo {
         this.visibleFilepath = filepathPrefix + Constants.POSTFIX_VISIBLE_IMAGE + ".png";
 
         this.title = RawThermalDump.generateTitleFromFilepath(dumpFilepath);
-    }
-
-    public String getRecordUuid() {
-        return recordUuid;
-    }
-
-    public void setRecordUuid(String recordUuid) {
-        this.recordUuid = recordUuid;
     }
 
     public Patient getPatient() {

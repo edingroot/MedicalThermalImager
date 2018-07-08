@@ -573,7 +573,7 @@ public class CameraPresenter<V extends CameraMvpView> extends BasePresenter<V>
                     // Create record in local db
                     String contiShootUuid = currContiShooting ? currContiShootParams.groupUuid : null;
                     CaptureRecord captureRecord = new CaptureRecord(
-                            captureProcessInfo.getRecordUuid(),
+                            UUID.randomUUID().toString(),
                             currCaptureProcessInfo.getPatient().getCuid(),
                             currCaptureProcessInfo.getTitle(),
                             currentPatient.getName() + "/" + currCaptureProcessInfo.getFilepathPrefix(),
@@ -586,6 +586,7 @@ public class CameraPresenter<V extends CameraMvpView> extends BasePresenter<V>
                                         currCaptureProcessInfo, extractVisibleSuccess);
                 },
                 e -> {
+                    e.printStackTrace();
                     if (isViewAttached()) {
                         getMvpView().showToast(R.string.dump_failed);
                     }
@@ -595,7 +596,7 @@ public class CameraPresenter<V extends CameraMvpView> extends BasePresenter<V>
 
     private Observable<RawThermalDump> captureRawThermalDump(RenderedImage renderedImage, String filename, String title) {
         return Observable.<RawThermalDump>create(emitter -> {
-            RawThermalDump rawThermalDump = new RawThermalDump(renderedImage, title);
+            RawThermalDump rawThermalDump = new RawThermalDump(renderedImage, title, new Date());
             rawThermalDump.setRecordUuid(UUID.randomUUID().toString());
 
             if (thermalSpotsHelper != null) {

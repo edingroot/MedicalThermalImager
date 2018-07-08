@@ -423,7 +423,7 @@ public class ThermalSpotsHelper implements Disposable {
 
     private Point view2thermalPosition(int x, int y) {
         if (!viewMetricsSet)
-            throw new RuntimeException("Convert spot position before view metrics set.");
+            throw new RuntimeException("Convert spot position before view metrics set");
 
         double ratio = (double) tempSourceWidth / imageViewWidth;
         y -= imageViewRawY;
@@ -434,7 +434,7 @@ public class ThermalSpotsHelper implements Disposable {
 
     private Point thermal2viewPosition(int x, int y) {
         if (!viewMetricsSet)
-            throw new RuntimeException("Convert spot position before view metrics set.");
+            throw new RuntimeException("Convert spot position before view metrics set");
 
         double ratio = (double) imageViewWidth / tempSourceWidth;
         x = (int) (x * ratio);

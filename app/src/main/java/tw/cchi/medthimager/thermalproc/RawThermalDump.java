@@ -73,8 +73,8 @@ import tw.cchi.medthimager.util.CommonUtils;
  *  (M+91)             number of thermal spot markers (up to 20 spot markers)
  *  (M+92)  ~ (M+171)  thermal spot marker #1 ~ #20, (x: 2 bytes, y: 2 bytes)
  *  (M+172)            -
- *  (M+173) ~ (M+202)  record UUID (32 ascii chars, no '-')
- *  (M+203)            EOF
+ *  (M+173) ~ (M+204)  record UUID (32 ascii chars, no '-')
+ *  (M+205)            EOF
  */
 public class RawThermalDump implements Disposable {
     private final String TAG = Config.TAGPRE + getClass().getSimpleName();
@@ -95,18 +95,18 @@ public class RawThermalDump implements Disposable {
     private int captureTimestamp;
 
     // [Android Only]
-    private String captureRecordUuid; // for cache
     private VisibleImageMask visibleImageMask;
     private boolean disposed = false;
 
     /**
      * [Android]
      */
-    public RawThermalDump(RenderedImage renderedImage, String title) {
+    public RawThermalDump(RenderedImage renderedImage, String title, Date captureTime) {
         this.width = renderedImage.width();
         this.height = renderedImage.height();
         this.thermalValues = renderedImage.thermalPixelValues();
         this.title = title;
+        this.setCaptureTimestamp(captureTime);
     }
 
     public RawThermalDump(int formatVersion, int width, int height, int[] thermalValues) {
@@ -189,7 +189,7 @@ public class RawThermalDump implements Disposable {
 
             // Read record UUID
             if (bytes[M + 173] != 0) {
-                rawThermalDump.recordUuid = new String(Arrays.copyOfRange(bytes, M + 173, M + 202 + 1));
+                rawThermalDump.recordUuid = new String(Arrays.copyOfRange(bytes, M + 173, M + 204 + 1));
             }
         }
 
@@ -615,7 +615,7 @@ public class RawThermalDump implements Disposable {
                     4   + width * height * 2, // v1
                     8   + width * height * 2, // v2
                     176 + width * height * 2, // v3
-                    207 + width * height * 2  // v4
+                    209 + width * height * 2  // v4
             };
             if (formatVersion < 1 || formatVersion > lengths.length)
                 return -1;
@@ -624,9 +624,9 @@ public class RawThermalDump implements Disposable {
         }
 
         private static int getThermalPixelOffset(int formatVersion) {
-            int[] offsets = new int[]{4, 4, 5};
+            int[] offsets = new int[]{4, 4, 5, 5};
             if (formatVersion < 1 || formatVersion > offsets.length)
-                return -1;
+                throw new Error("Incorrect format version");
             else
                 return offsets[formatVersion - 1];
         }
@@ -634,14 +634,6 @@ public class RawThermalDump implements Disposable {
 
 
     // ---------------------- [Android] ---------------------- //
-
-    public String getCaptureRecordUuid() {
-        return captureRecordUuid;
-    }
-
-    public void setCaptureRecordUuid(String captureRecordUuid) {
-        this.captureRecordUuid = captureRecordUuid;
-    }
 
     public void attachVisibleImageMask(Bitmap visibleImage, int defaultOffsetX, int defaultOffsetY) {
         Log.i(TAG, String.format("[attachVisibleImageMask] offset=(%d, %d)", visibleOffsetX, visibleOffsetY));
