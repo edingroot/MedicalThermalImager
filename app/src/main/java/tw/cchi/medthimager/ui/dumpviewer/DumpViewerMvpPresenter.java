@@ -11,9 +11,9 @@ import tw.cchi.medthimager.ui.base.MvpPresenter;
 
 public interface DumpViewerMvpPresenter<V extends DumpViewerMvpView> extends MvpPresenter<V> {
 
-    void pickImages();
+    void pickDumps();
 
-    void updateDumpsAfterPick(ArrayList<String> selectedPaths);
+    void onDumpsPicked(ArrayList<String> selectedPaths);
 
 
     @UiThread

@@ -16,6 +16,7 @@ import org.opencv.core.Point;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Collections;
 
 import javax.inject.Inject;
 
@@ -96,23 +97,25 @@ public class DumpViewerPresenter<V extends DumpViewerMvpView> extends BasePresen
         }));
 
         // Launch image picker on activity first started
-        pickImages();
+        pickDumps();
         getMvpView().showToast(R.string.pick_thermal_images);
     }
 
 
     @Override
-    public void pickImages() {
+    public void pickDumps() {
         getMvpView().launchImagePicker(tabResources.getThermalDumpPaths());
     }
 
     @Override
-    public void updateDumpsAfterPick(ArrayList<String> selectedPaths) {
+    public void onDumpsPicked(ArrayList<String> selectedPaths) {
         getMvpView().showLoading();
 
         final ArrayList<String> addPaths = selectedPaths;
         ArrayList<String> removePaths = new ArrayList<>(tabResources.getThermalDumpPaths());
         ArrayList<String> currentPaths = new ArrayList<>(tabResources.getThermalDumpPaths());
+
+        Collections.sort(addPaths);
 
         for (String path : currentPaths) {
             // Selected file has already been added
@@ -149,7 +152,7 @@ public class DumpViewerPresenter<V extends DumpViewerMvpView> extends BasePresen
                         try { // Avoid crash if activity stopped while calling updateThermalChartAxis()
                             updateThermalChartAxis();
 
-                            Log.d(TAG, "updateDumpsAfterPick@complete");
+                            Log.d(TAG, "onDumpsPicked@complete");
 
                             // switchDumpTab() called by addThermalDump() may not yet finished
                             if (tabResources.hasLoaded()) {

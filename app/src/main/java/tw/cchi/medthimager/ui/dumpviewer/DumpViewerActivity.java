@@ -139,7 +139,7 @@ public class DumpViewerActivity extends BaseActivity
         switch (requestCode) {
             case FilePickerConst.REQUEST_CODE_DOC:
                 if (resultCode == RESULT_OK && data != null) {
-                    presenter.updateDumpsAfterPick(data.getStringArrayListExtra(FilePickerConst.KEY_SELECTED_DOCS));
+                    presenter.onDumpsPicked(data.getStringArrayListExtra(FilePickerConst.KEY_SELECTED_DOCS));
                 }
                 break;
         }
@@ -202,7 +202,7 @@ public class DumpViewerActivity extends BaseActivity
 
     @OnClick(R.id.btnPick)
     public void onImagePickClick() {
-        presenter.pickImages();
+        presenter.pickDumps();
     }
 
     @OnClick(R.id.toggleVisible)
