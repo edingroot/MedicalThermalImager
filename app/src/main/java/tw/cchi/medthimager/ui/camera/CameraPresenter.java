@@ -339,6 +339,12 @@ public class CameraPresenter<V extends CameraMvpView> extends BasePresenter<V>
 
     @Override
     public void onDeviceConnected(Device device) {
+        if (device == null) {
+            if (isViewAttached())
+                getMvpView().showSnackBar(R.string.error_occurred);
+            return;
+        }
+
         // Log event
         dataManager.analytics.logCameraConnected(true);
 
