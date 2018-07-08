@@ -8,7 +8,6 @@ import android.widget.Toast;
 import java.util.concurrent.Callable;
 
 import io.reactivex.disposables.Disposable;
-import tw.cchi.medthimager.Errors;
 import tw.cchi.medthimager.MvpApplication;
 import tw.cchi.medthimager.data.DataManager;
 import tw.cchi.medthimager.data.network.ApiHelper;
@@ -71,9 +70,11 @@ public abstract class SyncTask implements Callable<Void>, Disposable {
 
     boolean checkNetworkAndAuthed() {
         if (!NetworkUtils.isNetworkConnected(application)) {
-            throw new Errors.NetworkLostError();
+            // throw new Errors.NetworkLostError();
+            return false;
         } else if (!application.getSession().isActive()) {
-            throw new Errors.UnauthenticatedError();
+            // throw new Errors.UnauthenticatedError();
+            return false;
         }
         return true;
     }
