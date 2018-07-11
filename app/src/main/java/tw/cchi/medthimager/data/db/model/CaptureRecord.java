@@ -53,16 +53,6 @@ public class CaptureRecord {
     @ColumnInfo(name = "synced")
     private boolean synced = false;
 
-    @Ignore
-    public CaptureRecord(@NonNull String uuid, String patientCuid, String title, String filenamePrefix, @Nullable String contishootGroup) {
-        this.uuid = uuid;
-        this.patientCuid = patientCuid;
-        this.title = title;
-        this.filenamePrefix = filenamePrefix;
-        this.contishootGroup = contishootGroup;
-        this.createdAt = new Date();
-    }
-
     public CaptureRecord(@NonNull String uuid, String patientCuid, String title, String filenamePrefix, String contishootGroup, Date createdAt, boolean synced) {
         this.uuid = uuid;
         this.patientCuid = patientCuid;

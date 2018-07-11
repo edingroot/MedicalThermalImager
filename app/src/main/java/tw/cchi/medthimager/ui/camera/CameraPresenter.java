@@ -568,6 +568,7 @@ public class CameraPresenter<V extends CameraMvpView> extends BasePresenter<V>
             .observeOn(Schedulers.io())
             .flatMap(rawThermalDump -> {
                 currCaptureProcessInfo.setRecordUuid(rawThermalDump.getRecordUuid());
+                currCaptureProcessInfo.setCaptureDate(rawThermalDump.getCaptureTimestamp());
 
                 // Wait until flir image saved
                 FileUtils.waitUntilExists(currCaptureProcessInfo.getFlirFilepath());
@@ -585,7 +586,9 @@ public class CameraPresenter<V extends CameraMvpView> extends BasePresenter<V>
                             currCaptureProcessInfo.getPatient().getCuid(),
                             currCaptureProcessInfo.getTitle(),
                             currentPatient.getName() + "/" + currCaptureProcessInfo.getFilepathPrefix(),
-                            contiShootUuid);
+                            contiShootUuid,
+                            currCaptureProcessInfo.getCaptureDate(),
+                            false);
 
                     dataManager.db.captureRecordDAO().insertAll(captureRecord);
 

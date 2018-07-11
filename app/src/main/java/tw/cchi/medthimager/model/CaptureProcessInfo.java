@@ -1,5 +1,7 @@
 package tw.cchi.medthimager.model;
 
+import java.util.Date;
+
 import tw.cchi.medthimager.Constants;
 import tw.cchi.medthimager.data.db.model.Patient;
 import tw.cchi.medthimager.thermalproc.RawThermalDump;
@@ -11,6 +13,7 @@ import tw.cchi.medthimager.util.ThermalDumpUtils;
  */
 public class CaptureProcessInfo {
     private String recordUuid;
+    private Date captureDate;
     private Patient patient;
     private String title;
     private String filepathPrefix;
@@ -45,6 +48,14 @@ public class CaptureProcessInfo {
 
     public void setRecordUuid(String recordUuid) {
         this.recordUuid = recordUuid;
+    }
+
+    public Date getCaptureDate() {
+        return captureDate;
+    }
+
+    public void setCaptureDate(Date captureDate) {
+        this.captureDate = captureDate;
     }
 
     public Patient getPatient() {
