@@ -123,7 +123,6 @@
     <string name="error_delete_color">Error deleting color image file of dump.</string>
     <string name="error_delete_visible">Error deleting visible light image file of dump.</string>
     <string name="error_delete_dump">Error deleting dump file.</string>
-    <string name="dump_deleted">Dump deleted</string>
     <string name="confirm_close_dump">Confirm to close %1$s tab?</string>
     <string name="confirm_delete_dump">Confirm to delete %1$s and related files?</string>
 

@@ -99,7 +99,7 @@ public class RawThermalDump implements Disposable {
     private boolean disposed = false;
 
     /**
-     * [Android]
+     * [Android Only]
      */
     public RawThermalDump(RenderedImage renderedImage, String title, Date captureTime) {
         this.width = renderedImage.width();
@@ -540,9 +540,9 @@ public class RawThermalDump implements Disposable {
 
             case 4:
                 bytes[startFrom] = (byte) (number & 0xff); // lsb
-                bytes[startFrom + 1] = (byte) ((number & 0xff00) >> 8);
-                bytes[startFrom + 2] = (byte) ((number & 0xff00) >> 16);
-                bytes[startFrom + 3] = (byte) ((number & 0xff00) >> 24); // msb
+                bytes[startFrom + 1] = (byte) ((number & 0x0000ff00) >> 8);
+                bytes[startFrom + 2] = (byte) ((number & 0x00ff0000) >> 16);
+                bytes[startFrom + 3] = (byte) ((number & 0xff000000) >> 24); // msb
                 break;
 
             default:

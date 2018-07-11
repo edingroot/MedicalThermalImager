@@ -288,10 +288,7 @@ public class DumpViewerPresenter<V extends DumpViewerMvpView> extends BasePresen
             .observeOn(AndroidSchedulers.mainThread()).subscribe(
                 deletedPath -> AppUtils.sendBroadcastToMedia(activity, deletedPath),
                 e -> getMvpView().showSnackBar(e.getMessage()),
-                () -> {
-                    getMvpView().showToast(R.string.dump_deleted);
-                    closeThermalDump(currentIndex, true);
-                }
+                () -> closeThermalDump(currentIndex, true)
         );
     }
 

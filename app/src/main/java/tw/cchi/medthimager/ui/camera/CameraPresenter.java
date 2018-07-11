@@ -567,6 +567,8 @@ public class CameraPresenter<V extends CameraMvpView> extends BasePresenter<V>
         ).subscribeOn(Schedulers.io())
             .observeOn(Schedulers.io())
             .flatMap(rawThermalDump -> {
+                currCaptureProcessInfo.setRecordUuid(rawThermalDump.getRecordUuid());
+
                 // Wait until flir image saved
                 FileUtils.waitUntilExists(currCaptureProcessInfo.getFlirFilepath());
                 CommonUtils.sleep(100);
@@ -579,7 +581,7 @@ public class CameraPresenter<V extends CameraMvpView> extends BasePresenter<V>
                     // Create record in local db
                     String contiShootUuid = currContiShooting ? currContiShootParams.groupUuid : null;
                     CaptureRecord captureRecord = new CaptureRecord(
-                            UUID.randomUUID().toString(),
+                            currCaptureProcessInfo.getRecordUuid(),
                             currCaptureProcessInfo.getPatient().getCuid(),
                             currCaptureProcessInfo.getTitle(),
                             currentPatient.getName() + "/" + currCaptureProcessInfo.getFilepathPrefix(),

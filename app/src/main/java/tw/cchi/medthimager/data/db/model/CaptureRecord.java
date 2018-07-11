@@ -54,7 +54,7 @@ public class CaptureRecord {
     private boolean synced = false;
 
     @Ignore
-    public CaptureRecord(String uuid, String patientCuid, String title, String filenamePrefix, @Nullable String contishootGroup) {
+    public CaptureRecord(@NonNull String uuid, String patientCuid, String title, String filenamePrefix, @Nullable String contishootGroup) {
         this.uuid = uuid;
         this.patientCuid = patientCuid;
         this.title = title;
