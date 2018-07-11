@@ -146,7 +146,7 @@ public class ApiHelper {
     }
 
     private void handleUploadThImageResponse(Response<ThImageResponse> response, @NonNull OnThImageUploadListener listener) {
-        if (response.code() == 201 && response.body() != null) {
+        if ((response.code() == 200 || response.code() == 201) && response.body() != null) {
             listener.onSuccess(response.body().thImage);
         } else if (response.errorBody() != null) {
             ThImageResponse thImageResponse;

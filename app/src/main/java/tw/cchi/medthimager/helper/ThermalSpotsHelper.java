@@ -360,8 +360,8 @@ public class ThermalSpotsHelper implements Disposable {
         Point viewPosition = spotView.getCenterPosition();
         Point rawPosition = view2thermalPosition(viewPosition.x, viewPosition.y);
 
-        Log.d(TAG, String.format("storeSpotPosition(id=%d) BfConv=(%d, %d), AfConv=(%d, %d)\n",
-            spotView.getSpotId(), viewPosition.x, viewPosition.y, rawPosition.x, rawPosition.y));
+        // Log.d(TAG, String.format("storeSpotPosition(id=%d) BfConv=(%d, %d), AfConv=(%d, %d)\n",
+        //     spotView.getSpotId(), viewPosition.x, viewPosition.y, rawPosition.x, rawPosition.y));
 
         if (tempSource == TempSource.ThermalDump) {
             ArrayList<org.opencv.core.Point> spotMarkers = rawThermalDump.getSpotMarkers();
