@@ -623,8 +623,10 @@ public class DumpViewerPresenter<V extends DumpViewerMvpView> extends BasePresen
         thImagesHelper.findOrInsertRecordFromThermalDump(thermalDump)
             .observeOn(Schedulers.io())
             .blockingSubscribe(captureRecord -> {
-                thermalDump.setRecordUuid(captureRecord.getUuid());
-                thermalDump.saveAsync();
+                if (!thermalDump.getRecordUuid().equals(captureRecord.getUuid())) {
+                    thermalDump.setRecordUuid(captureRecord.getUuid());
+                    thermalDump.saveAsync();
+                }
             });
 
         if (horizontalLineY == -1) {

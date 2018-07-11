@@ -53,6 +53,15 @@ public class CaptureRecord {
     @ColumnInfo(name = "synced")
     private boolean synced = false;
 
+    /**
+     * @param uuid
+     * @param patientCuid
+     * @param title
+     * @param filenamePrefix filename prefix of the absolute file path
+     * @param contishootGroup
+     * @param createdAt
+     * @param synced
+     */
     public CaptureRecord(@NonNull String uuid, String patientCuid, String title, String filenamePrefix, String contishootGroup, Date createdAt, boolean synced) {
         this.uuid = uuid;
         this.patientCuid = patientCuid;
@@ -80,6 +89,9 @@ public class CaptureRecord {
         return title;
     }
 
+    /**
+     * Filename prefix of the absolute file path.
+     */
     public String getFilenamePrefix() {
         return filenamePrefix;
     }

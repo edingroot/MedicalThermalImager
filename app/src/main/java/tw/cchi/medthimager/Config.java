@@ -14,7 +14,7 @@ public final class Config {
     public static final String PREFILLED_LOGIN_PASSWORD = "example@test1";
 
     public static final Level API_LOGGING_LEVEL = Level.BASIC;
-    public static final int REMOTE_CONFIG_CACHE_EXPIRATION = 60 * 60; // sec
+    public static final int REMOTE_CONFIG_CACHE_EXPIRATION = 2 * 60 * 60; // sec
 
     public static final Class[] GUEST_ACTIVITIES = {
             LoginActivity.class

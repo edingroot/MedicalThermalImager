@@ -38,14 +38,14 @@ public class ThImagesHelper {
     public Observable deleteInvalidCaptureRecords() {
         return Observable.create(emitter -> {
             for (CaptureRecord record : db.captureRecordDAO().getAll()) {
-                String filepathPrefix = AppUtils.getExportsDir() + "/" + record.getFilenamePrefix();
-                File dumpFile = new File(filepathPrefix + Constants.POSTFIX_THERMAL_DUMP + ".dat");
-                File flirFile = new File(filepathPrefix + Constants.POSTFIX_FLIR_IMAGE + ".jpg");
+                File dumpFile = new File(record.getFilenamePrefix() + Constants.POSTFIX_THERMAL_DUMP + ".dat");
+                File flirFile = new File(record.getFilenamePrefix() + Constants.POSTFIX_FLIR_IMAGE + ".jpg");
 
-                Log.i(TAG, "Checking record: " + dumpFile.getAbsolutePath());
                 if (!dumpFile.exists() || !flirFile.exists()) {
                     db.captureRecordDAO().delete(record);
                     Log.i(TAG, "Deleting record: " + dumpFile.getAbsolutePath());
+                } else {
+                    Log.i(TAG, "Record check passed: " + dumpFile.getAbsolutePath());
                 }
             }
 
@@ -67,7 +67,7 @@ public class ThImagesHelper {
             filesFlowable.parallel()
                 .runOn(Schedulers.io())
                 .map(file -> {
-                    Log.i(TAG, "Checking file: " + file.getAbsolutePath());
+                    Log.i(TAG, "Checking dump file: " + file.getAbsolutePath());
 
                     RawThermalDump rawThermalDump = RawThermalDump.readFromDumpFile(file.getAbsolutePath());
                     if (rawThermalDump == null) {

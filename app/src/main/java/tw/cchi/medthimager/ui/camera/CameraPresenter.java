@@ -585,7 +585,7 @@ public class CameraPresenter<V extends CameraMvpView> extends BasePresenter<V>
                             currCaptureProcessInfo.getRecordUuid(),
                             currCaptureProcessInfo.getPatient().getCuid(),
                             currCaptureProcessInfo.getTitle(),
-                            currentPatient.getName() + "/" + currCaptureProcessInfo.getFilepathPrefix(),
+                            currCaptureProcessInfo.getFilepathPrefix(),
                             contiShootUuid,
                             currCaptureProcessInfo.getCaptureDate(),
                             false);

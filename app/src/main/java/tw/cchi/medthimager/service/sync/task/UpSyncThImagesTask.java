@@ -61,10 +61,9 @@ public class UpSyncThImagesTask extends SyncTask {
                     record.getTitle(), record.getCreatedAt());
 
             // Check if files exist, if not, skip upload and delete record
-            String filepathPrefix = AppUtils.getExportsDir() + "/" + record.getFilenamePrefix();
-            File dumpFile = new File(filepathPrefix + Constants.POSTFIX_THERMAL_DUMP + ".dat");
-            File flirFile = new File(filepathPrefix + Constants.POSTFIX_FLIR_IMAGE + ".jpg");
-            File visibleFile = new File(filepathPrefix + Constants.POSTFIX_VISIBLE_IMAGE + ".png");
+            File dumpFile = new File(record.getFilenamePrefix() + Constants.POSTFIX_THERMAL_DUMP + ".dat");
+            File flirFile = new File(record.getFilenamePrefix() + Constants.POSTFIX_FLIR_IMAGE + ".jpg");
+            File visibleFile = new File(record.getFilenamePrefix() + Constants.POSTFIX_VISIBLE_IMAGE + ".png");
             if (!dumpFile.exists() || !flirFile.exists()) {
                 Log.e(TAG, "Dump record: " + record.getFilenamePrefix() +
                         ", either dump file or flir file not exist, delete record from local database.");
