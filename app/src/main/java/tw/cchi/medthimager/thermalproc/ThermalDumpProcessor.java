@@ -19,10 +19,10 @@ public class ThermalDumpProcessor {
     private final String TAG = Config.TAGPRE + getClass().getSimpleName();
 
     private final static int MAX_TEMP_ALLOWED = 2731 + 1200; // 120 deg Celsius
-    private final static int COLOR_TEMP_MIN = 10; // 10 deg Celsius
-    private final static int COLOR_TEMP_MAX = 40; // 40 deg Celsius
     private final static double FILTER_RATIO_LOW = 0.005; // Set to 0 to disable
     private final static double FILTER_RATIO_HIGH = 0.0005; // Set to 0 to disable
+    // private final static int COLOR_TEMP_MIN = 15; // 15 deg Celsius
+    // private final static int COLOR_TEMP_MAX = 40; // 40 deg Celsius
 
     private int width = 0;
     private int height = 0;
@@ -198,10 +198,12 @@ public class ThermalDumpProcessor {
      * Generate grayscale thermal image from temperature values
      */
     public void generateThermalImage() {
-        /* generateThermalImage(
+        System.out.printf("minTemp=%d, maxTemp=%d\n", (minThermalValue - 2731) / 10, (maxThermalValue - 2731) / 10);
+
+        generateThermalImage(
                 (minThermalValue - 2731) / 10.0f,
-                (maxThermalValue - 2731) / 10.0f); */
-        generateThermalImage(COLOR_TEMP_MIN, COLOR_TEMP_MAX);
+                (maxThermalValue - 2731) / 10.0f);
+        // generateThermalImage(COLOR_TEMP_MIN, COLOR_TEMP_MAX);
     }
 
     /**
