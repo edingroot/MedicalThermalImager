@@ -45,21 +45,22 @@ public class CSVExportHelper {
             Map<String, Patient> patientMap = getPatientMap();
             for (CaptureRecord captureRecord : database.captureRecordDAO().getAll()) {
                 StringBuilder rowBuilder = new StringBuilder();
+                String filenamePrefix = ThImagesHelper.extractFilenamePrefix(captureRecord.getFilepathPrefix());
 
                 Patient patient = patientMap.get(captureRecord.getPatientCuid());
                 if (patient == null) {
                     rowBuilder.append(String.format("%s,%s,%s,%s,%s",
-                            "-", "-", captureRecord.getFilenamePrefix(),
+                            "-", "-", filenamePrefix,
                             captureRecord.getCreatedAt(), captureRecord.getTitle()
                     ));
                 } else {
                     rowBuilder.append(String.format("%s,%s,%s,%s,%s",
-                            patient.getCuid(), patient.getName(), captureRecord.getFilenamePrefix(),
+                            patient.getCuid(), patient.getName(), filenamePrefix,
                             captureRecord.getCreatedAt(), captureRecord.getTitle()
                     ));
                 }
 
-                ArrayList<Double> spotValues = readSpotValues(captureRecord.getFilenamePrefix());
+                ArrayList<Double> spotValues = readSpotValues(filenamePrefix);
                 if (spotValues != null) {
                     if (spotValues.size() > maxSpotCount)
                         maxSpotCount = spotValues.size();
@@ -67,7 +68,7 @@ public class CSVExportHelper {
                     for (double temp : spotValues)
                         rowBuilder.append(String.format(",%.2f", temp));
                 } else {
-                    Log.i(TAG, "Dump not found, skip reading spotValues of: " + captureRecord.getFilenamePrefix());
+                    Log.i(TAG, "Dump not found, skip reading spotValues of: " + filenamePrefix);
                     // TODO: remove this record from database?
                     continue;
                 }

@@ -38,8 +38,8 @@ public class ThImagesHelper {
     public Observable deleteInvalidCaptureRecords() {
         return Observable.create(emitter -> {
             for (CaptureRecord record : db.captureRecordDAO().getAll()) {
-                File dumpFile = new File(record.getFilenamePrefix() + Constants.POSTFIX_THERMAL_DUMP + ".dat");
-                File flirFile = new File(record.getFilenamePrefix() + Constants.POSTFIX_FLIR_IMAGE + ".jpg");
+                File dumpFile = new File(record.getFilepathPrefix() + Constants.POSTFIX_THERMAL_DUMP + ".dat");
+                File flirFile = new File(record.getFilepathPrefix() + Constants.POSTFIX_FLIR_IMAGE + ".jpg");
 
                 if (!dumpFile.exists() || !flirFile.exists()) {
                     db.captureRecordDAO().delete(record);
@@ -107,7 +107,6 @@ public class ThImagesHelper {
             }
 
             if (captureRecord == null) {
-                String filenamePrefix = extractFilenamePrefix(thermalDump.getFilepath());
                 Date capturedAt = thermalDump.getCaptureTimestamp();
 
                 if (capturedAt == null) {
@@ -123,11 +122,14 @@ public class ThImagesHelper {
                     }
                 }
 
+                Log.i(TAG, "Adding new dump record due to record not found: " + thermalDump.getFilepath());
+
                 captureRecord = new CaptureRecord(
                         UUID.randomUUID().toString(),
                         thermalDump.getPatientCuid(),
                         thermalDump.getTitle(),
-                        filenamePrefix, null,
+                        thermalDump.getFilepath(),
+                        null,
                         capturedAt, false);
 
                 db.captureRecordDAO().insertAndAutoCreatePatient(db.patientDAO(), captureRecord);
@@ -159,21 +161,22 @@ public class ThImagesHelper {
     }
 
     /**
-     * Output example: "Unspecified/0602-155558-6"
-     *
-     * See also {@link tw.cchi.medthimager.model.CaptureProcessInfo}
-     */
-    public static String extractFilenamePrefix(String filePath) {
-        return extractFilepathPrefix(filePath).replace(AppUtils.getExportsDir() + "/", "");
-    }
-
-    /**
      * Output example: "/storage/emulated/0/flirEx1/Unspecified/0602-155558-6"
      *
      * See also {@link tw.cchi.medthimager.model.CaptureProcessInfo}
      */
     public static String extractFilepathPrefix(String filePath) {
         String prefix = FileUtils.removeExtension(filePath);
-        return prefix.substring(0, prefix.lastIndexOf("_"));
+        int index = prefix.lastIndexOf("_");
+        return index > 0 ? prefix.substring(0, prefix.lastIndexOf("_")) : prefix;
+    }
+
+    /**
+     * Output example: "Unspecified/0602-155558-6"
+     *
+     * See also {@link tw.cchi.medthimager.model.CaptureProcessInfo}
+     */
+    public static String extractFilenamePrefix(String filePath) {
+        return extractFilepathPrefix(filePath).replace(AppUtils.getExportsDir() + "/", "");
     }
 }

@@ -20,7 +20,6 @@ import tw.cchi.medthimager.helper.ThImagesHelper;
 import tw.cchi.medthimager.model.api.ThImage;
 import tw.cchi.medthimager.service.sync.helper.SyncPatientHelper;
 import tw.cchi.medthimager.thermalproc.RawThermalDump;
-import tw.cchi.medthimager.util.AppUtils;
 import tw.cchi.medthimager.util.CommonUtils;
 
 public class UpSyncThImagesTask extends SyncTask {
@@ -61,11 +60,11 @@ public class UpSyncThImagesTask extends SyncTask {
                     record.getTitle(), record.getCreatedAt());
 
             // Check if files exist, if not, skip upload and delete record
-            File dumpFile = new File(record.getFilenamePrefix() + Constants.POSTFIX_THERMAL_DUMP + ".dat");
-            File flirFile = new File(record.getFilenamePrefix() + Constants.POSTFIX_FLIR_IMAGE + ".jpg");
-            File visibleFile = new File(record.getFilenamePrefix() + Constants.POSTFIX_VISIBLE_IMAGE + ".png");
+            File dumpFile = new File(record.getFilepathPrefix() + Constants.POSTFIX_THERMAL_DUMP + ".dat");
+            File flirFile = new File(record.getFilepathPrefix() + Constants.POSTFIX_FLIR_IMAGE + ".jpg");
+            File visibleFile = new File(record.getFilepathPrefix() + Constants.POSTFIX_VISIBLE_IMAGE + ".png");
             if (!dumpFile.exists() || !flirFile.exists()) {
-                Log.e(TAG, "Dump record: " + record.getFilenamePrefix() +
+                Log.e(TAG, "Dump record: " + record.getFilepathPrefix() +
                         ", either dump file or flir file not exist, delete record from local database.");
                 dataManager.db.captureRecordDAO().delete(record);
                 continue;

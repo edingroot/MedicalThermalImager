@@ -18,7 +18,7 @@ import tw.cchi.medthimager.data.db.model.PatientDAO;
 @Database(entities = {
         Patient.class,
         CaptureRecord.class
-}, version = 3)
+}, version = 4)
 @TypeConverters(DateConverter.class)
 public abstract class AppDatabase extends RoomDatabase {
     private static final String TAG = AppDatabase.class.getSimpleName();

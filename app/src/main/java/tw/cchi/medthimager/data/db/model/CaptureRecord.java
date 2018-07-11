@@ -41,8 +41,8 @@ public class CaptureRecord {
     /**
      * See {@link tw.cchi.medthimager.model.CaptureProcessInfo#CaptureProcessInfo(Patient)}
      */
-    @ColumnInfo(name = "filename_prefix")
-    private String filenamePrefix;
+    @ColumnInfo(name = "filepath_prefix")
+    private String filepathPrefix;
 
     @ColumnInfo(name = "contishoot_group")
     private String contishootGroup;
@@ -53,20 +53,11 @@ public class CaptureRecord {
     @ColumnInfo(name = "synced")
     private boolean synced = false;
 
-    /**
-     * @param uuid
-     * @param patientCuid
-     * @param title
-     * @param filenamePrefix filename prefix of the absolute file path
-     * @param contishootGroup
-     * @param createdAt
-     * @param synced
-     */
-    public CaptureRecord(@NonNull String uuid, String patientCuid, String title, String filenamePrefix, String contishootGroup, Date createdAt, boolean synced) {
+    public CaptureRecord(@NonNull String uuid, String patientCuid, String title, String filepathPrefix, String contishootGroup, Date createdAt, boolean synced) {
         this.uuid = uuid;
         this.patientCuid = patientCuid;
         this.title = title;
-        this.filenamePrefix = filenamePrefix;
+        this.filepathPrefix = filepathPrefix;
         this.contishootGroup = contishootGroup;
         this.createdAt = createdAt;
         this.synced = synced;
@@ -89,11 +80,8 @@ public class CaptureRecord {
         return title;
     }
 
-    /**
-     * Filename prefix of the absolute file path.
-     */
-    public String getFilenamePrefix() {
-        return filenamePrefix;
+    public String getFilepathPrefix() {
+        return filepathPrefix;
     }
 
     public String getContishootGroup() {
