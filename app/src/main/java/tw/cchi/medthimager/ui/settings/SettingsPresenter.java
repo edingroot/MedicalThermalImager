@@ -1,6 +1,5 @@
 package tw.cchi.medthimager.ui.settings;
 
-import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 
 import javax.inject.Inject;
@@ -25,7 +24,6 @@ import tw.cchi.medthimager.util.annotation.BgThreadCapable;
 public class SettingsPresenter<V extends SettingsMvpView> extends BasePresenter<V> implements SettingsMvpPresenter<V> {
     private final String TAG = Config.TAGPRE + getClass().getSimpleName();
 
-    @Inject AppCompatActivity activity;
     @Inject ApiHelper apiHelper;
     @Inject ThImagesHelper thImagesHelper;
 

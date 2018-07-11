@@ -3,12 +3,16 @@ package tw.cchi.medthimager.ui.base;
 
 import android.os.Handler;
 import android.os.Looper;
+import android.support.v7.app.AppCompatActivity;
 
 import javax.inject.Inject;
 
 import io.reactivex.disposables.CompositeDisposable;
 import tw.cchi.medthimager.MvpApplication;
 import tw.cchi.medthimager.data.DataManager;
+import tw.cchi.medthimager.ui.dialog.updateremider.UpdateReminderDialog;
+import tw.cchi.medthimager.ui.dialog.updateremider.UpdateReminderPresenter;
+import tw.cchi.medthimager.util.AppUtils;
 
 /**
  * Base class that implements the Presenter interface and provides a base implementation for
@@ -22,6 +26,7 @@ public class BasePresenter<V extends MvpView> implements MvpPresenter<V> {
     protected Handler mainLooperHandler;
 
     @Inject protected MvpApplication application;
+    @Inject protected AppCompatActivity activity;
     @Inject protected DataManager dataManager;
 
     @Inject
@@ -33,6 +38,9 @@ public class BasePresenter<V extends MvpView> implements MvpPresenter<V> {
     @Override
     public void onAttach(V mvpView) {
         this.mMvpView = mvpView;
+
+        if (getClass() != UpdateReminderPresenter.class)
+            checkNewVersion();
     }
 
     @Override
@@ -56,6 +64,21 @@ public class BasePresenter<V extends MvpView> implements MvpPresenter<V> {
 
     public CompositeDisposable getCompositeDisposable() {
         return disposables;
+    }
+
+    private void checkNewVersion() {
+        int currentVersion = AppUtils.getVersionCode(application);
+        int lastNotifiedVersion = dataManager.pref.getLastNotifiedVersion();
+
+        if (lastNotifiedVersion < currentVersion) {
+            lastNotifiedVersion = currentVersion;
+            dataManager.pref.setLastNotifiedVersion(lastNotifiedVersion);
+        }
+
+        if (lastNotifiedVersion < dataManager.rconfig.getLatestVersionCode()) {
+            UpdateReminderDialog dialog = UpdateReminderDialog.newInstance();
+            dialog.show(activity.getSupportFragmentManager());
+        }
     }
 
     public static class MvpViewNotAttachedException extends RuntimeException {

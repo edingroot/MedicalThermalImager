@@ -24,6 +24,9 @@ import tw.cchi.medthimager.ui.camera.patientmgmt.PatientMgmtPresenter;
 import tw.cchi.medthimager.ui.dialog.patientconflict.ConflictPatientMvpPresenter;
 import tw.cchi.medthimager.ui.dialog.patientconflict.ConflictPatientMvpView;
 import tw.cchi.medthimager.ui.dialog.patientconflict.ConflictPatientPresenter;
+import tw.cchi.medthimager.ui.dialog.updateremider.UpdateReminderMvpPresenter;
+import tw.cchi.medthimager.ui.dialog.updateremider.UpdateReminderMvpView;
+import tw.cchi.medthimager.ui.dialog.updateremider.UpdateReminderPresenter;
 import tw.cchi.medthimager.ui.dumpviewer.DumpViewerMvpPresenter;
 import tw.cchi.medthimager.ui.dumpviewer.DumpViewerMvpView;
 import tw.cchi.medthimager.ui.dumpviewer.DumpViewerPresenter;
@@ -96,6 +99,11 @@ public class ActivityModule {
 
     @Provides
     ConflictPatientMvpPresenter<ConflictPatientMvpView> provideConflictPatientMvpPresenter(ConflictPatientPresenter<ConflictPatientMvpView> presenter) {
+        return presenter;
+    }
+
+    @Provides
+    UpdateReminderMvpPresenter<UpdateReminderMvpView> provideUpdateReminderMvpPresenter(UpdateReminderPresenter<UpdateReminderMvpView> presenter) {
         return presenter;
     }
 

@@ -1,7 +1,5 @@
 package tw.cchi.medthimager.ui.dialog.patientconflict;
 
-import android.support.v7.app.AppCompatActivity;
-
 import java.util.List;
 
 import javax.inject.Inject;
@@ -16,8 +14,6 @@ import tw.cchi.medthimager.ui.base.BasePresenter;
 import tw.cchi.medthimager.util.DateTimeUtils;
 
 public class ConflictPatientPresenter<V extends ConflictPatientMvpView> extends BasePresenter<V> implements ConflictPatientMvpPresenter<V> {
-
-    @Inject AppCompatActivity activity;
 
     private SyncBroadcastSender.ConflictType conflictType;
     private Patient localPatient;

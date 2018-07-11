@@ -9,8 +9,11 @@ import android.util.Log;
 import com.flir.flironesdk.Device;
 import com.google.firebase.analytics.FirebaseAnalytics;
 
+import javax.inject.Inject;
+
 import tw.cchi.medthimager.BuildConfig;
 import tw.cchi.medthimager.Config;
+import tw.cchi.medthimager.di.ApplicationContext;
 import tw.cchi.medthimager.model.ContiShootParameters;
 import tw.cchi.medthimager.util.AppUtils;
 
@@ -18,11 +21,12 @@ public class FirebaseAnalyticsHelper {
     private final String TAG = Config.TAGPRE + "FAHelper";
 
     private Context context;
-    private FirebaseAnalytics mFirebaseAnalytics;
+    private FirebaseAnalytics firebaseAnalytics;
 
-    public FirebaseAnalyticsHelper(Context context, FirebaseAnalytics firebaseAnalytics) {
+    @Inject
+    public FirebaseAnalyticsHelper(@ApplicationContext Context context) {
         this.context = context;
-        this.mFirebaseAnalytics = firebaseAnalytics;
+        this.firebaseAnalytics = FirebaseAnalytics.getInstance(context);
 
         boolean enableAnalytics = !BuildConfig.DEBUG &&
                                   Config.ENABLE_ANALYTICS_COLLECTION &&
@@ -43,8 +47,8 @@ public class FirebaseAnalyticsHelper {
             UserProperty.DEVICE_ID, deviceId,
             UserProperty.WIFI_MAC_ADDR, macAddr));
 
-        mFirebaseAnalytics.setUserProperty(UserProperty.DEVICE_ID, deviceId);
-        mFirebaseAnalytics.setUserProperty(UserProperty.WIFI_MAC_ADDR, macAddr);
+        firebaseAnalytics.setUserProperty(UserProperty.DEVICE_ID, deviceId);
+        firebaseAnalytics.setUserProperty(UserProperty.WIFI_MAC_ADDR, macAddr);
     }
 
     /**
@@ -52,7 +56,7 @@ public class FirebaseAnalyticsHelper {
      *   (disabled if running in test lab)
      */
     public FirebaseAnalytics getFirebaseAnalytics() {
-        return mFirebaseAnalytics;
+        return firebaseAnalytics;
     }
 
     // ------------------------------------- Logging Methods ------------------------------------- //
@@ -143,7 +147,7 @@ public class FirebaseAnalyticsHelper {
     // ------------------------------------- /Logging Methods ------------------------------------- //
 
     private void logEvent(@NonNull String event, @Nullable Bundle params) {
-        mFirebaseAnalytics.logEvent(Event.PREFIX + event, params);
+        firebaseAnalytics.logEvent(Event.PREFIX + event, params);
     }
 
 }

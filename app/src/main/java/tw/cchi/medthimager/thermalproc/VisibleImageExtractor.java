@@ -15,7 +15,10 @@ import java.util.EnumSet;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReentrantLock;
 
+import javax.inject.Inject;
+
 import tw.cchi.medthimager.Config;
+import tw.cchi.medthimager.di.ApplicationContext;
 import tw.cchi.medthimager.util.annotation.NewThread;
 
 public class VisibleImageExtractor implements FrameProcessor.Delegate {
@@ -32,7 +35,8 @@ public class VisibleImageExtractor implements FrameProcessor.Delegate {
     private final AtomicInteger proceedTypeCount = new AtomicInteger(0);
     // private volatile Bitmap blendedMSXBitmap;
 
-    public VisibleImageExtractor(Context applicationContext) {
+    @Inject
+    public VisibleImageExtractor(@ApplicationContext Context applicationContext) {
         frameProcessor = new FrameProcessor(applicationContext, VisibleImageExtractor.this, IMAGE_TYPES);
         // frameProcessor.setImagePalette(RenderedImage.Palette.Iron);
         frameProcessor.setEmissivity(0.98f); // human skin, water, frost

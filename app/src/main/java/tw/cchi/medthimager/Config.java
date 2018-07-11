@@ -12,7 +12,9 @@ public final class Config {
 //    public static final String API_BASE_URL = "http://192.168.0.201/thermal-imager-console/public/api/";
     public static final String PREFILLED_LOGIN_EMAIL = "test1@example.com";
     public static final String PREFILLED_LOGIN_PASSWORD = "example@test1";
+
     public static final Level API_LOGGING_LEVEL = Level.BASIC;
+    public static final int REMOTE_CONFIG_CACHE_EXPIRATION = 60 * 60; // sec
 
     public static final Class[] GUEST_ACTIVITIES = {
             LoginActivity.class

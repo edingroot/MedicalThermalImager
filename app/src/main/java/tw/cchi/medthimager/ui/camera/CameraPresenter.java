@@ -7,7 +7,6 @@ import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.net.Uri;
 import android.support.annotation.UiThread;
-import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 
 import com.flir.flironesdk.Device;
@@ -60,7 +59,6 @@ public class CameraPresenter<V extends CameraMvpView> extends BasePresenter<V>
                 FrameProcessor.Delegate, Device.PowerUpdateDelegate {
     private final String TAG = Config.TAGPRE + getClass().getSimpleName();
 
-    @Inject AppCompatActivity activity;
     @Inject CSVExportHelper csvExportHelper;
     @Inject ThImagesHelper thImagesHelper;
 

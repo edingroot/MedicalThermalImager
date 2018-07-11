@@ -68,6 +68,13 @@
     <string name="error">Error</string>
     <string name="completed">Completed</string>
 
+    <!-- UpdateReminderDialog -->
+    <string name="new_version_available">New Version Available</string>
+    <string name="current_version_">Current version: %1$s</string>
+    <string name="new_version_">New version: %1$s</string>
+    <string name="update">Update</string>
+    <string name="ignore">Ignore</string>
+
     <!-- PatientMgmtDialog -->
     <string name="confirm_remove_patient">Confirm to remove records of %1$s?</string>
 

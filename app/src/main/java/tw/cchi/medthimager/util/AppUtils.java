@@ -5,6 +5,8 @@ import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.net.Uri;
@@ -23,6 +25,39 @@ public final class AppUtils {
 
     private AppUtils() {
         // This utility class is not publicly instantiable
+    }
+
+    public static int getVersionCode(Context context) {
+        try {
+            PackageInfo pInfo = context.getPackageManager()
+                    .getPackageInfo(context.getPackageName(), 0);
+            return pInfo.versionCode;
+        } catch (PackageManager.NameNotFoundException e) {
+            e.printStackTrace();
+            return 0;
+        }
+    }
+
+    public static String getVersionName(Context context) {
+        try {
+            PackageInfo pInfo = context.getPackageManager()
+                    .getPackageInfo(context.getPackageName(), 0);
+            return pInfo.versionName;
+        } catch (PackageManager.NameNotFoundException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    public static String getPackageName(Context context) {
+        try {
+            PackageInfo pInfo = context.getPackageManager()
+                    .getPackageInfo(context.getPackageName(), 0);
+            return pInfo.packageName;
+        } catch (PackageManager.NameNotFoundException e) {
+            e.printStackTrace();
+            return null;
+        }
     }
 
     @SuppressLint("HardwareIds")

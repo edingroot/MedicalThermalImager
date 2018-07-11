@@ -30,6 +30,7 @@ public class AppPreferencesHelper implements PreferencesHelper {
     private static final String KEY_LAST_SYNC_PATIENTS = "KEY_LAST_SYNC_PATIENTS";
     private static final String KEY_SYNC_PATIENT_CONFLICTS = "KEY_SYNC_PATIENT_CONFLICTS";
     private static final String KEY_LAST_SYNC_THIMAGES = "KEY_LAST_SYNC_THIMAGES";
+    private static final String KEY_LAST_NOTIFIED_VERSION = "KEY_LAST_NOTIFIED_VERSION";
 
     // Settings
     private static final String KEY_DEFAULT_VISIBLE_OFFSET_ENABLED = "KEY_DEFAULT_VISIBLE_OFFSET_ENABLED";
@@ -76,6 +77,7 @@ public class AppPreferencesHelper implements PreferencesHelper {
         return json == null ? null : gson.fromJson(json, User.class);
     }
 
+
     @Override
     public void setUser(@Nullable User user) {
         mPrefs.edit().putString(KEY_USER, user == null ? null : gson.toJson(user)).apply();
@@ -113,6 +115,17 @@ public class AppPreferencesHelper implements PreferencesHelper {
     public void setLastSyncThImages(Date datetime) {
         mPrefs.edit().putLong(KEY_LAST_SYNC_THIMAGES, datetime.getTime()).apply();
     }
+
+    @Override
+    public int getLastNotifiedVersion() {
+        return mPrefs.getInt(KEY_LAST_NOTIFIED_VERSION, 0);
+    }
+
+    @Override
+    public void setLastNotifiedVersion(int versionCode) {
+        mPrefs.edit().putInt(KEY_LAST_NOTIFIED_VERSION, versionCode).apply();
+    }
+
 
     @Override
     public int getSyncPatientConflictCount() {

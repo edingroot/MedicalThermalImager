@@ -1,6 +1,6 @@
 package tw.cchi.medthimager.data.fanalytics;
 
-public class Event {
+public final class Event {
     public static final String PREFIX = "medth_";
 
     public static final String SIMPLE_EVENT = "simple_event";

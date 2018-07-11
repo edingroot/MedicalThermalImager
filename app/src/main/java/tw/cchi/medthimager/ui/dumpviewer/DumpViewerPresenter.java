@@ -9,7 +9,6 @@ package tw.cchi.medthimager.ui.dumpviewer;
 import android.graphics.Bitmap;
 import android.os.Handler;
 import android.support.annotation.UiThread;
-import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 
 import org.opencv.core.Point;
@@ -48,8 +47,6 @@ import tw.cchi.medthimager.util.annotation.NewThread;
 
 public class DumpViewerPresenter<V extends DumpViewerMvpView> extends BasePresenter<V> implements DumpViewerMvpPresenter<V> {
     private final String TAG = Config.TAGPRE + getClass().getSimpleName();
-
-    @Inject AppCompatActivity activity;
 
     // Data models & helpers
     @Inject VisibleImageExtractor visibleImageExtractor;

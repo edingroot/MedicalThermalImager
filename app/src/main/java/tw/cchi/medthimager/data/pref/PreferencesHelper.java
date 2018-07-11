@@ -42,6 +42,10 @@ public interface PreferencesHelper {
 
     void setLastSyncThImages(Date datetime);
 
+    int getLastNotifiedVersion();
+
+    void setLastNotifiedVersion(int versionCode);
+
     int getSyncPatientConflictCount();
 
     void setSyncPatientConflictCount(int count);

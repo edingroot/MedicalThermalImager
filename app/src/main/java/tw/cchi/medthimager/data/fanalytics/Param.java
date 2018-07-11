@@ -1,6 +1,6 @@
 package tw.cchi.medthimager.data.fanalytics;
 
-public class Param {
+public final class Param {
 
     public static final String STATE = "state";
     public static final String CUID = "cuid";
