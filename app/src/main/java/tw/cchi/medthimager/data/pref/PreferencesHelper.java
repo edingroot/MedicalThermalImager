@@ -34,10 +34,12 @@ public interface PreferencesHelper {
 
     void setSelectedPatientCuid(String selectedPatientCuid);
 
+    @Nullable
     Date getLastSyncPatients();
 
     void setLastSyncPatients(Date datetime);
 
+    @Nullable
     Date getLastSyncThImages();
 
     void setLastSyncThImages(Date datetime);

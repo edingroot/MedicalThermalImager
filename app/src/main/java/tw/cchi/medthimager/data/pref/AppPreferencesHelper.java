@@ -94,10 +94,11 @@ public class AppPreferencesHelper implements PreferencesHelper {
         mPrefs.edit().putString(KEY_SELECTED_PATIENT_CUID, selectedPatientCuid).apply();
     }
 
+    @Nullable
     @Override
     public Date getLastSyncPatients() {
         long timestamp = mPrefs.getLong(KEY_LAST_SYNC_PATIENTS, 0);
-        return timestamp == 0 ? new Date() : new Date(timestamp);
+        return timestamp == 0 ? null : new Date(timestamp);
     }
 
     @Override
@@ -105,10 +106,11 @@ public class AppPreferencesHelper implements PreferencesHelper {
         mPrefs.edit().putLong(KEY_LAST_SYNC_PATIENTS, datetime.getTime()).apply();
     }
 
+    @Nullable
     @Override
     public Date getLastSyncThImages() {
         long timestamp = mPrefs.getLong(KEY_LAST_SYNC_THIMAGES, 0);
-        return timestamp == 0 ? new Date() : new Date(timestamp);
+        return timestamp == 0 ? null : new Date(timestamp);
     }
 
     @Override

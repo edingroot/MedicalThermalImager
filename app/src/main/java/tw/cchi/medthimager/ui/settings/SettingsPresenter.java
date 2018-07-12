@@ -2,6 +2,8 @@ package tw.cchi.medthimager.ui.settings;
 
 import android.util.Log;
 
+import java.util.Date;
+
 import javax.inject.Inject;
 
 import io.reactivex.Observable;
@@ -12,6 +14,7 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 import tw.cchi.medthimager.Config;
+import tw.cchi.medthimager.R;
 import tw.cchi.medthimager.data.network.ApiHelper;
 import tw.cchi.medthimager.helper.ThImagesHelper;
 import tw.cchi.medthimager.helper.session.Session;
@@ -154,11 +157,19 @@ public class SettingsPresenter<V extends SettingsMvpView> extends BasePresenter<
     }
 
     private String getLastSyncPatients() {
-        return DateTimeUtils.timestampToString(dataManager.pref.getLastSyncPatients().getTime());
+        Date date = dataManager.pref.getLastSyncPatients();
+        if (date != null)
+            return DateTimeUtils.timestampToString(date.getTime());
+        else
+            return activity.getString(R.string.never);
     }
 
     private String getLastSyncThImages() {
-        return DateTimeUtils.timestampToString(dataManager.pref.getLastSyncThImages().getTime());
+        Date date = dataManager.pref.getLastSyncThImages();
+        if (date != null)
+            return DateTimeUtils.timestampToString(date.getTime());
+        else
+            return activity.getString(R.string.never);
     }
 
     @Override

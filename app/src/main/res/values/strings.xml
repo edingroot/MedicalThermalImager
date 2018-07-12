@@ -43,6 +43,7 @@
     <string name="sync_patient_list">Sync Patient List</string>
     <string name="sync_thermal_images">Sync Thermal Images</string>
     <string name="last_sync">Last sync: %1$s</string>
+    <string name="never">never</string>
     <string name="sync">Sync</string>
     <string name="syncing">Syncing…</string>
     <string name="upload_conflict_syncing_patient">Image upload canceled due to conflict occurred when syncing current patient info.</string>

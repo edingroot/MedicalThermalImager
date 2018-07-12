@@ -108,28 +108,32 @@ public class ThImagesHelper {
 
             if (captureRecord == null) {
                 Date capturedAt = thermalDump.getCaptureTimestamp();
-
                 if (capturedAt == null) {
-                    capturedAt = thermalDump.getCaptureTimestamp();
-                    if (capturedAt == null) {
-                        File flirImg = new File(extractFilepathPrefix(thermalDump.getFilepath()) + Constants.POSTFIX_FLIR_IMAGE + ".jpg");
-                        if (flirImg.exists()) {
-                            capturedAt = new Date(flirImg.lastModified());
-                        } else {
-                            File dumpFile = new File(thermalDump.getFilepath());
-                            capturedAt = new Date(dumpFile.lastModified());
-                        }
+                    File flirImg = new File(extractFilepathPrefix(thermalDump.getFilepath()) + Constants.POSTFIX_FLIR_IMAGE + ".jpg");
+                    if (flirImg.exists()) {
+                        capturedAt = new Date(flirImg.lastModified());
+                    } else {
+                        File dumpFile = new File(thermalDump.getFilepath());
+                        capturedAt = new Date(dumpFile.lastModified());
                     }
                 }
 
                 Log.i(TAG, "Adding new dump record due to record not found: " + thermalDump.getFilepath());
 
-                String uuid = thermalDump.getRecordUuid() == null ? UUID.randomUUID().toString() : thermalDump.getRecordUuid();
+                String uuid = thermalDump.getRecordUuid();
+                String filepathPrefix = extractFilepathPrefix(thermalDump.getFilepath());
+
+                if (uuid == null) {
+                    uuid = UUID.randomUUID().toString();
+                    thermalDump.setRecordUuid(uuid);
+                    thermalDump.save();
+                }
+
                 captureRecord = new CaptureRecord(
                         uuid,
                         thermalDump.getPatientCuid(),
                         thermalDump.getTitle(),
-                        thermalDump.getFilepath(),
+                        filepathPrefix,
                         null,
                         capturedAt, false);
 
