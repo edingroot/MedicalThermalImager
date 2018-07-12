@@ -124,8 +124,9 @@ public class ThImagesHelper {
 
                 Log.i(TAG, "Adding new dump record due to record not found: " + thermalDump.getFilepath());
 
+                String uuid = thermalDump.getRecordUuid() == null ? UUID.randomUUID().toString() : thermalDump.getRecordUuid();
                 captureRecord = new CaptureRecord(
-                        UUID.randomUUID().toString(),
+                        uuid,
                         thermalDump.getPatientCuid(),
                         thermalDump.getTitle(),
                         thermalDump.getFilepath(),

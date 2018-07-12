@@ -44,14 +44,14 @@ public abstract class AppDatabase extends RoomDatabase {
         return Room.databaseBuilder(context, AppDatabase.class, DATABASE_NAME)
                 .addCallback(new RoomDatabase.Callback() {
                     @Override
-                    public void onCreate (@NonNull SupportSQLiteDatabase db){
+                    public void onCreate(@NonNull SupportSQLiteDatabase db) {
                         // Called when the database is created for the first time.
                         // This is called after all the ables are created.
                         Migrations.checkAndInsertDefaultPatient(db);
                     }
 
                     @Override
-                    public void onOpen (@NonNull SupportSQLiteDatabase db){
+                    public void onOpen(@NonNull SupportSQLiteDatabase db) {
                         // Do something every time database is open
                         Migrations.checkAndInsertDefaultPatient(db);
                     }
