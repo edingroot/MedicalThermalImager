@@ -25,7 +25,7 @@ public abstract class CaptureRecordTagsDAO {
     public abstract void deleteTagsOfCaptureRecord(String captureRecordUuid);
 
 
-    @Query("select capture_record_tags.uuid from capture_record_tags where capture_record_uuid = :uuid")
+    @Query("select capture_record_tags.tag_uuid from capture_record_tags where capture_record_uuid = :uuid")
     public abstract List<String> getTagsOfCaptureRecord(String uuid);
 
     @Transaction
