@@ -12,13 +12,15 @@ import android.util.Log;
 import tw.cchi.medthimager.data.db.converter.DateConverter;
 import tw.cchi.medthimager.data.db.model.CaptureRecord;
 import tw.cchi.medthimager.data.db.model.CaptureRecordDAO;
+import tw.cchi.medthimager.data.db.model.CaptureRecordTags;
 import tw.cchi.medthimager.data.db.model.Patient;
 import tw.cchi.medthimager.data.db.model.PatientDAO;
 
 @Database(entities = {
         Patient.class,
-        CaptureRecord.class
-}, version = 4)
+        CaptureRecord.class,
+        CaptureRecordTags.class
+}, version = 5)
 @TypeConverters(DateConverter.class)
 public abstract class AppDatabase extends RoomDatabase {
     private static final String TAG = AppDatabase.class.getSimpleName();

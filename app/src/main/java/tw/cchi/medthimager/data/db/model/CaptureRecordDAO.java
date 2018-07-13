@@ -21,7 +21,7 @@ public abstract class CaptureRecordDAO {
     public abstract CaptureRecord get(String uuid);
 
     @Query("select * from capture_records where uuid in (:uuids)")
-    public abstract List<CaptureRecord> getByUUIDs(String[] uuids);
+    public abstract List<CaptureRecord> get(String[] uuids);
 
     @Query("select * from capture_records where synced is 0")
     public abstract List<CaptureRecord> getSyncList();
@@ -34,6 +34,10 @@ public abstract class CaptureRecordDAO {
 
     @Query("select * from capture_records where patient_cuid = :patientCuid and title = :title limit 1")
     public abstract CaptureRecord findByProps(String patientCuid, String title);
+
+    @Query("select capture_record_tags.uuid from capture_record_tags where capture_record_uuid = :uuid")
+    public abstract List<String> getTags(String uuid);
+
 
     @Insert
     public abstract void insertAll(CaptureRecord... captureRecords);
