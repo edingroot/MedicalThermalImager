@@ -667,9 +667,13 @@ public class CameraPresenter<V extends CameraMvpView> extends BasePresenter<V>
                             false);
 
                     dataManager.db.captureRecordDAO().insertAll(captureRecord);
+                    dataManager.db.captureRecordTagsDAO().setTagsOfCaptureRecord(captureRecord, new HashSet<>(selectedTags));
 
                     // Upload to server if available
-                    uploadCapturedFiles(currCaptureProcessInfo.getPatient(), captureRecord,
+                    List<String> tagUuids = new ArrayList<>();
+                    for (Tag tag : selectedTags)
+                        tagUuids.add(tag.getUuid());
+                    uploadCapturedFiles(currCaptureProcessInfo.getPatient(), captureRecord, tagUuids,
                                         currCaptureProcessInfo, extractVisibleSuccess);
                 },
                 e -> {
@@ -744,11 +748,16 @@ public class CameraPresenter<V extends CameraMvpView> extends BasePresenter<V>
     }
 
     @NewThread
-    private void uploadCapturedFiles(Patient patient, CaptureRecord captureRecord,
+    private void uploadCapturedFiles(Patient patient, CaptureRecord captureRecord, List<String> tags,
                                      CaptureProcessInfo captureProcessInfo, boolean uploadVisibleImage) {
         application.connectSyncService().subscribe(syncService -> {
-            ThImage thImage = new ThImage(captureRecord.getUuid(), patient,
-                    captureRecord.getContishootGroup(), captureRecord.getTitle(), captureRecord.getCreatedAt());
+            ThImage thImage = new ThImage(
+                    captureRecord.getUuid(),
+                    tags,
+                    patient,
+                    captureRecord.getContishootGroup(),
+                    captureRecord.getTitle(),
+                    captureRecord.getCreatedAt());
 
             syncService.scheduleNewTask(new SyncSingleThImageTask(
                     thImage,

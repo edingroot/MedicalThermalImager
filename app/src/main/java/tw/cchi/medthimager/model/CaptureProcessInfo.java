@@ -4,6 +4,7 @@ import java.util.Date;
 
 import tw.cchi.medthimager.Constants;
 import tw.cchi.medthimager.data.db.model.Patient;
+import tw.cchi.medthimager.model.api.Tag;
 import tw.cchi.medthimager.thermalproc.RawThermalDump;
 import tw.cchi.medthimager.util.AppUtils;
 import tw.cchi.medthimager.util.ThermalDumpUtils;
@@ -13,8 +14,10 @@ import tw.cchi.medthimager.util.ThermalDumpUtils;
  */
 public class CaptureProcessInfo {
     private String recordUuid;
-    private Date captureDate;
     private Patient patient;
+
+    private Date captureDate;
+
     private String title;
     private String filepathPrefix;
     private String dumpFilepath;

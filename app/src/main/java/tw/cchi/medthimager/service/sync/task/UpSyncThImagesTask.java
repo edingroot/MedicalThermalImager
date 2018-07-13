@@ -52,12 +52,19 @@ public class UpSyncThImagesTask extends SyncTask {
         dataManager.pref.setLastSyncThImages(new Date());
 
         List<CaptureRecord> captureRecords = dataManager.db.captureRecordDAO().getSyncList();
+
         for (CaptureRecord record : captureRecords) {
             if (disposed) break;
 
             Patient patient = dataManager.db.patientDAO().getOrDefault(record.getPatientCuid());
-            ThImage metadata = new ThImage(record.getUuid(), patient, record.getContishootGroup(),
-                    record.getTitle(), record.getCreatedAt());
+            List<String> tagUuids = dataManager.db.captureRecordTagsDAO().getTagsOfCaptureRecord(record.getUuid());
+            ThImage metadata = new ThImage(
+                    record.getUuid(),
+                    tagUuids,
+                    patient,
+                    record.getContishootGroup(),
+                    record.getTitle(),
+                    record.getCreatedAt());
 
             // Check if files exist, if not, skip upload and delete record
             File dumpFile = new File(record.getFilepathPrefix() + Constants.POSTFIX_THERMAL_DUMP + ".dat");

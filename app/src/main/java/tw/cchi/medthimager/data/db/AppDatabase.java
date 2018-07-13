@@ -9,12 +9,16 @@ import android.content.Context;
 import android.support.annotation.NonNull;
 import android.util.Log;
 
+import java.util.Set;
+
 import tw.cchi.medthimager.data.db.converter.DateConverter;
 import tw.cchi.medthimager.data.db.model.CaptureRecord;
 import tw.cchi.medthimager.data.db.model.CaptureRecordDAO;
 import tw.cchi.medthimager.data.db.model.CaptureRecordTags;
+import tw.cchi.medthimager.data.db.model.CaptureRecordTagsDAO;
 import tw.cchi.medthimager.data.db.model.Patient;
 import tw.cchi.medthimager.data.db.model.PatientDAO;
+import tw.cchi.medthimager.model.api.Tag;
 
 @Database(entities = {
         Patient.class,
@@ -29,6 +33,7 @@ public abstract class AppDatabase extends RoomDatabase {
 
     public abstract PatientDAO patientDAO();
     public abstract CaptureRecordDAO captureRecordDAO();
+    public abstract CaptureRecordTagsDAO captureRecordTagsDAO();
 
     public static AppDatabase getInstance(final Context context) {
         if (instance == null) {

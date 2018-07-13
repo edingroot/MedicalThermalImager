@@ -92,9 +92,6 @@ public class ThImagesHelper {
         }).subscribeOn(Schedulers.io());
     }
 
-    /**
-     * For backward supporting raw thermal dump file format < v4.
-     */
     public Observable<CaptureRecord> findOrInsertRecordFromThermalDump(@NonNull RawThermalDump thermalDump) {
         return Observable.<CaptureRecord>create(emitter -> {
             CaptureRecord captureRecord;
@@ -102,6 +99,7 @@ public class ThImagesHelper {
             if (thermalDump.getRecordUuid() != null) {
                 captureRecord = db.captureRecordDAO().get(thermalDump.getRecordUuid());
             } else {
+                // For backward compatibility raw thermal dump file format < v4.
                 captureRecord = db.captureRecordDAO()
                         .findByProps(thermalDump.getPatientCuid(), thermalDump.getTitle());
             }

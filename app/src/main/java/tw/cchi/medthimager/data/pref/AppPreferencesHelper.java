@@ -193,6 +193,11 @@ public class AppPreferencesHelper implements PreferencesHelper {
         mPrefs.edit().putBoolean(KEY_CLEAR_SPOTS_ON_DISCONNECT, enable).apply();
     }
 
+    @Override
+    public boolean isTagsCacheEmpty() {
+        return mPrefs.getStringSet(KEY_TAGS, null) == null;
+    }
+
     @Nullable
     @Override
     public HashMap<String, Tag> getCachedTags() {

@@ -3,9 +3,12 @@ package tw.cchi.medthimager.data.db.model;
 import android.arch.persistence.room.ColumnInfo;
 import android.arch.persistence.room.Entity;
 import android.arch.persistence.room.ForeignKey;
+import android.arch.persistence.room.Ignore;
 import android.arch.persistence.room.Index;
 import android.arch.persistence.room.PrimaryKey;
 import android.support.annotation.NonNull;
+
+import java.util.UUID;
 
 @Entity(tableName = "capture_record_tags",
         foreignKeys = {
@@ -31,6 +34,13 @@ public class CaptureRecordTags {
 
     public CaptureRecordTags(@NonNull String uuid, String captureRecordUuid, String tagUuid) {
         this.uuid = uuid;
+        this.captureRecordUuid = captureRecordUuid;
+        this.tagUuid = tagUuid;
+    }
+
+    @Ignore
+    public CaptureRecordTags(String captureRecordUuid, String tagUuid) {
+        this.uuid = UUID.randomUUID().toString();
         this.captureRecordUuid = captureRecordUuid;
         this.tagUuid = tagUuid;
     }

@@ -76,6 +76,8 @@ public interface PreferencesHelper {
 
     // -------------------------- Caches -------------------------- //
 
+    boolean isTagsCacheEmpty();
+
     HashMap<String, Tag> getCachedTags();
 
     void setCachedTags(Set<Tag> tags);

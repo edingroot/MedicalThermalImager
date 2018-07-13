@@ -5,11 +5,13 @@ import android.os.Parcelable;
 import android.support.annotation.Nullable;
 
 import java.util.Date;
+import java.util.List;
 
 import tw.cchi.medthimager.data.db.model.Patient;
 
 public class ThImage implements Parcelable {
     private String uuid;
+    private List<String> tags;
     private String patient_uuid;
     private String patient_cuid;
     private String title;
@@ -20,8 +22,18 @@ public class ThImage implements Parcelable {
     private Date created_at;
     private Date updated_at;
 
-    public ThImage(String uuid, Patient patient, @Nullable String contishootGroup, String title, Date capturedAt) {
+    /**
+     * @param uuid
+     * @param tags tag uuids
+     * @param patient
+     * @param contishootGroup
+     * @param title
+     * @param capturedAt
+     */
+    public ThImage(String uuid, List<String> tags, Patient patient, @Nullable String contishootGroup,
+                   String title, Date capturedAt) {
         this.uuid = uuid;
+        this.tags = tags;
         this.patient_uuid = patient.getSsuuid();
         this.patient_cuid = patient.getCuid();
         this.title = title;
@@ -31,6 +43,10 @@ public class ThImage implements Parcelable {
 
     public String getUuid() {
         return uuid;
+    }
+
+    public List<String> getTags() {
+        return tags;
     }
 
     public String getPatient_uuid() {
