@@ -66,7 +66,7 @@ public class TagSelectionPresenter<V extends TagSelectionMvpView> extends BasePr
             return;
 
         HashMap<String, Tag> tags = dataManager.pref.getCachedTags();
-        if (tags.size() == 0) {
+        if (tags == null || tags.size() == 0) {
             getMvpView().showToast(R.string.error_no_tags_avail);
             getMvpView().dismiss();
         } else {

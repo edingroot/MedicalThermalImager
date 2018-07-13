@@ -72,14 +72,14 @@ public abstract class BaseDialog extends DialogFragment implements DialogMvpView
     @Override
     public void showSnackBar(String message) {
         if (mActivity != null) {
-            showSnackBar(message);
+            getBaseActivity().showSnackBar(message);
         }
     }
 
     @Override
     public void showSnackBar(@StringRes int resId) {
         if (mActivity != null) {
-            showSnackBar(resId);
+            getBaseActivity().showSnackBar(resId);
         }
     }
 
@@ -93,21 +93,21 @@ public abstract class BaseDialog extends DialogFragment implements DialogMvpView
     @Override
     public void showToast(String message) {
         if (mActivity != null) {
-            showToast(message);
+            getBaseActivity().showToast(message);
         }
     }
 
     @Override
     public void showToast(@StringRes int resId) {
         if (mActivity != null) {
-            showToast(resId);
+            getBaseActivity().showToast(resId);
         }
     }
 
     @Override
     public void showToast(@StringRes int resId, Object... formatArgs) {
         if (mActivity != null) {
-            showToast(resId, formatArgs);
+            getBaseActivity().showToast(resId, formatArgs);
         }
     }
 
