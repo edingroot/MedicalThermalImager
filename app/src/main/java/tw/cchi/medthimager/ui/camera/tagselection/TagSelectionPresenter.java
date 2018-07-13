@@ -7,6 +7,8 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.SortedMap;
+import java.util.TreeMap;
 
 import javax.inject.Inject;
 
@@ -72,9 +74,14 @@ public class TagSelectionPresenter<V extends TagSelectionMvpView> extends BasePr
     }
 
     private ArrayList<Pair<Object, String>> createListItems(HashMap<String, Tag> tags) {
-        ArrayList<Pair<Object, String>> items = new ArrayList<>();
-
+        // Sort tags by name
+        SortedMap<String, Tag> tagNameMap = new TreeMap<>();
         for (Tag tag : tags.values())
+            tagNameMap.put(tag.getName(), tag);
+
+        // Generate result
+        ArrayList<Pair<Object, String>> items = new ArrayList<>();
+        for (Tag tag : tagNameMap.values())
             items.add(new Pair<>(tag.getUuid(), tag.getName()));
 
         return items;
