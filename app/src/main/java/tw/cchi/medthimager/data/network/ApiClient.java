@@ -16,6 +16,7 @@ import retrofit2.http.POST;
 import retrofit2.http.Part;
 import retrofit2.http.PartMap;
 import retrofit2.http.Path;
+import tw.cchi.medthimager.model.api.Tag;
 import tw.cchi.medthimager.model.api.User;
 import tw.cchi.medthimager.model.api.AccessTokens;
 import tw.cchi.medthimager.model.api.PatientCreateRequest;
@@ -53,11 +54,16 @@ public interface ApiClient {
 
     @AuthRequired
     @GET("patients")
-    Observable<Response<List<SSPatient>>> getAllPatients();
+    Observable<Response<List<SSPatient>>> getPatients();
 
     @AuthRequired
     @POST("patients")
     Observable<Response<PatientResponse>> createPatient(@Body PatientCreateRequest patientCreateRequest);
+
+
+    @AuthRequired
+    @GET("tags")
+    Observable<Response<List<Tag>>> getTags();
 
 
     @AuthRequired

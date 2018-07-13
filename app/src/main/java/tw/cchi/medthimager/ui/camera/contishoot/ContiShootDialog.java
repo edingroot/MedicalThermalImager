@@ -38,6 +38,11 @@ public class ContiShootDialog extends BaseDialog implements ContiShootMvpView {
         return fragment;
     }
 
+    public void show(FragmentManager fragmentManager, OnResultListener onResultListener) {
+        this.onResultListener = onResultListener;
+        super.show(fragmentManager, FRAGMENT_TAG);
+    }
+
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.dialog_conti_shot, container, false);
@@ -52,11 +57,6 @@ public class ContiShootDialog extends BaseDialog implements ContiShootMvpView {
         getDialog().setCanceledOnTouchOutside(true);
 
         return view;
-    }
-
-    public void show(FragmentManager fragmentManager, OnResultListener onResultListener) {
-        this.onResultListener = onResultListener;
-        super.show(fragmentManager, FRAGMENT_TAG);
     }
 
     @OnClick(R.id.btnStart)

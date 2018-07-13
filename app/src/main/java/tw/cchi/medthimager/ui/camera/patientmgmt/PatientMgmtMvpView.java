@@ -13,8 +13,6 @@ public interface PatientMgmtMvpView extends DialogMvpView {
 
     void setSelectedPosition(int position);
 
-    PatientMgmtDialog.OnInteractionListener getListener();
-
     void dismiss();
 
 }

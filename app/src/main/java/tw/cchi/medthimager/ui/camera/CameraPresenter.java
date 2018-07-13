@@ -23,7 +23,10 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.EnumSet;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Locale;
+import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.UUID;
@@ -44,6 +47,7 @@ import tw.cchi.medthimager.helper.ThImagesHelper;
 import tw.cchi.medthimager.helper.ThermalSpotsHelper;
 import tw.cchi.medthimager.model.CaptureProcessInfo;
 import tw.cchi.medthimager.model.ContiShootParameters;
+import tw.cchi.medthimager.model.api.Tag;
 import tw.cchi.medthimager.model.api.ThImage;
 import tw.cchi.medthimager.service.sync.task.SyncSingleThImageTask;
 import tw.cchi.medthimager.thermalproc.RawThermalDump;
@@ -79,6 +83,7 @@ public class CameraPresenter<V extends CameraMvpView> extends BasePresenter<V>
     private volatile boolean contiShooting = false;
     private CaptureProcessInfo captureProcessInfo = null;
     private Patient currentPatient;
+    private Set<Tag> selectedTags;
 
     static {
         OpenCVLoader.initDebug();
@@ -111,6 +116,15 @@ public class CameraPresenter<V extends CameraMvpView> extends BasePresenter<V>
         }).subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe(getMvpView()::setPatientStatusText);
+
+        // Restore selected tags
+        HashMap<String, Tag> tags = dataManager.pref.getCachedTags();
+        selectedTags = new HashSet<>();
+        for (String tagUuid : dataManager.pref.getSelectedTags()) {
+            Tag tag = tags.get(tagUuid);
+            if (tag != null)
+                selectedTags.add(tag);
+        }
 
         getMvpView().setSingleShootMode();
     }
@@ -448,6 +462,16 @@ public class CameraPresenter<V extends CameraMvpView> extends BasePresenter<V>
     @Override
     public String getCurrentPatientName() {
         return currentPatient != null ? currentPatient.getName() : Patient.DEFAULT_PATIENT_NAME;
+    }
+
+    @Override
+    public Set<Tag> getSelectedTags() {
+        return selectedTags;
+    }
+
+    @Override
+    public void setSelectedTags(Set<Tag> tags) {
+        selectedTags = tags;
     }
 
     @Override

@@ -53,6 +53,22 @@ public class PatientMgmtDialog extends BaseDialog
         return fragment;
     }
 
+    public void show(FragmentManager fragmentManager, OnInteractionListener onResultListener) {
+        this.onInteractionListener = onResultListener;
+        super.show(fragmentManager, FRAGMENT_TAG);
+    }
+
+    public void setSelectedPatient(@Nullable String patientCuid) {
+        if (patientCuid == null)
+            patientCuid = Patient.DEFAULT_PATIENT_CUID;
+
+        // This method may be called before view created
+        if (presenter != null)
+            presenter.setSelected(patientCuid);
+        else
+            preSelectedPatientCuid = patientCuid;
+    }
+
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.dialog_patient_mgmt, container, false);
@@ -95,22 +111,6 @@ public class PatientMgmtDialog extends BaseDialog
                 }));
     }
 
-    public void show(FragmentManager fragmentManager, OnInteractionListener onResultListener) {
-        this.onInteractionListener = onResultListener;
-        super.show(fragmentManager, FRAGMENT_TAG);
-    }
-
-    public void setSelectedPatient(@Nullable String patientCuid) {
-        if (patientCuid == null)
-            patientCuid = Patient.DEFAULT_PATIENT_CUID;
-
-        // This method may be called before view created
-        if (presenter != null)
-            presenter.setSelected(patientCuid);
-        else
-            preSelectedPatientCuid = patientCuid;
-    }
-
 
     @OnClick(R.id.btnAdd)
     public void onAddClick() {
@@ -147,11 +147,6 @@ public class PatientMgmtDialog extends BaseDialog
     @Override
     public void setSelectedPosition(int position) {
         patientRecyclerAdapter.setSelectedPosition(position);
-    }
-
-    @Override
-    public OnInteractionListener getListener() {
-        return onInteractionListener;
     }
 
     @Override

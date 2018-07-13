@@ -47,6 +47,7 @@ import tw.cchi.medthimager.helper.ThermalSpotsHelper;
 import tw.cchi.medthimager.ui.base.BaseActivity;
 import tw.cchi.medthimager.ui.camera.contishoot.ContiShootDialog;
 import tw.cchi.medthimager.ui.camera.patientmgmt.PatientMgmtDialog;
+import tw.cchi.medthimager.ui.camera.tagselection.TagSelectionDialog;
 import tw.cchi.medthimager.ui.dumpviewer.DumpViewerActivity;
 import tw.cchi.medthimager.ui.settings.SettingsActivity;
 import tw.cchi.medthimager.util.CommonUtils;
@@ -211,10 +212,16 @@ public class CameraActivity extends BaseActivity implements
             return;
 
         PatientMgmtDialog patientMgmtDialog = PatientMgmtDialog.newInstance();
-        patientMgmtDialog.show(getSupportFragmentManager(), (patient) -> {
-            presenter.setCurrentPatient(patient.getCuid());
-        });
+        patientMgmtDialog.show(getSupportFragmentManager(), patient ->
+                presenter.setCurrentPatient(patient.getCuid()));
         patientMgmtDialog.setSelectedPatient(presenter.getCurrentPatientCuid());
+    }
+
+    @OnClick(R.id.imgBtnSelectTags)
+    public void onSelectTagsClick(View v) {
+        TagSelectionDialog tagSelectionDialog = TagSelectionDialog.newInstance();
+        tagSelectionDialog.show(getSupportFragmentManager(), presenter::setSelectedTags);
+        tagSelectionDialog.setSelectedTags(presenter.getSelectedTags());
     }
 
     @OnClick(R.id.btnTools)

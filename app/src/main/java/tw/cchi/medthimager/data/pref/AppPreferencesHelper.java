@@ -8,6 +8,9 @@ import android.support.annotation.Nullable;
 import com.google.gson.Gson;
 
 import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Set;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -16,6 +19,7 @@ import tw.cchi.medthimager.Config;
 import tw.cchi.medthimager.di.ApplicationContext;
 import tw.cchi.medthimager.di.PreferenceInfo;
 import tw.cchi.medthimager.model.api.AccessTokens;
+import tw.cchi.medthimager.model.api.Tag;
 import tw.cchi.medthimager.model.api.User;
 
 @Singleton
@@ -31,12 +35,16 @@ public class AppPreferencesHelper implements PreferencesHelper {
     private static final String KEY_SYNC_PATIENT_CONFLICTS = "KEY_SYNC_PATIENT_CONFLICTS";
     private static final String KEY_LAST_SYNC_THIMAGES = "KEY_LAST_SYNC_THIMAGES";
     private static final String KEY_LAST_NOTIFIED_VERSION = "KEY_LAST_NOTIFIED_VERSION";
+    private static final String KEY_SELECTED_TAGS = "KEY_SELECTED_TAGS";
 
     // Settings
     private static final String KEY_DEFAULT_VISIBLE_OFFSET_ENABLED = "KEY_DEFAULT_VISIBLE_OFFSET_ENABLED";
     private static final String KEY_DEFAULT_VISIBLE_OFFSET_X = "KEY_DEFAULT_VISIBLE_OFFSET_X";
     private static final String KEY_DEFAULT_VISIBLE_OFFSET_Y = "KEY_DEFAULT_VISIBLE_OFFSET_Y";
     private static final String KEY_CLEAR_SPOTS_ON_DISCONNECT = "KEY_CLEAR_SPOTS_ON_DISCONNECT";
+
+    // Caches
+    private static final String KEY_TAGS = "KEY_TAGS";
 
     private final SharedPreferences mPrefs;
     private final Gson gson = new Gson();
@@ -140,6 +148,16 @@ public class AppPreferencesHelper implements PreferencesHelper {
     }
 
     @Override
+    public Set<String> getSelectedTags() {
+        return mPrefs.getStringSet(KEY_SELECTED_TAGS, new HashSet<>());
+    }
+
+    @Override
+    public void setSelectedTags(Set<String> tagUuids) {
+        mPrefs.edit().putStringSet(KEY_SELECTED_TAGS, tagUuids).apply();
+    }
+
+    @Override
     public boolean getAutoApplyVisibleOffsetEnabled() {
         return mPrefs.getBoolean(KEY_DEFAULT_VISIBLE_OFFSET_ENABLED, false);
     }
@@ -173,6 +191,33 @@ public class AppPreferencesHelper implements PreferencesHelper {
     @Override
     public void setClearSpotsOnDisconnect(boolean enable) {
         mPrefs.edit().putBoolean(KEY_CLEAR_SPOTS_ON_DISCONNECT, enable).apply();
+    }
+
+    @Nullable
+    @Override
+    public HashMap<String, Tag> getCachedTags() {
+        Set<String> keyNameSet = mPrefs.getStringSet(KEY_TAGS, null);
+
+        if (keyNameSet == null)
+            return null;
+
+        HashMap<String, Tag> tags = new HashMap<>();
+        for (String keyName : keyNameSet) {
+            String key = keyName.substring(0, 36);
+            String name = keyName.substring(36);
+            tags.put(key, new Tag(key, name));
+        }
+
+        return tags;
+    }
+
+    @Override
+    public void setCachedTags(Set<Tag> tags) {
+        Set<String> keyNameSet = new HashSet<>();
+        for (Tag tag : tags)
+            keyNameSet.add(tag.getUuid() + tag.getName());
+
+        mPrefs.edit().putStringSet(KEY_TAGS, keyNameSet).apply();
     }
 
 }

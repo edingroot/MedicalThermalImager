@@ -4,8 +4,11 @@ import android.graphics.Point;
 import android.support.annotation.Nullable;
 
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Set;
 
 import tw.cchi.medthimager.model.api.AccessTokens;
+import tw.cchi.medthimager.model.api.Tag;
 import tw.cchi.medthimager.model.api.User;
 
 public interface PreferencesHelper {
@@ -52,6 +55,10 @@ public interface PreferencesHelper {
 
     void setSyncPatientConflictCount(int count);
 
+    Set<String> getSelectedTags();
+
+    void setSelectedTags(Set<String> tagUuids);
+
 
     // ------------------------- Settings ------------------------- //
 
@@ -66,5 +73,11 @@ public interface PreferencesHelper {
     boolean getClearSpotsOnDisconnectEnabled();
 
     void setClearSpotsOnDisconnect(boolean enable);
+
+    // -------------------------- Caches -------------------------- //
+
+    HashMap<String, Tag> getCachedTags();
+
+    void setCachedTags(Set<Tag> tags);
 
 }

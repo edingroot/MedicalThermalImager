@@ -31,6 +31,10 @@ public class UpdateReminderDialog extends BaseDialog implements UpdateReminderMv
         return new UpdateReminderDialog();
     }
 
+    public void show(FragmentManager fragmentManager) {
+        super.show(fragmentManager, FRAGMENT_TAG);
+    }
+
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.dialog_update_reminder, container, false);
@@ -45,10 +49,6 @@ public class UpdateReminderDialog extends BaseDialog implements UpdateReminderMv
         getDialog().setCanceledOnTouchOutside(true);
 
         return view;
-    }
-
-    public void show(FragmentManager fragmentManager) {
-        super.show(fragmentManager, FRAGMENT_TAG);
     }
 
 

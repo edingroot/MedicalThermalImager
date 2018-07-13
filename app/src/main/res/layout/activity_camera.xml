@@ -43,10 +43,18 @@
             <ImageButton
                 android:id="@+id/imgBtnSelectPatient"
                 style="?metaButtonBarButtonStyle"
-                android:layout_width="wrap_content"
+                android:layout_width="120px"
                 android:layout_height="wrap_content"
                 android:layout_alignParentStart="true"
                 android:src="@android:drawable/ic_menu_my_calendar"/>
+
+            <ImageButton
+                android:id="@+id/imgBtnSelectTags"
+                style="?metaButtonBarButtonStyle"
+                android:layout_width="120px"
+                android:layout_height="wrap_content"
+                android:layout_toEndOf="@id/imgBtnSelectPatient"
+                android:src="@drawable/ic_tags"/>
 
             <LinearLayout
                 android:layout_width="wrap_content"

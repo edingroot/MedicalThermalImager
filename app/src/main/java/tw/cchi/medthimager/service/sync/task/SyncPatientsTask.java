@@ -92,7 +92,7 @@ public class SyncPatientsTask extends SyncTask {
             return;
         }
 
-        application.getSession().getApiClient().getAllPatients()
+        application.getSession().getApiClient().getPatients()
             .blockingSubscribe(
                 (Response<List<SSPatient>> response) -> {
                     if (response.code() == 200 && response.body() != null) {

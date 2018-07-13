@@ -21,6 +21,9 @@ import tw.cchi.medthimager.ui.camera.contishoot.ContiShootPresenter;
 import tw.cchi.medthimager.ui.camera.patientmgmt.PatientMgmtMvpPresenter;
 import tw.cchi.medthimager.ui.camera.patientmgmt.PatientMgmtMvpView;
 import tw.cchi.medthimager.ui.camera.patientmgmt.PatientMgmtPresenter;
+import tw.cchi.medthimager.ui.camera.tagselection.TagSelectionMvpPresenter;
+import tw.cchi.medthimager.ui.camera.tagselection.TagSelectionMvpView;
+import tw.cchi.medthimager.ui.camera.tagselection.TagSelectionPresenter;
 import tw.cchi.medthimager.ui.dialog.patientconflict.ConflictPatientMvpPresenter;
 import tw.cchi.medthimager.ui.dialog.patientconflict.ConflictPatientMvpView;
 import tw.cchi.medthimager.ui.dialog.patientconflict.ConflictPatientPresenter;
@@ -99,6 +102,11 @@ public class ActivityModule {
 
     @Provides
     ConflictPatientMvpPresenter<ConflictPatientMvpView> provideConflictPatientMvpPresenter(ConflictPatientPresenter<ConflictPatientMvpView> presenter) {
+        return presenter;
+    }
+
+    @Provides
+    TagSelectionMvpPresenter<TagSelectionMvpView> provideTagSelectionMvpPresenter(TagSelectionPresenter<TagSelectionMvpView> presenter) {
         return presenter;
     }
 

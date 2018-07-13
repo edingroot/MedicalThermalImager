@@ -7,8 +7,10 @@ import com.google.gson.Gson;
 
 import java.io.File;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import javax.inject.Inject;
 
@@ -22,6 +24,7 @@ import tw.cchi.medthimager.MvpApplication;
 import tw.cchi.medthimager.model.api.PatientCreateRequest;
 import tw.cchi.medthimager.model.api.PatientResponse;
 import tw.cchi.medthimager.model.api.SSPatient;
+import tw.cchi.medthimager.model.api.Tag;
 import tw.cchi.medthimager.model.api.ThImage;
 import tw.cchi.medthimager.model.api.ThImageResponse;
 import tw.cchi.medthimager.model.api.User;
@@ -50,6 +53,32 @@ public class ApiHelper {
                     (Response<User> response) -> {
                         if (response.code() == 200) {
                             application.getSession().setUser(response.body());
+                            emitter.onNext(true);
+                        } else {
+                            emitter.onNext(false);
+                        }
+                        emitter.onComplete();
+                    },
+                    e -> {
+                        emitter.onNext(false);
+                        emitter.onComplete();
+                    }
+                );
+        });
+    }
+
+    public Observable<Boolean> refreshTags() {
+        if (!application.checkNetworkAuthed(false)) {
+            return Observable.just(false);
+        }
+
+        return Observable.create(emitter -> {
+            application.getSession().getApiClient().getTags()
+                .subscribeOn(Schedulers.io())
+                .subscribe(
+                    (Response<List<Tag>> response) -> {
+                        if (response.code() == 200 && response.body() != null) {
+                            application.dataManager.pref.setCachedTags(new HashSet<>(response.body()));
                             emitter.onNext(true);
                         } else {
                             emitter.onNext(false);

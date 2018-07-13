@@ -7,6 +7,7 @@ import tw.cchi.medthimager.ui.auth.LoginActivity;
 import tw.cchi.medthimager.ui.camera.CameraActivity;
 import tw.cchi.medthimager.ui.camera.contishoot.ContiShootDialog;
 import tw.cchi.medthimager.ui.camera.patientmgmt.PatientMgmtDialog;
+import tw.cchi.medthimager.ui.camera.tagselection.TagSelectionDialog;
 import tw.cchi.medthimager.ui.dialog.patientconflict.ConflictPatientDialog;
 import tw.cchi.medthimager.ui.dialog.updateremider.UpdateReminderDialog;
 import tw.cchi.medthimager.ui.dumpviewer.DumpViewerActivity;
@@ -21,6 +22,8 @@ public interface ActivityComponent {
     void inject(CameraActivity activity);
 
     void inject(PatientMgmtDialog activity);
+
+    void inject(TagSelectionDialog dialog);
 
     void inject(ContiShootDialog dialog);
 
