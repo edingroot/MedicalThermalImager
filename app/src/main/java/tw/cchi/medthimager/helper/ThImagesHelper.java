@@ -42,7 +42,7 @@ public class ThImagesHelper {
                 File flirFile = new File(record.getFilepathPrefix() + Constants.POSTFIX_FLIR_IMAGE + ".jpg");
 
                 if (!dumpFile.exists() || !flirFile.exists()) {
-                    db.captureRecordDAO().delete(record);
+                    db.captureRecordDAO().deleteWithTags(db.captureRecordTagsDAO(), record);
                     Log.i(TAG, "Deleting record: " + dumpFile.getAbsolutePath());
                 } else {
                     Log.i(TAG, "Record check passed: " + dumpFile.getAbsolutePath());

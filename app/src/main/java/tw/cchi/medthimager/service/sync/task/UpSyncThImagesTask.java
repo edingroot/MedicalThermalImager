@@ -73,7 +73,7 @@ public class UpSyncThImagesTask extends SyncTask {
             if (!dumpFile.exists() || !flirFile.exists()) {
                 Log.e(TAG, "Dump record: " + record.getFilepathPrefix() +
                         ", either dump file or flir file not exist, delete record from local database.");
-                dataManager.db.captureRecordDAO().delete(record);
+                dataManager.db.captureRecordDAO().deleteWithTags(dataManager.db.captureRecordTagsDAO(), record);
                 continue;
             }
 

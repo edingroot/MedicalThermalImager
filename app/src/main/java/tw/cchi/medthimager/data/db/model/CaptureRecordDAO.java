@@ -39,12 +39,6 @@ public abstract class CaptureRecordDAO {
     @Insert
     public abstract void insertAll(CaptureRecord... captureRecords);
 
-    @Update(onConflict = REPLACE)
-    public abstract void update(CaptureRecord captureRecord);
-
-    @Delete
-    public abstract void delete(CaptureRecord captureRecord);
-
     @Transaction
     public void insertAndCheckPatient(PatientDAO patientDAO, CaptureRecord captureRecord) {
         String patientCuid = captureRecord.getPatientCuid();
@@ -57,6 +51,20 @@ public abstract class CaptureRecordDAO {
         }
 
         insertAll(captureRecord);
+    }
+
+
+    @Update(onConflict = REPLACE)
+    public abstract void update(CaptureRecord captureRecord);
+
+
+    @Delete
+    public abstract void delete(CaptureRecord captureRecord);
+
+    @Transaction
+    public void deleteWithTags(CaptureRecordTagsDAO captureRecordTagsDAO, CaptureRecord captureRecord) {
+        captureRecordTagsDAO.deleteTagsOfCaptureRecord(captureRecord.getUuid());
+        delete(captureRecord);
     }
 
 }
