@@ -391,7 +391,7 @@ public class CameraPresenter<V extends CameraMvpView> extends BasePresenter<V>
         flirOneDevice = null;
 
         if (!activity.isDestroyed() && !activity.isFinishing()) {
-            // Clear preselected thermal spots on camera disconnect
+            // Clear preselected thermal spots on camera disconnected
             if (clearSpotsOnDisconnect && thermalSpotsHelper != null) {
                 thermalSpotsHelper.dispose();
                 thermalSpotsHelper = null;

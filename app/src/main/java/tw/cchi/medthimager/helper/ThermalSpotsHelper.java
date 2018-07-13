@@ -408,16 +408,18 @@ public class ThermalSpotsHelper implements Disposable {
             // Log.d(TAG, String.format("updateThermalValue, %d - viewPos=(%d, %d), dumpPos=(%d, %d)\n",
             //     spotView.getSpotId(), viewPosition.x, viewPosition.y, thermalPosition.x, thermalPosition.y));
 
+            final double temperature;
+            if (tempSource == TempSource.ThermalDump) {
+                temperature = rawThermalDump.getTemperature9Average(thermalPosition.x, thermalPosition.y);
+            } else if (tempSource == TempSource.RenderedImage) {
+                temperature = ThermalDumpUtils.getTemperature9Average(renderedImage, thermalPosition.x, thermalPosition.y);
+            } else {
+                // Shouldn't happen
+                temperature = 0;
+            }
+
             // Run on UI thread
-            new Handler(Looper.getMainLooper()).post(() -> {
-                if (tempSource == TempSource.ThermalDump) {
-                    spotView.setTemperature(
-                        rawThermalDump.getTemperature9Average(thermalPosition.x, thermalPosition.y));
-                } else if (tempSource == TempSource.RenderedImage) {
-                    spotView.setTemperature(
-                        ThermalDumpUtils.getTemperature9Average(renderedImage, thermalPosition.x, thermalPosition.y));
-                }
-            });
+            new Handler(Looper.getMainLooper()).post(() -> spotView.setTemperature(temperature));
         });
     }
 

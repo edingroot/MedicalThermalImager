@@ -49,7 +49,7 @@
     <string name="upload_conflict_syncing_patient">Image upload canceled due to conflict occurred when syncing current patient info.</string>
 
     <string name="auto_clear_spots">Auto Clear Spots</string>
-    <string name="auto_clear_spots_dscrp">Auto clear thermal spots on camera disconnect.</string>
+    <string name="auto_clear_spots_dscrp">Auto clear thermal spots on camera disconnected.</string>
     <string name="auto_apply_visible_image_offset">Auto Apply Visible Image Offset</string>
     <string name="auto_apply_visible_image_offset_dscrp">Auto align visible light image with thermal image based on the last adjusted offset.</string>
 
