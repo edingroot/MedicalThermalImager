@@ -30,6 +30,8 @@ import com.flir.flironesdk.FlirUsbDevice;
 import com.flir.flironesdk.RenderedImage;
 import com.jakewharton.rxbinding2.view.RxView;
 
+import java.util.HashSet;
+
 import javax.inject.Inject;
 
 import butterknife.BindView;
@@ -71,6 +73,7 @@ public class CameraActivity extends BaseActivity implements
     @BindView(R.id.batteryChargeIndicator) ImageView batteryChargeIndicator;
 
     @BindView(R.id.txtPatientName) TextView txtPatientName;
+    @BindView(R.id.txtSelectedTags) TextView txtSelectedTags;
     @BindView(R.id.txtShootInfo) TextView txtShootInfo;
     @BindView(R.id.txtTuningState) TextView txtTuningState;
 
@@ -212,16 +215,16 @@ public class CameraActivity extends BaseActivity implements
             return;
 
         PatientMgmtDialog patientMgmtDialog = PatientMgmtDialog.newInstance();
+        patientMgmtDialog.setSelectedPatient(presenter.getCurrentPatientCuid());
         patientMgmtDialog.show(getSupportFragmentManager(), patient ->
                 presenter.setCurrentPatient(patient.getCuid()));
-        patientMgmtDialog.setSelectedPatient(presenter.getCurrentPatientCuid());
     }
 
     @OnClick(R.id.imgBtnSelectTags)
     public void onSelectTagsClick(View v) {
         TagSelectionDialog tagSelectionDialog = TagSelectionDialog.newInstance();
+        tagSelectionDialog.setSelectedTags(new HashSet<>(presenter.getSelectedTags()));
         tagSelectionDialog.show(getSupportFragmentManager(), presenter::setSelectedTags);
-        tagSelectionDialog.setSelectedTags(presenter.getSelectedTags());
     }
 
     @OnClick(R.id.btnTools)
@@ -412,7 +415,12 @@ public class CameraActivity extends BaseActivity implements
 
     @Override
     public void setPatientStatusText(String patientName) {
-        txtPatientName.setText(getString(R.string.patient_, patientName));
+        txtPatientName.setText(patientName);
+    }
+
+    @Override
+    public void setTagsStatusText(String tagsStatusText) {
+        txtSelectedTags.setText(tagsStatusText);
     }
 
     @Override

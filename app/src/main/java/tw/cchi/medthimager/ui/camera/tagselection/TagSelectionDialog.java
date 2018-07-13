@@ -135,6 +135,6 @@ public class TagSelectionDialog extends BaseDialog
     }
 
     public interface OnResultListener {
-        void onResult(Set<Tag> tags);
+        void onResult(List<Tag> tags);
     }
 }

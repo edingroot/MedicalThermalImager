@@ -19,6 +19,8 @@ public interface CameraMvpView extends MvpView {
 
     void setPatientStatusText(String patientName);
 
+    void setTagsStatusText(String tagsStatusText);
+
     void setDeviceConnected();
 
     void setDeviceDisconnected();

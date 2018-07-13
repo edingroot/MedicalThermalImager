@@ -18,7 +18,7 @@
     <string name="battery_label">Batt:</string>
     <string name="txtTuning">Tuning...</string>
     <string name="tools">Tools</string>
-    <string name="patient_">Patient: %1$s</string>
+    <string name="no_tag">NO TAG</string>
     <string name="single_shoot">Single Shoot</string>
     <string name="conti_shoot_counts">%1$d / %2$d</string>
 

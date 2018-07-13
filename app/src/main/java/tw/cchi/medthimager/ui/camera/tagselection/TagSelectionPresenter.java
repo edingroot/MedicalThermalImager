@@ -35,9 +35,10 @@ public class TagSelectionPresenter<V extends TagSelectionMvpView> extends BasePr
 
         // Update tags
         tags = dataManager.pref.getCachedTags();
-        if (tags == null) {
+        if (tags == null || tags.size() == 0) {
             apiHelper.refreshTags().blockingSubscribe(success -> handleTagsUpdate());
         } else {
+            getMvpView().setTags(createListItems(tags));
             apiHelper.refreshTags().subscribe(success -> handleTagsUpdate());
         }
     }
@@ -50,7 +51,7 @@ public class TagSelectionPresenter<V extends TagSelectionMvpView> extends BasePr
 
     @Override
     public void confirm() {
-        Set<Tag> selectedTags = new HashSet<>();
+        List<Tag> selectedTags = new ArrayList<>();
         List<Object> selectedKeys = getMvpView().getSelectedKeys();
 
         for (Object key : selectedKeys)

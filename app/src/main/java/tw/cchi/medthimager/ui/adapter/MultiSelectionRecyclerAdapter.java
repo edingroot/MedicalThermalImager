@@ -25,7 +25,7 @@ import tw.cchi.medthimager.R;
 public class MultiSelectionRecyclerAdapter extends RecyclerView.Adapter<MultiSelectionRecyclerAdapter.ViewHolder> {
     private OnInteractionListener onInteractionListener;
     private ArrayList<Pair<Object, String>> items = new ArrayList<>(); // Pair<key, title>
-    private HashMap<Object, Boolean> selectedKeys = new HashMap<>();
+    private HashMap<Object, Boolean> isKeySelected = new HashMap<>();
     private boolean showRemove = true;
 
     @Inject
@@ -34,8 +34,11 @@ public class MultiSelectionRecyclerAdapter extends RecyclerView.Adapter<MultiSel
 
     public void setItems(ArrayList<Pair<Object, String>> items) {
         this.items = items;
-        for (Pair pair : items)
-            selectedKeys.put(pair.first, false);
+
+        for (Pair pair : items) {
+            if (!isKeySelected.containsKey(pair.first))
+                isKeySelected.put(pair.first, false);
+        }
 
         notifyDataSetChangedOnUI();
     }
@@ -50,14 +53,21 @@ public class MultiSelectionRecyclerAdapter extends RecyclerView.Adapter<MultiSel
     }
 
     public void setSelected(Object key, boolean isSelected) {
-        if (selectedKeys.containsKey(key))
-            selectedKeys.put(key, isSelected);
+        if (isKeySelected.containsKey(key))
+            isKeySelected.put(key, isSelected);
 
         notifyDataSetChangedOnUI();
     }
 
     public List<Object> getSelectedKeys() {
-        return new ArrayList<>(selectedKeys.keySet());
+        List<Object> selectedKeys = new ArrayList<>();
+
+        for (Pair<Object, String> item : items) {
+            if (isKeySelected.get(item.first))
+                selectedKeys.add(item.first);
+        }
+
+        return selectedKeys;
     }
 
     // Prevents "IllegalStateException: Cannot call this method while RecyclerView is computing a layout or scrolling"
@@ -78,7 +88,7 @@ public class MultiSelectionRecyclerAdapter extends RecyclerView.Adapter<MultiSel
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         final Object key = items.get(position).first;
-        final boolean selected = selectedKeys.get(key);
+        final boolean selected = isKeySelected.get(key);
 
         holder.txtRemove.setVisibility(showRemove ? View.VISIBLE : View.INVISIBLE);
         holder.txtChecked.setVisibility(selected ? View.VISIBLE : View.INVISIBLE);

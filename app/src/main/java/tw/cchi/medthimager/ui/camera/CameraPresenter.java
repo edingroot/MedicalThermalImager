@@ -25,10 +25,13 @@ import java.util.Date;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Locale;
 import java.util.Set;
+import java.util.SortedMap;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.TreeMap;
 import java.util.UUID;
 
 import javax.inject.Inject;
@@ -83,7 +86,7 @@ public class CameraPresenter<V extends CameraMvpView> extends BasePresenter<V>
     private volatile boolean contiShooting = false;
     private CaptureProcessInfo captureProcessInfo = null;
     private Patient currentPatient;
-    private Set<Tag> selectedTags;
+    private List<Tag> selectedTags;
 
     static {
         OpenCVLoader.initDebug();
@@ -118,13 +121,7 @@ public class CameraPresenter<V extends CameraMvpView> extends BasePresenter<V>
             .subscribe(getMvpView()::setPatientStatusText);
 
         // Restore selected tags
-        HashMap<String, Tag> tags = dataManager.pref.getCachedTags();
-        selectedTags = new HashSet<>();
-        for (String tagUuid : dataManager.pref.getSelectedTags()) {
-            Tag tag = tags.get(tagUuid);
-            if (tag != null)
-                selectedTags.add(tag);
-        }
+        setSelectedTags(loadSelectedTagsFromPref());
 
         getMvpView().setSingleShootMode();
     }
@@ -465,16 +462,6 @@ public class CameraPresenter<V extends CameraMvpView> extends BasePresenter<V>
     }
 
     @Override
-    public Set<Tag> getSelectedTags() {
-        return selectedTags;
-    }
-
-    @Override
-    public void setSelectedTags(Set<Tag> tags) {
-        selectedTags = tags;
-    }
-
-    @Override
     public void setCurrentPatient(final String patientCuid) {
         // Log event
         dataManager.analytics.logSetCurrentPatient(patientCuid);
@@ -487,6 +474,31 @@ public class CameraPresenter<V extends CameraMvpView> extends BasePresenter<V>
         }).subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe(getMvpView()::setPatientStatusText);
+    }
+
+    @Override
+    public List<Tag> getSelectedTags() {
+        return selectedTags;
+    }
+
+    @Override
+    public void setSelectedTags(List<Tag> tags) {
+        this.selectedTags = tags;
+
+        // Display selected tags
+        String statusText;
+        if (tags.size() == 0) {
+            statusText = activity.getString(R.string.no_tag);
+        } else {
+            StringBuilder stringBuilder = new StringBuilder();
+            for (Tag tag : tags)
+                stringBuilder.append(tag.getName()).append("-");
+            statusText = stringBuilder.toString().substring(0, stringBuilder.length() - 1);
+        }
+        getMvpView().setTagsStatusText(statusText);
+
+        // Store in pref
+        storeSelectedTagsToPref(tags);
     }
 
     @Override
@@ -556,6 +568,28 @@ public class CameraPresenter<V extends CameraMvpView> extends BasePresenter<V>
     }
 
     // ------------------------------------------------------------------------------------------- //
+
+    private List<Tag> loadSelectedTagsFromPref() {
+        HashMap<String, Tag> tags = dataManager.pref.getCachedTags();
+        Set<String> uuids = dataManager.pref.getSelectedTags();
+
+        // Sort tags by name
+        SortedMap<String, Tag> tagNameMap = new TreeMap<>();
+        for (String uuid : uuids) {
+            Tag tag = tags.get(uuid);
+            tagNameMap.put(tag.getName(), tag);
+        }
+
+        return new ArrayList<>(tagNameMap.values());
+    }
+
+    private void storeSelectedTagsToPref(List<Tag> tags) {
+        Set<String> uuids = new HashSet<>();
+        for (Tag tag : tags)
+            uuids.add(tag.getUuid());
+
+        dataManager.pref.setSelectedTags(uuids);
+    }
 
     private void connectSimulatedDevice() {
         // Log event

@@ -2,6 +2,7 @@ package tw.cchi.medthimager.ui.camera;
 
 import com.flir.flironesdk.RenderedImage;
 
+import java.util.List;
 import java.util.Set;
 
 import tw.cchi.medthimager.model.api.Tag;
@@ -49,9 +50,9 @@ public interface CameraMvpPresenter<V extends CameraMvpView> extends MvpPresente
 
     void setCurrentPatient(String patientCuid);
 
-    Set<Tag> getSelectedTags();
+    List<Tag> getSelectedTags();
 
-    void setSelectedTags(Set<Tag> tags);
+    void setSelectedTags(List<Tag> tags);
 
     boolean isDeviceAttached();
 
