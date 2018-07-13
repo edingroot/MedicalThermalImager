@@ -137,7 +137,7 @@ public class ThImagesHelper {
                         null,
                         capturedAt, false);
 
-                db.captureRecordDAO().insertAndAutoCreatePatient(db.patientDAO(), captureRecord);
+                db.captureRecordDAO().insertAndCheckPatient(db.patientDAO(), captureRecord);
             }
 
             emitter.onNext(captureRecord);

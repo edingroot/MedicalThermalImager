@@ -49,20 +49,14 @@ public abstract class CaptureRecordDAO {
     public abstract void delete(CaptureRecord captureRecord);
 
     @Transaction
-    public void insertAndAutoCreatePatient(PatientDAO patientDAO, CaptureRecord captureRecord) {
+    public void insertAndCheckPatient(PatientDAO patientDAO, CaptureRecord captureRecord) {
         String patientCuid = captureRecord.getPatientCuid();
 
-        if (patientCuid == null || patientCuid.length() == 0) {
-            // Patient not specified
+        // If patient not specified or patient not found in the local database
+        if (patientCuid == null || patientCuid.length() == 0 || patientDAO.get(patientCuid) == null) {
+            // Set to default patient
             patientCuid = Patient.DEFAULT_PATIENT_CUID;
             captureRecord.setPatientCuid(patientCuid);
-        } else {
-            if (patientDAO.get(patientCuid) == null) {
-                // Patient not found in app database
-                // TODO: get patient name from server?
-                String patientName = patientCuid;
-                patientDAO.insertAll(new Patient(patientCuid, patientName));
-            }
         }
 
         insertAll(captureRecord);

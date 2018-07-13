@@ -52,6 +52,7 @@ import tw.cchi.medthimager.model.CaptureProcessInfo;
 import tw.cchi.medthimager.model.ContiShootParameters;
 import tw.cchi.medthimager.model.api.Tag;
 import tw.cchi.medthimager.model.api.ThImage;
+import tw.cchi.medthimager.service.sync.task.SyncPatientsTask;
 import tw.cchi.medthimager.service.sync.task.SyncSingleThImageTask;
 import tw.cchi.medthimager.thermalproc.RawThermalDump;
 import tw.cchi.medthimager.ui.base.BasePresenter;
@@ -122,6 +123,16 @@ public class CameraPresenter<V extends CameraMvpView> extends BasePresenter<V>
 
         // Restore selected tags
         setSelectedTags(loadSelectedTagsFromPref());
+
+        // If there is only default patient, launch sync patient task
+        Observable.create(emitter -> {
+            if (dataManager.db.patientDAO().getAll().size() == 1) {
+                application.connectSyncService().subscribe(syncService -> {
+                    syncService.scheduleNewTask(new SyncPatientsTask());
+                    emitter.onComplete();
+                });
+            }
+        }).subscribeOn(Schedulers.io()).subscribe();
 
         getMvpView().setSingleShootMode();
     }
