@@ -11,6 +11,9 @@ import java.util.List;
 @Dao
 public abstract class PatientDAO {
 
+    @Query("select count(*) from patients")
+    public abstract int getCount();
+
     @Query("select * from patients")
     public abstract List<Patient> getAll();
 

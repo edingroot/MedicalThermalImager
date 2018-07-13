@@ -45,6 +45,7 @@ import tw.cchi.medthimager.Errors;
 import tw.cchi.medthimager.R;
 import tw.cchi.medthimager.data.db.model.CaptureRecord;
 import tw.cchi.medthimager.data.db.model.Patient;
+import tw.cchi.medthimager.data.network.ApiHelper;
 import tw.cchi.medthimager.helper.CSVExportHelper;
 import tw.cchi.medthimager.helper.ThImagesHelper;
 import tw.cchi.medthimager.helper.ThermalSpotsHelper;
@@ -67,8 +68,9 @@ public class CameraPresenter<V extends CameraMvpView> extends BasePresenter<V>
                 FrameProcessor.Delegate, Device.PowerUpdateDelegate {
     private final String TAG = Config.TAGPRE + getClass().getSimpleName();
 
-    @Inject CSVExportHelper csvExportHelper;
+    @Inject ApiHelper apiHelper;
     @Inject ThImagesHelper thImagesHelper;
+    @Inject CSVExportHelper csvExportHelper;
 
     private volatile Device flirOneDevice;
     private Device.TuningState tuningState = Device.TuningState.Unknown;
@@ -126,13 +128,18 @@ public class CameraPresenter<V extends CameraMvpView> extends BasePresenter<V>
 
         // If there is only default patient, launch sync patient task
         Observable.create(emitter -> {
-            if (dataManager.db.patientDAO().getAll().size() == 1) {
+            if (dataManager.db.patientDAO().getCount() == 1) {
                 application.connectSyncService().subscribe(syncService -> {
                     syncService.scheduleNewTask(new SyncPatientsTask());
                     emitter.onComplete();
                 });
             }
         }).subscribeOn(Schedulers.io()).subscribe();
+
+        // If there is no tags cached, fetch tags from server
+        if (dataManager.pref.isTagsCacheEmpty()) {
+            apiHelper.refreshTags().subscribe();
+        }
 
         getMvpView().setSingleShootMode();
     }
