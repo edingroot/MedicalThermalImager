@@ -10,6 +10,7 @@ import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.schedulers.Schedulers;
 import io.reactivex.subjects.PublishSubject;
 import tw.cchi.medthimager.MvpApplication;
+import tw.cchi.medthimager.R;
 import tw.cchi.medthimager.data.db.model.Patient;
 import tw.cchi.medthimager.service.sync.task.SyncPatientsTask;
 import tw.cchi.medthimager.service.sync.task.SyncSinglePatientTask;
@@ -41,14 +42,18 @@ public class PatientMgmtPresenter<V extends PatientMgmtMvpView> extends BasePres
 
     @Override
     public void addPatient(String caseId, String bed, String name) {
-        Observable.<List<Patient>>create(emitter -> {
-            Patient patient = new Patient(caseId, bed, name);
-            dataManager.db.patientDAO().insertAll(patient);
-            upSyncPatient(patient);
+        if (bed.isEmpty() && name.isEmpty()) {
+            getMvpView().showToast(R.string.error_both_bed_name_empty);
+        } else {
+            Observable.<List<Patient>>create(emitter -> {
+                Patient patient = new Patient(caseId, bed, name);
+                dataManager.db.patientDAO().insertAll(patient);
+                upSyncPatient(patient);
 
-            loadPatientListFromDB();
-            emitter.onComplete();
-        }).subscribeOn(Schedulers.io()).subscribe();
+                loadPatientListFromDB();
+                emitter.onComplete();
+            }).subscribeOn(Schedulers.io()).subscribe();
+        }
     }
 
     @Override

@@ -78,6 +78,7 @@
 
     <!-- PatientMgmtDialog -->
     <string name="confirm_remove_patient">Confirm to remove records of %1$s?</string>
+    <string name="error_both_bed_name_empty">Error: both name and bed are empty</string>
 
     <!-- TagSelectionDialog -->
     <string name="select_tags">Select Tags</string>
