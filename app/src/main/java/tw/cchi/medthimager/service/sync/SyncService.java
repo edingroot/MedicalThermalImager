@@ -126,7 +126,9 @@ public class SyncService extends Service {
                         }
 
                         taskRunningStatus.get(syncTask.getClass()).setRunning(false);
-                    }
+                    },
+                    Throwable::printStackTrace,
+                    () -> {}
                 ));
         }
     }
