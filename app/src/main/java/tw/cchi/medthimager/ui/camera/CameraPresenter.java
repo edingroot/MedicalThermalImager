@@ -118,10 +118,8 @@ public class CameraPresenter<V extends CameraMvpView> extends BasePresenter<V>
         Observable.<String>create(emitter -> {
             // Load saved values from shared preferences
             currentPatient = dataManager.db.patientDAO().getOrDefault(dataManager.pref.getSelectedPatientCuid());
-            emitter.onNext(currentPatient.getName());
-        }).subscribeOn(Schedulers.io())
-            .observeOn(AndroidSchedulers.mainThread())
-            .subscribe(getMvpView()::setPatientStatusText);
+            updateCurrentPatientStatusText();
+        }).subscribeOn(Schedulers.io()).subscribe();
 
         // Restore selected tags
         setSelectedTags(loadSelectedTagsFromPref());
@@ -474,9 +472,24 @@ public class CameraPresenter<V extends CameraMvpView> extends BasePresenter<V>
         return currentPatient != null ? currentPatient.getCuid() : Patient.DEFAULT_PATIENT_CUID;
     }
 
+    @BgThreadCapable
     @Override
-    public String getCurrentPatientName() {
-        return currentPatient != null ? currentPatient.getName() : Patient.DEFAULT_PATIENT_NAME;
+    public void updateCurrentPatientStatusText() {
+        String statusText;
+        if (currentPatient == null) {
+            statusText = Patient.DEFAULT_PATIENT_NAME;
+        } else {
+            if (!currentPatient.getName().isEmpty())
+                statusText = currentPatient.getName();
+            else
+                statusText = currentPatient.getBed();
+        }
+
+        mainLooperHandler.post(() -> {
+            if (isViewAttached()) {
+                getMvpView().setPatientStatusText(statusText);
+            }
+        });
     }
 
     @Override
@@ -488,10 +501,10 @@ public class CameraPresenter<V extends CameraMvpView> extends BasePresenter<V>
         Observable.<String>create(emitter -> {
             dataManager.pref.setSelectedPatientCuid(patientCuid);
             currentPatient = dataManager.db.patientDAO().getOrDefault(patientCuid);
-            emitter.onNext(currentPatient.getName());
-        }).subscribeOn(Schedulers.io())
-            .observeOn(AndroidSchedulers.mainThread())
-            .subscribe(getMvpView()::setPatientStatusText);
+
+            updateCurrentPatientStatusText();
+            emitter.onComplete();
+        }).subscribeOn(Schedulers.io()).subscribe();
     }
 
     @Override

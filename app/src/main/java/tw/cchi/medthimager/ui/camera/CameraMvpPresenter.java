@@ -3,13 +3,12 @@ package tw.cchi.medthimager.ui.camera;
 import com.flir.flironesdk.RenderedImage;
 
 import java.util.List;
-import java.util.Set;
 
+import tw.cchi.medthimager.model.ContiShootParameters;
 import tw.cchi.medthimager.model.api.Tag;
+import tw.cchi.medthimager.ui.base.MvpPresenter;
 import tw.cchi.medthimager.util.annotation.BgThreadCapable;
 import tw.cchi.medthimager.util.annotation.NewThread;
-import tw.cchi.medthimager.model.ContiShootParameters;
-import tw.cchi.medthimager.ui.base.MvpPresenter;
 
 public interface CameraMvpPresenter<V extends CameraMvpView> extends MvpPresenter<V> {
 
@@ -46,7 +45,8 @@ public interface CameraMvpPresenter<V extends CameraMvpView> extends MvpPresente
 
     String getCurrentPatientCuid();
 
-    String getCurrentPatientName();
+    @BgThreadCapable
+    void updateCurrentPatientStatusText();
 
     void setCurrentPatient(String patientCuid);
 
