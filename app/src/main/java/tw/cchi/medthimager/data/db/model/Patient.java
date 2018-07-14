@@ -41,6 +41,16 @@ public class Patient implements Parcelable {
     @ColumnInfo(name = "created_at")
     private Date createdAt;
 
+    public Patient(@NonNull String cuid, String ssuuid, String caseid, String name, String bed, boolean syncEnabled, Date createdAt) {
+        this.cuid = cuid;
+        this.ssuuid = ssuuid;
+        this.caseid = caseid;
+        this.name = name == null ? "" : name;
+        this.bed = bed == null ? "" : bed;
+        this.syncEnabled = syncEnabled;
+        this.createdAt = createdAt;
+    }
+
     @Ignore
     public Patient(@NonNull String cuid, String name) {
         this.cuid = cuid;
@@ -70,16 +80,6 @@ public class Patient implements Parcelable {
         this.name = ssPatient.getName();
         this.bed = ssPatient.getBed();
         this.createdAt = ssPatient.getCreated_at();
-    }
-
-    public Patient(@NonNull String cuid, String ssuuid, String caseid, String name, String bed, boolean syncEnabled, Date createdAt) {
-        this.cuid = cuid;
-        this.ssuuid = ssuuid;
-        this.caseid = caseid;
-        this.name = name;
-        this.bed = bed;
-        this.syncEnabled = syncEnabled;
-        this.createdAt = createdAt;
     }
 
     public boolean isDefaultPatient() {
