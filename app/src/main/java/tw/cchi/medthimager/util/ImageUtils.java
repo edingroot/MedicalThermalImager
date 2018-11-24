@@ -52,15 +52,15 @@ public final class ImageUtils {
     }
 
     /**
-     * Get geometric transform matrix of shift operation. (can be applied in Imgproc.warpAffine())
+     * Get geometric transformation matrix of shift operation. (can be applied in {@link org.opencv.imgproc.Imgproc#warpAffine(Mat, Mat, Mat, Size)})
      *
      * Ref: https://docs.opencv.org/3.0-beta/doc/py_tutorials/py_imgproc/py_geometric_transformations/py_geometric_transformations.html
      */
-    public static Mat getShiftTransFormMatrix(int dX, int dY) {
+    public static Mat getShiftTransformationMatrix(int dX, int dY) {
         Mat mat = new Mat(2, 3, CvType.CV_32F);
         int[][] M = new int[][]{
-            {1, 0, dX},
-            {0, 1, dY}
+                {1, 0, dX},
+                {0, 1, dY}
         };
 
         for (int i = 0; i < M.length; i++) {

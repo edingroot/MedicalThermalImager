@@ -26,7 +26,7 @@ public final class Config {
     public static final int DUMP_ALL_VISIBLE_INTERVAL = 500; // ms
     public static final int CONTI_SHOOT_START_DELAY = 5; // sec
 
-    public static final int INIT_DEFAULT_VISIBLE_OFFSET_X = 133;
-    public static final int INIT_DEFAULT_VISIBLE_OFFSET_Y = -8;
+    public static final int INIT_DEFAULT_VISIBLE_OFFSET_X = 0;
+    public static final int INIT_DEFAULT_VISIBLE_OFFSET_Y = -13;
 
 }

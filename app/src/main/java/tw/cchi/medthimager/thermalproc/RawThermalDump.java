@@ -325,7 +325,7 @@ public class RawThermalDump implements Disposable {
                 filename.substring(9, 11),
                 filename.substring(12, 13)
         );
-        if (fileType.equals("raw-reged"))
+        if (fileType.equals("raw_reged"))
             title += "R";
 
         return title;

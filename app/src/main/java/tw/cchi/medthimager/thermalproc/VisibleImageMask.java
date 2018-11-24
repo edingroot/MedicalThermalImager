@@ -53,11 +53,11 @@ public class VisibleImageMask implements Disposable {
         int imageOffsetX = (int) (rawThermalDumpRef.get().getVisibleOffsetX() * ratio);
         int imageOffsetY = (int) (rawThermalDumpRef.get().getVisibleOffsetY() * ratio);
 
-        // Transform (shift)
+        // Transform (shifting)
         Mat shiftedMat = new Mat(source.size(), source.type());
         Imgproc.warpAffine(
                 source, shiftedMat,
-                ImageUtils.getShiftTransFormMatrix(imageOffsetX, imageOffsetY), source.size());
+                ImageUtils.getShiftTransformationMatrix(imageOffsetX, imageOffsetY), source.size());
 
         // Resize (zoom)
         // Mat zoomedMat = new Mat(rawThermalDump.get)

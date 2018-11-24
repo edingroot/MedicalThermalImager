@@ -214,7 +214,7 @@ public class ThermalDumpProcessor {
      * @param temp255 The minimum temperature of the histogram right most index (255/255)
      */
     public void generateThermalImage(float temp0, float temp255) {
-        generatedImage = new Mat(height, width, CvType.CV_8UC1);
+        generatedImage = new Mat();
         generateThermalImageNative(temp0, temp255, generatedImage.getNativeObjAddr());
     }
 

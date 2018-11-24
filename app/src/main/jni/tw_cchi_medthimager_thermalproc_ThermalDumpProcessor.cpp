@@ -28,9 +28,9 @@ JNIEXPORT void JNICALL Java_tw_cchi_medthimager_thermalproc_ThermalDumpProcessor
     int height = JNIHelper::GetIntField(env, obj, "height");
     int minThermalValue = JNIHelper::GetIntField(env, obj, "minThermalValue");
     int maxThermalValue = JNIHelper::GetIntField(env, obj, "maxThermalValue");
+    cv::Mat *img = (cv::Mat*) resultMatAddr;
 
     // Create result mat
-    cv::Mat *img = (cv::Mat*) resultMatAddr;
     img->create(height, width, CV_8U);
 
     int thermalValue0 = (int) (temp0 * 10) + 2731;
