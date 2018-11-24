@@ -29,4 +29,7 @@
     <dimen name="thermal_spot_width">48dp</dimen>
     <dimen name="thermal_spot_height">50dp</dimen>
 
+    <!-- Dump Viewer -->
+    <dimen name="viewer_top_menu_height">52dp</dimen>
+
 </resources>

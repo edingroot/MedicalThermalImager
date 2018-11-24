@@ -84,26 +84,34 @@
         <ImageButton
             android:id="@+id/btnPick"
             style="@style/metaButton"
-            android:layout_width="52dp"
-            android:layout_height="52dp"
+            android:layout_width="@dimen/viewer_top_menu_height"
+            android:layout_height="@dimen/viewer_top_menu_height"
             android:layout_margin="0dp"
             android:src="@android:drawable/ic_input_add"/>
 
-        <HorizontalScrollView
+        <android.support.v4.widget.NestedScrollView
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_alignBottom="@+id/btnPick"
             android:layout_alignTop="@+id/btnPick"
             android:layout_toEndOf="@+id/btnPick"
+            android:fillViewport="true"
             android:padding="5dp">
 
-            <android.support.v7.widget.RecyclerView
-                android:id="@+id/recyclerDumpSwitcher"
+            <LinearLayout
                 android:layout_width="wrap_content"
-                android:layout_height="match_parent"
-                tools:listitem="@layout/listitem_thermaldump"/>
+                android:layout_height="match_parent">
 
-        </HorizontalScrollView>
+                <android.support.v7.widget.RecyclerView
+                    android:id="@+id/recyclerDumpSwitcher"
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:nestedScrollingEnabled="false"
+                    tools:listitem="@layout/listitem_thermaldump"/>
+
+            </LinearLayout>
+
+        </android.support.v4.widget.NestedScrollView>
 
     </RelativeLayout>
 
