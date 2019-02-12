@@ -347,7 +347,7 @@ public class CameraPresenter<V extends CameraMvpView> extends BasePresenter<V>
         SimpleDateFormat sdf = new SimpleDateFormat("MMdd-HHmmss", Locale.getDefault());
         String csvFilepath = AppUtils.getExportsDir() + "/" + "RecordsExport_" + sdf.format(new Date()) + ".csv";
 
-        csvExportHelper.exportAllCaptureRecords(csvFilepath)
+        csvExportHelper.exportAllCaptureRecords(getMvpView(), csvFilepath)
             .observeOn(AndroidSchedulers.mainThread()).subscribe(
                 o -> {},
                 e -> {

@@ -9,6 +9,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import javax.inject.Inject;
@@ -21,6 +22,7 @@ import tw.cchi.medthimager.data.db.AppDatabase;
 import tw.cchi.medthimager.data.db.model.CaptureRecord;
 import tw.cchi.medthimager.data.db.model.Patient;
 import tw.cchi.medthimager.thermalproc.RawThermalDump;
+import tw.cchi.medthimager.ui.base.MvpView;
 import tw.cchi.medthimager.util.AppUtils;
 import tw.cchi.medthimager.util.annotation.NewThread;
 
@@ -29,21 +31,35 @@ public class CSVExportHelper {
 
     private AppDatabase database;
 
+    @Inject ThImagesHelper thImagesHelper;
+
     @Inject
     public CSVExportHelper(AppDatabase database) {
         this.database = database;
     }
 
     @NewThread
-    public Observable<Object> exportAllCaptureRecords(final String filepath) {
+    public Observable<Object> exportAllCaptureRecords(final MvpView mvpView, final String filepath) {
         return Observable.create(emitter -> {
             StringBuilder outputBuilder = new StringBuilder();
             int maxSpotCount = 0;
 
-            // TODO: call ThImagesHelper.updateRecordsFromDumpFiles before exporting?
+            // Update capture records before exporting csv
+            Log.i(TAG, "Updating capture records");
+            thImagesHelper.updateRecordsFromDumpFiles().blockingSubscribe();
 
             Map<String, Patient> patientMap = getPatientMap();
-            for (CaptureRecord captureRecord : database.captureRecordDAO().getAll()) {
+            List<CaptureRecord> captureRecords = database.captureRecordDAO().getAll();
+
+            if (captureRecords.size() == 0) {
+                mvpView.showToast("No capture record found");
+                emitter.onComplete();
+                return;
+            } else {
+                mvpView.showToast("Exporting " + captureRecords.size() + " records to csv...");
+            }
+
+            for (CaptureRecord captureRecord : captureRecords) {
                 StringBuilder rowBuilder = new StringBuilder();
                 String filenamePrefix = ThImagesHelper.extractFilenamePrefix(captureRecord.getFilepathPrefix());
 
@@ -95,6 +111,7 @@ public class CSVExportHelper {
             try {
                 outputWriter = new BufferedWriter(new FileWriter(outputFile));
                 outputWriter.write(outputBuilder.toString());
+                emitter.onComplete();
             } catch (Exception e) {
                 emitter.onError(e);
             } finally {
