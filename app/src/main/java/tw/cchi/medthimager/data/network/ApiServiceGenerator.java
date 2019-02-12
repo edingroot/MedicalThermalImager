@@ -56,6 +56,7 @@ public class ApiServiceGenerator {
         ApiServiceGenerator.accessTokens = accessTokens;
         final AccessTokens token = accessTokens;
 
+        // Build the API client
         httpClient = new OkHttpClient.Builder();
         builder = new Retrofit.Builder()
                 .baseUrl(API_BASE_URL)
@@ -64,6 +65,7 @@ public class ApiServiceGenerator {
 
         httpClient.addInterceptor(new HttpLoggingInterceptor().setLevel(Config.API_LOGGING_LEVEL));
 
+        // Add API authentication bearer header
         httpClient.addInterceptor(chain -> {
             Request original = chain.request();
             Request request = original.newBuilder()
@@ -76,6 +78,7 @@ public class ApiServiceGenerator {
             return chain.proceed(request);
         });
 
+        // Handle the authentication process
         httpClient.authenticator((route, response) -> {
             if (responseCount(response) >= 2) {
                 // If both the original call and the call with refreshed token failed,
@@ -112,6 +115,7 @@ public class ApiServiceGenerator {
         return retrofit.create(serviceClass);
     }
 
+    // Response counter for the authenticator
     private static int responseCount(Response response) {
         int result = 1;
         while ((response = response.priorResponse()) != null) {

@@ -126,7 +126,9 @@ public class SettingsPresenter<V extends SettingsMvpView> extends BasePresenter<
 
         Observable.create(emitter -> {
             thImagesHelper.deleteInvalidCaptureRecords().blockingSubscribe();
-            thImagesHelper.updateRecordsFromDumpFiles().blockingSubscribe();
+
+            // This will be called in UpSyncThImagesTask
+            // thImagesHelper.updateRecordsFromDumpFiles().blockingSubscribe();
 
             application.connectSyncService().subscribe(syncService -> {
                 if (application.checkNetworkAuthed(true) && !syncService.isTaskRunning(UpSyncThImagesTask.class)) {

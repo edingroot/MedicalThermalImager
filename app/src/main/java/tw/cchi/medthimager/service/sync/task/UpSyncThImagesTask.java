@@ -49,6 +49,9 @@ public class UpSyncThImagesTask extends SyncTask {
         if (!checkNetworkAndAuthed())
             return;
 
+        // TODO: check unsuccessful behavior
+        thImagesHelper.updateRecordsFromDumpFiles().blockingSubscribe();
+
         dataManager.pref.setLastSyncThImages(new Date());
 
         List<CaptureRecord> captureRecords = dataManager.db.captureRecordDAO().getSyncList();
