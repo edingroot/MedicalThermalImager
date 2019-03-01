@@ -75,11 +75,30 @@ import tw.cchi.medthimager.util.CommonUtils;
  *  (M+172)            -
  *  (M+173) ~ (M+204)  record UUID (32 ascii chars, no '-')
  *  (M+205)            EOF
+ *
+ * File format v5:
+ *  0 ~ 1              width (number of columns)
+ *  2 ~ 3              height (number of rows)
+ *  4                  file format version (=5)
+ *  5 ~ M              each thermal pixel is stored by 2 bytes (M=2*width*height + 5 - 1)
+ *  (M+1)   ~ (M+2)    visible image alignment X offset (dump pixel offset * 10)
+ *  (M+3)   ~ (M+4)    visible image alignment Y offset (dump pixel offset * 10)
+ *  (M+5)   ~ (M+10)   -
+ *  (M+11)  ~ (M+50)   title tag (up to 40 ascii chars)
+ *  (M+51)  ~ (M+82)   patient CUID (32 ascii chars, no '-')
+ *  (M+83)  ~ (M+86)   capture timestamp (unix timestamp as 4 bytes number; int in java, long in C)
+ *  (M+87)  ~ (M+90)   -
+ *  (M+91)             number of thermal spot markers (up to 40 spot markers)
+ *  (M+92)  ~ (M+251)  thermal spot marker #1 ~ #40, (x: 2 bytes, y: 2 bytes)
+ *  (M+252)            -
+ *  (M+253) ~ (M+284)  record UUID (32 ascii chars, no '-')
+ *  (M+285)            EOF
  */
 public class RawThermalDump implements Disposable {
     private final String TAG = Config.TAGPRE + getClass().getSimpleName();
+    private static final int LATEST_FORMAT_VER = 5;
 
-    private int formatVersion = 4;
+    private int formatVersion = LATEST_FORMAT_VER;
     private String recordUuid = null;
     private String patientCuid = null;
     private String title = null;
@@ -128,7 +147,7 @@ public class RawThermalDump implements Disposable {
 
         // Validate and identify file format version
         boolean versionMatched = false;
-        for (int i = 1; i <= 4; i++) {
+        for (int i = 1; i <= LATEST_FORMAT_VER; i++) {
             if (bytes.length == FileFormat.getByteLength(i, width, height)) {
                 formatVersion = i;
                 thermalPixelOffset = FileFormat.getThermalPixelOffset(formatVersion);
@@ -169,9 +188,10 @@ public class RawThermalDump implements Disposable {
 
             // Read spot marker positions
             int numberOfSpots = bytes[M + 91];
-            if (numberOfSpots > 20) {
+            if ((formatVersion <= 4 && numberOfSpots > 20) || (formatVersion > 4 && numberOfSpots > 40))
                 return null;
-            } else if (numberOfSpots > 0) {
+
+            if (numberOfSpots > 0) {
                 rawThermalDump.spotMarkers.clear();
                 for (int i = 0; i < numberOfSpots; i++) {
                     int index = M + 92 + 4 * i;
@@ -188,8 +208,9 @@ public class RawThermalDump implements Disposable {
             rawThermalDump.captureTimestamp = bytes2SignedInt(bytes, M + 83, 4);
 
             // Read record UUID
-            if (bytes[M + 173] != 0) {
-                rawThermalDump.recordUuid = new String(Arrays.copyOfRange(bytes, M + 173, M + 204 + 1));
+            final int bytesFrom = FileFormat.getUuidOffset(formatVersion, M);
+            if (bytes[bytesFrom] != 0) {
+                rawThermalDump.recordUuid = new String(Arrays.copyOfRange(bytes, bytesFrom, bytesFrom + 32));
             }
         }
 
@@ -199,10 +220,14 @@ public class RawThermalDump implements Disposable {
     public void saveAsync() {
         Observable.create(emitter -> this.save())
             .subscribeOn(Schedulers.io())
-            .subscribe();
+            .subscribe(
+                success -> {},
+                Throwable::printStackTrace,
+                () -> {}
+            );
     }
 
-    public synchronized boolean save() {
+    public synchronized boolean save() throws Error {
         if (filepath != null) {
             return saveToFile(filepath);
         } else {
@@ -211,7 +236,7 @@ public class RawThermalDump implements Disposable {
         }
     }
 
-    public synchronized boolean saveToFile(String filepath) {
+    public synchronized boolean saveToFile(String filepath) throws Error {
         byte[] bytes = new byte[FileFormat.getByteLength(formatVersion, width, height)];
         int thermalPixelOffset = FileFormat.getThermalPixelOffset(formatVersion);
         int M = width * height * 2 + thermalPixelOffset - 1;
@@ -258,9 +283,11 @@ public class RawThermalDump implements Disposable {
             }
 
             // Spot maker positions
-            if (spotMarkers.size() > 20) return false;
-            bytes[M + 91] = (byte) spotMarkers.size();
-            for (int i = 0; i < spotMarkers.size(); i++) {
+            int numberOfSpots = spotMarkers.size();
+            if ((formatVersion <= 4 && numberOfSpots > 20) || (formatVersion > 4 && numberOfSpots > 40))
+                return false;
+            bytes[M + 91] = (byte) numberOfSpots;
+            for (int i = 0; i < numberOfSpots; i++) {
                 Point point = spotMarkers.get(i);
                 int index = M + 92 + 4 * i;
                 signedInt2Bytes((int) point.x, bytes, index, 2);
@@ -273,14 +300,13 @@ public class RawThermalDump implements Disposable {
             signedInt2Bytes(captureTimestamp, bytes, M + 83, 4);
 
             // Record UUID
+            final int bytesFrom = FileFormat.getUuidOffset(formatVersion, M);
             if (recordUuid != null) {
                 byte[] recordUuidBytes = recordUuid.getBytes();
-                for (int i = 0; i < 32; i++) {
-                    bytes[M + 173 + i] = recordUuidBytes[i];
-                }
+                System.arraycopy(recordUuidBytes, 0, bytes, bytesFrom, 32);
             } else {
                 // Set the first char as NULL
-                bytes[M + 173] = 0;
+                bytes[bytesFrom] = 0;
             }
         }
 
@@ -397,10 +423,14 @@ public class RawThermalDump implements Disposable {
     }
 
     public boolean setSpotMarkers(@NonNull ArrayList<Point> spotMarkers) {
-        if (spotMarkers.size() > 20)
+        if (spotMarkers.size() > 40)
             return false;
+        else if (spotMarkers.size() > 20)
+            formatVersion = 5;
 
-        if (formatVersion < 3) formatVersion = 3;
+        if (formatVersion < 3)
+            formatVersion = 3;
+
         this.spotMarkers = spotMarkers;
         return true;
     }
@@ -615,7 +645,8 @@ public class RawThermalDump implements Disposable {
                     4   + width * height * 2, // v1
                     8   + width * height * 2, // v2
                     176 + width * height * 2, // v3
-                    209 + width * height * 2  // v4
+                    209 + width * height * 2, // v4
+                    289 + width * height * 2  // v5
             };
             if (formatVersion < 1 || formatVersion > lengths.length)
                 return -1;
@@ -624,11 +655,15 @@ public class RawThermalDump implements Disposable {
         }
 
         private static int getThermalPixelOffset(int formatVersion) {
-            int[] offsets = new int[]{4, 4, 5, 5};
+            int[] offsets = new int[]{4, 4, 5, 5, 5};
             if (formatVersion < 1 || formatVersion > offsets.length)
                 throw new Error("Incorrect format version");
             else
                 return offsets[formatVersion - 1];
+        }
+
+        private static int getUuidOffset(int formatVersion, int M) {
+            return formatVersion >= 5 ? M + 253 : M + 173;
         }
     }
 
