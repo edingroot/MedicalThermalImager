@@ -53,7 +53,7 @@ android {
     buildTypes {
         debug {
             versionNameSuffix ".debug"
-            resValue "string", "app_version", "${defaultConfig.versionName}${versionNameSuffix}"
+            resValue "string", "_app_version", "${defaultConfig.versionName}${versionNameSuffix}"
         }
 
         release {
@@ -61,7 +61,7 @@ android {
             signingConfig signingConfigs.release
             // Ref: https://stackoverflow.com/questions/13218772/removing-log-call-using-proguard
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
-            resValue "string", "app_version", "${defaultConfig.versionName}"
+            resValue "string", "_app_version", "${defaultConfig.versionName}"
         }
     }
 

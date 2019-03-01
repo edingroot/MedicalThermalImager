@@ -33,6 +33,7 @@
 
 
     <!-- SettingsActivity -->
+    <string name="app_version">App Version</string>
     <string name="auth_status">Auth Status</string>
     <string name="unauthenticated">Unauthenticated</string>
     <string name="user_brief">%1$s (%2$s)</string>
